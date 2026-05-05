@@ -1,0 +1,162 @@
+<app-page-header
+  icon="analytics"
+  title="Dashboard"
+  subtitle="Análises visuais e indicadores chave"
+/>
+
+<div class="content">
+  <!-- KPIs principais -->
+  <section class="kpi-grid">
+    <app-kpi-card
+      icon="payments"
+      title="Total Investido"
+      [value]="kpis().totalInvestido | brl"
+      variant="red"
+    />
+    <app-kpi-card
+      icon="account_balance"
+      title="Capital Parado"
+      [value]="kpis().capitalParado | brl"
+      variant="amber"
+    />
+    <app-kpi-card
+      icon="trending_up"
+      title="Receita Bruta"
+      [value]="kpis().receitaBruta | brl"
+      variant="blue"
+    />
+    <app-kpi-card
+      icon="emoji_events"
+      title="Lucro Líquido"
+      [value]="kpis().lucroLiquido | brl"
+      variant="green"
+    />
+    <app-kpi-card
+      icon="percent"
+      title="Margem"
+      [value]="(kpis().margemLiquida * 100).toFixed(1) + '%'"
+      variant="teal"
+    />
+    <app-kpi-card
+      icon="local_offer"
+      title="Taxas Pagas"
+      [value]="kpis().taxasTotal | brl"
+      variant="orange"
+    />
+  </section>
+
+  <!-- Gráficos linha 1 -->
+  <section class="chart-grid">
+    <mat-card class="chart-card">
+      <div class="chart-header">
+        <h3>
+          <mat-icon>show_chart</mat-icon>
+          Evolução Mensal
+        </h3>
+        <p>Receita Líquida vs Lucro Líquido</p>
+      </div>
+      <div class="chart-body">
+        @if (mensalChart().labels?.length) {
+          <canvas
+            baseChart
+            [data]="mensalChart()"
+            [options]="lineOptions()"
+            type="line"
+          ></canvas>
+        } @else {
+          <div class="no-data">Sem dados para exibir</div>
+        }
+      </div>
+    </mat-card>
+
+    <mat-card class="chart-card">
+      <div class="chart-header">
+        <h3>
+          <mat-icon>emoji_events</mat-icon>
+          Lucro Líquido por Produto
+        </h3>
+        <p>Top produtos mais rentáveis</p>
+      </div>
+      <div class="chart-body">
+        @if (lucroProdutoChart().labels?.length) {
+          <canvas
+            baseChart
+            [data]="lucroProdutoChart()"
+            [options]="barOptions()"
+            type="bar"
+          ></canvas>
+        } @else {
+          <div class="no-data">Sem vendas registradas</div>
+        }
+      </div>
+    </mat-card>
+  </section>
+
+  <!-- Gráficos linha 2 -->
+  <section class="chart-grid">
+    <mat-card class="chart-card">
+      <div class="chart-header">
+        <h3>
+          <mat-icon>donut_large</mat-icon>
+          Composição da Receita
+        </h3>
+        <p>Como sua receita bruta é distribuída</p>
+      </div>
+      <div class="chart-body">
+        @if (kpis().receitaBruta > 0) {
+          <canvas
+            baseChart
+            [data]="composicaoChart()"
+            [options]="doughnutOptions()"
+            type="doughnut"
+          ></canvas>
+        } @else {
+          <div class="no-data">Sem receita registrada</div>
+        }
+      </div>
+    </mat-card>
+
+    <mat-card class="chart-card">
+      <div class="chart-header">
+        <h3>
+          <mat-icon>inventory_2</mat-icon>
+          Capital Parado por Lote
+        </h3>
+        <p>Onde seu dinheiro está preso</p>
+      </div>
+      <div class="chart-body">
+        @if (capitalParadoChart().labels?.length) {
+          <canvas
+            baseChart
+            [data]="capitalParadoChart()"
+            [options]="horizontalBarOptions()"
+            type="bar"
+          ></canvas>
+        } @else {
+          <div class="no-data">Sem capital parado</div>
+        }
+      </div>
+    </mat-card>
+  </section>
+
+  <!-- Comparativo geral -->
+  <section>
+    <mat-card class="chart-card full">
+      <div class="chart-header">
+        <h3>
+          <mat-icon>compare</mat-icon>
+          Comparativo Financeiro Geral
+        </h3>
+        <p>Visão consolidada das métricas principais</p>
+      </div>
+      <div class="chart-body chart-tall">
+        <canvas
+          baseChart
+          [data]="comparativoChart()"
+          [options]="barOptions()"
+          type="bar"
+        ></canvas>
+      </div>
+    </mat-card>
+  </section>
+</div>

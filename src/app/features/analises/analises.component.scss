@@ -1,0 +1,179 @@
+.content {
+  padding: 24px 32px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.resume-card {
+  padding: 24px !important;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--txt-secondary);
+  margin: 0 0 16px;
+  letter-spacing: 0.3px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--clr-blue);
+  }
+}
+
+.resume-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+  border: 1px solid var(--brd-default);
+  border-radius: 10px;
+  overflow: hidden;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.resume-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--brd-default);
+
+  &:nth-child(odd) {
+    border-right: 1px solid var(--brd-default);
+  }
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--txt-secondary);
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  strong {
+    font-size: 15px;
+    color: var(--txt-primary);
+  }
+
+  &.highlight {
+    background: var(--bg-green);
+
+    span {
+      color: var(--clr-green);
+      font-weight: 600;
+    }
+  }
+}
+
+.tabs-card {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+::ng-deep .mat-mdc-tab .mdc-tab__text-label {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab-body {
+  padding: 16px 0;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  font-size: 12.5px;
+  border-collapse: collapse;
+
+  thead {
+    background: var(--bg-elevated-2);
+  }
+
+  th {
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    color: var(--txt-secondary);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--brd-default);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 11px 14px;
+    color: var(--txt-primary);
+    border-bottom: 1px solid var(--brd-default);
+  }
+
+  tbody tr:hover {
+    background: var(--bg-elevated);
+  }
+}
+
+.pos {
+  color: var(--clr-amber);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.id-tag {
+  color: var(--clr-blue);
+  font-weight: 700;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.produto-cell {
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.categoria-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--bg-blue);
+  color: var(--clr-blue);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--txt-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  mat-icon {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    color: var(--clr-green);
+  }
+}

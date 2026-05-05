@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "angular.ng-template",
+    "esbenp.prettier-vscode",
+    "syler.sass-indented",
+    "editorconfig.editorconfig"
+  ]
+}

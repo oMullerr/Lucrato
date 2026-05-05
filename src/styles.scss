@@ -1,0 +1,190 @@
+@use '@angular/material' as mat;
+
+/* ═══════════════════════════════════════════════════════════════
+   ANGULAR MATERIAL M3 — themes light + dark
+   ═══════════════════════════════════════════════════════════════ */
+@include mat.core();
+
+$light-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$blue-palette,
+    tertiary: mat.$cyan-palette,
+  ),
+  density: (scale: -1),
+  typography: (plain-family: 'Inter, sans-serif'),
+));
+
+$dark-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: mat.$blue-palette,
+    tertiary: mat.$cyan-palette,
+  ),
+  density: (scale: -1),
+  typography: (plain-family: 'Inter, sans-serif'),
+));
+
+html {
+  @include mat.all-component-themes($light-theme);
+}
+html.dark {
+  @include mat.all-component-colors($dark-theme);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS — light + dark
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  /* Surfaces */
+  --bg-base:        #F7F8FB;
+  --bg-surface:     #FFFFFF;
+  --bg-elevated:    #FAFBFD;
+  --bg-elevated-2:  #F0F2F7;
+  --bg-input:       #FFFBE6;
+  --bg-auto:        #EFF6FF;
+
+  /* Accents (light) */
+  --bg-red:         #FEF2F2;
+  --bg-amber:       #FFFBEB;
+  --bg-green:       #F0FDF4;
+  --bg-blue:        #EFF6FF;
+  --bg-teal:        #F0FDFA;
+  --bg-purple:      #FAF5FF;
+  --bg-orange:      #FFF7ED;
+
+  /* Text */
+  --txt-primary:    #1A1D27;
+  --txt-secondary:  #6B7280;
+  --txt-muted:      #9CA3AF;
+
+  /* Functional */
+  --clr-green:      #16A34A;
+  --clr-red:        #DC2626;
+  --clr-amber:      #D97706;
+  --clr-blue:       #2563EB;
+  --clr-teal:       #0D9488;
+  --clr-purple:     #9333EA;
+  --clr-orange:     #EA580C;
+
+  /* Borders */
+  --brd-default:    #E5E7EB;
+  --brd-strong:     #D1D5DB;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg:  0 12px 32px rgba(0, 0, 0, 0.12);
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+
+html.dark {
+  --bg-base:        #0F1117;
+  --bg-surface:     #1A1D27;
+  --bg-elevated:    #22263A;
+  --bg-elevated-2:  #1E2235;
+  --bg-input:       #1E2D1E;
+  --bg-auto:        #111827;
+
+  --bg-red:         #2D0A0A;
+  --bg-amber:       #2D1A00;
+  --bg-green:       #0A2D0A;
+  --bg-blue:        #0A1A3D;
+  --bg-teal:        #00232A;
+  --bg-purple:      #1A0A2D;
+  --bg-orange:      #2D1000;
+
+  --txt-primary:    #E8EAFF;
+  --txt-secondary:  #8892B0;
+  --txt-muted:      #4A5568;
+
+  --clr-green:      #4ADE80;
+  --clr-red:        #F87171;
+  --clr-amber:      #FBBF24;
+  --clr-blue:       #60A5FA;
+  --clr-teal:       #2DD4BF;
+  --clr-purple:     #C084FC;
+  --clr-orange:     #FB923C;
+
+  --brd-default:    #2D3748;
+  --brd-strong:     #3D4A6A;
+
+  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg:  0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE
+   ═══════════════════════════════════════════════════════════════ */
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-base);
+  color: var(--txt-primary);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb {
+  background: var(--brd-strong);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--clr-blue); }
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ═══════════════════════════════════════════════════════════════ */
+.text-success { color: var(--clr-green); }
+.text-danger  { color: var(--clr-red); }
+.text-warning { color: var(--clr-amber); }
+.text-info    { color: var(--clr-blue); }
+.text-muted   { color: var(--txt-secondary); }
+
+.text-center { text-align: center; }
+.text-right  { text-align: right; }
+
+/* ═══════════════════════════════════════════════════════════════
+   MATERIAL OVERRIDES
+   ═══════════════════════════════════════════════════════════════ */
+.mat-mdc-card {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--brd-default);
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.mat-mdc-table {
+  background: var(--bg-surface) !important;
+}
+
+.mat-mdc-header-row {
+  background: var(--bg-elevated-2);
+}
+
+.mat-mdc-row:hover {
+  background: var(--bg-elevated) !important;
+}
+
+.mat-mdc-snack-bar-container {
+  &.snack-success { --mdc-snackbar-container-color: var(--clr-green); }
+  &.snack-error   { --mdc-snackbar-container-color: var(--clr-red); }
+  &.snack-info    { --mdc-snackbar-container-color: var(--clr-blue); }
+  &.snack-warning { --mdc-snackbar-container-color: var(--clr-amber); }
+}
+
+.mat-mdc-dialog-surface {
+  border-radius: var(--radius-lg) !important;
+}

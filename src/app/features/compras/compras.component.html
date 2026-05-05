@@ -1,0 +1,135 @@
+<app-page-header
+  icon="shopping_cart"
+  title="Compras / Lotes"
+  subtitle="Cadastre cada lote comprado para revenda"
+>
+  <button mat-stroked-button [matMenuTriggerFor]="menuBackup">
+    <mat-icon>backup</mat-icon>
+    Backup
+  </button>
+  <mat-menu #menuBackup="matMenu">
+    <button mat-menu-item (click)="exportar()">
+      <mat-icon>file_download</mat-icon>
+      Exportar dados
+    </button>
+    <button mat-menu-item (click)="importar()">
+      <mat-icon>file_upload</mat-icon>
+      Importar dados
+    </button>
+  </mat-menu>
+
+  <button mat-flat-button color="primary" (click)="abrirNova()">
+    <mat-icon>add</mat-icon>
+    Nova Compra
+  </button>
+</app-page-header>
+
+<div class="content">
+  <!-- Filtros -->
+  <div class="filtros">
+    <mat-form-field class="search" appearance="outline" subscriptSizing="dynamic">
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        placeholder="Buscar por produto, ID ou categoria..."
+        [ngModel]="filtroTexto()"
+        (ngModelChange)="filtroTexto.set($event)"
+      />
+    </mat-form-field>
+
+    <mat-chip-listbox
+      [value]="filtroStatus()"
+      (change)="setStatus($event.value)"
+      class="status-filter"
+    >
+      <mat-chip-option value="todos">
+        Todos ({{ totais().todos }})
+      </mat-chip-option>
+      <mat-chip-option value="em-estoque">
+        <mat-icon>inventory_2</mat-icon>
+        Em Estoque ({{ totais().emEstoque }})
+      </mat-chip-option>
+      <mat-chip-option value="atencao">
+        <mat-icon>warning</mat-icon>
+        Atenção ({{ totais().atencao }})
+      </mat-chip-option>
+      <mat-chip-option value="parado">
+        <mat-icon>error</mat-icon>
+        Parado ({{ totais().parado }})
+      </mat-chip-option>
+      <mat-chip-option value="vendido">
+        <mat-icon>check_circle</mat-icon>
+        Vendido ({{ totais().vendido }})
+      </mat-chip-option>
+    </mat-chip-listbox>
+  </div>
+
+  <!-- Tabela -->
+  @if (comprasFiltradas().length > 0) {
+    <mat-card class="table-card">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Produto</th>
+              <th>Categoria</th>
+              <th>Fornecedor</th>
+              <th>Data</th>
+              <th class="text-center">Qtd.</th>
+              <th class="text-right">Custo Unit.</th>
+              <th class="text-right">Custo Total Real</th>
+              <th class="text-center">Vendida</th>
+              <th class="text-center">Estoque</th>
+              <th>Status</th>
+              <th class="text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of comprasFiltradas(); track c.id) {
+              <tr>
+                <td><span class="id-tag">{{ c.id }}</span></td>
+                <td class="produto-cell" [title]="c.produto">{{ c.produto }}</td>
+                <td><span class="categoria-pill">{{ c.categoria }}</span></td>
+                <td class="text-muted">{{ c.fornecedor }}</td>
+                <td>{{ c.dataCompra | dataBr }}</td>
+                <td class="text-center">{{ c.qtdComprada }}</td>
+                <td class="text-right text-muted">{{ c.custoUnitario | brl }}</td>
+                <td class="text-right"><strong>{{ c.custoTotalReal | brl }}</strong></td>
+                <td class="text-center text-muted">{{ c.qtdVendida }}</td>
+                <td
+                  class="text-center"
+                  [class.text-success]="c.estoqueAtual === 0"
+                  [class.text-warning]="c.estoqueAtual > 0"
+                >
+                  <strong>{{ c.estoqueAtual }}</strong>
+                </td>
+                <td><app-status-badge [status]="c.status" /></td>
+                <td class="text-center actions">
+                  <button mat-icon-button matTooltip="Editar" (click)="editar(c)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button matTooltip="Remover" color="warn" (click)="confirmarRemover(c)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </mat-card>
+  } @else {
+    <mat-card class="empty">
+      <mat-icon class="empty-icon">shopping_cart</mat-icon>
+      <h3>Nenhuma compra encontrada</h3>
+      <p>
+        @if (compras().length === 0) {
+          Adicione sua primeira compra clicando em "Nova Compra"
+        } @else {
+          Ajuste os filtros para ver outros lotes
+        }
+      </p>
+    </mat-card>
+  }
+</div>

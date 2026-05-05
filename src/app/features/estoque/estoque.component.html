@@ -1,0 +1,231 @@
+<app-page-header
+  icon="inventory_2"
+  title="Panorama do Estoque"
+  subtitle="Visão executiva — bata o olho e saiba como está seu negócio"
+>
+  <a mat-stroked-button routerLink="/compras">
+    <mat-icon>shopping_cart</mat-icon>
+    Compras
+  </a>
+  <a mat-flat-button color="primary" routerLink="/vendas">
+    <mat-icon>sell</mat-icon>
+    Registrar Venda
+  </a>
+</app-page-header>
+
+<div class="content">
+  <!-- KPIs Financeiros -->
+  <section>
+    <h2 class="section-title">
+      <mat-icon>account_balance_wallet</mat-icon>
+      Financeiro Geral
+    </h2>
+    <div class="kpi-grid">
+      <app-kpi-card
+        icon="payments"
+        title="Total Investido"
+        [value]="kpis().totalInvestido | brl"
+        note="Custo real de todas as compras"
+        variant="red"
+      />
+      <app-kpi-card
+        icon="account_balance"
+        title="Capital Parado"
+        [value]="kpis().capitalParado | brl"
+        note="Estoque atual × custo unit. real"
+        variant="amber"
+      />
+      <app-kpi-card
+        icon="trending_up"
+        title="Receita Bruta"
+        [value]="kpis().receitaBruta | brl"
+        note="Total faturado"
+        variant="blue"
+      />
+      <app-kpi-card
+        icon="credit_card"
+        title="Receita Líquida"
+        [value]="kpis().receitaLiquida | brl"
+        note="Após todas as deduções"
+        variant="blue"
+      />
+      <app-kpi-card
+        icon="emoji_events"
+        title="Lucro Líquido"
+        [value]="kpis().lucroLiquido | brl"
+        note="Resultado final"
+        variant="green"
+      />
+      <app-kpi-card
+        icon="percent"
+        title="Margem Líquida"
+        [value]="(kpis().margemLiquida * 100).toFixed(1) + '%'"
+        note="Lucro líq. / receita bruta"
+        variant="teal"
+      />
+    </div>
+  </section>
+
+  <!-- KPIs de Estoque -->
+  <section>
+    <h2 class="section-title">
+      <mat-icon>inventory</mat-icon>
+      Estoque em Números
+    </h2>
+    <div class="kpi-grid">
+      <app-kpi-card
+        icon="inventory_2"
+        title="Lotes em Estoque"
+        [value]="kpis().qtdLotesEstoque"
+        note="Lotes com estoque > 0"
+        variant="amber"
+      />
+      <app-kpi-card
+        icon="check_circle"
+        title="Lotes Vendidos"
+        [value]="kpis().qtdLotesVendidos"
+        note="Totalmente vendidos"
+        variant="green"
+      />
+      <app-kpi-card
+        icon="shopping_basket"
+        title="Qtde. Vendida"
+        [value]="kpis().qtdVendida"
+        note="Unidades vendidas total"
+        variant="green"
+      />
+      <app-kpi-card
+        icon="local_offer"
+        title="Taxas ML Pagas"
+        [value]="kpis().taxasTotal | brl"
+        note="Total ao Mercado Livre"
+        variant="orange"
+      />
+      <app-kpi-card
+        icon="receipt_long"
+        title="Ticket Médio"
+        [value]="kpis().ticketMedio | brl"
+        note="Preço médio unit. de venda"
+        variant="purple"
+      />
+      <app-kpi-card
+        icon="bar_chart"
+        title="Total de Lotes"
+        [value]="kpis().qtdLotes"
+        note="Lotes cadastrados"
+        variant="gray"
+      />
+    </div>
+  </section>
+
+  <!-- Tabela detalhada -->
+  <section>
+    <h2 class="section-title">
+      <mat-icon>format_list_bulleted</mat-icon>
+      Posição Detalhada por Lote
+    </h2>
+
+    @if (comprasOrdenadas().length > 0) {
+      <mat-card class="table-card">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Produto</th>
+                <th>Categoria</th>
+                <th>Data Compra</th>
+                <th class="text-center">Qtd.</th>
+                <th class="text-center">Vendida</th>
+                <th class="text-center">Estoque</th>
+                <th class="text-right">Custo Unit.</th>
+                <th class="text-right">Capital Parado</th>
+                <th>1ª Venda</th>
+                <th>Última Venda</th>
+                <th class="text-center">Dias</th>
+                <th>Status</th>
+                <th class="text-center">Margem</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of comprasOrdenadas(); track c.id) {
+                <tr>
+                  <td><span class="id-tag">{{ c.id }}</span></td>
+                  <td class="produto-cell" [title]="c.produto">{{ c.produto }}</td>
+                  <td><span class="categoria-pill">{{ c.categoria }}</span></td>
+                  <td [class]="diaClasse(c)">{{ c.dataCompra | dataBr }}</td>
+                  <td class="text-center">{{ c.qtdComprada }}</td>
+                  <td class="text-center text-muted">{{ c.qtdVendida }}</td>
+                  <td
+                    class="text-center"
+                    [class.text-success]="c.estoqueAtual === 0"
+                    [class.text-warning]="c.estoqueAtual > 0"
+                  >
+                    <strong>{{ c.estoqueAtual }}</strong>
+                  </td>
+                  <td class="text-right text-muted">{{ c.custoUnitarioReal | brl }}</td>
+                  <td class="text-right" [class.text-warning]="c.valorParado > 0">
+                    <strong>{{ c.valorParado | brl: true }}</strong>
+                  </td>
+                  <td class="text-muted">{{ c.primeiraVenda | dataBr }}</td>
+                  <td class="text-muted">{{ c.ultimaVenda | dataBr }}</td>
+                  <td class="text-center">
+                    <strong>{{ c.diasEmEstoque }}d</strong>
+                  </td>
+                  <td><app-status-badge [status]="c.status" /></td>
+                  <td class="text-center" [class]="margemClasse(c.margemMedia)">
+                    {{ c.margemMedia !== undefined ? (c.margemMedia * 100).toFixed(1) + '%' : '—' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </mat-card>
+    } @else {
+      <mat-card class="empty">
+        <mat-icon class="empty-icon">inventory_2</mat-icon>
+        <h3>Nenhum lote cadastrado ainda</h3>
+        <p>
+          Comece adicionando uma compra na aba
+          <a routerLink="/compras">Compras</a>
+        </p>
+      </mat-card>
+    }
+  </section>
+
+  <!-- Alertas -->
+  @if (alertas().length > 0) {
+    <section>
+      <h2 class="section-title text-warning">
+        <mat-icon>warning</mat-icon>
+        Atenção — Estoque Parado
+      </h2>
+      <div class="alertas-grid">
+        @for (a of alertas(); track a.id) {
+          <mat-card class="alerta-card" [attr.data-status]="a.status">
+            <div class="alerta-header">
+              <app-status-badge [status]="a.status" />
+              <span class="alerta-id">{{ a.id }}</span>
+            </div>
+            <h4>{{ a.produto }}</h4>
+            <div class="alerta-stats">
+              <div>
+                <span>Estoque</span>
+                <strong>{{ a.estoqueAtual }} un.</strong>
+              </div>
+              <div>
+                <span>Parado há</span>
+                <strong>{{ a.diasEmEstoque }}d</strong>
+              </div>
+              <div>
+                <span>Capital</span>
+                <strong>{{ a.valorParado | brl }}</strong>
+              </div>
+            </div>
+          </mat-card>
+        }
+      </div>
+    </section>
+  }
+</div>

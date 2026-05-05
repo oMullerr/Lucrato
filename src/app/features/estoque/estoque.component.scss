@@ -1,0 +1,204 @@
+.content {
+  padding: 24px 32px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--txt-secondary);
+  margin-bottom: 14px;
+  letter-spacing: 0.3px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.table-card {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  font-size: 12.5px;
+  border-collapse: collapse;
+
+  thead {
+    background: var(--bg-elevated-2);
+  }
+
+  th {
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    color: var(--txt-secondary);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--brd-default);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 12px 14px;
+    color: var(--txt-primary);
+    border-bottom: 1px solid var(--brd-default);
+  }
+
+  tbody tr {
+    transition: background 0.1s;
+  }
+
+  tbody tr:hover {
+    background: var(--bg-elevated);
+  }
+}
+
+.id-tag {
+  color: var(--clr-blue);
+  font-weight: 700;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.produto-cell {
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.categoria-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--bg-blue);
+  color: var(--clr-blue);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.alert-amber {
+  background: var(--bg-amber);
+  color: var(--clr-amber);
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 4px 8px !important;
+}
+
+.alert-red {
+  background: var(--bg-red);
+  color: var(--clr-red);
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 4px 8px !important;
+}
+
+.empty {
+  padding: 60px 20px !important;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: var(--txt-muted);
+  display: block;
+  margin: 0 auto 16px;
+}
+
+.empty h3 {
+  color: var(--txt-primary);
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.empty p,
+.empty a {
+  color: var(--txt-secondary);
+}
+
+.empty a {
+  color: var(--clr-blue);
+  font-weight: 600;
+}
+
+.alertas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.alerta-card {
+  padding: 18px !important;
+  border-left: 4px solid var(--accent, var(--clr-amber)) !important;
+
+  &[data-status="Parado"]  { --accent: var(--clr-red); }
+  &[data-status="Atenção"] { --accent: var(--clr-amber); }
+}
+
+.alerta-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.alerta-id {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--clr-blue);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.alerta-card h4 {
+  font-size: 13.5px;
+  color: var(--txt-primary);
+  margin: 0 0 12px;
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+.alerta-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.alerta-stats > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.alerta-stats span {
+  font-size: 10px;
+  color: var(--txt-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.alerta-stats strong {
+  font-size: 13px;
+  color: var(--txt-primary);
+  margin-top: 2px;
+}

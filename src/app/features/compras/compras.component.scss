@@ -1,0 +1,116 @@
+.content {
+  padding: 24px 32px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.filtros {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search {
+  flex: 1;
+  min-width: 280px;
+  max-width: 420px;
+}
+
+.status-filter {
+  flex: 1;
+}
+
+.table-card {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  font-size: 12.5px;
+  border-collapse: collapse;
+
+  thead {
+    background: var(--bg-elevated-2);
+  }
+
+  th {
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    color: var(--txt-secondary);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--brd-default);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 8px 14px;
+    color: var(--txt-primary);
+    border-bottom: 1px solid var(--brd-default);
+  }
+
+  tbody tr:hover {
+    background: var(--bg-elevated);
+  }
+}
+
+.id-tag {
+  color: var(--clr-blue);
+  font-weight: 700;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.produto-cell {
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.categoria-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--bg-blue);
+  color: var(--clr-blue);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.actions {
+  white-space: nowrap;
+}
+
+.empty {
+  padding: 60px 20px !important;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: var(--txt-muted);
+  display: block;
+  margin: 0 auto 16px;
+}
+
+.empty h3 {
+  color: var(--txt-primary);
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.empty p {
+  color: var(--txt-secondary);
+}

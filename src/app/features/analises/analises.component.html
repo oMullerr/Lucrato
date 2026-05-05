@@ -1,0 +1,266 @@
+<app-page-header
+  icon="insights"
+  title="Análises Detalhadas"
+  subtitle="Resumos por produto, categoria e período"
+/>
+
+<div class="content">
+  <!-- Resumo financeiro -->
+  <mat-card class="resume-card">
+    <h3 class="card-title">
+      <mat-icon>account_balance_wallet</mat-icon>
+      Resumo Financeiro Geral
+    </h3>
+    <div class="resume-grid">
+      <div class="resume-row">
+        <span>Total Investido em Compras</span>
+        <strong class="text-danger">{{ kpis().totalInvestido | brl }}</strong>
+      </div>
+      <div class="resume-row">
+        <span>Capital Parado em Estoque</span>
+        <strong class="text-warning">{{ kpis().capitalParado | brl }}</strong>
+      </div>
+      <div class="resume-row">
+        <span>Receita Bruta Total</span>
+        <strong class="text-info">{{ kpis().receitaBruta | brl }}</strong>
+      </div>
+      <div class="resume-row">
+        <span>Total Taxas ML Pagas</span>
+        <strong class="text-warning">{{ kpis().taxasTotal | brl }}</strong>
+      </div>
+      <div class="resume-row">
+        <span>Total Fretes Vendedor</span>
+        <strong class="text-muted">{{ kpis().fretesTotal | brl }}</strong>
+      </div>
+      <div class="resume-row">
+        <span>Total Descontos / Cupons</span>
+        <strong class="text-muted">{{ kpis().descontosTotal | brl }}</strong>
+      </div>
+      <div class="resume-row">
+        <span>Receita Líquida Total</span>
+        <strong>{{ kpis().receitaLiquida | brl }}</strong>
+      </div>
+      <div class="resume-row">
+        <span>Lucro Bruto Total</span>
+        <strong class="text-success">{{ kpis().lucroBruto | brl }}</strong>
+      </div>
+      <div class="resume-row highlight">
+        <span><mat-icon>emoji_events</mat-icon> Lucro Líquido Total</span>
+        <strong class="text-success">{{ kpis().lucroLiquido | brl }}</strong>
+      </div>
+      <div class="resume-row highlight">
+        <span><mat-icon>percent</mat-icon> Margem Líquida Média</span>
+        <strong class="text-success">{{ (kpis().margemLiquida * 100).toFixed(1) }}%</strong>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Tabs com análises detalhadas -->
+  <mat-card class="tabs-card">
+    <mat-tab-group animationDuration="200ms">
+      <!-- Ranking por produto -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>emoji_events</mat-icon>
+          Ranking por Produto
+        </ng-template>
+
+        <div class="tab-body">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="text-center">#</th>
+                  <th>Produto</th>
+                  <th class="text-center">Qtd Vendida</th>
+                  <th class="text-right">Receita Bruta</th>
+                  <th class="text-right">Receita Líquida</th>
+                  <th class="text-right">Custo Total</th>
+                  <th class="text-right">Lucro Bruto</th>
+                  <th class="text-right">Lucro Líquido</th>
+                  <th class="text-center">Margem %</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of rankingProdutos(); track p.produto; let i = $index) {
+                  <tr>
+                    <td class="text-center pos">{{ i + 1 }}</td>
+                    <td class="produto-cell">{{ p.produto }}</td>
+                    <td class="text-center">{{ p.qtd }}</td>
+                    <td class="text-right">{{ p.receita | brl }}</td>
+                    <td class="text-right">{{ p.receitaLiq | brl }}</td>
+                    <td class="text-right text-muted">{{ p.custo | brl }}</td>
+                    <td class="text-right">{{ p.lucroBruto | brl }}</td>
+                    <td
+                      class="text-right"
+                      [class.text-success]="p.lucroLiq > 0"
+                      [class.text-danger]="p.lucroLiq < 0"
+                    >
+                      <strong>{{ p.lucroLiq | brl }}</strong>
+                    </td>
+                    <td class="text-center" [class]="margemClasse(p.margem)">
+                      <strong>{{ (p.margem * 100).toFixed(1) }}%</strong>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (rankingProdutos().length === 0) {
+            <div class="empty">Sem vendas registradas ainda</div>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Categorias -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>category</mat-icon>
+          Por Categoria
+        </ng-template>
+
+        <div class="tab-body">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Categoria</th>
+                  <th class="text-center">Lotes</th>
+                  <th class="text-right">Investido</th>
+                  <th class="text-right">Capital Parado</th>
+                  <th class="text-right">Receita Bruta</th>
+                  <th class="text-right">Lucro Líquido</th>
+                  <th class="text-center">Margem %</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of resumoCategorias(); track c.categoria) {
+                  <tr>
+                    <td><span class="categoria-pill">{{ c.categoria }}</span></td>
+                    <td class="text-center">{{ c.lotes }}</td>
+                    <td class="text-right text-danger">{{ c.investido | brl }}</td>
+                    <td class="text-right text-warning">{{ c.capitalParado | brl }}</td>
+                    <td class="text-right">{{ c.receita | brl }}</td>
+                    <td
+                      class="text-right"
+                      [class.text-success]="c.lucro > 0"
+                      [class.text-danger]="c.lucro < 0"
+                    >
+                      <strong>{{ c.lucro | brl }}</strong>
+                    </td>
+                    <td class="text-center" [class]="margemClasse(c.margem)">
+                      {{ (c.margem * 100).toFixed(1) }}%
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Mensal -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>calendar_month</mat-icon>
+          Evolução Mensal
+        </ng-template>
+
+        <div class="tab-body">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mês</th>
+                  <th class="text-center">Vendas</th>
+                  <th class="text-right">Receita Bruta</th>
+                  <th class="text-right">Taxas ML</th>
+                  <th class="text-right">Receita Líquida</th>
+                  <th class="text-right">Custo</th>
+                  <th class="text-right">Lucro Líquido</th>
+                  <th class="text-center">Margem %</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (m of resumoMensal(); track m.mes) {
+                  <tr>
+                    <td><strong>{{ m.mes }}</strong></td>
+                    <td class="text-center">{{ m.qtd }}</td>
+                    <td class="text-right">{{ m.receita | brl }}</td>
+                    <td class="text-right text-warning">{{ m.taxas | brl }}</td>
+                    <td class="text-right">{{ m.receitaLiq | brl }}</td>
+                    <td class="text-right text-muted">{{ m.custo | brl }}</td>
+                    <td
+                      class="text-right"
+                      [class.text-success]="m.lucro > 0"
+                      [class.text-danger]="m.lucro < 0"
+                    >
+                      <strong>{{ m.lucro | brl }}</strong>
+                    </td>
+                    <td class="text-center" [class]="margemClasse(m.margem)">
+                      {{ (m.margem * 100).toFixed(1) }}%
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (resumoMensal().length === 0) {
+            <div class="empty">Sem dados mensais ainda</div>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Estoque parado -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>warning</mat-icon>
+          Estoque Parado
+        </ng-template>
+
+        <div class="tab-body">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Produto</th>
+                  <th class="text-center">Estoque</th>
+                  <th class="text-right">Custo Unit.</th>
+                  <th class="text-right">Capital Parado</th>
+                  <th class="text-center">Dias Parado</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of estoqueParado(); track c.id) {
+                  <tr>
+                    <td><span class="id-tag">{{ c.id }}</span></td>
+                    <td class="produto-cell">{{ c.produto }}</td>
+                    <td class="text-center text-warning"><strong>{{ c.estoqueAtual }}</strong></td>
+                    <td class="text-right text-muted">{{ c.custoUnitarioReal | brl }}</td>
+                    <td class="text-right text-warning"><strong>{{ c.valorParado | brl }}</strong></td>
+                    <td
+                      class="text-center"
+                      [class.text-danger]="c.diasEmEstoque >= 30"
+                      [class.text-warning]="c.diasEmEstoque >= 25 && c.diasEmEstoque < 30"
+                    >
+                      {{ c.diasEmEstoque }}d
+                    </td>
+                    <td><app-status-badge [status]="c.status" /></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (estoqueParado().length === 0) {
+            <div class="empty">
+              <mat-icon>celebration</mat-icon>
+              Nenhum produto parado!
+            </div>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-card>
+</div>

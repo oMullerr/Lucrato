@@ -1,0 +1,151 @@
+<app-page-header
+  icon="sell"
+  title="Vendas Detalhadas"
+  subtitle="Cada linha = uma venda. Mesmo produto pode ter preços diferentes."
+>
+  <button mat-flat-button color="primary" (click)="abrirNova()">
+    <mat-icon>add</mat-icon>
+    Nova Venda
+  </button>
+</app-page-header>
+
+<div class="content">
+  <!-- Resumo rápido -->
+  <div class="quick-stats">
+    <mat-card class="stat-card">
+      <small>Total de Vendas</small>
+      <strong>{{ resumo().total }}</strong>
+    </mat-card>
+    <mat-card class="stat-card">
+      <small>Receita Bruta</small>
+      <strong class="text-info">{{ resumo().receita | brl }}</strong>
+    </mat-card>
+    <mat-card class="stat-card">
+      <small>Taxas Pagas</small>
+      <strong class="text-warning">{{ resumo().taxas | brl }}</strong>
+    </mat-card>
+    <mat-card class="stat-card">
+      <small>Lucro Líquido</small>
+      <strong [class.text-success]="resumo().lucro > 0" [class.text-danger]="resumo().lucro < 0">
+        {{ resumo().lucro | brl }}
+      </strong>
+    </mat-card>
+    <mat-card class="stat-card">
+      <small>Margem Média</small>
+      <strong class="text-info">{{ (resumo().margem * 100).toFixed(1) }}%</strong>
+    </mat-card>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <mat-form-field class="search" appearance="outline" subscriptSizing="dynamic">
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        placeholder="Buscar por produto, ID venda ou ID lote..."
+        [ngModel]="filtroTexto()"
+        (ngModelChange)="filtroTexto.set($event)"
+      />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Canal</mat-label>
+      <mat-select [ngModel]="filtroCanal()" (ngModelChange)="filtroCanal.set($event)">
+        <mat-option value="todos">Todos os canais</mat-option>
+        @for (c of canais(); track c) {
+          <mat-option [value]="c">{{ c }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Status</mat-label>
+      <mat-select [ngModel]="filtroStatus()" (ngModelChange)="filtroStatus.set($event)">
+        <mat-option value="todos">Todos</mat-option>
+        <mat-option value="Concluída">Concluída</mat-option>
+        <mat-option value="Cancelada">Cancelada</mat-option>
+        <mat-option value="Devolvida">Devolvida</mat-option>
+        <mat-option value="Em disputa">Em disputa</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Tabela -->
+  @if (vendasFiltradas().length > 0) {
+    <mat-card class="table-card">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID Venda</th>
+              <th>ID Lote</th>
+              <th>Produto</th>
+              <th>Data</th>
+              <th>Canal</th>
+              <th class="text-center">Qtd.</th>
+              <th class="text-right">Preço Unit.</th>
+              <th class="text-right">Receita Bruta</th>
+              <th class="text-center">Taxa %</th>
+              <th class="text-right">Receita Líquida</th>
+              <th class="text-right">Custo</th>
+              <th class="text-right">Lucro Líquido</th>
+              <th class="text-center">Margem %</th>
+              <th>Status</th>
+              <th class="text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of vendasFiltradas(); track v.id) {
+              <tr>
+                <td><span class="id-tag id-venda">{{ v.id }}</span></td>
+                <td><span class="id-tag id-lote">{{ v.idLote }}</span></td>
+                <td class="produto-cell" [title]="v.produto">{{ v.produto }}</td>
+                <td>{{ v.dataVenda | dataBr }}</td>
+                <td><span class="canal-pill">{{ v.canal }}</span></td>
+                <td class="text-center">{{ v.qtdVendida }}</td>
+                <td class="text-right">{{ v.precoUnitario | brl }}</td>
+                <td class="text-right"><strong>{{ v.receitaBruta | brl }}</strong></td>
+                <td class="text-center" [class.text-warning]="isTaxaCustomizada(v.taxaPercentual)">
+                  {{ (v.taxaPercentual * 100).toFixed(1) }}%
+                </td>
+                <td class="text-right">{{ v.receitaLiquida | brl }}</td>
+                <td class="text-right text-muted">{{ v.custoTotalProporcional | brl }}</td>
+                <td
+                  class="text-right"
+                  [class.text-success]="v.lucroLiquido > 0"
+                  [class.text-danger]="v.lucroLiquido < 0"
+                >
+                  <strong>{{ v.lucroLiquido | brl }}</strong>
+                </td>
+                <td class="text-center" [class]="margemClasse(v.margemLiquida)">
+                  <strong>{{ (v.margemLiquida * 100).toFixed(1) }}%</strong>
+                </td>
+                <td><app-status-badge [status]="v.status" /></td>
+                <td class="text-center actions">
+                  <button mat-icon-button matTooltip="Editar" (click)="editar(v)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button matTooltip="Remover" color="warn" (click)="confirmarRemover(v)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </mat-card>
+  } @else {
+    <mat-card class="empty">
+      <mat-icon class="empty-icon">sell</mat-icon>
+      <h3>Nenhuma venda encontrada</h3>
+      <p>
+        @if (vendas().length === 0) {
+          Adicione sua primeira venda clicando em "Nova Venda"
+        } @else {
+          Ajuste os filtros para ver outras vendas
+        }
+      </p>
+    </mat-card>
+  }
+</div>
