@@ -9,16 +9,16 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
-import { Configuracoes } from '../../core/models/models';
+import { Settings } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
 
-type ListKey = 'categorias' | 'fornecedores' | 'canais';
+type ListKey = 'categories' | 'suppliers' | 'channels';
 
 @Component({
-  selector: 'app-configuracoes',
+  selector: 'app-settings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -26,68 +26,67 @@ type ListKey = 'categorias' | 'fornecedores' | 'canais';
     MatFormFieldModule, MatInputModule, MatSelectModule, MatChipsModule,
     PageHeaderComponent,
   ],
-  templateUrl: './configuracoes.component.html',
-  styleUrl: './configuracoes.component.scss',
+  templateUrl: './settings.component.html',
+  styleUrl: './settings.component.scss',
 })
-export class ConfiguracoesComponent {
+export class SettingsComponent {
   private readonly dataService = inject(DataService);
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(MatDialog);
 
-  protected readonly separadores = [ENTER, COMMA];
+  protected readonly separators = [ENTER, COMMA];
 
-  protected readonly form = signal<Configuracoes>(this.snapshot());
+  protected readonly form = signal<Settings>(this.snapshot());
 
-  // Acessadores como percentual para UX
-  protected get taxaPercentual(): number {
-    return this.form().taxaMlPadrao * 100;
+  protected get feePercentage(): number {
+    return this.form().defaultMlFee * 100;
   }
-  protected set taxaPercentual(v: number) {
-    this.form.update(f => ({ ...f, taxaMlPadrao: (v || 0) / 100 }));
-  }
-
-  protected get margemMinimaPct(): number {
-    return this.form().margemMinima * 100;
-  }
-  protected set margemMinimaPct(v: number) {
-    this.form.update(f => ({ ...f, margemMinima: (v || 0) / 100 }));
+  protected set feePercentage(v: number) {
+    this.form.update(f => ({ ...f, defaultMlFee: (v || 0) / 100 }));
   }
 
-  protected readonly modificado = computed(() => {
-    const cfg = this.dataService.configuracoes();
+  protected get minMarginPct(): number {
+    return this.form().minimumMargin * 100;
+  }
+  protected set minMarginPct(v: number) {
+    this.form.update(f => ({ ...f, minimumMargin: (v || 0) / 100 }));
+  }
+
+  protected readonly isModified = computed(() => {
+    const cfg = this.dataService.settings();
     if (!cfg) return false;
     return JSON.stringify(cfg) !== JSON.stringify(this.form());
   });
 
-  protected adicionarItem(lista: ListKey, valor: string): void {
-    const v = (valor ?? '').trim();
+  protected addItem(list: ListKey, value: string): void {
+    const v = (value ?? '').trim();
     if (!v) return;
-    const atual = this.form()[lista];
-    if (atual.includes(v)) {
+    const current = this.form()[list];
+    if (current.includes(v)) {
       this.notify.warning(`"${v}" já existe na lista.`);
       return;
     }
-    this.form.update(f => ({ ...f, [lista]: [...atual, v] }));
+    this.form.update(f => ({ ...f, [list]: [...current, v] }));
   }
 
-  protected removerItem(lista: ListKey, item: string): void {
+  protected removeItem(list: ListKey, item: string): void {
     this.form.update(f => ({
       ...f,
-      [lista]: f[lista].filter(x => x !== item),
+      [list]: f[list].filter(x => x !== item),
     }));
   }
 
-  protected salvar(): void {
-    this.dataService.atualizarConfiguracoes(this.form());
+  protected save(): void {
+    this.dataService.updateSettings(this.form());
     this.notify.success('Configurações salvas.');
   }
 
-  protected descartar(): void {
+  protected discard(): void {
     this.form.set(this.snapshot());
     this.notify.info('Alterações descartadas.');
   }
 
-  protected resetarTudo(): void {
+  protected resetAll(): void {
     this.dialog
       .open(ConfirmDialogComponent, {
         data: {
@@ -101,29 +100,29 @@ export class ConfiguracoesComponent {
       .afterClosed()
       .subscribe(async confirmed => {
         if (confirmed) {
-          await this.dataService.resetar();
+          await this.dataService.reset();
           this.form.set(this.snapshot());
           this.notify.success('Sistema resetado para o estado inicial.');
         }
       });
   }
 
-  private snapshot(): Configuracoes {
-    return JSON.parse(JSON.stringify(this.dataService.configuracoes() ?? this.empty()));
+  private snapshot(): Settings {
+    return JSON.parse(JSON.stringify(this.dataService.settings() ?? this.empty()));
   }
 
-  private empty(): Configuracoes {
+  private empty(): Settings {
     return {
-      taxaMlPadrao: 0.12,
-      diasAlertaAmarelo: 25,
-      diasAlertaVermelho: 30,
-      margemMinima: 0.10,
-      alertaEstoqueBaixo: 1,
-      fretePadrao: 0,
-      canalPadrao: 'Mercado Livre',
-      categorias: [],
-      fornecedores: [],
-      canais: [],
+      defaultMlFee: 0.12,
+      yellowAlertDays: 25,
+      redAlertDays: 30,
+      minimumMargin: 0.10,
+      lowStockAlert: 1,
+      defaultShipping: 0,
+      defaultChannel: 'Mercado Livre',
+      categories: [],
+      suppliers: [],
+      channels: [],
     };
   }
 }

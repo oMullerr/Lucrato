@@ -24,23 +24,23 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'PRINCIPAL',
     items: [
-      { path: '/estoque',   label: 'Estoque',   icon: 'inventory_2' },
-      { path: '/dashboard', label: 'Dashboard', icon: 'analytics' },
-      { path: '/analises',  label: 'Análises',  icon: 'insights' },
+      { path: '/inventory',  label: 'Estoque',   icon: 'inventory_2' },
+      { path: '/dashboard',  label: 'Dashboard', icon: 'analytics' },
+      { path: '/analytics',  label: 'Análises',  icon: 'insights' },
     ],
   },
   {
     label: 'REGISTROS',
     items: [
-      { path: '/compras', label: 'Compras', icon: 'shopping_cart' },
-      { path: '/vendas',  label: 'Vendas',  icon: 'sell' },
+      { path: '/purchases', label: 'Compras', icon: 'shopping_cart' },
+      { path: '/sales',     label: 'Vendas',  icon: 'sell' },
     ],
   },
   {
     label: 'SISTEMA',
     items: [
-      { path: '/configuracoes', label: 'Configurações', icon: 'settings' },
-      { path: '/instrucoes',    label: 'Instruções',    icon: 'help_outline' },
+      { path: '/settings',     label: 'Configurações', icon: 'settings' },
+      { path: '/instructions', label: 'Instruções',    icon: 'help_outline' },
     ],
   },
 ];
@@ -91,7 +91,7 @@ const NAV_GROUPS: NavGroup[] = [
           @if (data.loaded()) {
             <div class="status">
               <span class="dot"></span>
-              {{ data.compras().length }} lotes · {{ data.vendas().length }} vendas
+              {{ data.purchases().length }} lotes · {{ data.sales().length }} vendas
             </div>
           }
         </div>

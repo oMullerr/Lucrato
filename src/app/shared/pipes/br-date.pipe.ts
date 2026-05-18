@@ -1,7 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-@Pipe({ name: 'dataBr', standalone: true, pure: true })
-export class DataBrPipe implements PipeTransform {
+@Pipe({ name: 'brDate', standalone: true, pure: true })
+export class BrDatePipe implements PipeTransform {
   transform(value: string | null | undefined): string {
     if (!value) return '—';
     const date = new Date(value);

@@ -10,7 +10,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header.compone
 import { KpiCardComponent } from '../../shared/components/kpi-card.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 
-const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 @Component({
   selector: 'app-dashboard',
@@ -35,15 +35,15 @@ export class DashboardComponent {
   );
 
   // ── Dados mensais ────────────────────────────────────
-  protected readonly mensalChart = computed<ChartConfiguration<'line'>['data']>(() => {
-    const concluidas = this.dataService.vendasCalculadas().filter(v => v.status === 'Concluída');
+  protected readonly monthlyChart = computed<ChartConfiguration<'line'>['data']>(() => {
+    const concluidas = this.dataService.computedSales().filter(v => v.status === 'Concluída');
     const recLiq = new Array<number>(12).fill(0);
     const lucro = new Array<number>(12).fill(0);
 
     for (const v of concluidas) {
-      const m = new Date(v.dataVenda).getUTCMonth();
-      recLiq[m] += v.receitaLiquida;
-      lucro[m] += v.lucroLiquido;
+      const m = new Date(v.saleDate).getUTCMonth();
+      recLiq[m] += v.netRevenue;
+      lucro[m] += v.netProfit;
     }
 
     const ativos: number[] = [];
@@ -57,7 +57,7 @@ export class DashboardComponent {
     const c = this.C();
 
     return {
-      labels: MESES.slice(min, max + 1),
+      labels: MONTHS.slice(min, max + 1),
       datasets: [
         {
           label: 'Receita Líquida',
@@ -84,11 +84,11 @@ export class DashboardComponent {
   });
 
   // ── Lucro por produto ─────────────────────────────────
-  protected readonly lucroProdutoChart = computed<ChartConfiguration<'bar'>['data']>(() => {
-    const concluidas = this.dataService.vendasCalculadas().filter(v => v.status === 'Concluída');
+  protected readonly productProfitChart = computed<ChartConfiguration<'bar'>['data']>(() => {
+    const concluidas = this.dataService.computedSales().filter(v => v.status === 'Concluída');
     const map = new Map<string, number>();
     for (const v of concluidas) {
-      map.set(v.produto, (map.get(v.produto) ?? 0) + v.lucroLiquido);
+      map.set(v.product, (map.get(v.product) ?? 0) + v.netProfit);
     }
     const arr = [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
     const c = this.C();
@@ -107,19 +107,19 @@ export class DashboardComponent {
   });
 
   // ── Composição de receita ─────────────────────────────
-  protected readonly composicaoChart = computed<ChartConfiguration<'doughnut'>['data']>(() => {
+  protected readonly compositionChart = computed<ChartConfiguration<'doughnut'>['data']>(() => {
     const k = this.kpis();
-    const custoProd = k.receitaBruta - k.taxasTotal - k.fretesTotal - k.descontosTotal - k.lucroLiquido;
+    const custoProd = k.grossRevenue - k.totalFees - k.totalShipping - k.totalDiscounts - k.netProfit;
     const c = this.C();
 
     return {
       labels: ['Lucro Líquido', 'Taxas L', 'Frete', 'Desconto', 'Custo Produtos'],
       datasets: [{
         data: [
-          Math.max(0, k.lucroLiquido),
-          k.taxasTotal,
-          k.fretesTotal,
-          k.descontosTotal,
+          Math.max(0, k.netProfit),
+          k.totalFees,
+          k.totalShipping,
+          k.totalDiscounts,
           Math.max(0, custoProd),
         ],
         backgroundColor: [c.green, c.amber, c.orange, c.red, c.blue],
@@ -130,17 +130,17 @@ export class DashboardComponent {
   });
 
   // ── Capital parado ────────────────────────────────────
-  protected readonly capitalParadoChart = computed<ChartConfiguration<'bar'>['data']>(() => {
-    const compras = this.dataService.comprasCalculadas()
-      .filter(c => c.valorParado > 0)
-      .sort((a, b) => b.valorParado - a.valorParado);
+  protected readonly idleCapitalChart = computed<ChartConfiguration<'bar'>['data']>(() => {
+    const compras = this.dataService.computedPurchases()
+      .filter(c => c.idleValue > 0)
+      .sort((a, b) => b.idleValue - a.idleValue);
     const c = this.C();
 
     return {
-      labels: compras.map(x => `${x.id} — ${x.produto.substring(0, 22)}${x.produto.length > 22 ? '…' : ''}`),
+      labels: compras.map(x => `${x.id} — ${x.product.substring(0, 22)}${x.product.length > 22 ? '…' : ''}`),
       datasets: [{
         label: 'Capital Parado (R$)',
-        data: compras.map(x => x.valorParado),
+        data: compras.map(x => x.idleValue),
         backgroundColor: c.amber + 'CC',
         borderColor: c.amber,
         borderWidth: 1.5,
@@ -150,14 +150,14 @@ export class DashboardComponent {
   });
 
   // ── Comparativo geral ─────────────────────────────────
-  protected readonly comparativoChart = computed<ChartConfiguration<'bar'>['data']>(() => {
+  protected readonly comparativeChart = computed<ChartConfiguration<'bar'>['data']>(() => {
     const k = this.kpis();
     const c = this.C();
     return {
       labels: ['Investido', 'Receita Bruta', 'Receita Líquida', 'Lucro Líquido', 'Capital Parado', 'Taxas L'],
       datasets: [{
         label: 'Valor (R$)',
-        data: [k.totalInvestido, k.receitaBruta, k.receitaLiquida, k.lucroLiquido, k.capitalParado, k.taxasTotal],
+        data: [k.totalInvested, k.grossRevenue, k.netRevenue, k.netProfit, k.idleCapital, k.totalFees],
         backgroundColor: [c.red + 'CC', c.blue + 'CC', c.blue + 'CC', c.green + 'CC', c.amber + 'CC', c.orange + 'CC'],
         borderColor: [c.red, c.blue, c.blue, c.green, c.amber, c.orange],
         borderWidth: 1.5,

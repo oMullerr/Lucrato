@@ -1,47 +1,48 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { APP } from '../constants/app.constants';
 import {
-  Compra, Venda, Configuracoes, Database
+  Purchase, Sale, Settings, Database
 } from '../models/models';
-import { calcularCompra, calcularKpis, calcularVenda, proximoId } from './calculations';
+import { calculatePurchase, calculateKpis, calculateSale, nextId } from './calculations';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
   private readonly db = signal<Database | null>(null);
 
   readonly loaded = computed(() => this.db() !== null);
-  readonly compras = computed(() => this.db()?.compras ?? []);
-  readonly vendas = computed(() => this.db()?.vendas ?? []);
-  readonly configuracoes = computed(() => this.db()?.configuracoes ?? null);
+  readonly purchases = computed(() => this.db()?.purchases ?? []);
+  readonly sales = computed(() => this.db()?.sales ?? []);
+  readonly settings = computed(() => this.db()?.settings ?? null);
 
-  /** Compras com cálculos derivados (custo real, estoque, status). */
-  readonly comprasCalculadas = computed(() => {
-    const cfg = this.configuracoes();
+  /** Purchases with derived computed fields (actual cost, stock, status). */
+  readonly computedPurchases = computed(() => {
+    const cfg = this.settings();
     if (!cfg) return [];
-    return this.compras().map(c => calcularCompra(c, this.vendas(), cfg));
+    return this.purchases().map(c => calculatePurchase(c, this.sales(), cfg));
   });
 
-  /** Vendas com cálculos derivados (lucro, margem). */
-  readonly vendasCalculadas = computed(() =>
-    this.vendas().map(v => calcularVenda(v, this.compras()))
+  /** Sales with derived computed fields (profit, margin). */
+  readonly computedSales = computed(() =>
+    this.sales().map(v => calculateSale(v, this.purchases()))
   );
 
-  /** KPIs consolidados. */
+  /** Consolidated KPIs. */
   readonly kpis = computed(() =>
-    calcularKpis(this.comprasCalculadas(), this.vendasCalculadas())
+    calculateKpis(this.computedPurchases(), this.computedSales())
   );
 
   constructor() {
-    void this.carregar();
+    void this.load();
   }
 
   // ─── Persistence ───────────────────────────────────────
 
-  async carregar(): Promise<void> {
+  async load(): Promise<void> {
     const stored = localStorage.getItem(APP.storageKey);
     if (stored) {
       try {
-        this.db.set(JSON.parse(stored) as Database);
+        const parsed = JSON.parse(stored);
+        this.db.set(this.migrateDatabase(parsed));
         return;
       } catch {
         // fall through to fetch
@@ -49,28 +50,29 @@ export class DataService {
     }
     try {
       const response = await fetch(APP.initialDbUrl);
-      const data = (await response.json()) as Database;
-      this.db.set(data);
+      const data = await response.json();
+      this.db.set(this.migrateDatabase(data));
       this.persist();
     } catch {
       this.db.set(this.createEmpty());
     }
   }
 
-  async resetar(): Promise<void> {
+  async reset(): Promise<void> {
     localStorage.removeItem(APP.storageKey);
-    await this.carregar();
+    await this.load();
   }
 
-  exportar(): string {
+  exportData(): string {
     return JSON.stringify(this.db(), null, 2);
   }
 
-  importar(json: string): boolean {
+  importData(json: string): boolean {
     try {
-      const data = JSON.parse(json) as Database;
-      if (!data.compras || !data.vendas || !data.configuracoes) return false;
-      this.db.set(data);
+      const data = JSON.parse(json);
+      const migrated = this.migrateDatabase(data);
+      if (!migrated.purchases || !migrated.sales || !migrated.settings) return false;
+      this.db.set(migrated);
       this.persist();
       return true;
     } catch {
@@ -78,60 +80,60 @@ export class DataService {
     }
   }
 
-  // ─── Compras CRUD ──────────────────────────────────────
+  // ─── Purchases CRUD ──────────────────────────────────────
 
-  proximoIdCompra(): string {
-    return proximoId(this.compras().map(c => c.id), 'C');
+  nextPurchaseId(): string {
+    return nextId(this.purchases().map(c => c.id), 'C');
   }
 
-  buscarCompra(id: string): Compra | undefined {
-    return this.compras().find(c => c.id === id);
+  findPurchase(id: string): Purchase | undefined {
+    return this.purchases().find(c => c.id === id);
   }
 
-  adicionarCompra(compra: Compra): void {
-    this.update(d => { d.compras.push({ ...compra }); });
+  addPurchase(purchase: Purchase): void {
+    this.update(d => { d.purchases.push({ ...purchase }); });
   }
 
-  atualizarCompra(id: string, dados: Partial<Compra>): void {
+  updatePurchase(id: string, data: Partial<Purchase>): void {
     this.update(d => {
-      const idx = d.compras.findIndex(c => c.id === id);
-      if (idx !== -1) d.compras[idx] = { ...d.compras[idx]!, ...dados };
+      const idx = d.purchases.findIndex(c => c.id === id);
+      if (idx !== -1) d.purchases[idx] = { ...d.purchases[idx]!, ...data };
     });
   }
 
-  removerCompra(id: string): void {
-    this.update(d => { d.compras = d.compras.filter(c => c.id !== id); });
+  removePurchase(id: string): void {
+    this.update(d => { d.purchases = d.purchases.filter(c => c.id !== id); });
   }
 
-  // ─── Vendas CRUD ───────────────────────────────────────
+  // ─── Sales CRUD ───────────────────────────────────────
 
-  proximoIdVenda(): string {
-    return proximoId(this.vendas().map(v => v.id), 'V');
+  nextSaleId(): string {
+    return nextId(this.sales().map(v => v.id), 'V');
   }
 
-  buscarVenda(id: string): Venda | undefined {
-    return this.vendas().find(v => v.id === id);
+  findSale(id: string): Sale | undefined {
+    return this.sales().find(v => v.id === id);
   }
 
-  adicionarVenda(venda: Venda): void {
-    this.update(d => { d.vendas.push({ ...venda }); });
+  addSale(sale: Sale): void {
+    this.update(d => { d.sales.push({ ...sale }); });
   }
 
-  atualizarVenda(id: string, dados: Partial<Venda>): void {
+  updateSale(id: string, data: Partial<Sale>): void {
     this.update(d => {
-      const idx = d.vendas.findIndex(v => v.id === id);
-      if (idx !== -1) d.vendas[idx] = { ...d.vendas[idx]!, ...dados };
+      const idx = d.sales.findIndex(v => v.id === id);
+      if (idx !== -1) d.sales[idx] = { ...d.sales[idx]!, ...data };
     });
   }
 
-  removerVenda(id: string): void {
-    this.update(d => { d.vendas = d.vendas.filter(v => v.id !== id); });
+  removeSale(id: string): void {
+    this.update(d => { d.sales = d.sales.filter(v => v.id !== id); });
   }
 
-  // ─── Configurações ─────────────────────────────────────
+  // ─── Settings ─────────────────────────────────────────
 
-  atualizarConfiguracoes(dados: Partial<Configuracoes>): void {
-    this.update(d => { d.configuracoes = { ...d.configuracoes, ...dados }; });
+  updateSettings(data: Partial<Settings>): void {
+    this.update(d => { d.settings = { ...d.settings, ...data }; });
   }
 
   // ─── Internals ─────────────────────────────────────────
@@ -152,21 +154,73 @@ export class DataService {
     localStorage.setItem(APP.storageKey, JSON.stringify(current));
   }
 
+  /** Migrates old Portuguese-keyed database format to current English format. */
+  private migrateDatabase(data: any): Database {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const isOldFormat = (data.compras !== undefined || data.vendas !== undefined) && data.purchases === undefined;
+    if (!isOldFormat) return data as Database;
+
+    const cfg = data.configuracoes ?? data.settings ?? {};
+    return {
+      purchases: (data.compras ?? []).map((c: any) => ({
+        id: c.id,
+        product: c.produto ?? c.product ?? '',
+        category: c.categoria ?? c.category ?? '',
+        supplier: c.fornecedor ?? c.supplier ?? '',
+        link: c.link,
+        purchaseDate: c.dataCompra ?? c.purchaseDate ?? '',
+        quantityPurchased: c.qtdComprada ?? c.quantityPurchased ?? 0,
+        unitCost: c.custoUnitario ?? c.unitCost ?? 0,
+        purchaseShipping: c.freteCompra ?? c.purchaseShipping ?? 0,
+        otherCosts: c.outrosCustos ?? c.otherCosts ?? 0,
+        notes: c.observacoes ?? c.notes,
+      })),
+      sales: (data.vendas ?? []).map((v: any) => ({
+        id: v.id,
+        batchId: v.idLote ?? v.batchId ?? '',
+        product: v.produto ?? v.product ?? '',
+        quantitySold: v.qtdVendida ?? v.quantitySold ?? 0,
+        unitPrice: v.precoUnitario ?? v.unitPrice ?? 0,
+        saleDate: v.dataVenda ?? v.saleDate ?? '',
+        channel: v.canal ?? v.channel ?? 'Mercado Livre',
+        feePercentage: v.taxaPercentual ?? v.feePercentage ?? 0.12,
+        sellerShipping: v.freteVendedor ?? v.sellerShipping ?? 0,
+        discount: v.desconto ?? v.discount ?? 0,
+        otherCosts: v.outrosCustos ?? v.otherCosts ?? 0,
+        status: v.status ?? 'Concluída',
+        notes: v.observacoes ?? v.notes,
+      })),
+      settings: {
+        defaultMlFee: cfg.taxaMlPadrao ?? cfg.defaultMlFee ?? 0.12,
+        yellowAlertDays: cfg.diasAlertaAmarelo ?? cfg.yellowAlertDays ?? 25,
+        redAlertDays: cfg.diasAlertaVermelho ?? cfg.redAlertDays ?? 30,
+        minimumMargin: cfg.margemMinima ?? cfg.minimumMargin ?? 0.10,
+        lowStockAlert: cfg.alertaEstoqueBaixo ?? cfg.lowStockAlert ?? 1,
+        defaultShipping: cfg.fretePadrao ?? cfg.defaultShipping ?? 0,
+        defaultChannel: cfg.canalPadrao ?? cfg.defaultChannel ?? 'Mercado Livre',
+        categories: cfg.categorias ?? cfg.categories ?? [],
+        suppliers: cfg.fornecedores ?? cfg.suppliers ?? [],
+        channels: cfg.canais ?? cfg.channels ?? [],
+      },
+      metadata: data.metadata ?? { versao: APP.version, ultimaAtualizacao: new Date().toISOString() },
+    };
+  }
+
   private createEmpty(): Database {
     return {
-      compras: [],
-      vendas: [],
-      configuracoes: {
-        taxaMlPadrao: 0.12,
-        diasAlertaAmarelo: 25,
-        diasAlertaVermelho: 30,
-        margemMinima: 0.10,
-        alertaEstoqueBaixo: 1,
-        fretePadrao: 0,
-        canalPadrao: 'Mercado Livre',
-        categorias: ['Eletrônicos', 'Outros'],
-        fornecedores: ['Amazon BR', 'Outro'],
-        canais: ['Mercado Livre', 'Outro'],
+      purchases: [],
+      sales: [],
+      settings: {
+        defaultMlFee: 0.12,
+        yellowAlertDays: 25,
+        redAlertDays: 30,
+        minimumMargin: 0.10,
+        lowStockAlert: 1,
+        defaultShipping: 0,
+        defaultChannel: 'Mercado Livre',
+        categories: ['Eletrônicos', 'Outros'],
+        suppliers: ['Amazon BR', 'Outro'],
+        channels: ['Mercado Livre', 'Outro'],
       },
       metadata: { versao: APP.version, ultimaAtualizacao: new Date().toISOString() },
     };

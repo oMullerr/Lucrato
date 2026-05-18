@@ -3,7 +3,7 @@
   title="Vendas Detalhadas"
   subtitle="Cada linha = uma venda. Mesmo produto pode ter preços diferentes."
 >
-  <button mat-flat-button color="primary" (click)="abrirNova()">
+  <button mat-flat-button color="primary" (click)="openNew()">
     <mat-icon>add</mat-icon>
     Nova Venda
   </button>
@@ -14,25 +14,25 @@
   <div class="quick-stats">
     <mat-card class="stat-card">
       <small>Total de Vendas</small>
-      <strong>{{ resumo().total }}</strong>
+      <strong>{{ summary().total }}</strong>
     </mat-card>
     <mat-card class="stat-card">
       <small>Receita Bruta</small>
-      <strong class="text-info">{{ resumo().receita | brl }}</strong>
+      <strong class="text-info">{{ summary().revenue | brl }}</strong>
     </mat-card>
     <mat-card class="stat-card">
       <small>Taxas Pagas</small>
-      <strong class="text-warning">{{ resumo().taxas | brl }}</strong>
+      <strong class="text-warning">{{ summary().fees | brl }}</strong>
     </mat-card>
     <mat-card class="stat-card">
       <small>Lucro Líquido</small>
-      <strong [class.text-success]="resumo().lucro > 0" [class.text-danger]="resumo().lucro < 0">
-        {{ resumo().lucro | brl }}
+      <strong [class.text-success]="summary().profit > 0" [class.text-danger]="summary().profit < 0">
+        {{ summary().profit | brl }}
       </strong>
     </mat-card>
     <mat-card class="stat-card">
       <small>Margem Média</small>
-      <strong class="text-info">{{ (resumo().margem * 100).toFixed(1) }}%</strong>
+      <strong class="text-info">{{ (summary().margin * 100).toFixed(1) }}%</strong>
     </mat-card>
   </div>
 
@@ -43,16 +43,16 @@
       <input
         matInput
         placeholder="Buscar por produto, ID venda ou ID lote..."
-        [ngModel]="filtroTexto()"
-        (ngModelChange)="filtroTexto.set($event)"
+        [ngModel]="textFilter()"
+        (ngModelChange)="textFilter.set($event)"
       />
     </mat-form-field>
 
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Canal</mat-label>
-      <mat-select [ngModel]="filtroCanal()" (ngModelChange)="filtroCanal.set($event)">
-        <mat-option value="todos">Todos os canais</mat-option>
-        @for (c of canais(); track c) {
+      <mat-select [ngModel]="channelFilter()" (ngModelChange)="channelFilter.set($event)">
+        <mat-option value="all">Todos os canais</mat-option>
+        @for (c of channels(); track c) {
           <mat-option [value]="c">{{ c }}</mat-option>
         }
       </mat-select>
@@ -60,8 +60,8 @@
 
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Status</mat-label>
-      <mat-select [ngModel]="filtroStatus()" (ngModelChange)="filtroStatus.set($event)">
-        <mat-option value="todos">Todos</mat-option>
+      <mat-select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+        <mat-option value="all">Todos</mat-option>
         <mat-option value="Concluída">Concluída</mat-option>
         <mat-option value="Cancelada">Cancelada</mat-option>
         <mat-option value="Devolvida">Devolvida</mat-option>
@@ -71,7 +71,7 @@
   </div>
 
   <!-- Tabela -->
-  @if (vendasFiltradas().length > 0) {
+  @if (filteredSales().length > 0) {
     <mat-card class="table-card">
       <div class="table-wrapper">
         <table class="data-table">
@@ -95,37 +95,37 @@
             </tr>
           </thead>
           <tbody>
-            @for (v of vendasFiltradas(); track v.id) {
+            @for (v of filteredSales(); track v.id) {
               <tr>
-                <td><span class="id-tag id-venda">{{ v.id }}</span></td>
-                <td><span class="id-tag id-lote">{{ v.idLote }}</span></td>
-                <td class="produto-cell" [title]="v.produto">{{ v.produto }}</td>
-                <td>{{ v.dataVenda | dataBr }}</td>
-                <td><span class="canal-pill">{{ v.canal }}</span></td>
-                <td class="text-center">{{ v.qtdVendida }}</td>
-                <td class="text-right">{{ v.precoUnitario | brl }}</td>
-                <td class="text-right"><strong>{{ v.receitaBruta | brl }}</strong></td>
-                <td class="text-center" [class.text-warning]="isTaxaCustomizada(v.taxaPercentual)">
-                  {{ (v.taxaPercentual * 100).toFixed(1) }}%
+                <td><span class="id-tag id-sale">{{ v.id }}</span></td>
+                <td><span class="id-tag id-batch">{{ v.batchId }}</span></td>
+                <td class="product-cell" [title]="v.product">{{ v.product }}</td>
+                <td>{{ v.saleDate | brDate }}</td>
+                <td><span class="channel-pill">{{ v.channel }}</span></td>
+                <td class="text-center">{{ v.quantitySold }}</td>
+                <td class="text-right">{{ v.unitPrice | brl }}</td>
+                <td class="text-right"><strong>{{ v.grossRevenue | brl }}</strong></td>
+                <td class="text-center" [class.text-warning]="isCustomFee(v.feePercentage)">
+                  {{ (v.feePercentage * 100).toFixed(1) }}%
                 </td>
-                <td class="text-right">{{ v.receitaLiquida | brl }}</td>
-                <td class="text-right text-muted">{{ v.custoTotalProporcional | brl }}</td>
+                <td class="text-right">{{ v.netRevenue | brl }}</td>
+                <td class="text-right text-muted">{{ v.proportionalCost | brl }}</td>
                 <td
                   class="text-right"
-                  [class.text-success]="v.lucroLiquido > 0"
-                  [class.text-danger]="v.lucroLiquido < 0"
+                  [class.text-success]="v.netProfit > 0"
+                  [class.text-danger]="v.netProfit < 0"
                 >
-                  <strong>{{ v.lucroLiquido | brl }}</strong>
+                  <strong>{{ v.netProfit | brl }}</strong>
                 </td>
-                <td class="text-center" [class]="margemClasse(v.margemLiquida)">
-                  <strong>{{ (v.margemLiquida * 100).toFixed(1) }}%</strong>
+                <td class="text-center" [class]="marginClass(v.netMargin)">
+                  <strong>{{ (v.netMargin * 100).toFixed(1) }}%</strong>
                 </td>
                 <td><app-status-badge [status]="v.status" /></td>
                 <td class="text-center actions">
-                  <button mat-icon-button matTooltip="Editar" (click)="editar(v)">
+                  <button mat-icon-button matTooltip="Editar" (click)="edit(v)">
                     <mat-icon>edit</mat-icon>
                   </button>
-                  <button mat-icon-button matTooltip="Remover" color="warn" (click)="confirmarRemover(v)">
+                  <button mat-icon-button matTooltip="Remover" color="warn" (click)="confirmRemove(v)">
                     <mat-icon>delete</mat-icon>
                   </button>
                 </td>
@@ -140,7 +140,7 @@
       <mat-icon class="empty-icon">sell</mat-icon>
       <h3>Nenhuma venda encontrada</h3>
       <p>
-        @if (vendas().length === 0) {
+        @if (sales().length === 0) {
           Adicione sua primeira venda clicando em "Nova Venda"
         } @else {
           Ajuste os filtros para ver outras vendas

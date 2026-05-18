@@ -10,37 +10,37 @@
     <app-kpi-card
       icon="payments"
       title="Total Investido"
-      [value]="kpis().totalInvestido | brl"
+      [value]="kpis().totalInvested | brl"
       variant="red"
     />
     <app-kpi-card
       icon="account_balance"
       title="Capital Parado"
-      [value]="kpis().capitalParado | brl"
+      [value]="kpis().idleCapital | brl"
       variant="amber"
     />
     <app-kpi-card
       icon="trending_up"
       title="Receita Bruta"
-      [value]="kpis().receitaBruta | brl"
+      [value]="kpis().grossRevenue | brl"
       variant="blue"
     />
     <app-kpi-card
       icon="emoji_events"
       title="Lucro Líquido"
-      [value]="kpis().lucroLiquido | brl"
+      [value]="kpis().netProfit | brl"
       variant="green"
     />
     <app-kpi-card
       icon="percent"
       title="Margem"
-      [value]="(kpis().margemLiquida * 100).toFixed(1) + '%'"
+      [value]="(kpis().netMargin * 100).toFixed(1) + '%'"
       variant="teal"
     />
     <app-kpi-card
       icon="local_offer"
       title="Taxas Pagas"
-      [value]="kpis().taxasTotal | brl"
+      [value]="kpis().totalFees | brl"
       variant="orange"
     />
   </section>
@@ -56,10 +56,10 @@
         <p>Receita Líquida vs Lucro Líquido</p>
       </div>
       <div class="chart-body">
-        @if (mensalChart().labels?.length) {
+        @if (monthlyChart().labels?.length) {
           <canvas
             baseChart
-            [data]="mensalChart()"
+            [data]="monthlyChart()"
             [options]="lineOptions()"
             type="line"
           ></canvas>
@@ -78,10 +78,10 @@
         <p>Top produtos mais rentáveis</p>
       </div>
       <div class="chart-body">
-        @if (lucroProdutoChart().labels?.length) {
+        @if (productProfitChart().labels?.length) {
           <canvas
             baseChart
-            [data]="lucroProdutoChart()"
+            [data]="productProfitChart()"
             [options]="barOptions()"
             type="bar"
           ></canvas>
@@ -103,10 +103,10 @@
         <p>Como sua receita bruta é distribuída</p>
       </div>
       <div class="chart-body">
-        @if (kpis().receitaBruta > 0) {
+        @if (kpis().grossRevenue > 0) {
           <canvas
             baseChart
-            [data]="composicaoChart()"
+            [data]="compositionChart()"
             [options]="doughnutOptions()"
             type="doughnut"
           ></canvas>
@@ -125,10 +125,10 @@
         <p>Onde seu dinheiro está preso</p>
       </div>
       <div class="chart-body">
-        @if (capitalParadoChart().labels?.length) {
+        @if (idleCapitalChart().labels?.length) {
           <canvas
             baseChart
-            [data]="capitalParadoChart()"
+            [data]="idleCapitalChart()"
             [options]="horizontalBarOptions()"
             type="bar"
           ></canvas>
@@ -152,7 +152,7 @@
       <div class="chart-body chart-tall">
         <canvas
           baseChart
-          [data]="comparativoChart()"
+          [data]="comparativeChart()"
           [options]="barOptions()"
           type="bar"
         ></canvas>

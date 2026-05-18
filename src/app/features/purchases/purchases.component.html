@@ -8,17 +8,17 @@
     Backup
   </button>
   <mat-menu #menuBackup="matMenu">
-    <button mat-menu-item (click)="exportar()">
+    <button mat-menu-item (click)="exportData()">
       <mat-icon>file_download</mat-icon>
       Exportar dados
     </button>
-    <button mat-menu-item (click)="importar()">
+    <button mat-menu-item (click)="importData()">
       <mat-icon>file_upload</mat-icon>
       Importar dados
     </button>
   </mat-menu>
 
-  <button mat-flat-button color="primary" (click)="abrirNova()">
+  <button mat-flat-button color="primary" (click)="openNew()">
     <mat-icon>add</mat-icon>
     Nova Compra
   </button>
@@ -32,40 +32,40 @@
       <input
         matInput
         placeholder="Buscar por produto, ID ou categoria..."
-        [ngModel]="filtroTexto()"
-        (ngModelChange)="filtroTexto.set($event)"
+        [ngModel]="textFilter()"
+        (ngModelChange)="textFilter.set($event)"
       />
     </mat-form-field>
 
     <mat-chip-listbox
-      [value]="filtroStatus()"
+      [value]="statusFilter()"
       (change)="setStatus($event.value)"
       class="status-filter"
     >
-      <mat-chip-option value="todos">
-        Todos ({{ totais().todos }})
+      <mat-chip-option value="all">
+        Todos ({{ totals().total }})
       </mat-chip-option>
-      <mat-chip-option value="em-estoque">
+      <mat-chip-option value="in-stock">
         <mat-icon>inventory_2</mat-icon>
-        Em Estoque ({{ totais().emEstoque }})
+        Em Estoque ({{ totals().inStock }})
       </mat-chip-option>
-      <mat-chip-option value="atencao">
+      <mat-chip-option value="attention">
         <mat-icon>warning</mat-icon>
-        Atenção ({{ totais().atencao }})
+        Atenção ({{ totals().attention }})
       </mat-chip-option>
-      <mat-chip-option value="parado">
+      <mat-chip-option value="idle">
         <mat-icon>error</mat-icon>
-        Parado ({{ totais().parado }})
+        Parado ({{ totals().idle }})
       </mat-chip-option>
-      <mat-chip-option value="vendido">
+      <mat-chip-option value="sold">
         <mat-icon>check_circle</mat-icon>
-        Vendido ({{ totais().vendido }})
+        Vendido ({{ totals().sold }})
       </mat-chip-option>
     </mat-chip-listbox>
   </div>
 
   <!-- Tabela -->
-  @if (comprasFiltradas().length > 0) {
+  @if (filteredPurchases().length > 0) {
     <mat-card class="table-card">
       <div class="table-wrapper">
         <table class="data-table">
@@ -86,30 +86,30 @@
             </tr>
           </thead>
           <tbody>
-            @for (c of comprasFiltradas(); track c.id) {
+            @for (c of filteredPurchases(); track c.id) {
               <tr>
                 <td><span class="id-tag">{{ c.id }}</span></td>
-                <td class="produto-cell" [title]="c.produto">{{ c.produto }}</td>
-                <td><span class="categoria-pill">{{ c.categoria }}</span></td>
-                <td class="text-muted">{{ c.fornecedor }}</td>
-                <td>{{ c.dataCompra | dataBr }}</td>
-                <td class="text-center">{{ c.qtdComprada }}</td>
-                <td class="text-right text-muted">{{ c.custoUnitario | brl }}</td>
-                <td class="text-right"><strong>{{ c.custoTotalReal | brl }}</strong></td>
-                <td class="text-center text-muted">{{ c.qtdVendida }}</td>
+                <td class="product-cell" [title]="c.product">{{ c.product }}</td>
+                <td><span class="category-pill">{{ c.category }}</span></td>
+                <td class="text-muted">{{ c.supplier }}</td>
+                <td>{{ c.purchaseDate | brDate }}</td>
+                <td class="text-center">{{ c.quantityPurchased }}</td>
+                <td class="text-right text-muted">{{ c.unitCost | brl }}</td>
+                <td class="text-right"><strong>{{ c.totalActualCost | brl }}</strong></td>
+                <td class="text-center text-muted">{{ c.quantitySold }}</td>
                 <td
                   class="text-center"
-                  [class.text-success]="c.estoqueAtual === 0"
-                  [class.text-warning]="c.estoqueAtual > 0"
+                  [class.text-success]="c.currentStock === 0"
+                  [class.text-warning]="c.currentStock > 0"
                 >
-                  <strong>{{ c.estoqueAtual }}</strong>
+                  <strong>{{ c.currentStock }}</strong>
                 </td>
                 <td><app-status-badge [status]="c.status" /></td>
                 <td class="text-center actions">
-                  <button mat-icon-button matTooltip="Editar" (click)="editar(c)">
+                  <button mat-icon-button matTooltip="Editar" (click)="edit(c)">
                     <mat-icon>edit</mat-icon>
                   </button>
-                  <button mat-icon-button matTooltip="Remover" color="warn" (click)="confirmarRemover(c)">
+                  <button mat-icon-button matTooltip="Remover" color="warn" (click)="confirmRemove(c)">
                     <mat-icon>delete</mat-icon>
                   </button>
                 </td>
@@ -124,7 +124,7 @@
       <mat-icon class="empty-icon">shopping_cart</mat-icon>
       <h3>Nenhuma compra encontrada</h3>
       <p>
-        @if (compras().length === 0) {
+        @if (purchases().length === 0) {
           Adicione sua primeira compra clicando em "Nova Compra"
         } @else {
           Ajuste os filtros para ver outros lotes

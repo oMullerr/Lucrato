@@ -7,16 +7,16 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { Compra } from '../../core/models/models';
+import { Purchase } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 
-export interface CompraDialogData {
-  compra?: Compra;
+export interface PurchaseDialogData {
+  purchase?: Purchase;
 }
 
 @Component({
-  selector: 'app-compra-form-dialog',
+  selector: 'app-purchase-form-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -48,18 +48,18 @@ export interface CompraDialogData {
         <mat-form-field class="full">
           <mat-label>Produto</mat-label>
           <input matInput
-            [ngModel]="model().produto"
-            (ngModelChange)="set('produto', $event)"
-            name="produto" required />
+            [ngModel]="model().product"
+            (ngModelChange)="set('product', $event)"
+            name="product" required />
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Categoria</mat-label>
           <mat-select
-            [ngModel]="model().categoria"
-            (ngModelChange)="set('categoria', $event)"
-            name="categoria" required>
-            @for (cat of categorias(); track cat) {
+            [ngModel]="model().category"
+            (ngModelChange)="set('category', $event)"
+            name="category" required>
+            @for (cat of categories(); track cat) {
               <mat-option [value]="cat">{{ cat }}</mat-option>
             }
           </mat-select>
@@ -68,11 +68,11 @@ export interface CompraDialogData {
         <mat-form-field>
           <mat-label>Fornecedor</mat-label>
           <mat-select
-            [ngModel]="model().fornecedor"
-            (ngModelChange)="set('fornecedor', $event)"
-            name="fornecedor" required>
-            @for (f of fornecedores(); track f) {
-              <mat-option [value]="f">{{ f }}</mat-option>
+            [ngModel]="model().supplier"
+            (ngModelChange)="set('supplier', $event)"
+            name="supplier" required>
+            @for (s of suppliers(); track s) {
+              <mat-option [value]="s">{{ s }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
@@ -81,46 +81,46 @@ export interface CompraDialogData {
           <mat-label>Data da Compra</mat-label>
           <input
             matInput
-            [matDatepicker]="pickerCompra"
-            [ngModel]="dataCompraAsDate()"
-            (ngModelChange)="setDataCompra($event)"
-            name="dataCompra"
+            [matDatepicker]="pickerPurchase"
+            [ngModel]="purchaseDateAsDate()"
+            (ngModelChange)="setPurchaseDate($event)"
+            name="purchaseDate"
             required
           />
-          <mat-datepicker-toggle matIconSuffix [for]="pickerCompra"></mat-datepicker-toggle>
-          <mat-datepicker #pickerCompra></mat-datepicker>
+          <mat-datepicker-toggle matIconSuffix [for]="pickerPurchase"></mat-datepicker-toggle>
+          <mat-datepicker #pickerPurchase></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Quantidade Comprada</mat-label>
           <input matInput type="number"
-            [ngModel]="model().qtdComprada"
-            (ngModelChange)="setNum('qtdComprada', $event)"
-            name="qtdComprada" min="1" required />
+            [ngModel]="model().quantityPurchased"
+            (ngModelChange)="setNum('quantityPurchased', $event)"
+            name="quantityPurchased" min="1" required />
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Custo Unitário (R$)</mat-label>
           <input matInput type="number" step="0.01"
-            [ngModel]="model().custoUnitario"
-            (ngModelChange)="setNum('custoUnitario', $event)"
-            name="custoUnitario" min="0" required />
+            [ngModel]="model().unitCost"
+            (ngModelChange)="setNum('unitCost', $event)"
+            name="unitCost" min="0" required />
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Frete da Compra (R$)</mat-label>
           <input matInput type="number" step="0.01"
-            [ngModel]="model().freteCompra"
-            (ngModelChange)="setNum('freteCompra', $event)"
-            name="freteCompra" min="0" />
+            [ngModel]="model().purchaseShipping"
+            (ngModelChange)="setNum('purchaseShipping', $event)"
+            name="purchaseShipping" min="0" />
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Outros Custos (R$)</mat-label>
           <input matInput type="number" step="0.01"
-            [ngModel]="model().outrosCustos"
-            (ngModelChange)="setNum('outrosCustos', $event)"
-            name="outrosCustos" min="0" />
+            [ngModel]="model().otherCosts"
+            (ngModelChange)="setNum('otherCosts', $event)"
+            name="otherCosts" min="0" />
         </mat-form-field>
 
         <mat-form-field class="full">
@@ -134,9 +134,9 @@ export interface CompraDialogData {
         <mat-form-field class="full">
           <mat-label>Observações</mat-label>
           <textarea matInput rows="2"
-            [ngModel]="model().observacoes"
-            (ngModelChange)="set('observacoes', $event)"
-            name="observacoes"></textarea>
+            [ngModel]="model().notes"
+            (ngModelChange)="set('notes', $event)"
+            name="notes"></textarea>
         </mat-form-field>
       </form>
 
@@ -148,15 +148,15 @@ export interface CompraDialogData {
         <div class="preview-stats">
           <div>
             <span>Custo Total</span>
-            <strong>{{ custoTotalCompra() | brl }}</strong>
+            <strong>{{ totalPurchaseCost() | brl }}</strong>
           </div>
           <div>
             <span>Custo Total Real</span>
-            <strong>{{ custoTotalReal() | brl }}</strong>
+            <strong>{{ totalActualCost() | brl }}</strong>
           </div>
           <div>
             <span>Custo Unit. Real</span>
-            <strong>{{ custoUnitarioReal() | brl }}</strong>
+            <strong>{{ actualUnitCost() | brl }}</strong>
           </div>
         </div>
       </div>
@@ -164,7 +164,7 @@ export interface CompraDialogData {
 
     <mat-dialog-actions align="end">
       <button mat-button (click)="ref.close()">Cancelar</button>
-      <button mat-flat-button color="primary" (click)="salvar()" [disabled]="!isValid()">
+      <button mat-flat-button color="primary" (click)="save()" [disabled]="!isValid()">
         <mat-icon>save</mat-icon>
         {{ isEdit() ? 'Salvar' : 'Adicionar' }}
       </button>
@@ -236,30 +236,30 @@ export interface CompraDialogData {
     }
   `]
 })
-export class CompraFormDialogComponent {
+export class PurchaseFormDialogComponent {
   private readonly dataService = inject(DataService);
-  protected readonly ref = inject<MatDialogRef<CompraFormDialogComponent, Compra | null>>(MatDialogRef);
-  private readonly data = inject<CompraDialogData>(MAT_DIALOG_DATA);
+  protected readonly ref = inject<MatDialogRef<PurchaseFormDialogComponent, Purchase | null>>(MatDialogRef);
+  private readonly data = inject<PurchaseDialogData>(MAT_DIALOG_DATA);
 
-  protected readonly isEdit = signal(!!this.data.compra);
-  protected readonly model = signal<Compra>(this.initialModel());
+  protected readonly isEdit = signal(!!this.data.purchase);
+  protected readonly model = signal<Purchase>(this.initialModel());
 
-  protected readonly categorias = computed(() => this.dataService.configuracoes()?.categorias ?? []);
-  protected readonly fornecedores = computed(() => this.dataService.configuracoes()?.fornecedores ?? []);
+  protected readonly categories = computed(() => this.dataService.settings()?.categories ?? []);
+  protected readonly suppliers = computed(() => this.dataService.settings()?.suppliers ?? []);
 
-  protected readonly custoTotalCompra = computed(() =>
-    (this.model().qtdComprada ?? 0) * (this.model().custoUnitario ?? 0)
+  protected readonly totalPurchaseCost = computed(() =>
+    (this.model().quantityPurchased ?? 0) * (this.model().unitCost ?? 0)
   );
-  protected readonly custoTotalReal = computed(() =>
-    this.custoTotalCompra() + (this.model().freteCompra ?? 0) + (this.model().outrosCustos ?? 0)
+  protected readonly totalActualCost = computed(() =>
+    this.totalPurchaseCost() + (this.model().purchaseShipping ?? 0) + (this.model().otherCosts ?? 0)
   );
-  protected readonly custoUnitarioReal = computed(() => {
+  protected readonly actualUnitCost = computed(() => {
     const m = this.model();
-    return m.qtdComprada > 0 ? this.custoTotalReal() / m.qtdComprada : 0;
+    return m.quantityPurchased > 0 ? this.totalActualCost() / m.quantityPurchased : 0;
   });
 
-  protected readonly dataCompraAsDate = computed(() => {
-    const s = this.model().dataCompra;
+  protected readonly purchaseDateAsDate = computed(() => {
+    const s = this.model().purchaseDate;
     if (!s) return null;
     const [y, m, d] = s.split('-').map(Number);
     return !y || !m || !d ? null : new Date(y, m - 1, d);
@@ -273,10 +273,10 @@ export class CompraFormDialogComponent {
     this.model.update(m => ({ ...m, [field]: +(value ?? 0) || 0 }));
   }
 
-  protected setDataCompra(d: Date | null): void {
+  protected setPurchaseDate(d: Date | null): void {
     const newStr = this.dateAsString(d);
-    if (newStr === this.model().dataCompra) return;
-    this.model.update(m => ({ ...m, dataCompra: newStr }));
+    if (newStr === this.model().purchaseDate) return;
+    this.model.update(m => ({ ...m, purchaseDate: newStr }));
   }
 
   private dateAsString(d: Date | null): string {
@@ -289,30 +289,30 @@ export class CompraFormDialogComponent {
 
   protected isValid(): boolean {
     const m = this.model();
-    return !!(m.id && m.produto && m.categoria && m.fornecedor &&
-              m.dataCompra && m.qtdComprada > 0 && m.custoUnitario >= 0);
+    return !!(m.id && m.product && m.category && m.supplier &&
+              m.purchaseDate && m.quantityPurchased > 0 && m.unitCost >= 0);
   }
 
-  protected salvar(): void {
+  protected save(): void {
     if (!this.isValid()) return;
     this.ref.close({ ...this.model() });
   }
 
-  private initialModel(): Compra {
-    if (this.data.compra) return { ...this.data.compra };
-    const cfg = this.dataService.configuracoes();
+  private initialModel(): Purchase {
+    if (this.data.purchase) return { ...this.data.purchase };
+    const cfg = this.dataService.settings();
     return {
-      id: this.dataService.proximoIdCompra(),
-      produto: '',
-      categoria: cfg?.categorias[0] ?? 'Eletrônicos',
-      fornecedor: cfg?.fornecedores[0] ?? 'Amazon BR',
+      id: this.dataService.nextPurchaseId(),
+      product: '',
+      category: cfg?.categories[0] ?? 'Eletrônicos',
+      supplier: cfg?.suppliers[0] ?? 'Amazon BR',
       link: '',
-      dataCompra: new Date().toISOString().split('T')[0]!,
-      qtdComprada: 1,
-      custoUnitario: 0,
-      freteCompra: cfg?.fretePadrao ?? 0,
-      outrosCustos: 0,
-      observacoes: '',
+      purchaseDate: new Date().toISOString().split('T')[0]!,
+      quantityPurchased: 1,
+      unitCost: 0,
+      purchaseShipping: cfg?.defaultShipping ?? 0,
+      otherCosts: 0,
+      notes: '',
     };
   }
 }

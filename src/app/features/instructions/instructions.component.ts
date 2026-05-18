@@ -136,7 +136,7 @@ Revisão semanal (5 minutos):
 ];
 
 @Component({
-  selector: 'app-instrucoes',
+  selector: 'app-instructions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -249,6 +249,6 @@ Revisão semanal (5 minutos):
     }
   `]
 })
-export class InstrucoesComponent {
+export class InstructionsComponent {
   protected readonly instructions = INSTRUCTIONS;
 }

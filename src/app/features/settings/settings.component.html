@@ -3,12 +3,12 @@
   title="Configurações"
   subtitle="Parâmetros do sistema, listas e preferências"
 >
-  @if (modificado()) {
-    <button mat-stroked-button (click)="descartar()">
+  @if (isModified()) {
+    <button mat-stroked-button (click)="discard()">
       <mat-icon>undo</mat-icon>
       Descartar
     </button>
-    <button mat-flat-button color="primary" (click)="salvar()">
+    <button mat-flat-button color="primary" (click)="save()">
       <mat-icon>save</mat-icon>
       Salvar
     </button>
@@ -32,8 +32,8 @@
           step="0.01"
           min="0"
           max="100"
-          [ngModel]="taxaPercentual"
-          (ngModelChange)="taxaPercentual = $event"
+          [ngModel]="feePercentage"
+          (ngModelChange)="feePercentage = $event"
         />
         <span matSuffix>%</span>
         <mat-hint>Aplicada a novas vendas. Pode ser editada por venda.</mat-hint>
@@ -47,8 +47,8 @@
           step="0.1"
           min="0"
           max="100"
-          [ngModel]="margemMinimaPct"
-          (ngModelChange)="margemMinimaPct = $event"
+          [ngModel]="minMarginPct"
+          (ngModelChange)="minMarginPct = $event"
         />
         <span matSuffix>%</span>
         <mat-hint>Vendas abaixo desta margem aparecem como alerta.</mat-hint>
@@ -60,7 +60,7 @@
           matInput
           type="number"
           min="1"
-          [(ngModel)]="form().diasAlertaAmarelo"
+          [(ngModel)]="form().yellowAlertDays"
         />
         <span matSuffix>dias</span>
         <mat-hint>Produto fica em "Atenção" após este tempo parado.</mat-hint>
@@ -72,7 +72,7 @@
           matInput
           type="number"
           min="1"
-          [(ngModel)]="form().diasAlertaVermelho"
+          [(ngModel)]="form().redAlertDays"
         />
         <span matSuffix>dias</span>
         <mat-hint>Produto fica como "Parado" após este tempo.</mat-hint>
@@ -85,15 +85,15 @@
           type="number"
           step="0.01"
           min="0"
-          [(ngModel)]="form().fretePadrao"
+          [(ngModel)]="form().defaultShipping"
         />
         <span matSuffix>R$</span>
       </mat-form-field>
 
       <mat-form-field>
         <mat-label>Canal de venda padrão</mat-label>
-        <mat-select [(ngModel)]="form().canalPadrao">
-          @for (c of form().canais; track c) {
+        <mat-select [(ngModel)]="form().defaultChannel">
+          @for (c of form().channels; track c) {
             <mat-option [value]="c">{{ c }}</mat-option>
           }
         </mat-select>
@@ -110,9 +110,9 @@
       </h3>
       <mat-form-field appearance="outline" class="chip-field">
         <mat-label>Adicionar categoria</mat-label>
-        <mat-chip-grid #chipsCategorias>
-          @for (cat of form().categorias; track cat) {
-            <mat-chip-row (removed)="removerItem('categorias', cat)">
+        <mat-chip-grid #chipsCategories>
+          @for (cat of form().categories; track cat) {
+            <mat-chip-row (removed)="removeItem('categories', cat)">
               {{ cat }}
               <button matChipRemove>
                 <mat-icon>cancel</mat-icon>
@@ -122,9 +122,9 @@
         </mat-chip-grid>
         <input
           placeholder="Digite e pressione Enter"
-          [matChipInputFor]="chipsCategorias"
-          [matChipInputSeparatorKeyCodes]="separadores"
-          (matChipInputTokenEnd)="adicionarItem('categorias', $event.value); $event.chipInput!.clear()"
+          [matChipInputFor]="chipsCategories"
+          [matChipInputSeparatorKeyCodes]="separators"
+          (matChipInputTokenEnd)="addItem('categories', $event.value); $event.chipInput!.clear()"
         />
       </mat-form-field>
     </mat-card>
@@ -136,10 +136,10 @@
       </h3>
       <mat-form-field appearance="outline" class="chip-field">
         <mat-label>Adicionar fornecedor</mat-label>
-        <mat-chip-grid #chipsFornecedores>
-          @for (f of form().fornecedores; track f) {
-            <mat-chip-row (removed)="removerItem('fornecedores', f)">
-              {{ f }}
+        <mat-chip-grid #chipsSuppliers>
+          @for (s of form().suppliers; track s) {
+            <mat-chip-row (removed)="removeItem('suppliers', s)">
+              {{ s }}
               <button matChipRemove>
                 <mat-icon>cancel</mat-icon>
               </button>
@@ -148,9 +148,9 @@
         </mat-chip-grid>
         <input
           placeholder="Digite e pressione Enter"
-          [matChipInputFor]="chipsFornecedores"
-          [matChipInputSeparatorKeyCodes]="separadores"
-          (matChipInputTokenEnd)="adicionarItem('fornecedores', $event.value); $event.chipInput!.clear()"
+          [matChipInputFor]="chipsSuppliers"
+          [matChipInputSeparatorKeyCodes]="separators"
+          (matChipInputTokenEnd)="addItem('suppliers', $event.value); $event.chipInput!.clear()"
         />
       </mat-form-field>
     </mat-card>
@@ -162,9 +162,9 @@
       </h3>
       <mat-form-field appearance="outline" class="chip-field">
         <mat-label>Adicionar canal</mat-label>
-        <mat-chip-grid #chipsCanais>
-          @for (c of form().canais; track c) {
-            <mat-chip-row (removed)="removerItem('canais', c)">
+        <mat-chip-grid #chipsChannels>
+          @for (c of form().channels; track c) {
+            <mat-chip-row (removed)="removeItem('channels', c)">
               {{ c }}
               <button matChipRemove>
                 <mat-icon>cancel</mat-icon>
@@ -174,9 +174,9 @@
         </mat-chip-grid>
         <input
           placeholder="Digite e pressione Enter"
-          [matChipInputFor]="chipsCanais"
-          [matChipInputSeparatorKeyCodes]="separadores"
-          (matChipInputTokenEnd)="adicionarItem('canais', $event.value); $event.chipInput!.clear()"
+          [matChipInputFor]="chipsChannels"
+          [matChipInputSeparatorKeyCodes]="separators"
+          (matChipInputTokenEnd)="addItem('channels', $event.value); $event.chipInput!.clear()"
         />
       </mat-form-field>
     </mat-card>
@@ -189,7 +189,7 @@
       Zona de Perigo
     </h3>
     <p>Resetar o sistema apaga todos os dados (compras, vendas e configurações) e restaura o exemplo inicial.</p>
-    <button mat-stroked-button color="warn" (click)="resetarTudo()">
+    <button mat-stroked-button color="warn" (click)="resetAll()">
       <mat-icon>delete_forever</mat-icon>
       Resetar Sistema
     </button>

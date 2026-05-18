@@ -1,20 +1,20 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'estoque', pathMatch: 'full' },
+  { path: '', redirectTo: 'inventory', pathMatch: 'full' },
   {
-    path: 'estoque',
-    loadComponent: () => import('./features/estoque/estoque.component').then(m => m.EstoqueComponent),
+    path: 'inventory',
+    loadComponent: () => import('./features/inventory/inventory.component').then(m => m.InventoryComponent),
     title: 'Estoque · Lucrato',
   },
   {
-    path: 'compras',
-    loadComponent: () => import('./features/compras/compras.component').then(m => m.ComprasComponent),
+    path: 'purchases',
+    loadComponent: () => import('./features/purchases/purchases.component').then(m => m.PurchasesComponent),
     title: 'Compras · Lucrato',
   },
   {
-    path: 'vendas',
-    loadComponent: () => import('./features/vendas/vendas.component').then(m => m.VendasComponent),
+    path: 'sales',
+    loadComponent: () => import('./features/sales/sales.component').then(m => m.SalesComponent),
     title: 'Vendas · Lucrato',
   },
   {
@@ -23,19 +23,19 @@ export const routes: Routes = [
     title: 'Dashboard · Lucrato',
   },
   {
-    path: 'analises',
-    loadComponent: () => import('./features/analises/analises.component').then(m => m.AnalisesComponent),
+    path: 'analytics',
+    loadComponent: () => import('./features/analytics/analytics.component').then(m => m.AnalyticsComponent),
     title: 'Análises · Lucrato',
   },
   {
-    path: 'configuracoes',
-    loadComponent: () => import('./features/configuracoes/configuracoes.component').then(m => m.ConfiguracoesComponent),
+    path: 'settings',
+    loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent),
     title: 'Configurações · Lucrato',
   },
   {
-    path: 'instrucoes',
-    loadComponent: () => import('./features/instrucoes/instrucoes.component').then(m => m.InstrucoesComponent),
+    path: 'instructions',
+    loadComponent: () => import('./features/instructions/instructions.component').then(m => m.InstructionsComponent),
     title: 'Instruções · Lucrato',
   },
-  { path: '**', redirectTo: 'estoque' },
+  { path: '**', redirectTo: 'inventory' },
 ];

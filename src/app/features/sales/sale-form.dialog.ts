@@ -8,17 +8,17 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { Venda } from '../../core/models/models';
+import { Sale } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
-import { calcularVenda } from '../../core/services/calculations';
+import { calculateSale } from '../../core/services/calculations';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 
-export interface VendaDialogData {
-  venda?: Venda;
+export interface SaleDialogData {
+  sale?: Sale;
 }
 
 @Component({
-  selector: 'app-venda-form-dialog',
+  selector: 'app-sale-form-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -51,18 +51,18 @@ export interface VendaDialogData {
         <mat-form-field>
           <mat-label>ID Lote (da aba Compras)</mat-label>
           <mat-select
-            [ngModel]="model().idLote"
-            (ngModelChange)="onIdLoteChange($event)"
-            name="idLote"
+            [ngModel]="model().batchId"
+            (ngModelChange)="onBatchIdChange($event)"
+            name="batchId"
             required
           >
-            @for (lote of lotesDisponiveis(); track lote.id) {
-              <mat-option [value]="lote.id">
-                {{ lote.id }} — {{ lote.produto }}
-                @if (lote.estoqueAtual <= 0) {
+            @for (batch of availableBatches(); track batch.id) {
+              <mat-option [value]="batch.id">
+                {{ batch.id }} — {{ batch.product }}
+                @if (batch.currentStock <= 0) {
                   (esgotado)
                 } @else {
-                  ({{ lote.estoqueAtual }} disp.)
+                  ({{ batch.currentStock }} disp.)
                 }
               </mat-option>
             }
@@ -71,7 +71,7 @@ export interface VendaDialogData {
 
         <mat-form-field class="full">
           <mat-label>Produto</mat-label>
-          <input matInput [value]="model().produto" name="produto" readonly />
+          <input matInput [value]="model().product" name="product" readonly />
           <mat-hint>Preenchido automaticamente pelo lote</mat-hint>
         </mat-form-field>
 
@@ -79,23 +79,23 @@ export interface VendaDialogData {
           <mat-label>Data da Venda</mat-label>
           <input
             matInput
-            [matDatepicker]="pickerVenda"
-            [ngModel]="dataVendaAsDate()"
-            (ngModelChange)="setDataVenda($event)"
-            name="dataVenda"
+            [matDatepicker]="pickerSale"
+            [ngModel]="saleDateAsDate()"
+            (ngModelChange)="setSaleDate($event)"
+            name="saleDate"
             required
           />
-          <mat-datepicker-toggle matIconSuffix [for]="pickerVenda"></mat-datepicker-toggle>
-          <mat-datepicker #pickerVenda></mat-datepicker>
+          <mat-datepicker-toggle matIconSuffix [for]="pickerSale"></mat-datepicker-toggle>
+          <mat-datepicker #pickerSale></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Canal</mat-label>
           <mat-select
-            [ngModel]="model().canal"
-            (ngModelChange)="set('canal', $event)"
-            name="canal" required>
-            @for (c of canais(); track c) {
+            [ngModel]="model().channel"
+            (ngModelChange)="set('channel', $event)"
+            name="channel" required>
+            @for (c of channels(); track c) {
               <mat-option [value]="c">{{ c }}</mat-option>
             }
           </mat-select>
@@ -104,23 +104,23 @@ export interface VendaDialogData {
         <mat-form-field>
           <mat-label>Qtd. Vendida</mat-label>
           <input matInput type="number"
-            [ngModel]="model().qtdVendida"
-            (ngModelChange)="setNum('qtdVendida', $event)"
-            name="qtdVendida" min="1" required />
-          @if (estoqueDisponivel() !== null) {
-            <mat-hint>Disponível: {{ estoqueDisponivel() }} un.</mat-hint>
+            [ngModel]="model().quantitySold"
+            (ngModelChange)="setNum('quantitySold', $event)"
+            name="quantitySold" min="1" required />
+          @if (availableStock() !== null) {
+            <mat-hint>Disponível: {{ availableStock() }} un.</mat-hint>
           }
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Preço Unitário (R$)</mat-label>
           <input matInput type="number" step="0.01"
-            [ngModel]="model().precoUnitario"
-            (ngModelChange)="setNum('precoUnitario', $event)"
-            name="precoUnitario" min="0.01" required />
+            [ngModel]="model().unitPrice"
+            (ngModelChange)="setNum('unitPrice', $event)"
+            name="unitPrice" min="0.01" required />
         </mat-form-field>
 
-        <!-- TAXA CUSTOMIZADA - destaque -->
+        <!-- Taxa customizada -->
         <div class="taxa-field full">
           <div class="taxa-header">
             <span class="taxa-label">
@@ -130,8 +130,8 @@ export interface VendaDialogData {
             <button
               type="button"
               mat-icon-button
-              (click)="resetarTaxa()"
-              matTooltip="Resetar para padrão ({{ (taxaPadrao() * 100).toFixed(1) }}%)"
+              (click)="resetFee()"
+              matTooltip="Resetar para padrão ({{ (defaultFee() * 100).toFixed(1) }}%)"
             >
               <mat-icon>restart_alt</mat-icon>
             </button>
@@ -143,40 +143,40 @@ export interface VendaDialogData {
               step="0.01"
               min="0"
               max="100"
-              [(ngModel)]="taxaInput"
-              name="taxaInput"
-              (ngModelChange)="onTaxaChange()"
+              [(ngModel)]="feeInput"
+              name="feeInput"
+              (ngModelChange)="onFeeChange()"
               required
             />
             <span matSuffix>%</span>
           </mat-form-field>
           <small class="taxa-hint">
-            Padrão: {{ (taxaPadrao() * 100).toFixed(1) }}% · Edite para essa venda específica
+            Padrão: {{ (defaultFee() * 100).toFixed(1) }}% · Edite para essa venda específica
           </small>
         </div>
 
         <mat-form-field>
           <mat-label>Frete Vendedor (R$)</mat-label>
           <input matInput type="number" step="0.01"
-            [ngModel]="model().freteVendedor"
-            (ngModelChange)="setNum('freteVendedor', $event)"
-            name="freteVendedor" min="0" />
+            [ngModel]="model().sellerShipping"
+            (ngModelChange)="setNum('sellerShipping', $event)"
+            name="sellerShipping" min="0" />
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Desconto / Cupom (R$)</mat-label>
           <input matInput type="number" step="0.01"
-            [ngModel]="model().desconto"
-            (ngModelChange)="setNum('desconto', $event)"
-            name="desconto" min="0" />
+            [ngModel]="model().discount"
+            (ngModelChange)="setNum('discount', $event)"
+            name="discount" min="0" />
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Outros Custos (R$)</mat-label>
           <input matInput type="number" step="0.01"
-            [ngModel]="model().outrosCustos"
-            (ngModelChange)="setNum('outrosCustos', $event)"
-            name="outrosCustos" min="0" />
+            [ngModel]="model().otherCosts"
+            (ngModelChange)="setNum('otherCosts', $event)"
+            name="otherCosts" min="0" />
         </mat-form-field>
 
         <mat-form-field>
@@ -195,9 +195,9 @@ export interface VendaDialogData {
         <mat-form-field class="full">
           <mat-label>Observações</mat-label>
           <textarea matInput rows="2"
-            [ngModel]="model().observacoes"
-            (ngModelChange)="set('observacoes', $event)"
-            name="observacoes"></textarea>
+            [ngModel]="model().notes"
+            (ngModelChange)="set('notes', $event)"
+            name="notes"></textarea>
         </mat-form-field>
       </form>
 
@@ -210,30 +210,30 @@ export interface VendaDialogData {
         <div class="preview-stats">
           <div>
             <span>Receita Bruta</span>
-            <strong class="text-info">{{ preview().receitaBruta | brl }}</strong>
+            <strong class="text-info">{{ preview().grossRevenue | brl }}</strong>
           </div>
           <div>
             <span>Taxa L</span>
-            <strong class="text-warning">- {{ preview().taxaValor | brl }}</strong>
+            <strong class="text-warning">- {{ preview().feeAmount | brl }}</strong>
           </div>
           <div>
             <span>Receita Líquida</span>
-            <strong>{{ preview().receitaLiquida | brl }}</strong>
+            <strong>{{ preview().netRevenue | brl }}</strong>
           </div>
           <div>
             <span>Custo Produto</span>
-            <strong class="text-danger">- {{ preview().custoTotalProporcional | brl }}</strong>
+            <strong class="text-danger">- {{ preview().proportionalCost | brl }}</strong>
           </div>
           <div>
             <span>Lucro Líquido</span>
-            <strong [class]="lucroClasse()">
-              {{ preview().lucroLiquido | brl }}
+            <strong [class]="profitClass()">
+              {{ preview().netProfit | brl }}
             </strong>
           </div>
           <div>
             <span>Margem Líquida</span>
-            <strong [class]="margemClasse()">
-              {{ (preview().margemLiquida * 100).toFixed(1) }}%
+            <strong [class]="marginClass()">
+              {{ (preview().netMargin * 100).toFixed(1) }}%
             </strong>
           </div>
         </div>
@@ -242,7 +242,7 @@ export interface VendaDialogData {
 
     <mat-dialog-actions align="end">
       <button mat-button (click)="ref.close()">Cancelar</button>
-      <button mat-flat-button color="primary" (click)="salvar()" [disabled]="!isValid()">
+      <button mat-flat-button color="primary" (click)="save()" [disabled]="!isValid()">
         <mat-icon>save</mat-icon>
         {{ isEdit() ? 'Salvar' : 'Adicionar' }}
       </button>
@@ -344,67 +344,67 @@ export interface VendaDialogData {
     }
   `]
 })
-export class VendaFormDialogComponent {
+export class SaleFormDialogComponent {
   private readonly dataService = inject(DataService);
-  protected readonly ref = inject<MatDialogRef<VendaFormDialogComponent, Venda | null>>(MatDialogRef);
-  private readonly data = inject<VendaDialogData>(MAT_DIALOG_DATA);
+  protected readonly ref = inject<MatDialogRef<SaleFormDialogComponent, Sale | null>>(MatDialogRef);
+  private readonly data = inject<SaleDialogData>(MAT_DIALOG_DATA);
 
-  protected readonly isEdit = signal(!!this.data.venda);
-  protected readonly model = signal<Venda>(this.initialModel());
-  protected taxaInput = (this.data.venda?.taxaPercentual ?? this.dataService.configuracoes()?.taxaMlPadrao ?? 0.12) * 100;
+  protected readonly isEdit = signal(!!this.data.sale);
+  protected readonly model = signal<Sale>(this.initialModel());
+  protected feeInput = (this.data.sale?.feePercentage ?? this.dataService.settings()?.defaultMlFee ?? 0.12) * 100;
 
-  protected readonly canais = computed(() => this.dataService.configuracoes()?.canais ?? []);
-  protected readonly taxaPadrao = computed(() => this.dataService.configuracoes()?.taxaMlPadrao ?? 0.12);
+  protected readonly channels = computed(() => this.dataService.settings()?.channels ?? []);
+  protected readonly defaultFee = computed(() => this.dataService.settings()?.defaultMlFee ?? 0.12);
 
-  protected readonly lotesDisponiveis = computed(() =>
-    this.dataService.comprasCalculadas()
-      .filter(c => c.estoqueAtual > 0 || (this.isEdit() && c.id === this.model().idLote))
+  protected readonly availableBatches = computed(() =>
+    this.dataService.computedPurchases()
+      .filter(c => c.currentStock > 0 || (this.isEdit() && c.id === this.model().batchId))
   );
 
-  protected readonly estoqueDisponivel = computed(() => {
-    const idLote = this.model().idLote;
-    if (!idLote) return null;
-    const lote = this.dataService.comprasCalculadas().find(c => c.id === idLote);
-    return lote ? lote.estoqueAtual : null;
+  protected readonly availableStock = computed(() => {
+    const batchId = this.model().batchId;
+    if (!batchId) return null;
+    const batch = this.dataService.computedPurchases().find(c => c.id === batchId);
+    return batch ? batch.currentStock : null;
   });
 
   protected readonly preview = computed(() => {
-    return calcularVenda(this.model(), this.dataService.compras());
+    return calculateSale(this.model(), this.dataService.purchases());
   });
 
-  protected lucroClasse(): string {
-    const l = this.preview().lucroLiquido;
-    return l < 0 ? 'text-danger' : l > 0 ? 'text-success' : '';
+  protected profitClass(): string {
+    const p = this.preview().netProfit;
+    return p < 0 ? 'text-danger' : p > 0 ? 'text-success' : '';
   }
 
-  protected margemClasse(): string {
-    const m = this.preview().margemLiquida;
+  protected marginClass(): string {
+    const m = this.preview().netMargin;
     if (m < 0) return 'text-danger';
-    const cfg = this.dataService.configuracoes();
-    if (cfg && m < cfg.margemMinima) return 'text-warning';
+    const cfg = this.dataService.settings();
+    if (cfg && m < cfg.minimumMargin) return 'text-warning';
     return 'text-success';
   }
 
-  protected onTaxaChange(): void {
-    this.model.update(m => ({ ...m, taxaPercentual: (this.taxaInput || 0) / 100 }));
+  protected onFeeChange(): void {
+    this.model.update(m => ({ ...m, feePercentage: (this.feeInput || 0) / 100 }));
   }
 
-  protected resetarTaxa(): void {
-    this.taxaInput = this.taxaPadrao() * 100;
-    this.onTaxaChange();
+  protected resetFee(): void {
+    this.feeInput = this.defaultFee() * 100;
+    this.onFeeChange();
   }
 
-  protected readonly dataVendaAsDate = computed(() => {
-    const s = this.model().dataVenda;
+  protected readonly saleDateAsDate = computed(() => {
+    const s = this.model().saleDate;
     if (!s) return null;
     const [y, m, d] = s.split('-').map(Number);
     return !y || !m || !d ? null : new Date(y, m - 1, d);
   });
 
-  protected setDataVenda(d: Date | null): void {
+  protected setSaleDate(d: Date | null): void {
     const newStr = this.dateAsString(d);
-    if (newStr === this.model().dataVenda) return;
-    this.model.update(m => ({ ...m, dataVenda: newStr }));
+    if (newStr === this.model().saleDate) return;
+    this.model.update(m => ({ ...m, saleDate: newStr }));
   }
 
   private dateAsString(d: Date | null): string {
@@ -423,39 +423,39 @@ export class VendaFormDialogComponent {
     this.model.update(m => ({ ...m, [field]: +(value ?? 0) || 0 }));
   }
 
-  protected onIdLoteChange(idLote: string): void {
-    const lote = this.dataService.buscarCompra(idLote);
-    this.model.update(m => ({ ...m, idLote, produto: lote?.produto ?? m.produto }));
+  protected onBatchIdChange(batchId: string): void {
+    const batch = this.dataService.findPurchase(batchId);
+    this.model.update(m => ({ ...m, batchId, product: batch?.product ?? m.product }));
   }
 
   protected isValid(): boolean {
     const m = this.model();
-    return !!(m.id && m.idLote && m.produto && m.qtdVendida > 0 &&
-              m.precoUnitario > 0 && m.dataVenda && m.canal && m.status);
+    return !!(m.id && m.batchId && m.product && m.quantitySold > 0 &&
+              m.unitPrice > 0 && m.saleDate && m.channel && m.status);
   }
 
-  protected salvar(): void {
+  protected save(): void {
     if (!this.isValid()) return;
     this.ref.close({ ...this.model() });
   }
 
-  private initialModel(): Venda {
-    if (this.data.venda) return { ...this.data.venda };
-    const cfg = this.dataService.configuracoes();
+  private initialModel(): Sale {
+    if (this.data.sale) return { ...this.data.sale };
+    const cfg = this.dataService.settings();
     return {
-      id: this.dataService.proximoIdVenda(),
-      idLote: '',
-      produto: '',
-      qtdVendida: 1,
-      precoUnitario: 0,
-      dataVenda: new Date().toISOString().split('T')[0]!,
-      canal: cfg?.canalPadrao ?? 'Mercado Livre',
-      taxaPercentual: cfg?.taxaMlPadrao ?? 0.12,
-      freteVendedor: 0,
-      desconto: 0,
-      outrosCustos: 0,
+      id: this.dataService.nextSaleId(),
+      batchId: '',
+      product: '',
+      quantitySold: 1,
+      unitPrice: 0,
+      saleDate: new Date().toISOString().split('T')[0]!,
+      channel: cfg?.defaultChannel ?? 'Mercado Livre',
+      feePercentage: cfg?.defaultMlFee ?? 0.12,
+      sellerShipping: 0,
+      discount: 0,
+      otherCosts: 0,
       status: 'Concluída',
-      observacoes: '',
+      notes: '',
     };
   }
 }

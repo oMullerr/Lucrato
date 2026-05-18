@@ -80,14 +80,14 @@
   font-size: 12px;
 }
 
-.produto-cell {
+.product-cell {
   max-width: 280px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.categoria-pill {
+.category-pill {
   display: inline-block;
   padding: 3px 10px;
   background: var(--bg-blue);
@@ -143,13 +143,13 @@
   font-weight: 600;
 }
 
-.alertas-grid {
+.alerts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
 
-.alerta-card {
+.alert-card {
   padding: 18px !important;
   border-left: 4px solid var(--accent, var(--clr-amber)) !important;
 
@@ -157,21 +157,21 @@
   &[data-status="Atenção"] { --accent: var(--clr-amber); }
 }
 
-.alerta-header {
+.alert-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
 }
 
-.alerta-id {
+.alert-id {
   font-family: 'JetBrains Mono', monospace;
   color: var(--clr-blue);
   font-size: 12px;
   font-weight: 700;
 }
 
-.alerta-card h4 {
+.alert-card h4 {
   font-size: 13.5px;
   color: var(--txt-primary);
   margin: 0 0 12px;
@@ -179,25 +179,25 @@
   font-weight: 500;
 }
 
-.alerta-stats {
+.alert-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
-.alerta-stats > div {
+.alert-stats > div {
   display: flex;
   flex-direction: column;
 }
 
-.alerta-stats span {
+.alert-stats span {
   font-size: 10px;
   color: var(--txt-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.alerta-stats strong {
+.alert-stats strong {
   font-size: 13px;
   color: var(--txt-primary);
   margin-top: 2px;

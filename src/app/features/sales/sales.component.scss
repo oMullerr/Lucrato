@@ -91,22 +91,22 @@
   font-size: 12px;
 }
 
-.id-venda {
+.id-sale {
   color: var(--clr-green);
 }
 
-.id-lote {
+.id-batch {
   color: var(--clr-blue);
 }
 
-.produto-cell {
+.product-cell {
   max-width: 240px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.canal-pill {
+.channel-pill {
   display: inline-block;
   padding: 3px 10px;
   background: var(--bg-purple);

@@ -3,11 +3,11 @@
   title="Panorama do Estoque"
   subtitle="Visão executiva — bata o olho e saiba como está seu negócio"
 >
-  <a mat-stroked-button routerLink="/compras">
+  <a mat-stroked-button routerLink="/purchases">
     <mat-icon>shopping_cart</mat-icon>
     Compras
   </a>
-  <a mat-flat-button color="primary" routerLink="/vendas">
+  <a mat-flat-button color="primary" routerLink="/sales">
     <mat-icon>sell</mat-icon>
     Registrar Venda
   </a>
@@ -24,42 +24,42 @@
       <app-kpi-card
         icon="payments"
         title="Total Investido"
-        [value]="kpis().totalInvestido | brl"
+        [value]="kpis().totalInvested | brl"
         note="Custo real de todas as compras"
         variant="red"
       />
       <app-kpi-card
         icon="account_balance"
         title="Capital Parado"
-        [value]="kpis().capitalParado | brl"
+        [value]="kpis().idleCapital | brl"
         note="Estoque atual × custo unit. real"
         variant="amber"
       />
       <app-kpi-card
         icon="trending_up"
         title="Receita Bruta"
-        [value]="kpis().receitaBruta | brl"
+        [value]="kpis().grossRevenue | brl"
         note="Total faturado"
         variant="blue"
       />
       <app-kpi-card
         icon="credit_card"
         title="Receita Líquida"
-        [value]="kpis().receitaLiquida | brl"
+        [value]="kpis().netRevenue | brl"
         note="Após todas as deduções"
         variant="blue"
       />
       <app-kpi-card
         icon="emoji_events"
         title="Lucro Líquido"
-        [value]="kpis().lucroLiquido | brl"
+        [value]="kpis().netProfit | brl"
         note="Resultado final"
         variant="green"
       />
       <app-kpi-card
         icon="percent"
         title="Margem Líquida"
-        [value]="(kpis().margemLiquida * 100).toFixed(1) + '%'"
+        [value]="(kpis().netMargin * 100).toFixed(1) + '%'"
         note="Lucro líq. / receita bruta"
         variant="teal"
       />
@@ -76,42 +76,42 @@
       <app-kpi-card
         icon="inventory_2"
         title="Lotes em Estoque"
-        [value]="kpis().qtdLotesEstoque"
+        [value]="kpis().batchesInStock"
         note="Lotes com estoque > 0"
         variant="amber"
       />
       <app-kpi-card
         icon="check_circle"
         title="Lotes Vendidos"
-        [value]="kpis().qtdLotesVendidos"
+        [value]="kpis().soldBatches"
         note="Totalmente vendidos"
         variant="green"
       />
       <app-kpi-card
         icon="shopping_basket"
         title="Qtde. Vendida"
-        [value]="kpis().qtdVendida"
+        [value]="kpis().totalSold"
         note="Unidades vendidas total"
         variant="green"
       />
       <app-kpi-card
         icon="local_offer"
         title="Taxas L Pagas"
-        [value]="kpis().taxasTotal | brl"
+        [value]="kpis().totalFees | brl"
         note="Total ao Mercado Livre"
         variant="orange"
       />
       <app-kpi-card
         icon="receipt_long"
         title="Ticket Médio"
-        [value]="kpis().ticketMedio | brl"
+        [value]="kpis().averageTicket | brl"
         note="Preço médio unit. de venda"
         variant="purple"
       />
       <app-kpi-card
         icon="bar_chart"
         title="Total de Lotes"
-        [value]="kpis().qtdLotes"
+        [value]="kpis().totalBatches"
         note="Lotes cadastrados"
         variant="gray"
       />
@@ -125,7 +125,7 @@
       Posição Detalhada por Lote
     </h2>
 
-    @if (comprasOrdenadas().length > 0) {
+    @if (sortedPurchases().length > 0) {
       <mat-card class="table-card">
         <div class="table-wrapper">
           <table class="data-table">
@@ -148,33 +148,33 @@
               </tr>
             </thead>
             <tbody>
-              @for (c of comprasOrdenadas(); track c.id) {
+              @for (c of sortedPurchases(); track c.id) {
                 <tr>
                   <td><span class="id-tag">{{ c.id }}</span></td>
-                  <td class="produto-cell" [title]="c.produto">{{ c.produto }}</td>
-                  <td><span class="categoria-pill">{{ c.categoria }}</span></td>
-                  <td [class]="diaClasse(c)">{{ c.dataCompra | dataBr }}</td>
-                  <td class="text-center">{{ c.qtdComprada }}</td>
-                  <td class="text-center text-muted">{{ c.qtdVendida }}</td>
+                  <td class="product-cell" [title]="c.product">{{ c.product }}</td>
+                  <td><span class="category-pill">{{ c.category }}</span></td>
+                  <td [class]="dayClass(c)">{{ c.purchaseDate | brDate }}</td>
+                  <td class="text-center">{{ c.quantityPurchased }}</td>
+                  <td class="text-center text-muted">{{ c.quantitySold }}</td>
                   <td
                     class="text-center"
-                    [class.text-success]="c.estoqueAtual === 0"
-                    [class.text-warning]="c.estoqueAtual > 0"
+                    [class.text-success]="c.currentStock === 0"
+                    [class.text-warning]="c.currentStock > 0"
                   >
-                    <strong>{{ c.estoqueAtual }}</strong>
+                    <strong>{{ c.currentStock }}</strong>
                   </td>
-                  <td class="text-right text-muted">{{ c.custoUnitarioReal | brl }}</td>
-                  <td class="text-right" [class.text-warning]="c.valorParado > 0">
-                    <strong>{{ c.valorParado | brl: true }}</strong>
+                  <td class="text-right text-muted">{{ c.actualUnitCost | brl }}</td>
+                  <td class="text-right" [class.text-warning]="c.idleValue > 0">
+                    <strong>{{ c.idleValue | brl: true }}</strong>
                   </td>
-                  <td class="text-muted">{{ c.primeiraVenda | dataBr }}</td>
-                  <td class="text-muted">{{ c.ultimaVenda | dataBr }}</td>
+                  <td class="text-muted">{{ c.firstSale | brDate }}</td>
+                  <td class="text-muted">{{ c.lastSale | brDate }}</td>
                   <td class="text-center">
-                    <strong>{{ c.diasEmEstoque }}d</strong>
+                    <strong>{{ c.daysInStock }}d</strong>
                   </td>
                   <td><app-status-badge [status]="c.status" /></td>
-                  <td class="text-center" [class]="margemClasse(c.margemMedia)">
-                    {{ c.margemMedia !== undefined ? (c.margemMedia * 100).toFixed(1) + '%' : '—' }}
+                  <td class="text-center" [class]="marginClass(c.averageMargin)">
+                    {{ c.averageMargin !== undefined ? (c.averageMargin * 100).toFixed(1) + '%' : '—' }}
                   </td>
                 </tr>
               }
@@ -188,39 +188,39 @@
         <h3>Nenhum lote cadastrado ainda</h3>
         <p>
           Comece adicionando uma compra na aba
-          <a routerLink="/compras">Compras</a>
+          <a routerLink="/purchases">Compras</a>
         </p>
       </mat-card>
     }
   </section>
 
   <!-- Alertas -->
-  @if (alertas().length > 0) {
+  @if (alerts().length > 0) {
     <section>
       <h2 class="section-title text-warning">
         <mat-icon>warning</mat-icon>
         Atenção — Estoque Parado
       </h2>
-      <div class="alertas-grid">
-        @for (a of alertas(); track a.id) {
-          <mat-card class="alerta-card" [attr.data-status]="a.status">
-            <div class="alerta-header">
+      <div class="alerts-grid">
+        @for (a of alerts(); track a.id) {
+          <mat-card class="alert-card" [attr.data-status]="a.status">
+            <div class="alert-header">
               <app-status-badge [status]="a.status" />
-              <span class="alerta-id">{{ a.id }}</span>
+              <span class="alert-id">{{ a.id }}</span>
             </div>
-            <h4>{{ a.produto }}</h4>
-            <div class="alerta-stats">
+            <h4>{{ a.product }}</h4>
+            <div class="alert-stats">
               <div>
                 <span>Estoque</span>
-                <strong>{{ a.estoqueAtual }} un.</strong>
+                <strong>{{ a.currentStock }} un.</strong>
               </div>
               <div>
                 <span>Parado há</span>
-                <strong>{{ a.diasEmEstoque }}d</strong>
+                <strong>{{ a.daysInStock }}d</strong>
               </div>
               <div>
                 <span>Capital</span>
-                <strong>{{ a.valorParado | brl }}</strong>
+                <strong>{{ a.idleValue | brl }}</strong>
               </div>
             </div>
           </mat-card>

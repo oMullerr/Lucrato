@@ -11,18 +11,18 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
-import { Compra, CompraCalculada, StatusEstoque } from '../../core/models/models';
+import { Purchase, ComputedPurchase, InventoryStatus } from '../../core/models/models';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
-import { DataBrPipe } from '../../shared/pipes/data-br.pipe';
-import { CompraFormDialogComponent } from './compra-form.dialog';
+import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
+import { PurchaseFormDialogComponent } from './purchase-form.dialog';
 
-type FiltroStatus = 'todos' | 'em-estoque' | 'atencao' | 'parado' | 'vendido';
+type StatusFilter = 'all' | 'in-stock' | 'attention' | 'idle' | 'sold';
 
 @Component({
-  selector: 'app-compras',
+  selector: 'app-purchases',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -31,73 +31,73 @@ type FiltroStatus = 'todos' | 'em-estoque' | 'atencao' | 'parado' | 'vendido';
     MatFormFieldModule, MatInputModule, MatChipsModule,
     MatTooltipModule, MatMenuModule,
     PageHeaderComponent, StatusBadgeComponent,
-    BrlPipe, DataBrPipe,
+    BrlPipe, BrDatePipe,
   ],
-  templateUrl: './compras.component.html',
-  styleUrl: './compras.component.scss',
+  templateUrl: './purchases.component.html',
+  styleUrl: './purchases.component.scss',
 })
-export class ComprasComponent {
+export class PurchasesComponent {
   private readonly dataService = inject(DataService);
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(MatDialog);
 
-  protected readonly filtroTexto = signal('');
-  protected readonly filtroStatus = signal<FiltroStatus>('todos');
+  protected readonly textFilter = signal('');
+  protected readonly statusFilter = signal<StatusFilter>('all');
 
-  protected readonly compras = this.dataService.comprasCalculadas;
+  protected readonly purchases = this.dataService.computedPurchases;
 
-  protected readonly totais = computed(() => {
-    const cs = this.compras();
+  protected readonly totals = computed(() => {
+    const cs = this.purchases();
     return {
-      todos: cs.length,
-      emEstoque: cs.filter(c => c.status === 'Em Estoque').length,
-      atencao: cs.filter(c => c.status === 'Atenção').length,
-      parado: cs.filter(c => c.status === 'Parado').length,
-      vendido: cs.filter(c => c.status === 'Vendido').length,
+      total: cs.length,
+      inStock: cs.filter(c => c.status === 'Em Estoque').length,
+      attention: cs.filter(c => c.status === 'Atenção').length,
+      idle: cs.filter(c => c.status === 'Parado').length,
+      sold: cs.filter(c => c.status === 'Vendido').length,
     };
   });
 
-  protected readonly comprasFiltradas = computed(() => {
-    const statusMap: Record<Exclude<FiltroStatus, 'todos'>, StatusEstoque> = {
-      'em-estoque': 'Em Estoque',
-      'atencao': 'Atenção',
-      'parado': 'Parado',
-      'vendido': 'Vendido',
+  protected readonly filteredPurchases = computed(() => {
+    const statusMap: Record<Exclude<StatusFilter, 'all'>, InventoryStatus> = {
+      'in-stock': 'Em Estoque',
+      'attention': 'Atenção',
+      'idle': 'Parado',
+      'sold': 'Vendido',
     };
 
-    let cs = this.compras();
-    const status = this.filtroStatus();
-    if (status !== 'todos') {
+    let cs = this.purchases();
+    const status = this.statusFilter();
+    if (status !== 'all') {
       cs = cs.filter(c => c.status === statusMap[status]);
     }
-    const texto = this.filtroTexto().trim().toLowerCase();
-    if (texto) {
+    const text = this.textFilter().trim().toLowerCase();
+    if (text) {
       cs = cs.filter(c =>
-        c.produto.toLowerCase().includes(texto) ||
-        c.id.toLowerCase().includes(texto) ||
-        c.categoria.toLowerCase().includes(texto)
+        c.product.toLowerCase().includes(text) ||
+        c.id.toLowerCase().includes(text) ||
+        c.category.toLowerCase().includes(text)
       );
     }
-    return [...cs].sort((a, b) => b.dataCompra.localeCompare(a.dataCompra));
+    return [...cs].sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate));
   });
 
-  protected setStatus(s: FiltroStatus): void {
-    this.filtroStatus.set(s);
+  protected setStatus(s: StatusFilter): void {
+    this.statusFilter.set(s);
   }
 
-  protected abrirNova(): void {
-    this.abrirForm();
+  protected openNew(): void {
+    this.openForm();
   }
 
-  protected editar(c: CompraCalculada): void {
-    this.abrirForm({ ...c });
+  protected edit(c: ComputedPurchase): void {
+    this.openForm({ ...c });
   }
 
-  protected confirmarRemover(c: CompraCalculada): void {
-    const vendasVinculadas = this.dataService.vendas().filter(v => v.idLote === c.id);
-    if (vendasVinculadas.length > 0) {
+  protected confirmRemove(c: ComputedPurchase): void {
+    const linkedSales = this.dataService.sales().filter(v => v.batchId === c.id);
+    if (linkedSales.length > 0) {
       this.notify.warning(
-        `Existem ${vendasVinculadas.length} venda(s) vinculada(s). Remova-as antes do lote.`
+        `Existem ${linkedSales.length} venda(s) vinculada(s). Remova-as antes do lote.`
       );
       return;
     }
@@ -106,7 +106,7 @@ export class ComprasComponent {
       .open(ConfirmDialogComponent, {
         data: {
           title: 'Remover Lote',
-          message: `Remover o lote ${c.id} — "${c.produto}"?`,
+          message: `Remover o lote ${c.id} — "${c.product}"?`,
           danger: true,
           confirmText: 'Remover',
         },
@@ -115,14 +115,14 @@ export class ComprasComponent {
       .afterClosed()
       .subscribe(confirmed => {
         if (confirmed) {
-          this.dataService.removerCompra(c.id);
+          this.dataService.removePurchase(c.id);
           this.notify.success(`Lote ${c.id} removido.`);
         }
       });
   }
 
-  protected exportar(): void {
-    const blob = new Blob([this.dataService.exportar()], { type: 'application/json' });
+  protected exportData(): void {
+    const blob = new Blob([this.dataService.exportData()], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -132,7 +132,7 @@ export class ComprasComponent {
     this.notify.success('Backup exportado.');
   }
 
-  protected importar(): void {
+  protected importData(): void {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
@@ -140,7 +140,7 @@ export class ComprasComponent {
       const file = input.files?.[0];
       if (!file) return;
       const text = await file.text();
-      if (this.dataService.importar(text)) {
+      if (this.dataService.importData(text)) {
         this.notify.success('Backup importado com sucesso.');
       } else {
         this.notify.error('Arquivo inválido.');
@@ -149,24 +149,24 @@ export class ComprasComponent {
     input.click();
   }
 
-  private abrirForm(compra?: Compra): void {
+  private openForm(purchase?: Purchase): void {
     this.dialog
-      .open<CompraFormDialogComponent, { compra?: Compra }, Compra | null>(
-        CompraFormDialogComponent,
-        { data: { compra }, width: '720px', maxWidth: '95vw' }
+      .open<PurchaseFormDialogComponent, { purchase?: Purchase }, Purchase | null>(
+        PurchaseFormDialogComponent,
+        { data: { purchase }, width: '720px', maxWidth: '95vw' }
       )
       .afterClosed()
       .subscribe(result => {
         if (!result) return;
-        if (compra) {
-          this.dataService.atualizarCompra(compra.id, result);
+        if (purchase) {
+          this.dataService.updatePurchase(purchase.id, result);
           this.notify.success(`Lote ${result.id} atualizado.`);
         } else {
-          if (this.dataService.buscarCompra(result.id)) {
+          if (this.dataService.findPurchase(result.id)) {
             this.notify.error(`ID ${result.id} já existe.`);
             return;
           }
-          this.dataService.adicionarCompra(result);
+          this.dataService.addPurchase(result);
           this.notify.success(`Lote ${result.id} adicionado.`);
         }
       });

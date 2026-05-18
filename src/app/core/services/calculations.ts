@@ -1,141 +1,140 @@
 import {
-  Compra, Venda, Configuracoes,
-  CompraCalculada, VendaCalculada, KpiResumo, StatusEstoque
+  Purchase, Sale, Settings,
+  ComputedPurchase, ComputedSale, KpiSummary, InventoryStatus
 } from '../models/models';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
-/** Calcula campos derivados de uma compra. */
-export function calcularCompra(
-  compra: Compra,
-  vendas: Venda[],
-  config: Configuracoes,
-): CompraCalculada {
-  const custoTotalCompra = compra.qtdComprada * compra.custoUnitario;
-  const custoTotalReal = custoTotalCompra + compra.freteCompra + compra.outrosCustos;
-  const custoUnitarioReal = compra.qtdComprada > 0 ? custoTotalReal / compra.qtdComprada : 0;
+/** Calculates derived fields for a purchase batch. */
+export function calculatePurchase(
+  purchase: Purchase,
+  sales: Sale[],
+  config: Settings,
+): ComputedPurchase {
+  const totalPurchaseCost = purchase.quantityPurchased * purchase.unitCost;
+  const totalActualCost = totalPurchaseCost + purchase.purchaseShipping + purchase.otherCosts;
+  const actualUnitCost = purchase.quantityPurchased > 0 ? totalActualCost / purchase.quantityPurchased : 0;
 
-  const vendasDoLote = vendas.filter(v => v.idLote === compra.id && v.status === 'Concluída');
-  const qtdVendida = vendasDoLote.reduce((s, v) => s + v.qtdVendida, 0);
-  const estoqueAtual = compra.qtdComprada - qtdVendida;
-  const valorParado = estoqueAtual > 0 ? estoqueAtual * custoUnitarioReal : 0;
+  const batchSales = sales.filter(v => v.batchId === purchase.id && v.status === 'Concluída');
+  const quantitySold = batchSales.reduce((s, v) => s + v.quantitySold, 0);
+  const currentStock = purchase.quantityPurchased - quantitySold;
+  const idleValue = currentStock > 0 ? currentStock * actualUnitCost : 0;
 
-  const datas = vendasDoLote.map(v => v.dataVenda).sort();
-  const primeiraVenda = datas[0];
-  const ultimaVenda = datas[datas.length - 1];
+  const dates = batchSales.map(v => v.saleDate).sort();
+  const firstSale = dates[0];
+  const lastSale = dates[dates.length - 1];
 
-  const compraDate = new Date(compra.dataCompra);
-  const referencia = (estoqueAtual <= 0 && ultimaVenda)
-    ? new Date(ultimaVenda)
+  const purchaseDate = new Date(purchase.purchaseDate);
+  const reference = (currentStock <= 0 && lastSale)
+    ? new Date(lastSale)
     : new Date();
-  const diasEmEstoque = Math.floor((referencia.getTime() - compraDate.getTime()) / MS_PER_DAY);
+  const daysInStock = Math.floor((reference.getTime() - purchaseDate.getTime()) / MS_PER_DAY);
 
-  let status: StatusEstoque;
-  if (estoqueAtual <= 0) status = 'Vendido';
-  else if (diasEmEstoque >= config.diasAlertaVermelho) status = 'Parado';
-  else if (diasEmEstoque >= config.diasAlertaAmarelo) status = 'Atenção';
+  let status: InventoryStatus;
+  if (currentStock <= 0) status = 'Vendido';
+  else if (daysInStock >= config.redAlertDays) status = 'Parado';
+  else if (daysInStock >= config.yellowAlertDays) status = 'Atenção';
   else status = 'Em Estoque';
 
-  // Margem ponderada das vendas concluídas
-  const totalReceita = vendasDoLote.reduce((s, v) => s + v.qtdVendida * v.precoUnitario, 0);
-  const totalLucro = vendasDoLote.reduce((s, v) => {
-    const recBruta = v.qtdVendida * v.precoUnitario;
-    const recLiq = recBruta - recBruta * v.taxaPercentual - v.freteVendedor - v.desconto - v.outrosCustos;
-    return s + (recLiq - v.qtdVendida * custoUnitarioReal);
+  const totalRevenue = batchSales.reduce((s, v) => s + v.quantitySold * v.unitPrice, 0);
+  const totalProfit = batchSales.reduce((s, v) => {
+    const grossRev = v.quantitySold * v.unitPrice;
+    const netRev = grossRev - grossRev * v.feePercentage - v.sellerShipping - v.discount - v.otherCosts;
+    return s + (netRev - v.quantitySold * actualUnitCost);
   }, 0);
-  const margemMedia = totalReceita > 0 ? totalLucro / totalReceita : undefined;
+  const averageMargin = totalRevenue > 0 ? totalProfit / totalRevenue : undefined;
 
   return {
-    ...compra,
-    custoTotalCompra,
-    custoTotalReal,
-    custoUnitarioReal,
-    qtdVendida,
-    estoqueAtual,
-    valorParado,
-    primeiraVenda,
-    ultimaVenda,
-    diasEmEstoque,
+    ...purchase,
+    totalPurchaseCost,
+    totalActualCost,
+    actualUnitCost,
+    quantitySold,
+    currentStock,
+    idleValue,
+    firstSale,
+    lastSale,
+    daysInStock,
     status,
-    margemMedia,
+    averageMargin,
   };
 }
 
-/** Calcula campos derivados de uma venda. */
-export function calcularVenda(venda: Venda, compras: Compra[]): VendaCalculada {
-  const lote = compras.find(c => c.id === venda.idLote);
-  const custoUnitarioReal = lote
-    ? (lote.qtdComprada * lote.custoUnitario + lote.freteCompra + lote.outrosCustos)
-        / Math.max(lote.qtdComprada, 1)
+/** Calculates derived fields for a sale. */
+export function calculateSale(sale: Sale, purchases: Purchase[]): ComputedSale {
+  const batch = purchases.find(c => c.id === sale.batchId);
+  const actualUnitCost = batch
+    ? (batch.quantityPurchased * batch.unitCost + batch.purchaseShipping + batch.otherCosts)
+        / Math.max(batch.quantityPurchased, 1)
     : 0;
 
-  const receitaBruta = venda.qtdVendida * venda.precoUnitario;
-  const taxaValor = receitaBruta * venda.taxaPercentual;
-  const receitaLiquida = receitaBruta - taxaValor - venda.freteVendedor - venda.desconto - venda.outrosCustos;
-  const custoTotalProporcional = venda.qtdVendida * custoUnitarioReal;
-  const lucroBruto = receitaBruta - custoTotalProporcional;
-  const lucroLiquido = receitaLiquida - custoTotalProporcional;
-  const margemLiquida = receitaBruta > 0 ? lucroLiquido / receitaBruta : 0;
+  const grossRevenue = sale.quantitySold * sale.unitPrice;
+  const feeAmount = grossRevenue * sale.feePercentage;
+  const netRevenue = grossRevenue - feeAmount - sale.sellerShipping - sale.discount - sale.otherCosts;
+  const proportionalCost = sale.quantitySold * actualUnitCost;
+  const grossProfit = grossRevenue - proportionalCost;
+  const netProfit = netRevenue - proportionalCost;
+  const netMargin = grossRevenue > 0 ? netProfit / grossRevenue : 0;
 
   return {
-    ...venda,
-    receitaBruta,
-    taxaValor,
-    receitaLiquida,
-    custoUnitarioReal,
-    custoTotalProporcional,
-    lucroBruto,
-    lucroLiquido,
-    margemLiquida,
+    ...sale,
+    grossRevenue,
+    feeAmount,
+    netRevenue,
+    actualUnitCost,
+    proportionalCost,
+    grossProfit,
+    netProfit,
+    netMargin,
   };
 }
 
-/** Calcula KPIs consolidados a partir das listas calculadas. */
-export function calcularKpis(
-  comprasCalc: CompraCalculada[],
-  vendasCalc: VendaCalculada[],
-): KpiResumo {
-  const concluidas = vendasCalc.filter(v => v.status === 'Concluída');
+/** Calculates consolidated KPIs from computed lists. */
+export function calculateKpis(
+  computedPurchases: ComputedPurchase[],
+  computedSales: ComputedSale[],
+): KpiSummary {
+  const completed = computedSales.filter(v => v.status === 'Concluída');
 
-  const totalInvestido = comprasCalc.reduce((s, c) => s + c.custoTotalReal, 0);
-  const capitalParado = comprasCalc.reduce((s, c) => s + c.valorParado, 0);
-  const receitaBruta = concluidas.reduce((s, v) => s + v.receitaBruta, 0);
-  const taxasTotal = concluidas.reduce((s, v) => s + v.taxaValor, 0);
-  const fretesTotal = concluidas.reduce((s, v) => s + v.freteVendedor, 0);
-  const descontosTotal = concluidas.reduce((s, v) => s + v.desconto, 0);
-  const receitaLiquida = concluidas.reduce((s, v) => s + v.receitaLiquida, 0);
-  const lucroBruto = concluidas.reduce((s, v) => s + v.lucroBruto, 0);
-  const lucroLiquido = concluidas.reduce((s, v) => s + v.lucroLiquido, 0);
-  const margemLiquida = receitaBruta > 0 ? lucroLiquido / receitaBruta : 0;
+  const totalInvested = computedPurchases.reduce((s, c) => s + c.totalActualCost, 0);
+  const idleCapital = computedPurchases.reduce((s, c) => s + c.idleValue, 0);
+  const grossRevenue = completed.reduce((s, v) => s + v.grossRevenue, 0);
+  const totalFees = completed.reduce((s, v) => s + v.feeAmount, 0);
+  const totalShipping = completed.reduce((s, v) => s + v.sellerShipping, 0);
+  const totalDiscounts = completed.reduce((s, v) => s + v.discount, 0);
+  const netRevenue = completed.reduce((s, v) => s + v.netRevenue, 0);
+  const grossProfit = completed.reduce((s, v) => s + v.grossProfit, 0);
+  const netProfit = completed.reduce((s, v) => s + v.netProfit, 0);
+  const netMargin = grossRevenue > 0 ? netProfit / grossRevenue : 0;
 
   return {
-    totalInvestido,
-    capitalParado,
-    receitaBruta,
-    receitaLiquida,
-    taxasTotal,
-    fretesTotal,
-    descontosTotal,
-    lucroBruto,
-    lucroLiquido,
-    margemLiquida,
-    qtdVendida: concluidas.reduce((s, v) => s + v.qtdVendida, 0),
-    qtdLotes: comprasCalc.length,
-    qtdLotesEstoque: comprasCalc.filter(c => c.estoqueAtual > 0).length,
-    qtdLotesVendidos: comprasCalc.filter(c => c.estoqueAtual <= 0).length,
-    ticketMedio: concluidas.length > 0
-      ? concluidas.reduce((s, v) => s + v.precoUnitario, 0) / concluidas.length
+    totalInvested,
+    idleCapital,
+    grossRevenue,
+    netRevenue,
+    totalFees,
+    totalShipping,
+    totalDiscounts,
+    grossProfit,
+    netProfit,
+    netMargin,
+    totalSold: completed.reduce((s, v) => s + v.quantitySold, 0),
+    totalBatches: computedPurchases.length,
+    batchesInStock: computedPurchases.filter(c => c.currentStock > 0).length,
+    soldBatches: computedPurchases.filter(c => c.currentStock <= 0).length,
+    averageTicket: completed.length > 0
+      ? completed.reduce((s, v) => s + v.unitPrice, 0) / completed.length
       : 0,
   };
 }
 
-/** Gera o próximo ID sequencial para um prefixo (ex: C, V). */
-export function proximoId(ids: string[], prefixo: string, padding = 3): string {
+/** Generates the next sequential ID for a given prefix (e.g. C, V). */
+export function nextId(ids: string[], prefix: string, padding = 3): string {
   let max = 0;
-  const re = new RegExp(`^${prefixo}(\\d+)$`);
+  const re = new RegExp(`^${prefix}(\\d+)$`);
   for (const id of ids) {
     const m = id.match(re);
     if (m?.[1]) max = Math.max(max, parseInt(m[1], 10));
   }
-  return prefixo + String(max + 1).padStart(padding, '0');
+  return prefix + String(max + 1).padStart(padding, '0');
 }

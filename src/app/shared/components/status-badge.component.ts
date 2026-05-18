@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { StatusEstoque, StatusVenda } from '../../core/models/models';
+import { InventoryStatus, SaleStatus } from '../../core/models/models';
 
-type StatusType = StatusEstoque | StatusVenda;
+type StatusType = InventoryStatus | SaleStatus;
 
 interface StatusConfig {
   label: string;
