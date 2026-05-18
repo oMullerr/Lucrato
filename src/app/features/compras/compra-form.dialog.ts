@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { Compra } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
@@ -20,7 +21,7 @@ export interface CompraDialogData {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
-    MatSelectModule, MatButtonModule, MatIconModule, BrlPipe,
+    MatSelectModule, MatButtonModule, MatIconModule, MatDatepickerModule, BrlPipe,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -68,7 +69,16 @@ export interface CompraDialogData {
 
         <mat-form-field>
           <mat-label>Data da Compra</mat-label>
-          <input matInput type="date" [(ngModel)]="model().dataCompra" name="dataCompra" required />
+          <input
+            matInput
+            [matDatepicker]="pickerCompra"
+            [ngModel]="dataAsDate(model().dataCompra)"
+            (ngModelChange)="setDataCompra($event)"
+            name="dataCompra"
+            required
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="pickerCompra"></mat-datepicker-toggle>
+          <mat-datepicker #pickerCompra></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field>
@@ -219,6 +229,25 @@ export class CompraFormDialogComponent {
     const m = this.model();
     return m.qtdComprada > 0 ? this.custoTotalReal() / m.qtdComprada : 0;
   });
+
+  protected dataAsDate(s: string | undefined): Date | null {
+    if (!s) return null;
+    const [y, m, d] = s.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d);
+  }
+
+  protected setDataCompra(d: Date | null): void {
+    this.model.update(m => ({ ...m, dataCompra: this.dateAsString(d) }));
+  }
+
+  private dateAsString(d: Date | null): string {
+    if (!d) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
 
   protected isValid(): boolean {
     const m = this.model();
