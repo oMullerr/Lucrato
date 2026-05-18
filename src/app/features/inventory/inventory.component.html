@@ -135,6 +135,7 @@
                 <th>Produto</th>
                 <th>Categoria</th>
                 <th>Data Compra</th>
+                <th>Recebido</th>
                 <th class="text-center">Qtd.</th>
                 <th class="text-center">Vendida</th>
                 <th class="text-center">Estoque</th>
@@ -153,7 +154,8 @@
                   <td><span class="id-tag">{{ c.id }}</span></td>
                   <td class="product-cell" [title]="c.product">{{ c.product }}</td>
                   <td><span class="category-pill">{{ c.category }}</span></td>
-                  <td [class]="dayClass(c)">{{ c.purchaseDate | brDate }}</td>
+                  <td>{{ c.purchaseDate | brDate }}</td>
+                  <td [class]="dayClass(c)">{{ c.receiptDate | brDate }}</td>
                   <td class="text-center">{{ c.quantityPurchased }}</td>
                   <td class="text-center text-muted">{{ c.quantitySold }}</td>
                   <td

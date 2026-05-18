@@ -62,15 +62,12 @@ npm run build
 - Adicionar logo
 - Import de compras e vendas em massa
 - Versão mobile
-- Ordenar Categorias, Fornecedores e canais de vendas no painel de configuração
-- Adicionar data de recebimento do produto e contar o status a partir dessa data (hoje é feito em cima da data de compra)
 - Refazer layout e cores
 
 ---
 
 ## BUGS
 
-- Data em formato americano
 - Ao adicionar uma nova compra, quando digita o valor, não esta sendo calculado o valor automatico no fim da pagina
 - Listagem das compras não esta vindo em ordem crescente do lote e pelo status (priorizar lote crescente e 'em estoque')
 - No formulário de venda, o valor que é colocado no frete do vendedor, desconto/cupom e outros custos, não estão sendo contabilizados no resultado calculado

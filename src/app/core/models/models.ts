@@ -1,4 +1,4 @@
-export type InventoryStatus = 'Em Estoque' | 'Vendido' | 'Atenção' | 'Parado';
+export type InventoryStatus = 'Em Estoque' | 'Vendido' | 'Atenção' | 'Parado' | 'Ainda não recebido';
 export type SaleStatus = 'Concluída' | 'Cancelada' | 'Devolvida' | 'Em disputa';
 export type SaleChannel = 'Mercado Livre' | 'Shopee' | 'Amazon' | 'Instagram' | 'WhatsApp' | 'Outro';
 
@@ -10,6 +10,7 @@ export interface Purchase {
   supplier: string;
   link?: string;
   purchaseDate: string;
+  receiptDate?: string;
   quantityPurchased: number;
   unitCost: number;
   purchaseShipping: number;

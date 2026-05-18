@@ -44,7 +44,7 @@ export class InventoryComponent {
 
   protected dayClass(c: ComputedPurchase): string {
     const cfg = this.dataService.settings();
-    if (!cfg || c.currentStock <= 0) return '';
+    if (!cfg || c.currentStock <= 0 || !c.receiptDate) return '';
     if (c.daysInStock >= cfg.redAlertDays) return 'alert-red';
     if (c.daysInStock >= cfg.yellowAlertDays) return 'alert-amber';
     return '';

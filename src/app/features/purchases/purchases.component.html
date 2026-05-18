@@ -76,6 +76,7 @@
               <th>Categoria</th>
               <th>Fornecedor</th>
               <th>Data</th>
+              <th>Recebido</th>
               <th class="text-center">Qtd.</th>
               <th class="text-right">Custo Unit.</th>
               <th class="text-right">Custo Total Real</th>
@@ -93,6 +94,7 @@
                 <td><span class="category-pill">{{ c.category }}</span></td>
                 <td class="text-muted">{{ c.supplier }}</td>
                 <td>{{ c.purchaseDate | brDate }}</td>
+                <td>{{ c.receiptDate | brDate }}</td>
                 <td class="text-center">{{ c.quantityPurchased }}</td>
                 <td class="text-right text-muted">{{ c.unitCost | brl }}</td>
                 <td class="text-right"><strong>{{ c.totalActualCost | brl }}</strong></td>

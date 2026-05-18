@@ -24,14 +24,15 @@ export function calculatePurchase(
   const firstSale = dates[0];
   const lastSale = dates[dates.length - 1];
 
-  const purchaseDate = new Date(purchase.purchaseDate);
-  const reference = (currentStock <= 0 && lastSale)
-    ? new Date(lastSale)
-    : new Date();
-  const daysInStock = Math.floor((reference.getTime() - purchaseDate.getTime()) / MS_PER_DAY);
+  const startDate = purchase.receiptDate
+    ? new Date(purchase.receiptDate)
+    : new Date(purchase.purchaseDate);
+  const endRef = (currentStock <= 0 && lastSale) ? new Date(lastSale) : new Date();
+  const daysInStock = Math.floor((endRef.getTime() - startDate.getTime()) / MS_PER_DAY);
 
   let status: InventoryStatus;
   if (currentStock <= 0) status = 'Vendido';
+  else if (!purchase.receiptDate) status = 'Ainda não recebido';
   else if (daysInStock >= config.redAlertDays) status = 'Parado';
   else if (daysInStock >= config.yellowAlertDays) status = 'Atenção';
   else status = 'Em Estoque';

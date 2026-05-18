@@ -92,6 +92,20 @@ export interface PurchaseDialogData {
         </mat-form-field>
 
         <mat-form-field>
+          <mat-label>Data de Recebimento (opcional)</mat-label>
+          <input
+            matInput
+            [matDatepicker]="pickerReceipt"
+            [ngModel]="receiptDateAsDate()"
+            (ngModelChange)="setReceiptDate($event)"
+            name="receiptDate"
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="pickerReceipt"></mat-datepicker-toggle>
+          <mat-datepicker #pickerReceipt></mat-datepicker>
+          <mat-hint>O prazo de alerta conta a partir desta data.</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field>
           <mat-label>Quantidade Comprada</mat-label>
           <input matInput type="number"
             [ngModel]="model().quantityPurchased"
@@ -265,6 +279,13 @@ export class PurchaseFormDialogComponent {
     return !y || !m || !d ? null : new Date(y, m - 1, d);
   });
 
+  protected readonly receiptDateAsDate = computed(() => {
+    const s = this.model().receiptDate;
+    if (!s) return null;
+    const [y, m, d] = s.split('-').map(Number);
+    return !y || !m || !d ? null : new Date(y, m - 1, d);
+  });
+
   protected set(field: string, value: unknown): void {
     this.model.update(m => ({ ...m, [field]: value }));
   }
@@ -277,6 +298,12 @@ export class PurchaseFormDialogComponent {
     const newStr = this.dateAsString(d);
     if (newStr === this.model().purchaseDate) return;
     this.model.update(m => ({ ...m, purchaseDate: newStr }));
+  }
+
+  protected setReceiptDate(d: Date | null): void {
+    const newStr = this.dateAsString(d);
+    if (newStr === this.model().receiptDate) return;
+    this.model.update(m => ({ ...m, receiptDate: newStr }));
   }
 
   private dateAsString(d: Date | null): string {
@@ -308,6 +335,7 @@ export class PurchaseFormDialogComponent {
       supplier: cfg?.suppliers[0] ?? 'Amazon BR',
       link: '',
       purchaseDate: new Date().toISOString().split('T')[0]!,
+      receiptDate: '',
       quantityPurchased: 1,
       unitCost: 0,
       purchaseShipping: cfg?.defaultShipping ?? 0,

@@ -7,7 +7,7 @@ type StatusType = InventoryStatus | SaleStatus;
 interface StatusConfig {
   label: string;
   icon: string;
-  variant: 'success' | 'info' | 'warning' | 'danger';
+  variant: 'success' | 'info' | 'warning' | 'danger' | 'neutral';
 }
 
 const STATUS_MAP: Record<StatusType, StatusConfig> = {
@@ -15,7 +15,8 @@ const STATUS_MAP: Record<StatusType, StatusConfig> = {
   'Em Estoque': { label: 'Em Estoque', icon: 'inventory_2', variant: 'info' },
   'Vendido':    { label: 'Vendido',    icon: 'check_circle', variant: 'success' },
   'Atenção':    { label: 'Atenção',    icon: 'warning',      variant: 'warning' },
-  'Parado':     { label: 'Parado',     icon: 'error',        variant: 'danger' },
+  'Parado':            { label: 'Parado',         icon: 'error',           variant: 'danger' },
+  'Ainda não recebido': { label: 'Não recebido', icon: 'schedule',        variant: 'neutral' },
   // Venda
   'Concluída':  { label: 'Concluída',  icon: 'check_circle', variant: 'success' },
   'Cancelada':  { label: 'Cancelada',  icon: 'cancel',       variant: 'danger' },
@@ -68,6 +69,10 @@ const STATUS_MAP: Record<StatusType, StatusConfig> = {
     .badge[data-variant="info"] {
       background: var(--bg-blue);
       color: var(--clr-blue);
+    }
+    .badge[data-variant="neutral"] {
+      background: var(--bg-elevated-2);
+      color: var(--txt-secondary);
     }
   `]
 })
