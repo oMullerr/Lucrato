@@ -58,13 +58,13 @@ npm run build
 ## TODO
 
 - Dintinção de envio (correio/flex) - caso seja flex, ter o reembolso do frete
-- trocar nome de arquivo, função, variavel tudo pra ingles
 - Sistema de login => Firebase
 - Adicionar logo
 - Import de compras e vendas em massa
 - Versão mobile
 - Ordenar Categorias, Fornecedores e canais de vendas no painel de configuração
 - Adicionar data de recebimento do produto e contar o status a partir dessa data (hoje é feito em cima da data de compra)
+- Refazer layout e cores
 
 ---
 

@@ -110,9 +110,10 @@
       </h3>
       <mat-form-field appearance="outline" class="chip-field">
         <mat-label>Adicionar categoria</mat-label>
-        <mat-chip-grid #chipsCategories>
+        <mat-chip-grid #chipsCategories cdkDropList (cdkDropListDropped)="drop($event, 'categories')">
           @for (cat of form().categories; track cat) {
-            <mat-chip-row (removed)="removeItem('categories', cat)">
+            <mat-chip-row cdkDrag (removed)="removeItem('categories', cat)">
+              <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
               {{ cat }}
               <button matChipRemove>
                 <mat-icon>cancel</mat-icon>
@@ -136,9 +137,10 @@
       </h3>
       <mat-form-field appearance="outline" class="chip-field">
         <mat-label>Adicionar fornecedor</mat-label>
-        <mat-chip-grid #chipsSuppliers>
+        <mat-chip-grid #chipsSuppliers cdkDropList (cdkDropListDropped)="drop($event, 'suppliers')">
           @for (s of form().suppliers; track s) {
-            <mat-chip-row (removed)="removeItem('suppliers', s)">
+            <mat-chip-row cdkDrag (removed)="removeItem('suppliers', s)">
+              <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
               {{ s }}
               <button matChipRemove>
                 <mat-icon>cancel</mat-icon>
@@ -162,9 +164,10 @@
       </h3>
       <mat-form-field appearance="outline" class="chip-field">
         <mat-label>Adicionar canal</mat-label>
-        <mat-chip-grid #chipsChannels>
+        <mat-chip-grid #chipsChannels cdkDropList (cdkDropListDropped)="drop($event, 'channels')">
           @for (c of form().channels; track c) {
-            <mat-chip-row (removed)="removeItem('channels', c)">
+            <mat-chip-row cdkDrag (removed)="removeItem('channels', c)">
+              <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
               {{ c }}
               <button matChipRemove>
                 <mat-icon>cancel</mat-icon>

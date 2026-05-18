@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Settings } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
@@ -22,7 +23,8 @@ type ListKey = 'categories' | 'suppliers' | 'channels';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule, MatCardModule, MatIconModule, MatButtonModule,
+    FormsModule, DragDropModule,
+    MatCardModule, MatIconModule, MatButtonModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatChipsModule,
     PageHeaderComponent,
   ],
@@ -67,6 +69,12 @@ export class SettingsComponent {
       return;
     }
     this.form.update(f => ({ ...f, [list]: [...current, v] }));
+  }
+
+  protected drop(event: CdkDragDrop<string[]>, list: ListKey): void {
+    const arr = [...this.form()[list]];
+    moveItemInArray(arr, event.previousIndex, event.currentIndex);
+    this.form.update(f => ({ ...f, [list]: arr }));
   }
 
   protected removeItem(list: ListKey, item: string): void {
