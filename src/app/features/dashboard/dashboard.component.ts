@@ -113,7 +113,7 @@ export class DashboardComponent {
     const c = this.C();
 
     return {
-      labels: ['Lucro Líquido', 'Taxas ML', 'Frete', 'Desconto', 'Custo Produtos'],
+      labels: ['Lucro Líquido', 'Taxas L', 'Frete', 'Desconto', 'Custo Produtos'],
       datasets: [{
         data: [
           Math.max(0, k.lucroLiquido),
@@ -154,7 +154,7 @@ export class DashboardComponent {
     const k = this.kpis();
     const c = this.C();
     return {
-      labels: ['Investido', 'Receita Bruta', 'Receita Líquida', 'Lucro Líquido', 'Capital Parado', 'Taxas ML'],
+      labels: ['Investido', 'Receita Bruta', 'Receita Líquida', 'Lucro Líquido', 'Capital Parado', 'Taxas L'],
       datasets: [{
         label: 'Valor (R$)',
         data: [k.totalInvestido, k.receitaBruta, k.receitaLiquida, k.lucroLiquido, k.capitalParado, k.taxasTotal],

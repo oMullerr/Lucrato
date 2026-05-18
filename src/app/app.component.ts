@@ -58,9 +58,9 @@ const NAV_GROUPS: NavGroup[] = [
     <mat-sidenav-container class="app-shell">
       <mat-sidenav mode="side" opened class="sidebar">
         <div class="brand">
-          <div class="logo">ML</div>
+          <div class="logo">Lucrato</div>
           <div class="brand-text">
-            <strong>ML Gestão</strong>
+            <strong>Lucrato</strong>
             <small>Sistema v1.0</small>
           </div>
         </div>

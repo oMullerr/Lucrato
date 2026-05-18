@@ -1,6 +1,6 @@
 /** Constantes de aplicação */
 export const APP = {
-  name: 'ML Gestão',
+  name: 'Lucrato',
   version: '1.0.0',
   storageKey: 'ml-gestao-db',
   themeKey: 'ml-gestao-theme',

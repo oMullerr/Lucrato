@@ -42,7 +42,7 @@ const INSTRUCTIONS: InstructionItem[] = [
    • ID Venda: código único (ex: V005).
    • ID Lote: selecione o lote correspondente — isso puxa o custo correto automaticamente.
    • Quantidade vendida, preço unitário, data, canal.
-   • Taxa ML: já vem preenchida com o padrão. Edite se a taxa foi diferente nessa venda.
+   • Taxa L: já vem preenchida com o padrão. Edite se a taxa foi diferente nessa venda.
    • Frete vendedor, desconto e outros custos (opcional).
 3. O sistema calcula receita líquida, lucro e margem em tempo real.`,
   },
@@ -99,7 +99,7 @@ Os limites de dias são configuráveis em Configurações.`,
     icon: 'tune',
     title: 'Parâmetros configuráveis',
     body: `Na aba Configurações você pode ajustar:
-• Taxa ML padrão (12% por padrão).
+• Taxa L padrão (12% por padrão).
 • Dias para alertas amarelo (25) e vermelho (30).
 • Margem líquida mínima desejada (10%).
 • Frete padrão de compra.
@@ -128,7 +128,7 @@ Revisão semanal (5 minutos):
     title: 'Dicas importantes',
     body: `• Sempre preencha o ID Lote nas vendas — sem ele, o custo fica zerado e o lucro inflado.
 • Use IDs novos para compras novas do mesmo produto.
-• A taxa do ML pode variar por venda — edite no formulário quando necessário.
+• A taxa do L pode variar por venda — edite no formulário quando necessário.
 • Use Compras → Backup para exportar/importar seus dados em JSON.
 • O sistema funciona offline e salva tudo no seu navegador (localStorage).
 • Pode alternar entre tema claro e escuro a qualquer momento no botão do canto superior direito.`,
@@ -147,14 +147,14 @@ Revisão semanal (5 minutos):
     <app-page-header
       icon="help_outline"
       title="Instruções de Uso"
-      subtitle="Guia completo do sistema ML Gestão"
+      subtitle="Guia completo do sistema Lucrato"
     />
 
     <div class="content">
       <mat-card class="intro-card">
         <mat-icon class="intro-icon">menu_book</mat-icon>
         <div>
-          <h3>Bem-vindo ao ML Gestão</h3>
+          <h3>Bem-vindo ao Lucrato</h3>
           <p>
             Este guia explica passo a passo como usar o sistema. Clique em cada
             seção para expandir e ver os detalhes.

@@ -177,7 +177,7 @@ export interface VendaDialogData {
             <strong class="text-info">{{ preview().receitaBruta | brl }}</strong>
           </div>
           <div>
-            <span>Taxa ML</span>
+            <span>Taxa L</span>
             <strong class="text-warning">- {{ preview().taxaValor | brl }}</strong>
           </div>
           <div>

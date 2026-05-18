@@ -1,5 +1,5 @@
 /**
- * Modelos de domínio do Sistema ML Gestão
+ * Modelos de domínio do Sistema Lucrato
  */
 
 export type StatusEstoque = 'Em Estoque' | 'Vendido' | 'Atenção' | 'Parado';

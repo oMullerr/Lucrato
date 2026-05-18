@@ -5,37 +5,37 @@ export const routes: Routes = [
   {
     path: 'estoque',
     loadComponent: () => import('./features/estoque/estoque.component').then(m => m.EstoqueComponent),
-    title: 'Estoque · ML Gestão',
+    title: 'Estoque · Lucrato',
   },
   {
     path: 'compras',
     loadComponent: () => import('./features/compras/compras.component').then(m => m.ComprasComponent),
-    title: 'Compras · ML Gestão',
+    title: 'Compras · Lucrato',
   },
   {
     path: 'vendas',
     loadComponent: () => import('./features/vendas/vendas.component').then(m => m.VendasComponent),
-    title: 'Vendas · ML Gestão',
+    title: 'Vendas · Lucrato',
   },
   {
     path: 'dashboard',
     loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
-    title: 'Dashboard · ML Gestão',
+    title: 'Dashboard · Lucrato',
   },
   {
     path: 'analises',
     loadComponent: () => import('./features/analises/analises.component').then(m => m.AnalisesComponent),
-    title: 'Análises · ML Gestão',
+    title: 'Análises · Lucrato',
   },
   {
     path: 'configuracoes',
     loadComponent: () => import('./features/configuracoes/configuracoes.component').then(m => m.ConfiguracoesComponent),
-    title: 'Configurações · ML Gestão',
+    title: 'Configurações · Lucrato',
   },
   {
     path: 'instrucoes',
     loadComponent: () => import('./features/instrucoes/instrucoes.component').then(m => m.InstrucoesComponent),
-    title: 'Instruções · ML Gestão',
+    title: 'Instruções · Lucrato',
   },
   { path: '**', redirectTo: 'estoque' },
 ];
