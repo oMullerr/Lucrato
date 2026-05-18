@@ -38,7 +38,8 @@ export interface VendaDialogData {
           <mat-label>ID Venda</mat-label>
           <input
             matInput
-            [(ngModel)]="model().id"
+            [ngModel]="model().id"
+            (ngModelChange)="set('id', $event)"
             name="id"
             required
             pattern="V[0-9]{3,}"
@@ -50,10 +51,10 @@ export interface VendaDialogData {
         <mat-form-field>
           <mat-label>ID Lote (da aba Compras)</mat-label>
           <mat-select
-            [(ngModel)]="model().idLote"
+            [ngModel]="model().idLote"
+            (ngModelChange)="onIdLoteChange($event)"
             name="idLote"
             required
-            (selectionChange)="aoEscolherLote()"
           >
             @for (lote of lotesDisponiveis(); track lote.id) {
               <mat-option [value]="lote.id">
@@ -79,7 +80,7 @@ export interface VendaDialogData {
           <input
             matInput
             [matDatepicker]="pickerVenda"
-            [ngModel]="dataAsDate(model().dataVenda)"
+            [ngModel]="dataVendaAsDate()"
             (ngModelChange)="setDataVenda($event)"
             name="dataVenda"
             required
@@ -90,7 +91,10 @@ export interface VendaDialogData {
 
         <mat-form-field>
           <mat-label>Canal</mat-label>
-          <mat-select [(ngModel)]="model().canal" name="canal" required>
+          <mat-select
+            [ngModel]="model().canal"
+            (ngModelChange)="set('canal', $event)"
+            name="canal" required>
             @for (c of canais(); track c) {
               <mat-option [value]="c">{{ c }}</mat-option>
             }
@@ -99,7 +103,10 @@ export interface VendaDialogData {
 
         <mat-form-field>
           <mat-label>Qtd. Vendida</mat-label>
-          <input matInput type="number" [(ngModel)]="model().qtdVendida" name="qtdVendida" min="1" required />
+          <input matInput type="number"
+            [ngModel]="model().qtdVendida"
+            (ngModelChange)="setNum('qtdVendida', $event)"
+            name="qtdVendida" min="1" required />
           @if (estoqueDisponivel() !== null) {
             <mat-hint>Disponível: {{ estoqueDisponivel() }} un.</mat-hint>
           }
@@ -107,7 +114,10 @@ export interface VendaDialogData {
 
         <mat-form-field>
           <mat-label>Preço Unitário (R$)</mat-label>
-          <input matInput type="number" step="0.01" [(ngModel)]="model().precoUnitario" name="precoUnitario" min="0.01" required />
+          <input matInput type="number" step="0.01"
+            [ngModel]="model().precoUnitario"
+            (ngModelChange)="setNum('precoUnitario', $event)"
+            name="precoUnitario" min="0.01" required />
         </mat-form-field>
 
         <!-- TAXA CUSTOMIZADA - destaque -->
@@ -147,22 +157,34 @@ export interface VendaDialogData {
 
         <mat-form-field>
           <mat-label>Frete Vendedor (R$)</mat-label>
-          <input matInput type="number" step="0.01" [(ngModel)]="model().freteVendedor" name="freteVendedor" min="0" />
+          <input matInput type="number" step="0.01"
+            [ngModel]="model().freteVendedor"
+            (ngModelChange)="setNum('freteVendedor', $event)"
+            name="freteVendedor" min="0" />
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Desconto / Cupom (R$)</mat-label>
-          <input matInput type="number" step="0.01" [(ngModel)]="model().desconto" name="desconto" min="0" />
+          <input matInput type="number" step="0.01"
+            [ngModel]="model().desconto"
+            (ngModelChange)="setNum('desconto', $event)"
+            name="desconto" min="0" />
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Outros Custos (R$)</mat-label>
-          <input matInput type="number" step="0.01" [(ngModel)]="model().outrosCustos" name="outrosCustos" min="0" />
+          <input matInput type="number" step="0.01"
+            [ngModel]="model().outrosCustos"
+            (ngModelChange)="setNum('outrosCustos', $event)"
+            name="outrosCustos" min="0" />
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Status</mat-label>
-          <mat-select [(ngModel)]="model().status" name="status" required>
+          <mat-select
+            [ngModel]="model().status"
+            (ngModelChange)="set('status', $event)"
+            name="status" required>
             <mat-option value="Concluída">Concluída</mat-option>
             <mat-option value="Cancelada">Cancelada</mat-option>
             <mat-option value="Devolvida">Devolvida</mat-option>
@@ -172,7 +194,10 @@ export interface VendaDialogData {
 
         <mat-form-field class="full">
           <mat-label>Observações</mat-label>
-          <textarea matInput rows="2" [(ngModel)]="model().observacoes" name="observacoes"></textarea>
+          <textarea matInput rows="2"
+            [ngModel]="model().observacoes"
+            (ngModelChange)="set('observacoes', $event)"
+            name="observacoes"></textarea>
         </mat-form-field>
       </form>
 
@@ -369,15 +394,17 @@ export class VendaFormDialogComponent {
     this.onTaxaChange();
   }
 
-  protected dataAsDate(s: string | undefined): Date | null {
+  protected readonly dataVendaAsDate = computed(() => {
+    const s = this.model().dataVenda;
     if (!s) return null;
     const [y, m, d] = s.split('-').map(Number);
-    if (!y || !m || !d) return null;
-    return new Date(y, m - 1, d);
-  }
+    return !y || !m || !d ? null : new Date(y, m - 1, d);
+  });
 
   protected setDataVenda(d: Date | null): void {
-    this.model.update(m => ({ ...m, dataVenda: this.dateAsString(d) }));
+    const newStr = this.dateAsString(d);
+    if (newStr === this.model().dataVenda) return;
+    this.model.update(m => ({ ...m, dataVenda: newStr }));
   }
 
   private dateAsString(d: Date | null): string {
@@ -388,11 +415,17 @@ export class VendaFormDialogComponent {
     return `${y}-${m}-${day}`;
   }
 
-  protected aoEscolherLote(): void {
-    const lote = this.dataService.buscarCompra(this.model().idLote);
-    if (lote) {
-      this.model.update(m => ({ ...m, produto: lote.produto }));
-    }
+  protected set(field: string, value: unknown): void {
+    this.model.update(m => ({ ...m, [field]: value }));
+  }
+
+  protected setNum(field: string, value: string | number | null): void {
+    this.model.update(m => ({ ...m, [field]: +(value ?? 0) || 0 }));
+  }
+
+  protected onIdLoteChange(idLote: string): void {
+    const lote = this.dataService.buscarCompra(idLote);
+    this.model.update(m => ({ ...m, idLote, produto: lote?.produto ?? m.produto }));
   }
 
   protected isValid(): boolean {

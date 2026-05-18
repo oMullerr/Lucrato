@@ -35,7 +35,8 @@ export interface CompraDialogData {
           <mat-label>ID Lote</mat-label>
           <input
             matInput
-            [(ngModel)]="model().id"
+            [ngModel]="model().id"
+            (ngModelChange)="set('id', $event)"
             name="id"
             required
             pattern="C[0-9]{3,}"
@@ -46,12 +47,18 @@ export interface CompraDialogData {
 
         <mat-form-field class="full">
           <mat-label>Produto</mat-label>
-          <input matInput [(ngModel)]="model().produto" name="produto" required />
+          <input matInput
+            [ngModel]="model().produto"
+            (ngModelChange)="set('produto', $event)"
+            name="produto" required />
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Categoria</mat-label>
-          <mat-select [(ngModel)]="model().categoria" name="categoria" required>
+          <mat-select
+            [ngModel]="model().categoria"
+            (ngModelChange)="set('categoria', $event)"
+            name="categoria" required>
             @for (cat of categorias(); track cat) {
               <mat-option [value]="cat">{{ cat }}</mat-option>
             }
@@ -60,7 +67,10 @@ export interface CompraDialogData {
 
         <mat-form-field>
           <mat-label>Fornecedor</mat-label>
-          <mat-select [(ngModel)]="model().fornecedor" name="fornecedor" required>
+          <mat-select
+            [ngModel]="model().fornecedor"
+            (ngModelChange)="set('fornecedor', $event)"
+            name="fornecedor" required>
             @for (f of fornecedores(); track f) {
               <mat-option [value]="f">{{ f }}</mat-option>
             }
@@ -72,7 +82,7 @@ export interface CompraDialogData {
           <input
             matInput
             [matDatepicker]="pickerCompra"
-            [ngModel]="dataAsDate(model().dataCompra)"
+            [ngModel]="dataCompraAsDate()"
             (ngModelChange)="setDataCompra($event)"
             name="dataCompra"
             required
@@ -83,32 +93,50 @@ export interface CompraDialogData {
 
         <mat-form-field>
           <mat-label>Quantidade Comprada</mat-label>
-          <input matInput type="number" [(ngModel)]="model().qtdComprada" name="qtdComprada" min="1" required />
+          <input matInput type="number"
+            [ngModel]="model().qtdComprada"
+            (ngModelChange)="setNum('qtdComprada', $event)"
+            name="qtdComprada" min="1" required />
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Custo Unitário (R$)</mat-label>
-          <input matInput type="number" step="0.01" [(ngModel)]="model().custoUnitario" name="custoUnitario" min="0" required />
+          <input matInput type="number" step="0.01"
+            [ngModel]="model().custoUnitario"
+            (ngModelChange)="setNum('custoUnitario', $event)"
+            name="custoUnitario" min="0" required />
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Frete da Compra (R$)</mat-label>
-          <input matInput type="number" step="0.01" [(ngModel)]="model().freteCompra" name="freteCompra" min="0" />
+          <input matInput type="number" step="0.01"
+            [ngModel]="model().freteCompra"
+            (ngModelChange)="setNum('freteCompra', $event)"
+            name="freteCompra" min="0" />
         </mat-form-field>
 
         <mat-form-field>
           <mat-label>Outros Custos (R$)</mat-label>
-          <input matInput type="number" step="0.01" [(ngModel)]="model().outrosCustos" name="outrosCustos" min="0" />
+          <input matInput type="number" step="0.01"
+            [ngModel]="model().outrosCustos"
+            (ngModelChange)="setNum('outrosCustos', $event)"
+            name="outrosCustos" min="0" />
         </mat-form-field>
 
         <mat-form-field class="full">
           <mat-label>Link da Compra (opcional)</mat-label>
-          <input matInput type="url" [(ngModel)]="model().link" name="link" placeholder="https://..." />
+          <input matInput type="url"
+            [ngModel]="model().link"
+            (ngModelChange)="set('link', $event)"
+            name="link" placeholder="https://..." />
         </mat-form-field>
 
         <mat-form-field class="full">
           <mat-label>Observações</mat-label>
-          <textarea matInput rows="2" [(ngModel)]="model().observacoes" name="observacoes"></textarea>
+          <textarea matInput rows="2"
+            [ngModel]="model().observacoes"
+            (ngModelChange)="set('observacoes', $event)"
+            name="observacoes"></textarea>
         </mat-form-field>
       </form>
 
@@ -230,15 +258,25 @@ export class CompraFormDialogComponent {
     return m.qtdComprada > 0 ? this.custoTotalReal() / m.qtdComprada : 0;
   });
 
-  protected dataAsDate(s: string | undefined): Date | null {
+  protected readonly dataCompraAsDate = computed(() => {
+    const s = this.model().dataCompra;
     if (!s) return null;
     const [y, m, d] = s.split('-').map(Number);
-    if (!y || !m || !d) return null;
-    return new Date(y, m - 1, d);
+    return !y || !m || !d ? null : new Date(y, m - 1, d);
+  });
+
+  protected set(field: string, value: unknown): void {
+    this.model.update(m => ({ ...m, [field]: value }));
+  }
+
+  protected setNum(field: string, value: string | number | null): void {
+    this.model.update(m => ({ ...m, [field]: +(value ?? 0) || 0 }));
   }
 
   protected setDataCompra(d: Date | null): void {
-    this.model.update(m => ({ ...m, dataCompra: this.dateAsString(d) }));
+    const newStr = this.dateAsString(d);
+    if (newStr === this.model().dataCompra) return;
+    this.model.update(m => ({ ...m, dataCompra: newStr }));
   }
 
   private dateAsString(d: Date | null): string {
