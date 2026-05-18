@@ -4,6 +4,12 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
+import {
+  MAT_DATE_FORMATS,
+  MAT_DATE_LOCALE,
+  MatDateFormats,
+  provideNativeDateAdapter,
+} from '@angular/material/core';
 import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
@@ -12,13 +18,28 @@ import { routes } from './app.routes';
 
 registerLocaleData(localePt);
 
+const BR_DATE_FORMATS: MatDateFormats = {
+  parse: {
+    dateInput: 'dd/MM/yyyy',
+  },
+  display: {
+    dateInput: { day: '2-digit', month: '2-digit', year: 'numeric' },
+    monthYearLabel: { month: 'short', year: 'numeric' },
+    dateA11yLabel: { day: '2-digit', month: 'long', year: 'numeric' },
+    monthYearA11yLabel: { month: 'long', year: 'numeric' },
+  },
+};
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding()),
     provideAnimations(),
     provideCharts(withDefaultRegisterables()),
+    provideNativeDateAdapter(),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
+    { provide: MAT_DATE_LOCALE, useValue: 'pt-BR' },
+    { provide: MAT_DATE_FORMATS, useValue: BR_DATE_FORMATS },
     {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
       useValue: { appearance: 'outline', subscriptSizing: 'dynamic' },

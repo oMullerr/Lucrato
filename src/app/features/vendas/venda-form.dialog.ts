@@ -7,6 +7,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { Venda } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { calcularVenda } from '../../core/services/calculations';
@@ -22,7 +23,8 @@ export interface VendaDialogData {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
-    MatSelectModule, MatButtonModule, MatIconModule, MatTooltipModule, BrlPipe,
+    MatSelectModule, MatButtonModule, MatIconModule, MatTooltipModule,
+    MatDatepickerModule, BrlPipe,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -74,7 +76,16 @@ export interface VendaDialogData {
 
         <mat-form-field>
           <mat-label>Data da Venda</mat-label>
-          <input matInput type="date" [(ngModel)]="model().dataVenda" name="dataVenda" required />
+          <input
+            matInput
+            [matDatepicker]="pickerVenda"
+            [ngModel]="dataAsDate(model().dataVenda)"
+            (ngModelChange)="setDataVenda($event)"
+            name="dataVenda"
+            required
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="pickerVenda"></mat-datepicker-toggle>
+          <mat-datepicker #pickerVenda></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field>
@@ -356,6 +367,25 @@ export class VendaFormDialogComponent {
   protected resetarTaxa(): void {
     this.taxaInput = this.taxaPadrao() * 100;
     this.onTaxaChange();
+  }
+
+  protected dataAsDate(s: string | undefined): Date | null {
+    if (!s) return null;
+    const [y, m, d] = s.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d);
+  }
+
+  protected setDataVenda(d: Date | null): void {
+    this.model.update(m => ({ ...m, dataVenda: this.dateAsString(d) }));
+  }
+
+  private dateAsString(d: Date | null): string {
+    if (!d) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
 
   protected aoEscolherLote(): void {
