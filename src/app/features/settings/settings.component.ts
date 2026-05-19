@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,9 +12,11 @@ import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Settings } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
+import { ImportService } from '../../core/services/import.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
+import { ImportResultDialogComponent } from './import-result-dialog.component';
 
 type ListKey = 'categories' | 'suppliers' | 'channels';
 
@@ -33,8 +35,11 @@ type ListKey = 'categories' | 'suppliers' | 'channels';
 })
 export class SettingsComponent {
   private readonly dataService = inject(DataService);
+  private readonly importService = inject(ImportService);
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(MatDialog);
+
+  private readonly fileInputEl = viewChild<ElementRef<HTMLInputElement>>('fileInputRef');
 
   protected readonly separators = [ENTER, COMMA];
 
@@ -116,6 +121,45 @@ export class SettingsComponent {
     this._dirty = false;
     this.form.set(this.snapshot());
     this.notify.info('Alterações descartadas.');
+  }
+
+  protected downloadTemplate(): void {
+    this.importService.downloadTemplate(this.form());
+  }
+
+  protected triggerImport(): void {
+    this.fileInputEl()?.nativeElement.click();
+  }
+
+  protected async onFileSelected(event: Event): Promise<void> {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    const result = await this.importService.parseFile(
+      file,
+      this.dataService.purchases(),
+      this.dataService.sales(),
+      this.form(),
+    );
+
+    if (result.purchases.length) this.dataService.addPurchasesBulk(result.purchases);
+    if (result.sales.length) this.dataService.addSalesBulk(result.sales);
+
+    (event.target as HTMLInputElement).value = '';
+
+    if (result.errors.length === 0 && result.purchases.length === 0 && result.sales.length === 0) {
+      this.notify.warning('Nenhum dado encontrado na planilha.');
+      return;
+    }
+
+    this.dialog.open(ImportResultDialogComponent, {
+      data: {
+        purchaseCount: result.purchases.length,
+        saleCount: result.sales.length,
+        errors: result.errors,
+      },
+      width: '520px',
+    });
   }
 
   protected resetAll(): void {

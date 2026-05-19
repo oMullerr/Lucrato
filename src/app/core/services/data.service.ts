@@ -155,6 +155,14 @@ export class DataService {
     this.update(d => { d.sales = d.sales.filter(v => v.id !== id); });
   }
 
+  addPurchasesBulk(purchases: Purchase[]): void {
+    this.update(d => { d.purchases.push(...purchases); });
+  }
+
+  addSalesBulk(sales: Sale[]): void {
+    this.update(d => { d.sales.push(...sales); });
+  }
+
   // ─── Settings ─────────────────────────────────────────
 
   updateSettings(data: Partial<Settings>): void {

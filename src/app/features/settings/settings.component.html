@@ -188,6 +188,34 @@
     </mat-card>
   </div>
 
+  <!-- Importação em Massa -->
+  <mat-card class="config-card">
+    <h3 class="card-title">
+      <mat-icon>upload_file</mat-icon>
+      Importação em Massa
+    </h3>
+    <p class="import-description">
+      Baixe o modelo Excel, preencha com suas compras e vendas (a partir da linha 3) e reimporte.
+    </p>
+    <div class="import-actions">
+      <button mat-stroked-button (click)="downloadTemplate()">
+        <mat-icon>download</mat-icon>
+        Baixar Modelo (.xlsx)
+      </button>
+      <button mat-flat-button color="primary" (click)="triggerImport()">
+        <mat-icon>upload</mat-icon>
+        Importar Planilha
+      </button>
+    </div>
+    <input
+      #fileInputRef
+      type="file"
+      accept=".xlsx,.xls"
+      style="display:none"
+      (change)="onFileSelected($event)"
+    />
+  </mat-card>
+
   <!-- Zona de perigo -->
   <mat-card class="danger-card">
     <h3 class="card-title danger">

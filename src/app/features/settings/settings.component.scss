@@ -90,6 +90,19 @@
   transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
 }
 
+.import-description {
+  color: var(--txt-secondary);
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.import-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .danger-card p {
   color: var(--txt-secondary);
   margin: 0 0 16px;
