@@ -8,7 +8,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatMenuModule } from '@angular/material/menu';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { Purchase, ComputedPurchase, InventoryStatus } from '../../core/models/models';
@@ -29,7 +28,7 @@ type StatusFilter = 'all' | 'in-stock' | 'attention' | 'idle' | 'sold';
     FormsModule,
     MatButtonModule, MatIconModule, MatCardModule,
     MatFormFieldModule, MatInputModule, MatChipsModule,
-    MatTooltipModule, MatMenuModule,
+    MatTooltipModule,
     PageHeaderComponent, StatusBadgeComponent,
     BrlPipe, BrDatePipe,
   ],
@@ -119,34 +118,6 @@ export class PurchasesComponent {
           this.notify.success(`Lote ${c.id} removido.`);
         }
       });
-  }
-
-  protected exportData(): void {
-    const blob = new Blob([this.dataService.exportData()], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ml-gestao-backup-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    this.notify.success('Backup exportado.');
-  }
-
-  protected importData(): void {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async () => {
-      const file = input.files?.[0];
-      if (!file) return;
-      const text = await file.text();
-      if (this.dataService.importData(text)) {
-        this.notify.success('Backup importado com sucesso.');
-      } else {
-        this.notify.error('Arquivo inválido.');
-      }
-    };
-    input.click();
   }
 
   private openForm(purchase?: Purchase): void {

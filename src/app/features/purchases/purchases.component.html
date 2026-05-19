@@ -3,21 +3,6 @@
   title="Compras / Lotes"
   subtitle="Cadastre cada lote comprado para revenda"
 >
-  <button mat-stroked-button [matMenuTriggerFor]="menuBackup">
-    <mat-icon>backup</mat-icon>
-    Backup
-  </button>
-  <mat-menu #menuBackup="matMenu">
-    <button mat-menu-item (click)="exportData()">
-      <mat-icon>file_download</mat-icon>
-      Exportar dados
-    </button>
-    <button mat-menu-item (click)="importData()">
-      <mat-icon>file_upload</mat-icon>
-      Importar dados
-    </button>
-  </mat-menu>
-
   <button mat-flat-button color="primary" (click)="openNew()">
     <mat-icon>add</mat-icon>
     Nova Compra
