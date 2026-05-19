@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
 import { ThemeService } from './core/services/theme.service';
 import { DataService } from './core/services/data.service';
 import { AuthService } from './core/services/auth.service';
@@ -53,7 +54,7 @@ const NAV_GROUPS: NavGroup[] = [
   imports: [
     RouterOutlet, RouterLink, RouterLinkActive,
     MatSidenavModule, MatToolbarModule, MatListModule,
-    MatIconModule, MatButtonModule, MatDividerModule, MatTooltipModule,
+    MatIconModule, MatButtonModule, MatDividerModule, MatTooltipModule, MatMenuModule,
   ],
   template: `
     @if (auth.isLoggedIn()) {
@@ -64,7 +65,7 @@ const NAV_GROUPS: NavGroup[] = [
               <img src="favicon.svg" alt="Lucrato" width="26" height="26" />
             </div>
             <div class="brand-text">
-              <strong>{{ auth.storeName() || 'Lucrato' }}</strong>
+              <strong>Lucrato</strong>
               <small>Sistema v1.0</small>
             </div>
           </div>
@@ -112,14 +113,16 @@ const NAV_GROUPS: NavGroup[] = [
             >
               <mat-icon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
             </button>
-            <button
-              mat-icon-button
-              (click)="logout()"
-              matTooltip="Sair"
-              aria-label="Sair da conta"
-            >
-              <mat-icon>logout</mat-icon>
+            <button mat-button [matMenuTriggerFor]="userMenu" class="user-btn">
+              <mat-icon>account_circle</mat-icon>
+              <span class="user-name">{{ auth.storeName() }}</span>
             </button>
+            <mat-menu #userMenu="matMenu">
+              <button mat-menu-item (click)="logout()">
+                <mat-icon>logout</mat-icon>
+                <span>Sair</span>
+              </button>
+            </mat-menu>
           </mat-toolbar>
 
           <div class="page-container">
@@ -269,6 +272,32 @@ const NAV_GROUPS: NavGroup[] = [
     }
 
     .topbar-spacer { flex: 1; }
+
+    .user-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--txt-primary);
+      font-size: 13px;
+      font-weight: 500;
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 8px;
+    }
+
+    .user-btn mat-icon {
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+      color: var(--txt-secondary);
+    }
+
+    .user-name {
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 
     .page-container {
       height: calc(100vh - 56px);
