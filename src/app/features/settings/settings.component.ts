@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -39,11 +39,27 @@ export class SettingsComponent {
   protected readonly separators = [ENTER, COMMA];
 
   protected readonly form = signal<Settings>(this.snapshot());
+  private _dirty = false;
+
+  constructor() {
+    effect(() => {
+      const settings = this.dataService.settings();
+      if (settings && !this._dirty) {
+        this.form.set(JSON.parse(JSON.stringify(settings)));
+      }
+    }, { allowSignalWrites: true });
+  }
+
+  protected update<K extends keyof Settings>(key: K, value: unknown): void {
+    this._dirty = true;
+    this.form.update(f => ({ ...f, [key]: value }));
+  }
 
   protected get feePercentage(): number {
     return this.form().defaultMlFee * 100;
   }
   protected set feePercentage(v: number) {
+    this._dirty = true;
     this.form.update(f => ({ ...f, defaultMlFee: (v || 0) / 100 }));
   }
 
@@ -51,6 +67,7 @@ export class SettingsComponent {
     return this.form().minimumMargin * 100;
   }
   protected set minMarginPct(v: number) {
+    this._dirty = true;
     this.form.update(f => ({ ...f, minimumMargin: (v || 0) / 100 }));
   }
 
@@ -68,28 +85,35 @@ export class SettingsComponent {
       this.notify.warning(`"${v}" já existe na lista.`);
       return;
     }
-    this.form.update(f => ({ ...f, [list]: [...current, v] }));
+    const updated = [...current, v];
+    this._dirty = true;
+    this.form.update(f => ({ ...f, [list]: updated }));
+    this.dataService.updateSettings({ [list]: updated } as Partial<Settings>);
   }
 
   protected drop(event: CdkDragDrop<string[]>, list: ListKey): void {
     const arr = [...this.form()[list]];
     moveItemInArray(arr, event.previousIndex, event.currentIndex);
+    this._dirty = true;
     this.form.update(f => ({ ...f, [list]: arr }));
+    this.dataService.updateSettings({ [list]: arr } as Partial<Settings>);
   }
 
   protected removeItem(list: ListKey, item: string): void {
-    this.form.update(f => ({
-      ...f,
-      [list]: f[list].filter(x => x !== item),
-    }));
+    const updated = this.form()[list].filter(x => x !== item);
+    this._dirty = true;
+    this.form.update(f => ({ ...f, [list]: updated }));
+    this.dataService.updateSettings({ [list]: updated } as Partial<Settings>);
   }
 
   protected save(): void {
+    this._dirty = false;
     this.dataService.updateSettings(this.form());
     this.notify.success('Configurações salvas.');
   }
 
   protected discard(): void {
+    this._dirty = false;
     this.form.set(this.snapshot());
     this.notify.info('Alterações descartadas.');
   }

@@ -1,67 +1,84 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Firestore, doc, onSnapshot, setDoc } from '@angular/fire/firestore';
+import type { Unsubscribe } from '@angular/fire/firestore';
 import { APP } from '../constants/app.constants';
 import {
   Purchase, Sale, Settings, Database
 } from '../models/models';
 import { calculatePurchase, calculateKpis, calculateSale, nextId } from './calculations';
+import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
+  private readonly firestore = inject(Firestore);
+  private readonly auth = inject(AuthService);
+
   private readonly db = signal<Database | null>(null);
+  private _unsub?: Unsubscribe;
 
   readonly loaded = computed(() => this.db() !== null);
   readonly purchases = computed(() => this.db()?.purchases ?? []);
   readonly sales = computed(() => this.db()?.sales ?? []);
   readonly settings = computed(() => this.db()?.settings ?? null);
 
-  /** Purchases with derived computed fields (actual cost, stock, status). */
   readonly computedPurchases = computed(() => {
     const cfg = this.settings();
     if (!cfg) return [];
     return this.purchases().map(c => calculatePurchase(c, this.sales(), cfg));
   });
 
-  /** Sales with derived computed fields (profit, margin). */
   readonly computedSales = computed(() =>
     this.sales().map(v => calculateSale(v, this.purchases()))
   );
 
-  /** Consolidated KPIs. */
   readonly kpis = computed(() =>
     calculateKpis(this.computedPurchases(), this.computedSales())
   );
 
   constructor() {
-    void this.load();
-  }
-
-  // ─── Persistence ───────────────────────────────────────
-
-  async load(): Promise<void> {
-    const stored = localStorage.getItem(APP.storageKey);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        this.db.set(this.migrateDatabase(parsed));
-        return;
-      } catch {
-        // fall through to fetch
+    effect(() => {
+      const u = this.auth.currentUser();
+      if (u) {
+        this.startSync(u.uid);
+      } else if (u === null) {
+        this.stopSync();
       }
-    }
-    try {
-      const response = await fetch(APP.initialDbUrl);
-      const data = await response.json();
-      this.db.set(this.migrateDatabase(data));
-      this.persist();
-    } catch {
-      this.db.set(this.createEmpty());
-    }
+    });
   }
 
-  async reset(): Promise<void> {
-    localStorage.removeItem(APP.storageKey);
-    await this.load();
+  // ─── Firestore sync ────────────────────────────────────
+
+  private startSync(uid: string): void {
+    this.stopSync();
+    const ref = doc(this.firestore, `users/${uid}/db/main`);
+    this._unsub = onSnapshot(ref, snap => {
+      if (snap.exists()) {
+        this.db.set(this.migrateDatabase(snap.data()));
+      } else {
+        const empty = this.createEmpty();
+        this.db.set(empty);
+        setDoc(ref, empty).catch(err => console.error('[Firestore] Falha ao criar documento inicial:', err));
+      }
+    }, err => console.error('[Firestore] onSnapshot falhou:', err));
   }
+
+  private stopSync(): void {
+    this._unsub?.();
+    this._unsub = undefined;
+    this.db.set(null);
+  }
+
+  private persist(): void {
+    const uid = this.auth.currentUser()?.uid;
+    if (!uid) return;
+    const current = structuredClone(this.db());
+    if (!current) return;
+    current.metadata.ultimaAtualizacao = new Date().toISOString();
+    setDoc(doc(this.firestore, `users/${uid}/db/main`), current)
+      .catch(err => console.error('[Firestore] Falha ao salvar:', err));
+  }
+
+  // ─── Data import/export ────────────────────────────────
 
   exportData(): string {
     return JSON.stringify(this.db(), null, 2);
@@ -78,6 +95,14 @@ export class DataService {
     } catch {
       return false;
     }
+  }
+
+  async reset(): Promise<void> {
+    const uid = this.auth.currentUser()?.uid;
+    if (!uid) return;
+    const empty = this.createEmpty();
+    this.db.set(empty);
+    await setDoc(doc(this.firestore, `users/${uid}/db/main`), empty);
   }
 
   // ─── Purchases CRUD ──────────────────────────────────────
@@ -147,16 +172,7 @@ export class DataService {
     this.persist();
   }
 
-  private persist(): void {
-    const current = this.db();
-    if (!current) return;
-    current.metadata.ultimaAtualizacao = new Date().toISOString();
-    localStorage.setItem(APP.storageKey, JSON.stringify(current));
-  }
-
-  /** Migrates old Portuguese-keyed database format to current English format. */
   private migrateDatabase(data: any): Database {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isOldFormat = (data.compras !== undefined || data.vendas !== undefined) && data.purchases === undefined;
     if (!isOldFormat) return data as Database;
 

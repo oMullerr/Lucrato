@@ -9,6 +9,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ThemeService } from './core/services/theme.service';
 import { DataService } from './core/services/data.service';
+import { AuthService } from './core/services/auth.service';
 
 interface NavGroup {
   label: string;
@@ -55,68 +56,80 @@ const NAV_GROUPS: NavGroup[] = [
     MatIconModule, MatButtonModule, MatDividerModule, MatTooltipModule,
   ],
   template: `
-    <mat-sidenav-container class="app-shell">
-      <mat-sidenav mode="side" opened class="sidebar">
-        <div class="brand">
-          <div class="logo">
-            <img src="favicon.svg" alt="Lucrato" width="26" height="26" />
-          </div>
-          <div class="brand-text">
-            <strong>Lucrato</strong>
-            <small>Sistema v1.0</small>
-          </div>
-        </div>
-
-        <mat-divider />
-
-        <nav class="nav">
-          @for (group of navGroups; track group.label) {
-            <div class="nav-group">
-              <div class="nav-label">{{ group.label }}</div>
-              @for (item of group.items; track item.path) {
-                <a
-                  [routerLink]="item.path"
-                  routerLinkActive="active"
-                  class="nav-item"
-                  [matTooltip]="item.label"
-                  matTooltipPosition="right"
-                >
-                  <mat-icon>{{ item.icon }}</mat-icon>
-                  <span>{{ item.label }}</span>
-                </a>
-              }
+    @if (auth.isLoggedIn()) {
+      <mat-sidenav-container class="app-shell">
+        <mat-sidenav mode="side" opened class="sidebar">
+          <div class="brand">
+            <div class="logo">
+              <img src="favicon.svg" alt="Lucrato" width="26" height="26" />
             </div>
-          }
-        </nav>
-
-        <div class="sidebar-footer">
-          @if (data.loaded()) {
-            <div class="status">
-              <span class="dot"></span>
-              {{ data.purchases().length }} lotes · {{ data.sales().length }} vendas
+            <div class="brand-text">
+              <strong>{{ auth.storeName() || 'Lucrato' }}</strong>
+              <small>Sistema v1.0</small>
             </div>
-          }
-        </div>
-      </mat-sidenav>
+          </div>
 
-      <mat-sidenav-content>
-        <mat-toolbar class="topbar">
-          <span class="topbar-spacer"></span>
-          <button
-            mat-icon-button
-            (click)="theme.toggle()"
-            [matTooltip]="theme.isDark() ? 'Modo claro' : 'Modo escuro'"
-            aria-label="Alternar tema"
-          >
-            <mat-icon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
-          </button>
-        </mat-toolbar>
+          <mat-divider />
 
-        <div class="page-container">
-          <router-outlet />
-        </div>
-      </mat-sidenav-content>
-    </mat-sidenav-container>
+          <nav class="nav">
+            @for (group of navGroups; track group.label) {
+              <div class="nav-group">
+                <div class="nav-label">{{ group.label }}</div>
+                @for (item of group.items; track item.path) {
+                  <a
+                    [routerLink]="item.path"
+                    routerLinkActive="active"
+                    class="nav-item"
+                    [matTooltip]="item.label"
+                    matTooltipPosition="right"
+                  >
+                    <mat-icon>{{ item.icon }}</mat-icon>
+                    <span>{{ item.label }}</span>
+                  </a>
+                }
+              </div>
+            }
+          </nav>
+
+          <div class="sidebar-footer">
+            @if (data.loaded()) {
+              <div class="status">
+                <span class="dot"></span>
+                {{ data.purchases().length }} lotes · {{ data.sales().length }} vendas
+              </div>
+            }
+          </div>
+        </mat-sidenav>
+
+        <mat-sidenav-content>
+          <mat-toolbar class="topbar">
+            <span class="topbar-spacer"></span>
+            <button
+              mat-icon-button
+              (click)="theme.toggle()"
+              [matTooltip]="theme.isDark() ? 'Modo claro' : 'Modo escuro'"
+              aria-label="Alternar tema"
+            >
+              <mat-icon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              (click)="logout()"
+              matTooltip="Sair"
+              aria-label="Sair da conta"
+            >
+              <mat-icon>logout</mat-icon>
+            </button>
+          </mat-toolbar>
+
+          <div class="page-container">
+            <router-outlet />
+          </div>
+        </mat-sidenav-content>
+      </mat-sidenav-container>
+    } @else {
+      <router-outlet />
+    }
   `,
   styles: [`
     :host {
@@ -153,6 +166,7 @@ const NAV_GROUPS: NavGroup[] = [
       justify-content: center;
       border-radius: 10px;
       box-shadow: var(--shadow-sm);
+      flex-shrink: 0;
     }
 
     .brand-text strong {
@@ -269,5 +283,10 @@ const NAV_GROUPS: NavGroup[] = [
 export class AppComponent {
   protected readonly theme = inject(ThemeService);
   protected readonly data = inject(DataService);
+  protected readonly auth = inject(AuthService);
   protected readonly navGroups = NAV_GROUPS;
+
+  protected async logout(): Promise<void> {
+    await this.auth.logout();
+  }
 }

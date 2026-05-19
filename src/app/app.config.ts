@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
@@ -10,11 +10,16 @@ import {
   MatDateFormats,
   provideNativeDateAdapter,
 } from '@angular/material/core';
-import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
+import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
+import { provideAuth, getAuth } from '@angular/fire/auth';
+import { provideFirestore } from '@angular/fire/firestore';
+import { initializeFirestore, persistentLocalCache } from 'firebase/firestore';
+import { getApp } from 'firebase/app';
 
 import { routes } from './app.routes';
+import { environment } from '../environments/environment';
 
 registerLocaleData(localePt);
 
@@ -37,6 +42,11 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideCharts(withDefaultRegisterables()),
     provideNativeDateAdapter(),
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideAuth(() => getAuth()),
+    provideFirestore(() => initializeFirestore(getApp(), {
+      localCache: persistentLocalCache()
+    })),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
     { provide: MAT_DATE_LOCALE, useValue: 'pt-BR' },
     { provide: MAT_DATE_FORMATS, useValue: BR_DATE_FORMATS },

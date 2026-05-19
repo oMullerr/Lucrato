@@ -3,16 +3,14 @@
   title="Configurações"
   subtitle="Parâmetros do sistema, listas e preferências"
 >
-  @if (isModified()) {
-    <button mat-stroked-button (click)="discard()">
-      <mat-icon>undo</mat-icon>
-      Descartar
-    </button>
-    <button mat-flat-button color="primary" (click)="save()">
-      <mat-icon>save</mat-icon>
-      Salvar
-    </button>
-  }
+  <button mat-stroked-button (click)="discard()">
+    <mat-icon>undo</mat-icon>
+    Descartar
+  </button>
+  <button mat-flat-button color="primary" (click)="save()">
+    <mat-icon>save</mat-icon>
+    Salvar
+  </button>
 </app-page-header>
 
 <div class="content">
@@ -60,7 +58,8 @@
           matInput
           type="number"
           min="1"
-          [(ngModel)]="form().yellowAlertDays"
+          [ngModel]="form().yellowAlertDays"
+          (ngModelChange)="update('yellowAlertDays', +$event || 0)"
         />
         <span matSuffix>dias</span>
         <mat-hint>Produto fica em "Atenção" após este tempo parado.</mat-hint>
@@ -72,7 +71,8 @@
           matInput
           type="number"
           min="1"
-          [(ngModel)]="form().redAlertDays"
+          [ngModel]="form().redAlertDays"
+          (ngModelChange)="update('redAlertDays', +$event || 0)"
         />
         <span matSuffix>dias</span>
         <mat-hint>Produto fica como "Parado" após este tempo.</mat-hint>
@@ -85,14 +85,17 @@
           type="number"
           step="0.01"
           min="0"
-          [(ngModel)]="form().defaultShipping"
+          [ngModel]="form().defaultShipping"
+          (ngModelChange)="update('defaultShipping', +$event || 0)"
         />
         <span matSuffix>R$</span>
       </mat-form-field>
 
       <mat-form-field>
         <mat-label>Canal de venda padrão</mat-label>
-        <mat-select [(ngModel)]="form().defaultChannel">
+        <mat-select
+          [ngModel]="form().defaultChannel"
+          (ngModelChange)="update('defaultChannel', $event)">
           @for (c of form().channels; track c) {
             <mat-option [value]="c">{{ c }}</mat-option>
           }
