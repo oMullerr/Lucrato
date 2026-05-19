@@ -28,7 +28,9 @@ export interface Sale {
   saleDate: string;
   channel: SaleChannel;
   feePercentage: number;
+  shippingType?: 'correios' | 'flex';
   sellerShipping: number;
+  flexRefund?: number;
   discount: number;
   otherCosts: number;
   status: SaleStatus;

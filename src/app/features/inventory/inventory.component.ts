@@ -28,10 +28,19 @@ export class InventoryComponent {
 
   protected readonly kpis = this.dataService.kpis;
 
+  private readonly STATUS_PRIORITY: Record<string, number> = {
+    'Parado': 0,
+    'Atenção': 1,
+    'Em Estoque': 2,
+    'Ainda não recebido': 3,
+    'Vendido': 4,
+  };
+
   protected readonly sortedPurchases = computed(() =>
     [...this.dataService.computedPurchases()].sort((a, b) => {
-      if (a.currentStock > 0 && b.currentStock <= 0) return -1;
-      if (a.currentStock <= 0 && b.currentStock > 0) return 1;
+      const pa = this.STATUS_PRIORITY[a.status] ?? 99;
+      const pb = this.STATUS_PRIORITY[b.status] ?? 99;
+      if (pa !== pb) return pa - pb;
       return b.daysInStock - a.daysInStock;
     })
   );

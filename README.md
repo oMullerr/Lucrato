@@ -57,17 +57,8 @@ npm run build
 
 ## TODO
 
-- Dintinção de envio (correio/flex) - caso seja flex, ter o reembolso do frete
 - Sistema de login => Firebase
 - Adicionar logo
 - Import de compras e vendas em massa
 - Versão mobile
 - Refazer layout e cores
-
----
-
-## BUGS
-
-- Ao adicionar uma nova compra, quando digita o valor, não esta sendo calculado o valor automatico no fim da pagina
-- Listagem das compras não esta vindo em ordem crescente do lote e pelo status (priorizar lote crescente e 'em estoque')
-- No formulário de venda, o valor que é colocado no frete do vendedor, desconto/cupom e outros custos, não estão sendo contabilizados no resultado calculado

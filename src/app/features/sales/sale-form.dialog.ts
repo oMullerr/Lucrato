@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Sale } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { calculateSale } from '../../core/services/calculations';
@@ -24,7 +25,7 @@ export interface SaleDialogData {
   imports: [
     FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatTooltipModule,
-    MatDatepickerModule, BrlPipe,
+    MatDatepickerModule, MatSlideToggleModule, BrlPipe,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -155,13 +156,36 @@ export interface SaleDialogData {
           </small>
         </div>
 
-        <mat-form-field>
-          <mat-label>Frete Vendedor (R$)</mat-label>
-          <input matInput type="number" step="0.01"
-            [ngModel]="model().sellerShipping"
-            (ngModelChange)="setNum('sellerShipping', $event)"
-            name="sellerShipping" min="0" />
-        </mat-form-field>
+        <!-- Shipping type toggle -->
+        <div class="shipping-toggle full">
+          <mat-icon>local_shipping</mat-icon>
+          <span [class.active]="!isFlexShipping()">Correios</span>
+          <mat-slide-toggle
+            [checked]="isFlexShipping()"
+            (change)="setShippingType($event.checked)"
+            color="primary"
+          ></mat-slide-toggle>
+          <span [class.active]="isFlexShipping()">Flex</span>
+        </div>
+
+        @if (!isFlexShipping()) {
+          <mat-form-field>
+            <mat-label>Frete Vendedor (R$)</mat-label>
+            <input matInput type="number" step="0.01"
+              [ngModel]="model().sellerShipping"
+              (ngModelChange)="setNum('sellerShipping', $event)"
+              name="sellerShipping" min="0" />
+          </mat-form-field>
+        } @else {
+          <mat-form-field>
+            <mat-label>Estorno Envio Flex (R$)</mat-label>
+            <input matInput type="number" step="0.01"
+              [ngModel]="model().flexRefund ?? 0"
+              (ngModelChange)="setNum('flexRefund', $event)"
+              name="flexRefund" min="0" />
+            <mat-hint>Valor devolvido pelo ML — somado à receita</mat-hint>
+          </mat-form-field>
+        }
 
         <mat-form-field>
           <mat-label>Desconto / Cupom (R$)</mat-label>
@@ -261,6 +285,26 @@ export interface SaleDialogData {
 
     .form-grid .full { grid-column: 1 / -1; }
 
+    .shipping-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--bg-elevated-2);
+      border-radius: 10px;
+
+      mat-icon { color: var(--txt-secondary); font-size: 20px; width: 20px; height: 20px; }
+
+      span {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--txt-secondary);
+        transition: color 0.2s;
+      }
+
+      span.active { color: var(--txt-primary); font-weight: 600; }
+    }
+
     .taxa-field {
       padding: 12px 16px;
       background: var(--bg-amber);
@@ -352,6 +396,12 @@ export class SaleFormDialogComponent {
   protected readonly isEdit = signal(!!this.data.sale);
   protected readonly model = signal<Sale>(this.initialModel());
   protected feeInput = (this.data.sale?.feePercentage ?? this.dataService.settings()?.defaultMlFee ?? 0.12) * 100;
+
+  protected readonly isFlexShipping = computed(() => this.model().shippingType === 'flex');
+
+  protected setShippingType(isFlex: boolean): void {
+    this.model.update(m => ({ ...m, shippingType: isFlex ? 'flex' : 'correios' }));
+  }
 
   protected readonly channels = computed(() => this.dataService.settings()?.channels ?? []);
   protected readonly defaultFee = computed(() => this.dataService.settings()?.defaultMlFee ?? 0.12);
@@ -451,7 +501,9 @@ export class SaleFormDialogComponent {
       saleDate: new Date().toISOString().split('T')[0]!,
       channel: cfg?.defaultChannel ?? 'Mercado Livre',
       feePercentage: cfg?.defaultMlFee ?? 0.12,
+      shippingType: 'correios',
       sellerShipping: 0,
+      flexRefund: 0,
       discount: 0,
       otherCosts: 0,
       status: 'Concluída',

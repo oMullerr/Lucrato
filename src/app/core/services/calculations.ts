@@ -71,7 +71,10 @@ export function calculateSale(sale: Sale, purchases: Purchase[]): ComputedSale {
 
   const grossRevenue = sale.quantitySold * sale.unitPrice;
   const feeAmount = grossRevenue * sale.feePercentage;
-  const netRevenue = grossRevenue - feeAmount - sale.sellerShipping - sale.discount - sale.otherCosts;
+  const shippingImpact = sale.shippingType === 'flex'
+    ? (sale.flexRefund ?? 0)
+    : -sale.sellerShipping;
+  const netRevenue = grossRevenue - feeAmount + shippingImpact - sale.discount - sale.otherCosts;
   const proportionalCost = sale.quantitySold * actualUnitCost;
   const grossProfit = grossRevenue - proportionalCost;
   const netProfit = netRevenue - proportionalCost;
