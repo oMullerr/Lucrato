@@ -57,8 +57,9 @@ npm run build
 
 ## TODO
 
-- Sistema de login => Firebase
 - Adicionar logo
+- Sistema de login => Firebase
 - Import de compras e vendas em massa
-- Versão mobile
 - Refazer layout e cores
+- Versão mobile
+

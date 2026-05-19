@@ -58,7 +58,9 @@ const NAV_GROUPS: NavGroup[] = [
     <mat-sidenav-container class="app-shell">
       <mat-sidenav mode="side" opened class="sidebar">
         <div class="brand">
-          <div class="logo">Lucrato</div>
+          <div class="logo">
+            <img src="favicon.svg" alt="Lucrato" width="26" height="26" />
+          </div>
           <div class="brand-text">
             <strong>Lucrato</strong>
             <small>Sistema v1.0</small>
@@ -146,14 +148,10 @@ const NAV_GROUPS: NavGroup[] = [
       width: 38px;
       height: 38px;
       background: linear-gradient(135deg, var(--clr-blue), var(--clr-purple));
-      color: white;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 800;
-      font-size: 13px;
       border-radius: 10px;
-      letter-spacing: -0.5px;
       box-shadow: var(--shadow-sm);
     }
 
