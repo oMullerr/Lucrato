@@ -26,7 +26,8 @@ export type KpiVariant = 'red' | 'amber' | 'blue' | 'green' | 'teal' | 'purple' 
       padding: 18px 20px !important;
       position: relative;
       overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      border: 1px solid var(--brd-default) !important;
     }
 
     .kpi-card::before {
@@ -39,9 +40,22 @@ export type KpiVariant = 'red' | 'amber' | 'blue' | 'green' | 'teal' | 'purple' 
       background: var(--accent);
     }
 
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 90px;
+      height: 90px;
+      background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+      opacity: 0.08;
+      pointer-events: none;
+    }
+
     .kpi-card:hover {
       transform: translateY(-2px);
       box-shadow: var(--shadow-md) !important;
+      border-color: color-mix(in srgb, var(--accent) 30%, var(--brd-default)) !important;
     }
 
     .kpi-card[data-variant="red"]    { --accent: var(--clr-red); }
@@ -56,15 +70,20 @@ export type KpiVariant = 'red' | 'amber' | 'blue' | 'green' | 'teal' | 'purple' 
     .kpi-header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
+      gap: 10px;
+      margin-bottom: 12px;
     }
 
     .icon {
       color: var(--accent);
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
+      font-size: 17px;
+      width: 32px !important;
+      height: 32px !important;
+      line-height: 32px !important;
+      text-align: center;
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      border-radius: 8px;
+      flex-shrink: 0;
     }
 
     .title {
@@ -76,10 +95,10 @@ export type KpiVariant = 'red' | 'amber' | 'blue' | 'green' | 'teal' | 'purple' 
     }
 
     .value {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--accent);
-      letter-spacing: -0.5px;
+      font-size: 23px;
+      font-weight: 800;
+      color: var(--txt-primary);
+      letter-spacing: -0.6px;
       line-height: 1.1;
     }
 

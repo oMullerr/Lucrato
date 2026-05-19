@@ -28,9 +28,26 @@ import { MatIconModule } from '@angular/material/icon';
       justify-content: space-between;
       align-items: flex-start;
       gap: 24px;
-      padding: 28px 32px 20px;
-      background: var(--bg-surface);
+      padding: 24px 32px 20px;
+      background: linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--clr-blue) 5%, var(--bg-surface)),
+        var(--bg-surface)
+      );
       border-bottom: 1px solid var(--brd-default);
+      position: relative;
+    }
+
+    .page-header::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 25%;
+      bottom: 25%;
+      width: 3px;
+      background: var(--clr-blue);
+      border-radius: 0 2px 2px 0;
+      opacity: 0.7;
     }
 
     .header-text { flex: 1; min-width: 0; }
@@ -42,10 +59,16 @@ import { MatIconModule } from '@angular/material/icon';
     }
 
     .title .icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
+      font-size: 22px;
+      width: 44px !important;
+      height: 44px !important;
+      line-height: 44px !important;
+      text-align: center;
       color: var(--clr-blue);
+      background: color-mix(in srgb, var(--clr-blue) 11%, transparent);
+      border-radius: 11px;
+      border: 1px solid color-mix(in srgb, var(--clr-blue) 18%, transparent);
+      flex-shrink: 0;
     }
 
     .title h1 {
@@ -59,7 +82,7 @@ import { MatIconModule } from '@angular/material/icon';
     .subtitle {
       color: var(--txt-secondary);
       font-size: 13px;
-      margin: 6px 0 0 40px;
+      margin: 5px 0 0 58px;
     }
 
     .actions {

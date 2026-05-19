@@ -8,8 +8,8 @@
 $light-theme: mat.define-theme((
   color: (
     theme-type: light,
-    primary: mat.$blue-palette,
-    tertiary: mat.$cyan-palette,
+    primary: mat.$violet-palette,
+    tertiary: mat.$green-palette,
   ),
   density: (scale: -1),
   typography: (plain-family: 'Inter, sans-serif'),
@@ -18,8 +18,8 @@ $light-theme: mat.define-theme((
 $dark-theme: mat.define-theme((
   color: (
     theme-type: dark,
-    primary: mat.$blue-palette,
-    tertiary: mat.$cyan-palette,
+    primary: mat.$violet-palette,
+    tertiary: mat.$green-palette,
   ),
   density: (scale: -1),
   typography: (plain-family: 'Inter, sans-serif'),
@@ -37,85 +37,105 @@ html.dark {
    ═══════════════════════════════════════════════════════════════ */
 :root {
   /* Surfaces */
-  --bg-base:        #F7F8FB;
+  --bg-base:        #F4F5FB;
   --bg-surface:     #FFFFFF;
-  --bg-elevated:    #FAFBFD;
-  --bg-elevated-2:  #F0F2F7;
-  --bg-input:       #FFFBE6;
-  --bg-auto:        #EFF6FF;
+  --bg-elevated:    #F8F9FC;
+  --bg-elevated-2:  #EDEEF5;
+  --bg-input:       #FEFDF5;
+  --bg-auto:        #EEF2FF;
+  --bg-sidebar:     #1E1B4B;
 
   /* Accents (light) */
   --bg-red:         #FEF2F2;
   --bg-amber:       #FFFBEB;
-  --bg-green:       #F0FDF4;
-  --bg-blue:        #EFF6FF;
+  --bg-green:       #ECFDF5;
+  --bg-blue:        #EEF2FF;
   --bg-teal:        #F0FDFA;
-  --bg-purple:      #FAF5FF;
+  --bg-purple:      #F5F3FF;
   --bg-orange:      #FFF7ED;
 
   /* Text */
-  --txt-primary:    #1A1D27;
+  --txt-primary:    #1A1827;
   --txt-secondary:  #6B7280;
   --txt-muted:      #9CA3AF;
+  --txt-sidebar:    #C4C6EF;
+  --txt-sidebar-active: #FFFFFF;
 
   /* Functional */
-  --clr-green:      #16A34A;
+  --clr-green:      #059669;
   --clr-red:        #DC2626;
   --clr-amber:      #D97706;
-  --clr-blue:       #2563EB;
+  --clr-blue:       #4338CA;
   --clr-teal:       #0D9488;
-  --clr-purple:     #9333EA;
+  --clr-purple:     #7C3AED;
   --clr-orange:     #EA580C;
 
   /* Borders */
   --brd-default:    #E5E7EB;
   --brd-strong:     #D1D5DB;
+  --brd-sidebar:    rgba(255, 255, 255, 0.08);
 
   /* Shadows */
-  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg:  0 12px 32px rgba(0, 0, 0, 0.12);
+  --shadow-sm:  0 1px 3px rgba(67, 56, 202, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md:  0 4px 16px rgba(67, 56, 202, 0.10), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-lg:  0 12px 36px rgba(67, 56, 202, 0.14), 0 4px 12px rgba(0, 0, 0, 0.08);
 
   /* Radii */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
+
+  /* M3 system primary — alinha Material components ao índigo da paleta */
+  --mat-sys-primary:              #4338CA;
+  --mat-sys-on-primary:           #FFFFFF;
+  --mat-sys-primary-container:    #EEF2FF;
+  --mat-sys-on-primary-container: #1E1B4B;
 }
 
 html.dark {
-  --bg-base:        #0F1117;
-  --bg-surface:     #1A1D27;
-  --bg-elevated:    #22263A;
-  --bg-elevated-2:  #1E2235;
-  --bg-input:       #1E2D1E;
-  --bg-auto:        #111827;
+  --bg-base:        #0C0F1A;
+  --bg-surface:     #151929;
+  --bg-elevated:    #1C2038;
+  --bg-elevated-2:  #1A1E34;
+  --bg-input:       #1A2A1A;
+  --bg-auto:        #0F1238;
+  --bg-sidebar:     #0A0D18;
 
   --bg-red:         #2D0A0A;
-  --bg-amber:       #2D1A00;
-  --bg-green:       #0A2D0A;
-  --bg-blue:        #0A1A3D;
+  --bg-amber:       #2D1800;
+  --bg-green:       #042A1A;
+  --bg-blue:        #0F1238;
   --bg-teal:        #00232A;
-  --bg-purple:      #1A0A2D;
+  --bg-purple:      #1A0D3D;
   --bg-orange:      #2D1000;
 
   --txt-primary:    #E8EAFF;
-  --txt-secondary:  #8892B0;
-  --txt-muted:      #4A5568;
+  --txt-secondary:  #7C85B0;
+  --txt-muted:      #3D4568;
+  --txt-sidebar:    #8892C8;
+  --txt-sidebar-active: #FFFFFF;
 
-  --clr-green:      #4ADE80;
+  --clr-green:      #34D399;
   --clr-red:        #F87171;
   --clr-amber:      #FBBF24;
-  --clr-blue:       #60A5FA;
+  --clr-blue:       #818CF8;
   --clr-teal:       #2DD4BF;
-  --clr-purple:     #C084FC;
+  --clr-purple:     #A78BFA;
   --clr-orange:     #FB923C;
 
-  --brd-default:    #2D3748;
-  --brd-strong:     #3D4A6A;
+  --brd-default:    #1E2544;
+  --brd-strong:     #2D3660;
+  --brd-sidebar:    rgba(255, 255, 255, 0.06);
 
-  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg:  0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg:  0 12px 36px rgba(0, 0, 0, 0.6);
+
+  /* M3 system primary (dark) */
+  --mat-sys-primary:              #818CF8;
+  --mat-sys-on-primary:           #0F1238;
+  --mat-sys-primary-container:    #0F1238;
+  --mat-sys-on-primary-container: #C7D2FE;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -187,4 +207,12 @@ html, body {
 
 .mat-mdc-dialog-surface {
   border-radius: var(--radius-lg) !important;
+}
+
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: var(--bg-surface);
+}
+
+.sidebar .mat-divider {
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }

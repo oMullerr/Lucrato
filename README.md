@@ -225,7 +225,6 @@ firebase deploy
 
 ## TODO
 
-- Import de compras e vendas em massa
 - Refazer layout e cores
 - Versão mobile
 

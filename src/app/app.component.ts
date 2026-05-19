@@ -147,8 +147,8 @@ const NAV_GROUPS: NavGroup[] = [
 
     .sidebar {
       width: 250px;
-      background: var(--bg-surface) !important;
-      border-right: 1px solid var(--brd-default) !important;
+      background: var(--bg-sidebar) !important;
+      border-right: none !important;
       display: flex;
       flex-direction: column;
     }
@@ -163,26 +163,26 @@ const NAV_GROUPS: NavGroup[] = [
     .logo {
       width: 38px;
       height: 38px;
-      background: linear-gradient(135deg, var(--clr-blue), var(--clr-purple));
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 10px;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
       flex-shrink: 0;
     }
 
     .brand-text strong {
       display: block;
       font-size: 15px;
-      color: var(--txt-primary);
+      color: #FFFFFF;
       letter-spacing: -0.3px;
     }
 
     .brand-text small {
       display: block;
       font-size: 10px;
-      color: var(--txt-secondary);
+      color: rgba(255, 255, 255, 0.35);
       margin-top: 2px;
       letter-spacing: 0.5px;
     }
@@ -200,8 +200,8 @@ const NAV_GROUPS: NavGroup[] = [
     .nav-label {
       font-size: 10px;
       font-weight: 700;
-      letter-spacing: 1px;
-      color: var(--txt-muted);
+      letter-spacing: 1.2px;
+      color: rgba(255, 255, 255, 0.25);
       padding: 0 12px 6px;
     }
 
@@ -209,26 +209,29 @@ const NAV_GROUPS: NavGroup[] = [
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 10px 12px;
+      padding: 9px 12px;
       border-radius: 8px;
-      color: var(--txt-secondary);
+      color: var(--txt-sidebar);
       font-size: 13.5px;
       font-weight: 500;
       transition: all 0.15s ease;
       margin-bottom: 2px;
       cursor: pointer;
       text-decoration: none;
+      border-left: 2px solid transparent;
     }
 
     .nav-item:hover {
-      background: var(--bg-elevated);
-      color: var(--txt-primary);
+      background: rgba(255, 255, 255, 0.07);
+      color: #FFFFFF;
+      border-left-color: rgba(255, 255, 255, 0.2);
     }
 
     .nav-item.active {
-      background: var(--bg-blue);
-      color: var(--clr-blue);
+      background: rgba(99, 102, 241, 0.18);
+      color: #FFFFFF;
       font-weight: 600;
+      border-left-color: #818CF8;
     }
 
     .nav-item mat-icon {
@@ -239,7 +242,7 @@ const NAV_GROUPS: NavGroup[] = [
 
     .sidebar-footer {
       padding: 14px 20px;
-      border-top: 1px solid var(--brd-default);
+      border-top: 1px solid var(--brd-sidebar);
     }
 
     .status {
@@ -247,7 +250,7 @@ const NAV_GROUPS: NavGroup[] = [
       align-items: center;
       gap: 8px;
       font-size: 11.5px;
-      color: var(--txt-secondary);
+      color: rgba(255, 255, 255, 0.35);
     }
 
     .dot {
@@ -266,6 +269,7 @@ const NAV_GROUPS: NavGroup[] = [
     .topbar {
       background: var(--bg-surface) !important;
       border-bottom: 1px solid var(--brd-default);
+      box-shadow: 0 1px 0 color-mix(in srgb, var(--clr-blue) 8%, transparent);
       height: 56px;
       min-height: 56px;
       padding: 0 16px;
