@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 
 interface InstructionItem {
@@ -128,9 +127,9 @@ Revisão semanal (5 minutos):
     title: 'Dicas importantes',
     body: `• Sempre preencha o ID Lote nas vendas — sem ele, o custo fica zerado e o lucro inflado.
 • Use IDs novos para compras novas do mesmo produto.
-• A taxa do L pode variar por venda — edite no formulário quando necessário.
-• Use Compras → Backup para exportar/importar seus dados em JSON.
-• O sistema funciona offline e salva tudo no seu navegador (localStorage).
+• A taxa do ML pode variar por venda — edite no formulário quando necessário.
+• Use Configurações → Importação em Massa para importar compras e vendas via planilha Excel.
+• Seus dados ficam salvos na nuvem e acessíveis de qualquer dispositivo após login.
 • Pode alternar entre tema claro e escuro a qualquer momento no botão do canto superior direito.`,
   },
 ];
@@ -140,7 +139,7 @@ Revisão semanal (5 minutos):
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    MatCardModule, MatIconModule, MatExpansionModule,
+    MatIconModule,
     PageHeaderComponent,
   ],
   template: `
@@ -151,101 +150,185 @@ Revisão semanal (5 minutos):
     />
 
     <div class="content">
-      <mat-card class="intro-card">
-        <mat-icon class="intro-icon">menu_book</mat-icon>
-        <div>
-          <h3>Bem-vindo ao Lucrato</h3>
-          <p>
-            Este guia explica passo a passo como usar o sistema. Clique em cada
-            seção para expandir e ver os detalhes.
-          </p>
+      <div class="hero">
+        <div class="hero-icon">
+          <mat-icon>menu_book</mat-icon>
         </div>
-      </mat-card>
+        <div class="hero-text">
+          <h2>Bem-vindo ao Lucrato</h2>
+          <p>Este guia cobre todas as funcionalidades do sistema. Cada seção explica um aspecto diferente — do cadastro de compras aos alertas de estoque parado.</p>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-number">{{ instructions.length }}</span>
+          <span class="stat-label">seções</span>
+        </div>
+      </div>
 
-      <mat-accordion multi class="instructions">
+      <div class="cards-grid">
         @for (item of instructions; track item.title) {
-          <mat-expansion-panel>
-            <mat-expansion-panel-header>
-              <mat-panel-title>
+          <div class="instruction-card">
+            <div class="card-header">
+              <div class="icon-badge">
                 <mat-icon>{{ item.icon }}</mat-icon>
-                {{ item.title }}
-              </mat-panel-title>
-            </mat-expansion-panel-header>
-            <p class="instruction-body">{{ item.body }}</p>
-          </mat-expansion-panel>
+              </div>
+              <h3 class="card-title">{{ item.title }}</h3>
+            </div>
+            <p class="card-body">{{ item.body }}</p>
+          </div>
         }
-      </mat-accordion>
+      </div>
     </div>
   `,
   styles: [`
     .content {
       padding: 24px 32px 48px;
-      max-width: 900px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 24px;
     }
 
-    .intro-card {
-      padding: 20px 24px !important;
+    .hero {
       display: flex;
       align-items: center;
-      gap: 16px;
-      background: var(--bg-blue) !important;
-      border: 1px solid var(--clr-blue) !important;
+      gap: 24px;
+      padding: 28px 32px;
+      background: linear-gradient(135deg, var(--bg-blue) 0%, var(--bg-surface) 100%);
+      border: 1px solid color-mix(in srgb, var(--clr-blue) 30%, transparent);
+      border-radius: 14px;
     }
 
-    .intro-icon {
-      font-size: 36px;
-      width: 36px;
-      height: 36px;
-      color: var(--clr-blue);
-    }
-
-    .intro-card h3 {
-      font-size: 16px;
-      color: var(--txt-primary);
-      margin: 0 0 4px;
-    }
-
-    .intro-card p {
-      color: var(--txt-secondary);
-      font-size: 13px;
-      margin: 0;
-      line-height: 1.5;
-    }
-
-    .instructions {
+    .hero-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--clr-blue);
+      border-radius: 14px;
       display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    ::ng-deep .mat-expansion-panel {
-      background: var(--bg-surface) !important;
-      border: 1px solid var(--brd-default);
-      border-radius: 10px !important;
-      box-shadow: var(--shadow-sm) !important;
-    }
-
-    mat-panel-title {
-      display: flex !important;
       align-items: center;
-      gap: 12px;
-      font-weight: 600;
-      color: var(--txt-primary);
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--clr-blue) 35%, transparent);
 
       mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+        color: #fff;
+      }
+    }
+
+    .hero-text {
+      flex: 1;
+
+      h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--txt-primary);
+        margin: 0 0 6px;
+      }
+
+      p {
+        font-size: 13.5px;
+        color: var(--txt-secondary);
+        margin: 0;
+        line-height: 1.55;
+      }
+    }
+
+    .hero-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 24px;
+      background: var(--bg-surface);
+      border-radius: 12px;
+      border: 1px solid var(--brd-default);
+      flex-shrink: 0;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--clr-blue);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--txt-muted);
+      margin-top: 3px;
+      letter-spacing: 0.3px;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .instruction-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--brd-default);
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: box-shadow 0.15s ease, border-color 0.15s ease;
+
+      &:hover {
+        box-shadow: var(--shadow-md);
+        border-color: color-mix(in srgb, var(--clr-blue) 25%, var(--brd-default));
+      }
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-badge {
+      width: 36px;
+      height: 36px;
+      background: var(--bg-blue);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
         color: var(--clr-blue);
       }
     }
 
-    .instruction-body {
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--txt-primary);
+      margin: 0;
+    }
+
+    .card-body {
+      font-size: 13px;
       color: var(--txt-secondary);
-      font-size: 13.5px;
-      line-height: 1.7;
+      line-height: 1.75;
       margin: 0;
       white-space: pre-wrap;
+    }
+
+    @media (max-width: 1000px) {
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 700px) {
+      .content { padding: 16px 16px 32px; }
+      .hero { flex-wrap: wrap; }
+      .hero-stat { display: none; }
     }
   `]
 })
