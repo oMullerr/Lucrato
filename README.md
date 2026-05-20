@@ -223,11 +223,6 @@ firebase deploy
 
 ---
 
-## TODO
-
-- Versão mobile
-
-
 ## BUGS
 
 - Parâmetros e listas da aba de configuração
