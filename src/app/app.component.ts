@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
@@ -60,58 +60,58 @@ const NAV_GROUPS: NavGroup[] = [
     MatIconModule, MatButtonModule, MatDividerModule, MatTooltipModule, MatMenuModule,
   ],
   template: `
-    @if (auth.isLoggedIn()) {
-      <mat-sidenav-container class="app-shell">
-        <mat-sidenav
-          [mode]="isMobile() ? 'over' : 'side'"
-          [opened]="sidebarOpen()"
-          (openedChange)="sidebarOpen.set($event)"
-          class="sidebar"
-        >
-          <div class="brand">
-            <div class="logo">
-              <img src="favicon.svg" alt="Lucrato" width="26" height="26" />
-            </div>
-            <div class="brand-text">
-              <strong>Lucrato</strong>
-              <small>Sistema v1.0</small>
-            </div>
+    <mat-sidenav-container class="app-shell">
+      <mat-sidenav
+        [mode]="isMobile() ? 'over' : 'side'"
+        [opened]="auth.isLoggedIn() && sidebarOpen()"
+        (openedChange)="onSidenavChange($event)"
+        class="sidebar"
+      >
+        <div class="brand">
+          <div class="logo">
+            <img src="favicon.svg" alt="Lucrato" width="26" height="26" />
           </div>
-
-          <mat-divider />
-
-          <nav class="nav">
-            @for (group of navGroups; track group.label) {
-              <div class="nav-group">
-                <div class="nav-label">{{ group.label }}</div>
-                @for (item of group.items; track item.path) {
-                  <a
-                    [routerLink]="item.path"
-                    routerLinkActive="active"
-                    class="nav-item"
-                    [matTooltip]="item.label"
-                    matTooltipPosition="right"
-                    (click)="closeSidebarOnMobile()"
-                  >
-                    <mat-icon>{{ item.icon }}</mat-icon>
-                    <span>{{ item.label }}</span>
-                  </a>
-                }
-              </div>
-            }
-          </nav>
-
-          <div class="sidebar-footer">
-            @if (data.loaded()) {
-              <div class="status">
-                <span class="dot"></span>
-                {{ data.purchases().length }} lotes · {{ data.sales().length }} vendas
-              </div>
-            }
+          <div class="brand-text">
+            <strong>Lucrato</strong>
+            <small>Sistema v1.0</small>
           </div>
-        </mat-sidenav>
+        </div>
 
-        <mat-sidenav-content>
+        <mat-divider />
+
+        <nav class="nav">
+          @for (group of navGroups; track group.label) {
+            <div class="nav-group">
+              <div class="nav-label">{{ group.label }}</div>
+              @for (item of group.items; track item.path) {
+                <a
+                  [routerLink]="item.path"
+                  routerLinkActive="active"
+                  class="nav-item"
+                  [matTooltip]="item.label"
+                  matTooltipPosition="right"
+                  (click)="closeSidebarOnMobile()"
+                >
+                  <mat-icon>{{ item.icon }}</mat-icon>
+                  <span>{{ item.label }}</span>
+                </a>
+              }
+            </div>
+          }
+        </nav>
+
+        <div class="sidebar-footer">
+          @if (data.loaded()) {
+            <div class="status">
+              <span class="dot"></span>
+              {{ data.purchases().length }} lotes · {{ data.sales().length }} vendas
+            </div>
+          }
+        </div>
+      </mat-sidenav>
+
+      <mat-sidenav-content>
+        @if (auth.isLoggedIn()) {
           <mat-toolbar class="topbar">
             @if (isMobile()) {
               <button mat-icon-button class="hamburger-btn" (click)="toggleSidebar()" aria-label="Abrir menu de navegação">
@@ -138,15 +138,13 @@ const NAV_GROUPS: NavGroup[] = [
               </button>
             </mat-menu>
           </mat-toolbar>
+        }
 
-          <div class="page-container">
-            <router-outlet />
-          </div>
-        </mat-sidenav-content>
-      </mat-sidenav-container>
-    } @else {
-      <router-outlet />
-    }
+        <div class="page-container" [class.full-height]="!auth.isLoggedIn()">
+          <router-outlet />
+        </div>
+      </mat-sidenav-content>
+    </mat-sidenav-container>
   `,
   styles: [`
     :host {
@@ -322,6 +320,10 @@ const NAV_GROUPS: NavGroup[] = [
       overflow-y: auto;
     }
 
+    .page-container.full-height {
+      height: 100vh;
+    }
+
     .hamburger-btn {
       color: var(--txt-primary);
       margin-right: 8px;
@@ -341,6 +343,7 @@ export class AppComponent {
   protected readonly data = inject(DataService);
   protected readonly auth = inject(AuthService);
   protected readonly navGroups = NAV_GROUPS;
+  private readonly router = inject(Router);
 
   private readonly bp = inject(BreakpointObserver);
 
@@ -353,10 +356,22 @@ export class AppComponent {
     globalThis.window ? globalThis.window.innerWidth > 768 : true
   );
 
+  constructor() {
+    effect(() => {
+      if (this.auth.currentUser() === null) {
+        this.router.navigate(['/login']);
+      }
+    });
+  }
+
   protected toggleSidebar(): void { this.sidebarOpen.update(v => !v); }
 
   protected closeSidebarOnMobile(): void {
     if (this.isMobile()) this.sidebarOpen.set(false);
+  }
+
+  protected onSidenavChange(opened: boolean): void {
+    if (this.auth.isLoggedIn()) this.sidebarOpen.set(opened);
   }
 
   protected async logout(): Promise<void> {

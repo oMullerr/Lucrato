@@ -225,4 +225,5 @@ firebase deploy
 
 ## BUGS
 
+- Login não redireciona para o /inventory
 - Parâmetros e listas da aba de configuração
