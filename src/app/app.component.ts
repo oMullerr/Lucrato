@@ -358,8 +358,11 @@ export class AppComponent {
 
   constructor() {
     effect(() => {
-      if (this.auth.currentUser() === null) {
+      const user = this.auth.currentUser();
+      if (user === null) {
         this.router.navigate(['/login']);
+      } else if (user !== undefined && this.router.url.startsWith('/login')) {
+        this.router.navigate(['/inventory']);
       }
     });
   }

@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -197,7 +196,6 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class LoginComponent {
   private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
 
   loginEmail = '';
   loginPassword = '';
@@ -217,7 +215,6 @@ export class LoginComponent {
     this.loginLoading.set(true);
     try {
       await this.authService.login(this.loginEmail, this.loginPassword);
-      await this.router.navigate(['/inventory']);
     } catch (e: any) {
       this.loginError.set(this.friendlyError(e?.code));
     } finally {
@@ -230,7 +227,6 @@ export class LoginComponent {
     this.regLoading.set(true);
     try {
       await this.authService.register(this.regEmail, this.regPassword, this.regStoreName);
-      await this.router.navigate(['/inventory']);
     } catch (e: any) {
       this.regError.set(this.friendlyError(e?.code));
     } finally {
