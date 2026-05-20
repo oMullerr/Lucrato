@@ -31,6 +31,7 @@ interface CategoryStat {
 
 interface MonthStat {
   month: string;
+  sortKey: string;
   qty: number;
   revenue: number;
   fees: number;
@@ -117,9 +118,12 @@ export class AnalyticsComponent {
 
     for (const v of completed) {
       const d = new Date(v.saleDate);
-      const key = `${MONTHS[d.getUTCMonth()]}/${d.getUTCFullYear()}`;
-      const e = map.get(key) ?? {
-        month: key, qty: 0, revenue: 0, fees: 0,
+      const year = d.getUTCFullYear();
+      const month = d.getUTCMonth();
+      const sortKey = `${year}${String(month).padStart(2, '0')}`;
+      const displayMonth = `${MONTHS[month]}/${year}`;
+      const e = map.get(sortKey) ?? {
+        month: displayMonth, sortKey, qty: 0, revenue: 0, fees: 0,
         netRevenue: 0, cost: 0, profit: 0, margin: 0,
       };
       e.qty += v.quantitySold;
@@ -128,12 +132,12 @@ export class AnalyticsComponent {
       e.netRevenue += v.netRevenue;
       e.cost += v.proportionalCost;
       e.profit += v.netProfit;
-      map.set(key, e);
+      map.set(sortKey, e);
     }
 
     return [...map.values()]
       .map(e => ({ ...e, margin: e.revenue > 0 ? e.profit / e.revenue : 0 }))
-      .sort((a, b) => a.month.localeCompare(b.month));
+      .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
   });
 
   protected readonly idleInventory = computed(() =>

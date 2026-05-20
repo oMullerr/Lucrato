@@ -127,7 +127,7 @@ export function calculateKpis(
     batchesInStock: computedPurchases.filter(c => c.currentStock > 0).length,
     soldBatches: computedPurchases.filter(c => c.currentStock <= 0).length,
     averageTicket: completed.length > 0
-      ? completed.reduce((s, v) => s + v.unitPrice, 0) / completed.length
+      ? grossRevenue / completed.length
       : 0,
   };
 }

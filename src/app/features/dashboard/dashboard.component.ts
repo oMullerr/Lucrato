@@ -37,31 +37,30 @@ export class DashboardComponent {
   // ── Dados mensais ────────────────────────────────────
   protected readonly monthlyChart = computed<ChartConfiguration<'line'>['data']>(() => {
     const concluidas = this.dataService.computedSales().filter(v => v.status === 'Concluída');
-    const recLiq = new Array<number>(12).fill(0);
-    const lucro = new Array<number>(12).fill(0);
+    const byMonth = new Map<string, { label: string; net: number; profit: number }>();
 
     for (const v of concluidas) {
-      const m = new Date(v.saleDate).getUTCMonth();
-      recLiq[m] += v.netRevenue;
-      lucro[m] += v.netProfit;
+      const d = new Date(v.saleDate);
+      const year = d.getUTCFullYear();
+      const month = d.getUTCMonth();
+      const key = `${year}${String(month).padStart(2, '0')}`;
+      const label = `${MONTHS[month]}/${String(year).slice(2)}`;
+      const entry = byMonth.get(key) ?? { label, net: 0, profit: 0 };
+      entry.net += v.netRevenue;
+      entry.profit += v.netProfit;
+      byMonth.set(key, entry);
     }
 
-    const ativos: number[] = [];
-    for (let i = 0; i < 12; i++) {
-      if (recLiq[i] !== 0 || lucro[i] !== 0) ativos.push(i);
-    }
-    if (ativos.length === 0) return { labels: [], datasets: [] };
+    const sorted = [...byMonth.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    if (sorted.length === 0) return { labels: [], datasets: [] };
 
-    const min = Math.min(...ativos);
-    const max = Math.max(...ativos);
     const c = this.C();
-
     return {
-      labels: MONTHS.slice(min, max + 1),
+      labels: sorted.map(([, e]) => e.label),
       datasets: [
         {
           label: 'Receita Líquida',
-          data: recLiq.slice(min, max + 1),
+          data: sorted.map(([, e]) => e.net),
           borderColor: c.blue,
           backgroundColor: c.blue + '33',
           tension: 0.3,
@@ -71,7 +70,7 @@ export class DashboardComponent {
         },
         {
           label: 'Lucro Líquido',
-          data: lucro.slice(min, max + 1),
+          data: sorted.map(([, e]) => e.profit),
           borderColor: c.green,
           backgroundColor: c.green + '33',
           tension: 0.3,
