@@ -46,6 +46,7 @@
 
 .data-table {
   width: 100%;
+  min-width: 700px;
   font-size: 12.5px;
   border-collapse: collapse;
 
@@ -126,4 +127,10 @@
 
 .empty p {
   color: var(--txt-secondary);
+}
+
+@media (max-width: 768px) {
+  .content { padding: 16px 16px 32px; gap: 16px; }
+  .search { min-width: 0; width: 100%; max-width: 100%; flex: unset; }
+  .status-filter { width: 100%; flex: unset; }
 }

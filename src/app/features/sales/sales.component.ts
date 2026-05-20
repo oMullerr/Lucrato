@@ -96,6 +96,7 @@ export class SalesComponent {
           confirmText: 'Remover',
         },
         width: '420px',
+        maxWidth: '95vw',
       })
       .afterClosed()
       .subscribe(confirmed => {

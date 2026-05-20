@@ -177,3 +177,8 @@
     color: var(--clr-green);
   }
 }
+
+@media (max-width: 768px) {
+  .content { padding: 16px 16px 32px; gap: 16px; }
+  .resume-card { padding: 16px !important; }
+}

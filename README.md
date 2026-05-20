@@ -225,7 +225,6 @@ firebase deploy
 
 ## TODO
 
-- Refazer layout e cores
 - Versão mobile
 
 

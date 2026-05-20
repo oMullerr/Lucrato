@@ -109,3 +109,9 @@
   font-size: 13px;
   line-height: 1.5;
 }
+
+@media (max-width: 768px) {
+  .content { padding: 16px 16px 32px; gap: 16px; }
+  .config-card { padding: 16px !important; }
+  .import-section { display: none; }
+}

@@ -172,6 +172,7 @@ export class SettingsComponent {
           confirmText: 'Sim, resetar tudo',
         },
         width: '460px',
+        maxWidth: '95vw',
       })
       .afterClosed()
       .subscribe(async confirmed => {

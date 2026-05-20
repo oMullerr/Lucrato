@@ -187,6 +187,12 @@ import { AuthService } from '../../core/services/auth.service';
       border-radius: 8px;
       border-left: 3px solid var(--clr-red);
     }
+
+    @media (max-width: 480px) {
+      .login-page { padding: 16px; align-items: flex-start; padding-top: 40px; }
+      .login-card { padding: 20px 16px; border-radius: 12px; }
+      .brand h1 { font-size: 20px; }
+    }
   `],
 })
 export class LoginComponent {

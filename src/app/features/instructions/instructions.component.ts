@@ -327,8 +327,10 @@ Revisão semanal (5 minutos):
 
     @media (max-width: 700px) {
       .content { padding: 16px 16px 32px; }
-      .hero { flex-wrap: wrap; }
+      .hero { flex-wrap: wrap; padding: 20px 16px; gap: 16px; }
       .hero-stat { display: none; }
+      .hero-text h2 { font-size: 16px; }
+      .hero-text p { font-size: 13px; }
     }
   `]
 })

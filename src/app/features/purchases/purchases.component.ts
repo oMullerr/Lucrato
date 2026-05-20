@@ -110,6 +110,7 @@ export class PurchasesComponent {
           confirmText: 'Remover',
         },
         width: '420px',
+        maxWidth: '95vw',
       })
       .afterClosed()
       .subscribe(confirmed => {

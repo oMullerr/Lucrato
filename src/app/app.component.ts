@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -8,6 +8,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { ThemeService } from './core/services/theme.service';
 import { DataService } from './core/services/data.service';
 import { AuthService } from './core/services/auth.service';
@@ -59,7 +62,12 @@ const NAV_GROUPS: NavGroup[] = [
   template: `
     @if (auth.isLoggedIn()) {
       <mat-sidenav-container class="app-shell">
-        <mat-sidenav mode="side" opened class="sidebar">
+        <mat-sidenav
+          [mode]="isMobile() ? 'over' : 'side'"
+          [opened]="sidebarOpen()"
+          (openedChange)="sidebarOpen.set($event)"
+          class="sidebar"
+        >
           <div class="brand">
             <div class="logo">
               <img src="favicon.svg" alt="Lucrato" width="26" height="26" />
@@ -83,6 +91,7 @@ const NAV_GROUPS: NavGroup[] = [
                     class="nav-item"
                     [matTooltip]="item.label"
                     matTooltipPosition="right"
+                    (click)="closeSidebarOnMobile()"
                   >
                     <mat-icon>{{ item.icon }}</mat-icon>
                     <span>{{ item.label }}</span>
@@ -104,6 +113,11 @@ const NAV_GROUPS: NavGroup[] = [
 
         <mat-sidenav-content>
           <mat-toolbar class="topbar">
+            @if (isMobile()) {
+              <button mat-icon-button class="hamburger-btn" (click)="toggleSidebar()" aria-label="Abrir menu de navegação">
+                <mat-icon>menu</mat-icon>
+              </button>
+            }
             <span class="topbar-spacer"></span>
             <button
               mat-icon-button
@@ -308,8 +322,17 @@ const NAV_GROUPS: NavGroup[] = [
       overflow-y: auto;
     }
 
+    .hamburger-btn {
+      color: var(--txt-primary);
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
     @media (max-width: 768px) {
-      .sidebar { width: 220px; }
+      .sidebar {
+        width: 260px;
+        box-shadow: var(--shadow-lg);
+      }
     }
   `]
 })
@@ -318,6 +341,23 @@ export class AppComponent {
   protected readonly data = inject(DataService);
   protected readonly auth = inject(AuthService);
   protected readonly navGroups = NAV_GROUPS;
+
+  private readonly bp = inject(BreakpointObserver);
+
+  protected readonly isMobile = toSignal(
+    this.bp.observe('(max-width: 768px)').pipe(map(r => r.matches)),
+    { initialValue: globalThis.window ? globalThis.window.innerWidth <= 768 : false }
+  );
+
+  protected readonly sidebarOpen = signal(
+    globalThis.window ? globalThis.window.innerWidth > 768 : true
+  );
+
+  protected toggleSidebar(): void { this.sidebarOpen.update(v => !v); }
+
+  protected closeSidebarOnMobile(): void {
+    if (this.isMobile()) this.sidebarOpen.set(false);
+  }
 
   protected async logout(): Promise<void> {
     await this.auth.logout();
