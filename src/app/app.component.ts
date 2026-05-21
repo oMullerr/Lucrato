@@ -132,6 +132,11 @@ const NAV_GROUPS: NavGroup[] = [
               <span class="user-name">{{ auth.storeName() }}</span>
             </button>
             <mat-menu #userMenu="matMenu">
+              <button mat-menu-item routerLink="/profile">
+                <mat-icon>person</mat-icon>
+                <span>Perfil</span>
+              </button>
+              <mat-divider />
               <button mat-menu-item (click)="logout()">
                 <mat-icon>logout</mat-icon>
                 <span>Sair</span>

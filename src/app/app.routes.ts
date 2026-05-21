@@ -46,6 +46,12 @@ export const routes: Routes = [
     title: 'Configurações · Lucrato',
   },
   {
+    path: 'profile',
+    loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
+    canActivate: [authGuard],
+    title: 'Perfil · Lucrato',
+  },
+  {
     path: 'instructions',
     loadComponent: () => import('./features/instructions/instructions.component').then(m => m.InstructionsComponent),
     canActivate: [authGuard],
