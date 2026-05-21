@@ -2,9 +2,7 @@
 export const APP = {
   name: 'Lucrato',
   version: '1.0.0',
-  storageKey: 'ml-gestao-db',
   themeKey: 'ml-gestao-theme',
-  initialDbUrl: 'db.json',
 } as const;
 
 /** Paleta de cores para gráficos */

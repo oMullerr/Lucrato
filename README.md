@@ -203,15 +203,6 @@ users/{uid}/db/main
 
 ---
 
-### Migrar dados existentes do localStorage
-
-Se você tinha dados antes da migração para o Firebase:
-
-1. **Antes** de atualizar o app, exporte os dados em **Configurações → Exportar dados** e salve o JSON
-2. Após atualizar e criar sua conta, vá em **Configurações → Importar dados** e carregue o JSON exportado
-
----
-
 ### Build de produção
 
 ```bash

@@ -98,25 +98,6 @@ export class DataService {
       });
   }
 
-  // ─── Data import/export ────────────────────────────────
-
-  exportData(): string {
-    return JSON.stringify(this.db(), null, 2);
-  }
-
-  importData(json: string): boolean {
-    try {
-      const data = JSON.parse(json);
-      const migrated = this.migrateDatabase(data);
-      if (!migrated.purchases || !migrated.sales || !migrated.settings) return false;
-      this.db.set(migrated);
-      this.persist();
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
   async reset(): Promise<void> {
     const uid = this.auth.currentUser()?.uid;
     if (!uid) return;
@@ -211,60 +192,24 @@ export class DataService {
   }
 
   private migrateDatabase(data: any): Database {
-    const isOldFormat = (data.compras !== undefined || data.vendas !== undefined) && data.purchases === undefined;
     const defaults = this.defaultSettings();
-    const cfg = data.configuracoes ?? data.settings ?? {};
+    const cfg = data.settings ?? {};
     const mergedSettings: Settings = {
-      defaultMlFee: cfg.taxaMlPadrao ?? cfg.defaultMlFee ?? defaults.defaultMlFee,
-      yellowAlertDays: cfg.diasAlertaAmarelo ?? cfg.yellowAlertDays ?? defaults.yellowAlertDays,
-      redAlertDays: cfg.diasAlertaVermelho ?? cfg.redAlertDays ?? defaults.redAlertDays,
-      minimumMargin: cfg.margemMinima ?? cfg.minimumMargin ?? defaults.minimumMargin,
-      lowStockAlert: cfg.alertaEstoqueBaixo ?? cfg.lowStockAlert ?? defaults.lowStockAlert,
-      defaultShipping: cfg.fretePadrao ?? cfg.defaultShipping ?? defaults.defaultShipping,
-      defaultChannel: cfg.canalPadrao ?? cfg.defaultChannel ?? defaults.defaultChannel,
-      categories: cfg.categorias ?? cfg.categories ?? defaults.categories,
-      suppliers: cfg.fornecedores ?? cfg.suppliers ?? defaults.suppliers,
-      channels: cfg.canais ?? cfg.channels ?? defaults.channels,
+      defaultMlFee: cfg.defaultMlFee ?? defaults.defaultMlFee,
+      yellowAlertDays: cfg.yellowAlertDays ?? defaults.yellowAlertDays,
+      redAlertDays: cfg.redAlertDays ?? defaults.redAlertDays,
+      minimumMargin: cfg.minimumMargin ?? defaults.minimumMargin,
+      lowStockAlert: cfg.lowStockAlert ?? defaults.lowStockAlert,
+      defaultShipping: cfg.defaultShipping ?? defaults.defaultShipping,
+      defaultChannel: cfg.defaultChannel ?? defaults.defaultChannel,
+      categories: cfg.categories ?? defaults.categories,
+      suppliers: cfg.suppliers ?? defaults.suppliers,
+      channels: cfg.channels ?? defaults.channels,
     };
 
-    if (!isOldFormat) {
-      return {
-        purchases: data.purchases ?? [],
-        sales: data.sales ?? [],
-        settings: mergedSettings,
-        metadata: data.metadata ?? { versao: APP.version, ultimaAtualizacao: new Date().toISOString() },
-      };
-    }
-
     return {
-      purchases: (data.compras ?? []).map((c: any) => ({
-        id: c.id,
-        product: c.produto ?? c.product ?? '',
-        category: c.categoria ?? c.category ?? '',
-        supplier: c.fornecedor ?? c.supplier ?? '',
-        link: c.link,
-        purchaseDate: c.dataCompra ?? c.purchaseDate ?? '',
-        quantityPurchased: c.qtdComprada ?? c.quantityPurchased ?? 0,
-        unitCost: c.custoUnitario ?? c.unitCost ?? 0,
-        purchaseShipping: c.freteCompra ?? c.purchaseShipping ?? 0,
-        otherCosts: c.outrosCustos ?? c.otherCosts ?? 0,
-        notes: c.observacoes ?? c.notes,
-      })),
-      sales: (data.vendas ?? []).map((v: any) => ({
-        id: v.id,
-        batchId: v.idLote ?? v.batchId ?? '',
-        product: v.produto ?? v.product ?? '',
-        quantitySold: v.qtdVendida ?? v.quantitySold ?? 0,
-        unitPrice: v.precoUnitario ?? v.unitPrice ?? 0,
-        saleDate: v.dataVenda ?? v.saleDate ?? '',
-        channel: v.canal ?? v.channel ?? 'Mercado Livre',
-        feePercentage: v.taxaPercentual ?? v.feePercentage ?? 0.12,
-        sellerShipping: v.freteVendedor ?? v.sellerShipping ?? 0,
-        discount: v.desconto ?? v.discount ?? 0,
-        otherCosts: v.outrosCustos ?? v.otherCosts ?? 0,
-        status: v.status ?? 'Concluída',
-        notes: v.observacoes ?? v.notes,
-      })),
+      purchases: data.purchases ?? [],
+      sales: data.sales ?? [],
       settings: mergedSettings,
       metadata: data.metadata ?? { versao: APP.version, ultimaAtualizacao: new Date().toISOString() },
     };
