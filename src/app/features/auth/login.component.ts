@@ -6,7 +6,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../core/services/auth.service';
+import { validatePasswordStrength } from '../../core/services/password-validator';
+import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
 
 @Component({
   selector: 'app-login',
@@ -60,6 +63,10 @@ import { AuthService } from '../../core/services/auth.service';
                   Entrar
                 }
               </button>
+
+              <button type="button" mat-button class="forgot-link" (click)="openForgotPassword()">
+                Esqueci minha senha
+              </button>
             </form>
           </mat-tab>
 
@@ -81,11 +88,11 @@ import { AuthService } from '../../core/services/auth.service';
               <mat-form-field>
                 <mat-label>Senha</mat-label>
                 <input matInput [type]="showRegPwd() ? 'text' : 'password'" name="password"
-                  [(ngModel)]="regPassword" required autocomplete="new-password" minlength="6" />
+                  [(ngModel)]="regPassword" required autocomplete="new-password" minlength="8" />
                 <button type="button" mat-icon-button matSuffix (click)="showRegPwd.set(!showRegPwd())">
                   <mat-icon>{{ showRegPwd() ? 'visibility_off' : 'visibility' }}</mat-icon>
                 </button>
-                <mat-hint>Mínimo 6 caracteres</mat-hint>
+                <mat-hint>Mínimo 8 caracteres, com letra e número</mat-hint>
               </mat-form-field>
 
               @if (regError()) {
@@ -187,6 +194,13 @@ import { AuthService } from '../../core/services/auth.service';
       border-left: 3px solid var(--clr-red);
     }
 
+    .forgot-link {
+      align-self: center;
+      font-size: 12.5px;
+      color: var(--txt-secondary);
+      margin-top: 4px;
+    }
+
     @media (max-width: 480px) {
       .login-page { padding: 16px; align-items: flex-start; padding-top: 40px; }
       .login-card { padding: 20px 16px; border-radius: 12px; }
@@ -196,6 +210,7 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class LoginComponent {
   private readonly authService = inject(AuthService);
+  private readonly dialog = inject(MatDialog);
 
   loginEmail = '';
   loginPassword = '';
@@ -224,14 +239,40 @@ export class LoginComponent {
 
   async register(): Promise<void> {
     this.regError.set('');
+
+    const pwdError = validatePasswordStrength(this.regPassword);
+    if (pwdError) {
+      this.regError.set(pwdError);
+      return;
+    }
+
+    const storeName = this.regStoreName.trim();
+    if (!storeName) {
+      this.regError.set('Informe o nome da loja.');
+      return;
+    }
+
     this.regLoading.set(true);
     try {
-      await this.authService.register(this.regEmail, this.regPassword, this.regStoreName);
+      await this.authService.register(this.regEmail.trim(), this.regPassword, storeName);
+      try {
+        await this.authService.sendVerificationEmail();
+      } catch {
+        // não bloqueia o cadastro caso o envio falhe; usuário pode reenviar depois
+      }
     } catch (e: any) {
       this.regError.set(this.friendlyError(e?.code));
     } finally {
       this.regLoading.set(false);
     }
+  }
+
+  openForgotPassword(): void {
+    this.dialog.open(ForgotPasswordDialogComponent, {
+      data: this.loginEmail || null,
+      width: '440px',
+      maxWidth: '95vw',
+    });
   }
 
   private friendlyError(code: string): string {

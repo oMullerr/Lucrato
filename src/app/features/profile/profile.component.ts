@@ -10,8 +10,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { Firestore, deleteDoc, doc } from '@angular/fire/firestore';
 import { AuthService } from '../../core/services/auth.service';
 import { NotifyService } from '../../core/services/notify.service';
+import { validatePasswordStrength } from '../../core/services/password-validator';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
+import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/components/confirm-dialog.component';
 
 @Component({
   selector: 'app-profile',
@@ -392,7 +393,7 @@ export class ProfileComponent {
   protected readonly canChangePassword = computed(() => {
     return (
       this.currentPwd().length >= 6 &&
-      this.newPwd().length >= 6 &&
+      validatePasswordStrength(this.newPwd()) === null &&
       this.confirmPwd() === this.newPwd() &&
       this.newPwd() !== this.currentPwd()
     );
@@ -425,6 +426,13 @@ export class ProfileComponent {
 
   protected async changePassword(): Promise<void> {
     if (!this.canChangePassword()) return;
+
+    const pwdError = validatePasswordStrength(this.newPwd());
+    if (pwdError) {
+      this.notify.error(pwdError);
+      return;
+    }
+
     this.changingPassword.set(true);
     try {
       await this.auth.changePassword(this.currentPwd(), this.newPwd());
@@ -456,7 +464,7 @@ export class ProfileComponent {
   protected deleteAccount(): void {
     const storeName = this.auth.storeName();
     this.dialog
-      .open(ConfirmDialogComponent, {
+      .open<ConfirmDialogComponent, unknown, ConfirmDialogResult>(ConfirmDialogComponent, {
         data: {
           title: 'Excluir conta',
           message:
@@ -465,21 +473,20 @@ export class ProfileComponent {
           confirmText: 'Sim, excluir minha conta',
           requireTextMatch: storeName,
           requireTextLabel: 'Digite o nome da loja para confirmar',
+          requirePassword: true,
+          requirePasswordLabel: 'Senha atual',
         },
         width: '500px',
         maxWidth: '95vw',
       })
       .afterClosed()
-      .subscribe(async confirmed => {
-        if (!confirmed) return;
-        await this.performAccountDeletion();
+      .subscribe(async result => {
+        if (!result || !result.confirmed || !result.password) return;
+        await this.performAccountDeletion(result.password);
       });
   }
 
-  private async performAccountDeletion(): Promise<void> {
-    const password = window.prompt('Digite sua senha atual para confirmar a exclusão da conta:');
-    if (!password) return;
-
+  private async performAccountDeletion(password: string): Promise<void> {
     const uid = this.auth.currentUser()?.uid;
     if (!uid) {
       this.notify.error('Sessão expirada. Faça login novamente.');

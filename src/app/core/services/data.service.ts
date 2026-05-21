@@ -41,7 +41,9 @@ export class DataService {
     effect(() => {
       const u = this.auth.currentUser();
       if (u) {
-        this.startSync(u.uid);
+        this.startSync(u.uid).catch(err =>
+          console.error('[DataService] startSync falhou:', err),
+        );
       } else if (u === null) {
         this.stopSync();
       }
@@ -50,8 +52,9 @@ export class DataService {
 
   // ─── Firestore sync ────────────────────────────────────
 
-  private startSync(uid: string): void {
+  private async startSync(uid: string): Promise<void> {
     this.stopSync();
+    await this.auth.refreshIdToken();
     const ref = doc(this.firestore, `users/${uid}/db/main`);
     this._unsub = onSnapshot(ref, snap => {
       if (snap.exists()) {

@@ -14,7 +14,13 @@ export interface ConfirmDialogData {
   danger?: boolean;
   requireTextMatch?: string;
   requireTextLabel?: string;
+  requirePassword?: boolean;
+  requirePasswordLabel?: string;
 }
+
+export type ConfirmDialogResult =
+  | false
+  | { confirmed: true; password?: string };
 
 @Component({
   selector: 'app-confirm-dialog',
@@ -35,6 +41,7 @@ export interface ConfirmDialogData {
     </h2>
     <mat-dialog-content>
       <p>{{ data.message }}</p>
+
       @if (data.requireTextMatch) {
         <mat-form-field class="match-field" appearance="outline">
           <mat-label>{{ data.requireTextLabel ?? 'Digite para confirmar' }}</mat-label>
@@ -47,16 +54,29 @@ export interface ConfirmDialogData {
           <mat-hint>Digite exatamente: <strong>{{ data.requireTextMatch }}</strong></mat-hint>
         </mat-form-field>
       }
+
+      @if (data.requirePassword) {
+        <mat-form-field class="match-field" appearance="outline">
+          <mat-label>{{ data.requirePasswordLabel ?? 'Senha atual' }}</mat-label>
+          <input
+            matInput
+            type="password"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+            autocomplete="current-password"
+          />
+        </mat-form-field>
+      }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="ref.close(false)">
+      <button mat-button (click)="cancel()">
         {{ data.cancelText ?? 'Cancelar' }}
       </button>
       <button
         mat-flat-button
         [color]="data.danger ? 'warn' : 'primary'"
         [disabled]="!canConfirm()"
-        (click)="ref.close(true)"
+        (click)="confirm()"
         cdkFocusInitial
       >
         {{ data.confirmText ?? 'Confirmar' }}
@@ -72,11 +92,32 @@ export interface ConfirmDialogData {
   `]
 })
 export class ConfirmDialogComponent {
-  readonly ref = inject<MatDialogRef<ConfirmDialogComponent, boolean>>(MatDialogRef);
+  readonly ref = inject<MatDialogRef<ConfirmDialogComponent, ConfirmDialogResult>>(MatDialogRef);
   readonly data = inject<ConfirmDialogData>(MAT_DIALOG_DATA);
 
   protected readonly typedText = signal('');
-  protected readonly canConfirm = computed(() =>
-    !this.data.requireTextMatch || this.typedText().trim() === this.data.requireTextMatch
-  );
+  protected readonly password = signal('');
+
+  protected readonly canConfirm = computed(() => {
+    if (this.data.requireTextMatch && this.typedText().trim() !== this.data.requireTextMatch) {
+      return false;
+    }
+    if (this.data.requirePassword && this.password().length === 0) {
+      return false;
+    }
+    return true;
+  });
+
+  protected cancel(): void {
+    this.ref.close(false);
+  }
+
+  protected confirm(): void {
+    if (!this.canConfirm()) return;
+    if (this.data.requirePassword) {
+      this.ref.close({ confirmed: true, password: this.password() });
+    } else {
+      this.ref.close({ confirmed: true });
+    }
+  }
 }

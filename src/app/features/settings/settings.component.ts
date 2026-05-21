@@ -128,7 +128,6 @@ export class SettingsComponent implements OnDestroy {
           suppliers: raw?.suppliers ?? DEFAULT_SETTINGS.suppliers,
           channels: raw?.channels ?? DEFAULT_SETTINGS.channels,
         };
-        console.log('[Settings] snapshot recebido. exists=', snap.exists(), 'fromCache=', snap.metadata.fromCache, 'settings=', composed);
         this.serverSettings.set(composed);
       },
       err => {
@@ -239,8 +238,25 @@ export class SettingsComponent implements OnDestroy {
   }
 
   protected async onFileSelected(event: Event): Promise<void> {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
     if (!file) return;
+
+    const MAX_BYTES = 5 * 1024 * 1024;
+    const ALLOWED_EXT = ['.xlsx', '.xls'];
+    const fileName = file.name.toLowerCase();
+    const ext = fileName.slice(fileName.lastIndexOf('.'));
+
+    if (!ALLOWED_EXT.includes(ext)) {
+      this.notify.error('Apenas arquivos Excel (.xlsx, .xls) são aceitos.');
+      input.value = '';
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      this.notify.error('Arquivo muito grande. Máximo 5 MB.');
+      input.value = '';
+      return;
+    }
 
     this.importing.set(true);
     try {

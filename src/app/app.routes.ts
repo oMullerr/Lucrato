@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/guards/auth.guard';
+import { authGuard, guestGuard, verifyEmailGuard } from './core/guards/auth.guard';
+import { unsavedChangesGuard } from './core/guards/unsaved-changes.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'inventory', pathMatch: 'full' },
@@ -8,6 +9,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent),
     canActivate: [guestGuard],
     title: 'Login · Lucrato',
+  },
+  {
+    path: 'verify-email',
+    loadComponent: () => import('./features/auth/verify-email.component').then(m => m.VerifyEmailComponent),
+    canActivate: [verifyEmailGuard],
+    title: 'Verificar e-mail · Lucrato',
   },
   {
     path: 'inventory',
@@ -43,6 +50,7 @@ export const routes: Routes = [
     path: 'settings',
     loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent),
     canActivate: [authGuard],
+    canDeactivate: [unsavedChangesGuard],
     title: 'Configurações · Lucrato',
   },
   {

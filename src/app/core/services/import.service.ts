@@ -374,22 +374,27 @@ export class ImportService {
       return { purchases: [], sales: [], errors: ['Arquivo inválido ou corrompido.'] };
     }
 
-    const newPurchases = this.parsePurchases(
-      workbook.Sheets['Compras'],
-      currentPurchases,
-      errors,
-    );
+    try {
+      const newPurchases = this.parsePurchases(
+        workbook.Sheets['Compras'],
+        currentPurchases,
+        errors,
+      );
 
-    const newSales = this.parseSales(
-      workbook.Sheets['Vendas'],
-      currentPurchases,
-      newPurchases,
-      currentSales,
-      settings,
-      errors,
-    );
+      const newSales = this.parseSales(
+        workbook.Sheets['Vendas'],
+        currentPurchases,
+        newPurchases,
+        currentSales,
+        settings,
+        errors,
+      );
 
-    return { purchases: newPurchases, sales: newSales, errors };
+      return { purchases: newPurchases, sales: newSales, errors };
+    } catch (err) {
+      console.error('[Import] parseFile crashed:', err);
+      return { purchases: [], sales: [], errors: ['Arquivo inválido ou corrompido.'] };
+    }
   }
 
   private parsePurchases(
@@ -399,7 +404,14 @@ export class ImportService {
   ): Purchase[] {
     if (!ws) return [];
 
+    const MAX_ROWS = 5000;
     const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+    if (rows.length - 3 > MAX_ROWS) {
+      errors.push(`Aba "Compras" excede o limite de ${MAX_ROWS} linhas. Divida em arquivos menores.`);
+      return [];
+    }
+
     const result: Purchase[] = [];
     let nextNum = this.extractNextNum(existing.map(p => p.id), 'C');
 
@@ -464,7 +476,14 @@ export class ImportService {
   ): Sale[] {
     if (!ws) return [];
 
+    const MAX_ROWS = 5000;
     const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+    if (rows.length - 3 > MAX_ROWS) {
+      errors.push(`Aba "Vendas" excede o limite de ${MAX_ROWS} linhas. Divida em arquivos menores.`);
+      return [];
+    }
+
     const result: Sale[] = [];
 
     const allPurchases = [...existingPurchases, ...newPurchases];

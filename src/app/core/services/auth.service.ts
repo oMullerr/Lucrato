@@ -7,6 +7,7 @@ import {
   deleteUser,
   reauthenticateWithCredential,
   sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   updatePassword,
@@ -57,6 +58,23 @@ export class AuthService {
     const u = this._auth.currentUser;
     if (!u) throw new Error('not-logged-in');
     await sendEmailVerification(u);
+  }
+
+  async sendPasswordReset(email: string): Promise<void> {
+    await sendPasswordResetEmail(this._auth, email);
+  }
+
+  async reloadCurrentUser(): Promise<void> {
+    const u = this._auth.currentUser;
+    if (!u) return;
+    await u.reload();
+    await u.getIdToken(true);
+  }
+
+  async refreshIdToken(): Promise<void> {
+    const u = this._auth.currentUser;
+    if (!u) return;
+    await u.getIdToken(true);
   }
 
   async reauthenticate(currentPassword: string): Promise<void> {

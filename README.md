@@ -126,23 +126,14 @@ const firebaseConfig = {
 
 ### Configurar as regras de segurança
 
-Após criar o banco:
+As regras restritivas já estão versionadas em [firestore.rules](firestore.rules) na raiz do projeto. Use o Firebase CLI para publicá-las (não cole manualmente no console):
 
-1. Clique na aba **"Regras"**
-2. Substitua o conteúdo pelo seguinte e clique em **Publicar**:
-
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
+```bash
+npx firebase-tools login                                           # 1ª vez
+npx firebase-tools deploy --only firestore:rules --project lucrato-web
 ```
 
-> Esta regra garante que cada usuário só acessa os seus próprios dados.
+> As regras restringem cada usuário ao seu próprio subtree **e exigem e-mail verificado**. Sem este deploy, qualquer pessoa autenticada poderia acessar dados de outros usuários.
 
 ---
 
@@ -181,6 +172,24 @@ Abra **http://localhost:4200** no navegador.
 - Clique em **"Criar conta"** para registrar seu e-mail, senha e nome da loja
 - Após o cadastro, você será redirecionado para o Estoque
 - Os dados são salvos automaticamente no Firestore e sincronizados em todos os dispositivos
+
+---
+
+### Passo 7 — Habilitar App Check (reCAPTCHA Enterprise)
+
+App Check bloqueia chamadas à API Firestore que não venham do seu domínio autorizado, protegendo contra bots e abuso de cota mesmo se a API key vazar.
+
+1. No **Firebase Console** → projeto → **App Check** → registrar a app web
+2. Escolher provider **reCAPTCHA Enterprise**
+3. Em `console.cloud.google.com → Security → reCAPTCHA Enterprise`, criar uma chave para:
+   - `localhost` (dev)
+   - domínio de produção (ex.: `lucrato-web.vercel.app`)
+4. Copiar o **site key** (público) e colar nos environments:
+   - [src/environments/environment.ts](src/environments/environment.ts) — `recaptchaSiteKey`
+   - [src/environments/environment.prod.ts](src/environments/environment.prod.ts) — `recaptchaSiteKey`
+5. Em **Firebase Console → App Check → APIs → Cloud Firestore**, ativar **Enforce** quando estiver confiante (recomendado: rodar uma semana em "unenforced" primeiro pra ver métricas)
+
+**Debug token (dev local):** [main.ts](src/main.ts) habilita `FIREBASE_APPCHECK_DEBUG_TOKEN` automaticamente. Na primeira execução `npm start`, o console do navegador mostrará um token — copie e registre em **Firebase Console → App Check → Apps → ⋯ → Manage debug tokens**, senão chamadas locais falharão depois do Enforce.
 
 ---
 
@@ -223,11 +232,23 @@ firebase deploy
 
 ---
 
-## TODO
+## Segurança
 
-- Recuperar senha
-- local para alterar infomações da conta
+A aplicação implementa as seguintes camadas de proteção:
+
+| Camada | Onde |
+| --- | --- |
+| Firestore Rules restritas por UID + email_verified | [firestore.rules](firestore.rules) |
+| App Check (reCAPTCHA Enterprise) | [src/app/app.config.ts](src/app/app.config.ts) |
+| HTTP security headers (CSP, HSTS, X-Frame, etc.) | [vercel.json](vercel.json) |
+| Verificação de e-mail obrigatória | [src/app/core/guards/auth.guard.ts](src/app/core/guards/auth.guard.ts) |
+| Política de senha forte (8+ chars, letra+número) | [src/app/core/services/password-validator.ts](src/app/core/services/password-validator.ts) |
+| Forgot password (sem enumeração de contas) | [src/app/features/auth/forgot-password.dialog.ts](src/app/features/auth/forgot-password.dialog.ts) |
+| Re-autenticação antes de operações sensíveis | [src/app/features/profile/profile.component.ts](src/app/features/profile/profile.component.ts) |
+| Limites de upload XLSX (5 MB, 5000 linhas, MIME) | [src/app/features/settings/settings.component.ts](src/app/features/settings/settings.component.ts) + [src/app/core/services/import.service.ts](src/app/core/services/import.service.ts) |
+
+**Ajuste de CSP**: se algum recurso bloquear em produção, abra DevTools → Console no domínio Vercel e ajuste a diretiva correspondente em [vercel.json](vercel.json). A CSP atual cobre Firebase, reCAPTCHA, App Check e Material.
 
 ## BUGS
 
-- Parâmetros e listas da aba de configuração
+- Ta permitindo registrar a venda de um produto que o status diferente de disponível

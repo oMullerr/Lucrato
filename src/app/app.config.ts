@@ -15,6 +15,7 @@ import localePt from '@angular/common/locales/pt';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 import { provideFirestore } from '@angular/fire/firestore';
+import { provideAppCheck, initializeAppCheck, ReCaptchaEnterpriseProvider } from '@angular/fire/app-check';
 import { initializeFirestore, persistentLocalCache } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
 
@@ -35,6 +36,15 @@ const BR_DATE_FORMATS: MatDateFormats = {
   },
 };
 
+const appCheckProvider = environment.recaptchaSiteKey
+  ? [
+      provideAppCheck(() => initializeAppCheck(getApp(), {
+        provider: new ReCaptchaEnterpriseProvider(environment.recaptchaSiteKey),
+        isTokenAutoRefreshEnabled: true,
+      })),
+    ]
+  : [];
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
@@ -47,6 +57,7 @@ export const appConfig: ApplicationConfig = {
     provideFirestore(() => initializeFirestore(getApp(), {
       localCache: persistentLocalCache()
     })),
+    ...appCheckProvider,
     { provide: LOCALE_ID, useValue: 'pt-BR' },
     { provide: MAT_DATE_LOCALE, useValue: 'pt-BR' },
     { provide: MAT_DATE_FORMATS, useValue: BR_DATE_FORMATS },
