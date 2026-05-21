@@ -3,7 +3,7 @@ import { Firestore, doc, onSnapshot, setDoc } from '@angular/fire/firestore';
 import type { Unsubscribe } from '@angular/fire/firestore';
 import { APP } from '../constants/app.constants';
 import {
-  Purchase, Sale, Settings, Database
+  Purchase, Sale, Settings, Database, SaleChannel
 } from '../models/models';
 import { calculatePurchase, calculateKpis, calculateSale, nextId } from './calculations';
 import { AuthService } from './auth.service';
@@ -110,9 +110,25 @@ export class DataService {
   async reset(): Promise<void> {
     const uid = this.auth.currentUser()?.uid;
     if (!uid) return;
-    const empty = this.createEmpty();
-    this.db.set(empty);
-    await setDoc(doc(this.firestore, `users/${uid}/db/main`), empty);
+    const zeroed: Database = {
+      purchases: [],
+      sales: [],
+      settings: {
+        defaultMlFee: 0,
+        yellowAlertDays: 0,
+        redAlertDays: 0,
+        minimumMargin: 0,
+        lowStockAlert: 0,
+        defaultShipping: 0,
+        defaultChannel: '' as SaleChannel,
+        categories: [],
+        suppliers: [],
+        channels: [],
+      },
+      metadata: { versao: APP.version, ultimaAtualizacao: new Date().toISOString() },
+    };
+    this.db.set(zeroed);
+    await setDoc(doc(this.firestore, `users/${uid}/db/main`), zeroed);
   }
 
   // ─── Purchases CRUD ──────────────────────────────────────

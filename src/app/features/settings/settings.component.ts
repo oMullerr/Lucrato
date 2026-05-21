@@ -269,13 +269,16 @@ export class SettingsComponent implements OnDestroy {
   }
 
   protected resetAll(): void {
+    const storeName = this.auth.storeName();
     this.dialog
       .open(ConfirmDialogComponent, {
         data: {
           title: 'Resetar dados',
-          message: 'Isso vai apagar todos os dados (compras, vendas, configurações) e restaurar o exemplo inicial. Tem certeza?',
+          message: 'Isso vai apagar PERMANENTEMENTE todos os dados (compras, vendas, configurações). Os parâmetros do sistema voltarão a zero e as listas ficarão vazias. Não há como desfazer.',
           danger: true,
           confirmText: 'Sim, resetar tudo',
+          requireTextMatch: storeName,
+          requireTextLabel: 'Digite o nome da loja para confirmar',
         },
         width: '460px',
         maxWidth: '95vw',
