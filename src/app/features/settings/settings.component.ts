@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,8 +10,10 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { Firestore, doc, onSnapshot, setDoc, Unsubscribe } from '@angular/fire/firestore';
 import { Settings } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
+import { AuthService } from '../../core/services/auth.service';
 import { ImportService } from '../../core/services/import.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
@@ -19,6 +21,21 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.c
 import { ImportResultDialogComponent } from './import-result-dialog.component';
 
 type ListKey = 'categories' | 'suppliers' | 'channels';
+
+const DEFAULT_SETTINGS: Settings = {
+  defaultMlFee: 0.12,
+  yellowAlertDays: 25,
+  redAlertDays: 30,
+  minimumMargin: 0.10,
+  lowStockAlert: 1,
+  defaultShipping: 0,
+  defaultChannel: 'Mercado Livre',
+  categories: [],
+  suppliers: [],
+  channels: [],
+};
+
+const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 
 @Component({
   selector: 'app-settings',
@@ -33,7 +50,9 @@ type ListKey = 'categories' | 'suppliers' | 'channels';
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
-export class SettingsComponent {
+export class SettingsComponent implements OnDestroy {
+  private readonly firestore = inject(Firestore);
+  private readonly auth = inject(AuthService);
   private readonly dataService = inject(DataService);
   private readonly importService = inject(ImportService);
   private readonly notify = inject(NotifyService);
@@ -43,83 +62,170 @@ export class SettingsComponent {
 
   protected readonly separators = [ENTER, COMMA];
 
-  protected readonly form = signal<Settings>(this.snapshot());
-  private _dirty = false;
+  private readonly serverSettings = signal<Settings | null>(null);
+  protected readonly form = signal<Settings>(clone(DEFAULT_SETTINGS));
+  private readonly appliedBaseline = signal<Settings>(clone(DEFAULT_SETTINGS));
+  protected readonly saving = signal(false);
+  private snapshotUnsub: Unsubscribe | null = null;
+
+  protected readonly hasChanges = computed(() => {
+    const a = this.serverSettings() ?? DEFAULT_SETTINGS;
+    const b = this.form();
+    return JSON.stringify(a) !== JSON.stringify(b);
+  });
 
   constructor() {
     effect(() => {
-      const settings = this.dataService.settings();
-      if (settings && !this._dirty) {
-        this.form.set(JSON.parse(JSON.stringify(settings)));
+      const user = this.auth.currentUser();
+      if (user) {
+        this.attachListener(user.uid);
+      } else if (user === null) {
+        this.detachListener();
+        this.serverSettings.set(null);
       }
+    }, { allowSignalWrites: true });
+
+    effect(() => {
+      const b = this.serverSettings();
+      if (!b) return;
+      untracked(() => {
+        const f = this.form();
+        const applied = this.appliedBaseline();
+        const bSerialized = JSON.stringify(b);
+        const userEdited = JSON.stringify(f) !== JSON.stringify(applied);
+        if (!userEdited && JSON.stringify(f) !== bSerialized) {
+          this.form.set(clone(b));
+        }
+        if (JSON.stringify(applied) !== bSerialized) {
+          this.appliedBaseline.set(clone(b));
+        }
+      });
     }, { allowSignalWrites: true });
   }
 
-  protected update<K extends keyof Settings>(key: K, value: unknown): void {
-    this._dirty = true;
+  ngOnDestroy(): void {
+    this.detachListener();
+  }
+
+  private attachListener(uid: string): void {
+    this.detachListener();
+    const ref = doc(this.firestore, `users/${uid}/db/main`);
+    this.snapshotUnsub = onSnapshot(
+      ref,
+      snap => {
+        const data = snap.exists() ? (snap.data() as { settings?: Partial<Settings> }) : null;
+        const raw = data?.settings ?? null;
+        const composed: Settings = {
+          defaultMlFee: raw?.defaultMlFee ?? DEFAULT_SETTINGS.defaultMlFee,
+          yellowAlertDays: raw?.yellowAlertDays ?? DEFAULT_SETTINGS.yellowAlertDays,
+          redAlertDays: raw?.redAlertDays ?? DEFAULT_SETTINGS.redAlertDays,
+          minimumMargin: raw?.minimumMargin ?? DEFAULT_SETTINGS.minimumMargin,
+          lowStockAlert: raw?.lowStockAlert ?? DEFAULT_SETTINGS.lowStockAlert,
+          defaultShipping: raw?.defaultShipping ?? DEFAULT_SETTINGS.defaultShipping,
+          defaultChannel: raw?.defaultChannel ?? DEFAULT_SETTINGS.defaultChannel,
+          categories: raw?.categories ?? DEFAULT_SETTINGS.categories,
+          suppliers: raw?.suppliers ?? DEFAULT_SETTINGS.suppliers,
+          channels: raw?.channels ?? DEFAULT_SETTINGS.channels,
+        };
+        console.log('[Settings] snapshot recebido. exists=', snap.exists(), 'fromCache=', snap.metadata.fromCache, 'settings=', composed);
+        this.serverSettings.set(composed);
+      },
+      err => {
+        console.error('[Settings] onSnapshot falhou:', err);
+      }
+    );
+  }
+
+  private detachListener(): void {
+    if (this.snapshotUnsub) {
+      this.snapshotUnsub();
+      this.snapshotUnsub = null;
+    }
+  }
+
+  protected updateField<K extends keyof Settings>(key: K, value: Settings[K]): void {
     this.form.update(f => ({ ...f, [key]: value }));
   }
 
-  protected get feePercentage(): number {
+  protected get feePct(): number {
     return this.form().defaultMlFee * 100;
   }
-  protected set feePercentage(v: number) {
-    this._dirty = true;
-    this.form.update(f => ({ ...f, defaultMlFee: (v || 0) / 100 }));
+  protected set feePct(v: number) {
+    this.updateField('defaultMlFee', (Number(v) || 0) / 100);
   }
 
   protected get minMarginPct(): number {
     return this.form().minimumMargin * 100;
   }
   protected set minMarginPct(v: number) {
-    this._dirty = true;
-    this.form.update(f => ({ ...f, minimumMargin: (v || 0) / 100 }));
+    this.updateField('minimumMargin', (Number(v) || 0) / 100);
   }
-
-  protected readonly isModified = computed(() => {
-    const cfg = this.dataService.settings();
-    if (!cfg) return false;
-    return JSON.stringify(cfg) !== JSON.stringify(this.form());
-  });
 
   protected addItem(list: ListKey, value: string): void {
     const v = (value ?? '').trim();
     if (!v) return;
-    const current = this.form()[list];
-    if (current.includes(v)) {
+    const cur = this.form()[list];
+    if (cur.includes(v)) {
       this.notify.warning(`"${v}" já existe na lista.`);
       return;
     }
-    const updated = [...current, v];
-    this._dirty = true;
-    this.form.update(f => ({ ...f, [list]: updated }));
-    this.dataService.updateSettings({ [list]: updated } as Partial<Settings>);
+    this.updateField(list, [...cur, v] as Settings[typeof list]);
   }
 
   protected drop(event: CdkDragDrop<string[]>, list: ListKey): void {
     const arr = [...this.form()[list]];
     moveItemInArray(arr, event.previousIndex, event.currentIndex);
-    this._dirty = true;
-    this.form.update(f => ({ ...f, [list]: arr }));
-    this.dataService.updateSettings({ [list]: arr } as Partial<Settings>);
+    this.updateField(list, arr as Settings[typeof list]);
   }
 
   protected removeItem(list: ListKey, item: string): void {
-    const updated = this.form()[list].filter(x => x !== item);
-    this._dirty = true;
-    this.form.update(f => ({ ...f, [list]: updated }));
-    this.dataService.updateSettings({ [list]: updated } as Partial<Settings>);
+    const cur = this.form()[list];
+    this.updateField(list, cur.filter(x => x !== item) as Settings[typeof list]);
   }
 
-  protected save(): void {
-    this._dirty = false;
-    this.dataService.updateSettings(this.form());
-    this.notify.success('Configurações salvas.');
+  protected async save(): Promise<void> {
+    const next = this.form();
+
+    const validationError = this.validate(next);
+    if (validationError) {
+      this.notify.error(validationError);
+      return;
+    }
+
+    const diff = this.buildDiff(this.serverSettings(), next);
+    if (Object.keys(diff).length === 0) {
+      this.notify.info('Nada para salvar.');
+      return;
+    }
+
+    const ref = this.settingsDocRef();
+    if (!ref) {
+      this.notify.error('Sessão expirada. Faça login novamente.');
+      return;
+    }
+
+    const payload: { settings: Partial<Settings> } = { settings: {} };
+    for (const [key, value] of Object.entries(diff)) {
+      const field = key.split('.')[1] as keyof Settings;
+      (payload.settings as Record<string, unknown>)[field] = value;
+    }
+
+    this.saving.set(true);
+    try {
+      await setDoc(ref, payload, { merge: true });
+      this.notify.success('Configurações salvas.');
+    } catch (err) {
+      console.error('[Settings] setDoc falhou:', err);
+      this.notify.error('Erro ao salvar configurações. Verifique sua conexão.');
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   protected discard(): void {
-    this._dirty = false;
-    this.form.set(this.snapshot());
+    const b = this.serverSettings() ?? DEFAULT_SETTINGS;
+    this.form.set(clone(b));
+    this.appliedBaseline.set(clone(b));
     this.notify.info('Alterações descartadas.');
   }
 
@@ -178,28 +284,42 @@ export class SettingsComponent {
       .subscribe(async confirmed => {
         if (confirmed) {
           await this.dataService.reset();
-          this.form.set(this.snapshot());
           this.notify.success('Sistema resetado para o estado inicial.');
         }
       });
   }
 
-  private snapshot(): Settings {
-    return JSON.parse(JSON.stringify(this.dataService.settings() ?? this.empty()));
+  private settingsDocRef() {
+    const uid = this.auth.currentUser()?.uid;
+    if (!uid) return null;
+    return doc(this.firestore, `users/${uid}/db/main`);
   }
 
-  private empty(): Settings {
-    return {
-      defaultMlFee: 0.12,
-      yellowAlertDays: 25,
-      redAlertDays: 30,
-      minimumMargin: 0.10,
-      lowStockAlert: 1,
-      defaultShipping: 0,
-      defaultChannel: 'Mercado Livre',
-      categories: [],
-      suppliers: [],
-      channels: [],
-    };
+  private buildDiff(base: Settings | null, next: Settings): { [field: string]: unknown } {
+    const diff: { [field: string]: unknown } = {};
+    (Object.keys(next) as (keyof Settings)[]).forEach(k => {
+      if (!base || JSON.stringify(base[k]) !== JSON.stringify(next[k])) {
+        diff[`settings.${k}`] = next[k];
+      }
+    });
+    return diff;
+  }
+
+  private validate(s: Settings): string | null {
+    if (!Number.isFinite(s.defaultMlFee) || s.defaultMlFee < 0 || s.defaultMlFee > 1)
+      return 'Taxa do Mercado Livre deve estar entre 0% e 100%.';
+    if (!Number.isFinite(s.minimumMargin) || s.minimumMargin < 0 || s.minimumMargin > 1)
+      return 'Margem mínima deve estar entre 0% e 100%.';
+    if (!Number.isInteger(s.yellowAlertDays) || s.yellowAlertDays <= 0)
+      return 'Dias para alerta amarelo deve ser inteiro maior que zero.';
+    if (!Number.isInteger(s.redAlertDays) || s.redAlertDays <= 0)
+      return 'Dias para alerta vermelho deve ser inteiro maior que zero.';
+    if (s.redAlertDays < s.yellowAlertDays)
+      return 'Dias para alerta vermelho deve ser maior ou igual ao amarelo.';
+    if (!Number.isInteger(s.lowStockAlert) || s.lowStockAlert < 0)
+      return 'Alerta de estoque baixo deve ser inteiro não-negativo.';
+    if (!Number.isFinite(s.defaultShipping) || s.defaultShipping < 0)
+      return 'Frete padrão não pode ser negativo.';
+    return null;
   }
 }

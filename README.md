@@ -223,7 +223,11 @@ firebase deploy
 
 ---
 
+## TODO
+
+- Recuperar senha
+- local para alterar infomações da conta
+
 ## BUGS
 
-- Login não redireciona para o /inventory
 - Parâmetros e listas da aba de configuração

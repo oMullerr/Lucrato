@@ -3,16 +3,17 @@
   title="Configurações"
   subtitle="Parâmetros do sistema, listas e preferências"
 >
-  <button mat-stroked-button (click)="discard()">
+  <button mat-stroked-button (click)="discard()" [disabled]="!hasChanges() || saving()">
     <mat-icon>undo</mat-icon>
     Descartar
   </button>
-  <button mat-flat-button color="primary" (click)="save()">
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="!hasChanges() || saving()">
     <mat-icon>save</mat-icon>
-    Salvar
+    {{ saving() ? 'Salvando…' : 'Salvar' }}
   </button>
 </app-page-header>
 
+@let s = form();
 <div class="content">
   <!-- Parâmetros -->
   <mat-card class="config-card">
@@ -30,8 +31,8 @@
           step="0.01"
           min="0"
           max="100"
-          [ngModel]="feePercentage"
-          (ngModelChange)="feePercentage = $event"
+          [ngModel]="feePct"
+          (ngModelChange)="feePct = $event"
         />
         <span matSuffix>%</span>
         <mat-hint>Aplicada a novas vendas. Pode ser editada por venda.</mat-hint>
@@ -58,8 +59,8 @@
           matInput
           type="number"
           min="1"
-          [ngModel]="form().yellowAlertDays"
-          (ngModelChange)="update('yellowAlertDays', +$event || 0)"
+          [ngModel]="s.yellowAlertDays"
+          (ngModelChange)="updateField('yellowAlertDays', +$event || 0)"
         />
         <span matSuffix>dias</span>
         <mat-hint>Produto fica em "Atenção" após este tempo parado.</mat-hint>
@@ -71,8 +72,8 @@
           matInput
           type="number"
           min="1"
-          [ngModel]="form().redAlertDays"
-          (ngModelChange)="update('redAlertDays', +$event || 0)"
+          [ngModel]="s.redAlertDays"
+          (ngModelChange)="updateField('redAlertDays', +$event || 0)"
         />
         <span matSuffix>dias</span>
         <mat-hint>Produto fica como "Parado" após este tempo.</mat-hint>
@@ -85,8 +86,8 @@
           type="number"
           step="0.01"
           min="0"
-          [ngModel]="form().defaultShipping"
-          (ngModelChange)="update('defaultShipping', +$event || 0)"
+          [ngModel]="s.defaultShipping"
+          (ngModelChange)="updateField('defaultShipping', +$event || 0)"
         />
         <span matSuffix>R$</span>
       </mat-form-field>
@@ -94,9 +95,9 @@
       <mat-form-field>
         <mat-label>Canal de venda padrão</mat-label>
         <mat-select
-          [ngModel]="form().defaultChannel"
-          (ngModelChange)="update('defaultChannel', $event)">
-          @for (c of form().channels; track c) {
+          [ngModel]="s.defaultChannel"
+          (ngModelChange)="updateField('defaultChannel', $event)">
+          @for (c of s.channels; track c) {
             <mat-option [value]="c">{{ c }}</mat-option>
           }
         </mat-select>
@@ -114,7 +115,7 @@
       <mat-form-field appearance="outline" class="chip-field">
         <mat-label>Adicionar categoria</mat-label>
         <mat-chip-grid #chipsCategories cdkDropList (cdkDropListDropped)="drop($event, 'categories')">
-          @for (cat of form().categories; track cat) {
+          @for (cat of s.categories; track cat) {
             <mat-chip-row cdkDrag (removed)="removeItem('categories', cat)">
               <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
               {{ cat }}
@@ -141,10 +142,10 @@
       <mat-form-field appearance="outline" class="chip-field">
         <mat-label>Adicionar fornecedor</mat-label>
         <mat-chip-grid #chipsSuppliers cdkDropList (cdkDropListDropped)="drop($event, 'suppliers')">
-          @for (s of form().suppliers; track s) {
-            <mat-chip-row cdkDrag (removed)="removeItem('suppliers', s)">
+          @for (sup of s.suppliers; track sup) {
+            <mat-chip-row cdkDrag (removed)="removeItem('suppliers', sup)">
               <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
-              {{ s }}
+              {{ sup }}
               <button matChipRemove>
                 <mat-icon>cancel</mat-icon>
               </button>
@@ -168,10 +169,10 @@
       <mat-form-field appearance="outline" class="chip-field">
         <mat-label>Adicionar canal</mat-label>
         <mat-chip-grid #chipsChannels cdkDropList (cdkDropListDropped)="drop($event, 'channels')">
-          @for (c of form().channels; track c) {
-            <mat-chip-row cdkDrag (removed)="removeItem('channels', c)">
+          @for (ch of s.channels; track ch) {
+            <mat-chip-row cdkDrag (removed)="removeItem('channels', ch)">
               <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
-              {{ c }}
+              {{ ch }}
               <button matChipRemove>
                 <mat-icon>cancel</mat-icon>
               </button>

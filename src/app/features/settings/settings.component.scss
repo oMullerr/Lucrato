@@ -5,6 +5,21 @@
   gap: 24px;
 }
 
+.loading-state {
+  padding: 64px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--txt-secondary);
+
+  p {
+    margin: 0;
+    font-size: 13px;
+  }
+}
+
 .config-card {
   padding: 24px !important;
 }

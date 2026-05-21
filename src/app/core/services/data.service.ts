@@ -7,11 +7,13 @@ import {
 } from '../models/models';
 import { calculatePurchase, calculateKpis, calculateSale, nextId } from './calculations';
 import { AuthService } from './auth.service';
+import { NotifyService } from './notify.service';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
   private readonly firestore = inject(Firestore);
   private readonly auth = inject(AuthService);
+  private readonly notify = inject(NotifyService);
 
   private readonly db = signal<Database | null>(null);
   private _unsub?: Unsubscribe;
@@ -43,7 +45,7 @@ export class DataService {
       } else if (u === null) {
         this.stopSync();
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   // ─── Firestore sync ────────────────────────────────────
@@ -54,6 +56,10 @@ export class DataService {
     this._unsub = onSnapshot(ref, snap => {
       if (snap.exists()) {
         this.db.set(this.migrateDatabase(snap.data()));
+      } else if (snap.metadata.fromCache) {
+        if (this.db() === null) {
+          this.db.set(this.createEmpty());
+        }
       } else {
         const empty = this.createEmpty();
         this.db.set(empty);
@@ -68,14 +74,18 @@ export class DataService {
     this.db.set(null);
   }
 
-  private persist(): void {
+  private persist(): Promise<void> {
     const uid = this.auth.currentUser()?.uid;
-    if (!uid) return;
-    const current = structuredClone(this.db());
-    if (!current) return;
-    current.metadata.ultimaAtualizacao = new Date().toISOString();
-    setDoc(doc(this.firestore, `users/${uid}/db/main`), current)
-      .catch(err => console.error('[Firestore] Falha ao salvar:', err));
+    if (!uid) return Promise.resolve();
+    const raw = JSON.parse(JSON.stringify(this.db()));
+    if (!raw) return Promise.resolve();
+    raw.metadata.ultimaAtualizacao = new Date().toISOString();
+    return setDoc(doc(this.firestore, `users/${uid}/db/main`), raw)
+      .catch(err => {
+        console.error('[Firestore] Falha ao salvar:', err);
+        this.notify.error('Erro ao sincronizar dados com o servidor. Verifique sua conexão.');
+        throw err;
+      });
   }
 
   // ─── Data import/export ────────────────────────────────
@@ -165,26 +175,47 @@ export class DataService {
 
   // ─── Settings ─────────────────────────────────────────
 
-  updateSettings(data: Partial<Settings>): void {
-    this.update(d => { d.settings = { ...d.settings, ...data }; });
+  updateSettings(data: Partial<Settings>): Promise<void> {
+    return this.update(d => { d.settings = { ...d.settings, ...data }; });
   }
 
   // ─── Internals ─────────────────────────────────────────
 
-  private update(mutator: (db: Database) => void): void {
+  private update(mutator: (db: Database) => void): Promise<void> {
     const current = this.db();
-    if (!current) return;
+    if (!current) return Promise.resolve();
     const next: Database = JSON.parse(JSON.stringify(current));
     mutator(next);
     this.db.set(next);
-    this.persist();
+    return this.persist();
   }
 
   private migrateDatabase(data: any): Database {
     const isOldFormat = (data.compras !== undefined || data.vendas !== undefined) && data.purchases === undefined;
-    if (!isOldFormat) return data as Database;
-
+    const defaults = this.defaultSettings();
     const cfg = data.configuracoes ?? data.settings ?? {};
+    const mergedSettings: Settings = {
+      defaultMlFee: cfg.taxaMlPadrao ?? cfg.defaultMlFee ?? defaults.defaultMlFee,
+      yellowAlertDays: cfg.diasAlertaAmarelo ?? cfg.yellowAlertDays ?? defaults.yellowAlertDays,
+      redAlertDays: cfg.diasAlertaVermelho ?? cfg.redAlertDays ?? defaults.redAlertDays,
+      minimumMargin: cfg.margemMinima ?? cfg.minimumMargin ?? defaults.minimumMargin,
+      lowStockAlert: cfg.alertaEstoqueBaixo ?? cfg.lowStockAlert ?? defaults.lowStockAlert,
+      defaultShipping: cfg.fretePadrao ?? cfg.defaultShipping ?? defaults.defaultShipping,
+      defaultChannel: cfg.canalPadrao ?? cfg.defaultChannel ?? defaults.defaultChannel,
+      categories: cfg.categorias ?? cfg.categories ?? defaults.categories,
+      suppliers: cfg.fornecedores ?? cfg.suppliers ?? defaults.suppliers,
+      channels: cfg.canais ?? cfg.channels ?? defaults.channels,
+    };
+
+    if (!isOldFormat) {
+      return {
+        purchases: data.purchases ?? [],
+        sales: data.sales ?? [],
+        settings: mergedSettings,
+        metadata: data.metadata ?? { versao: APP.version, ultimaAtualizacao: new Date().toISOString() },
+      };
+    }
+
     return {
       purchases: (data.compras ?? []).map((c: any) => ({
         id: c.id,
@@ -214,19 +245,23 @@ export class DataService {
         status: v.status ?? 'Concluída',
         notes: v.observacoes ?? v.notes,
       })),
-      settings: {
-        defaultMlFee: cfg.taxaMlPadrao ?? cfg.defaultMlFee ?? 0.12,
-        yellowAlertDays: cfg.diasAlertaAmarelo ?? cfg.yellowAlertDays ?? 25,
-        redAlertDays: cfg.diasAlertaVermelho ?? cfg.redAlertDays ?? 30,
-        minimumMargin: cfg.margemMinima ?? cfg.minimumMargin ?? 0.10,
-        lowStockAlert: cfg.alertaEstoqueBaixo ?? cfg.lowStockAlert ?? 1,
-        defaultShipping: cfg.fretePadrao ?? cfg.defaultShipping ?? 0,
-        defaultChannel: cfg.canalPadrao ?? cfg.defaultChannel ?? 'Mercado Livre',
-        categories: cfg.categorias ?? cfg.categories ?? [],
-        suppliers: cfg.fornecedores ?? cfg.suppliers ?? [],
-        channels: cfg.canais ?? cfg.channels ?? [],
-      },
+      settings: mergedSettings,
       metadata: data.metadata ?? { versao: APP.version, ultimaAtualizacao: new Date().toISOString() },
+    };
+  }
+
+  private defaultSettings(): Settings {
+    return {
+      defaultMlFee: 0.12,
+      yellowAlertDays: 25,
+      redAlertDays: 30,
+      minimumMargin: 0.10,
+      lowStockAlert: 1,
+      defaultShipping: 0,
+      defaultChannel: 'Mercado Livre',
+      categories: ['Eletrônicos', 'Outros'],
+      suppliers: ['Amazon BR', 'Outro'],
+      channels: ['Mercado Livre', 'Outro'],
     };
   }
 
@@ -234,18 +269,7 @@ export class DataService {
     return {
       purchases: [],
       sales: [],
-      settings: {
-        defaultMlFee: 0.12,
-        yellowAlertDays: 25,
-        redAlertDays: 30,
-        minimumMargin: 0.10,
-        lowStockAlert: 1,
-        defaultShipping: 0,
-        defaultChannel: 'Mercado Livre',
-        categories: ['Eletrônicos', 'Outros'],
-        suppliers: ['Amazon BR', 'Outro'],
-        channels: ['Mercado Livre', 'Outro'],
-      },
+      settings: this.defaultSettings(),
       metadata: { versao: APP.version, ultimaAtualizacao: new Date().toISOString() },
     };
   }
