@@ -66,6 +66,7 @@ export class SettingsComponent implements OnDestroy {
   protected readonly form = signal<Settings>(clone(DEFAULT_SETTINGS));
   private readonly appliedBaseline = signal<Settings>(clone(DEFAULT_SETTINGS));
   protected readonly saving = signal(false);
+  protected readonly importing = signal(false);
   private snapshotUnsub: Unsubscribe | null = null;
 
   protected readonly hasChanges = computed(() => {
@@ -241,31 +242,40 @@ export class SettingsComponent implements OnDestroy {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
 
-    const result = await this.importService.parseFile(
-      file,
-      this.dataService.purchases(),
-      this.dataService.sales(),
-      this.form(),
-    );
+    this.importing.set(true);
+    try {
+      const result = await this.importService.parseFile(
+        file,
+        this.dataService.purchases(),
+        this.dataService.sales(),
+        this.form(),
+      );
 
-    if (result.purchases.length) this.dataService.addPurchasesBulk(result.purchases);
-    if (result.sales.length) this.dataService.addSalesBulk(result.sales);
+      if (result.purchases.length || result.sales.length) {
+        await this.dataService.bulkImport(result.purchases, result.sales);
+      }
 
-    (event.target as HTMLInputElement).value = '';
+      (event.target as HTMLInputElement).value = '';
 
-    if (result.errors.length === 0 && result.purchases.length === 0 && result.sales.length === 0) {
-      this.notify.warning('Nenhum dado encontrado na planilha.');
-      return;
+      if (result.errors.length === 0 && result.purchases.length === 0 && result.sales.length === 0) {
+        this.notify.warning('Nenhum dado encontrado na planilha.');
+        return;
+      }
+
+      this.dialog.open(ImportResultDialogComponent, {
+        data: {
+          purchaseCount: result.purchases.length,
+          saleCount: result.sales.length,
+          errors: result.errors,
+        },
+        width: '520px',
+      });
+    } catch (err) {
+      console.error('[Settings] Importação falhou:', err);
+      this.notify.error('Erro ao importar planilha. Verifique sua conexão.');
+    } finally {
+      this.importing.set(false);
     }
-
-    this.dialog.open(ImportResultDialogComponent, {
-      data: {
-        purchaseCount: result.purchases.length,
-        saleCount: result.sales.length,
-        errors: result.errors,
-      },
-      width: '520px',
-    });
   }
 
   protected resetAll(): void {

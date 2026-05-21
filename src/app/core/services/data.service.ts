@@ -77,10 +77,17 @@ export class DataService {
   private persist(): Promise<void> {
     const uid = this.auth.currentUser()?.uid;
     if (!uid) return Promise.resolve();
-    const raw = JSON.parse(JSON.stringify(this.db()));
-    if (!raw) return Promise.resolve();
-    raw.metadata.ultimaAtualizacao = new Date().toISOString();
-    return setDoc(doc(this.firestore, `users/${uid}/db/main`), raw)
+    const current = this.db();
+    if (!current) return Promise.resolve();
+    const payload = {
+      purchases: JSON.parse(JSON.stringify(current.purchases)),
+      sales: JSON.parse(JSON.stringify(current.sales)),
+      metadata: {
+        versao: current.metadata.versao,
+        ultimaAtualizacao: new Date().toISOString(),
+      },
+    };
+    return setDoc(doc(this.firestore, `users/${uid}/db/main`), payload, { merge: true })
       .catch(err => {
         console.error('[Firestore] Falha ao salvar:', err);
         this.notify.error('Erro ao sincronizar dados com o servidor. Verifique sua conexão.');
@@ -181,18 +188,12 @@ export class DataService {
     this.update(d => { d.sales = d.sales.filter(v => v.id !== id); });
   }
 
-  addPurchasesBulk(purchases: Purchase[]): void {
-    this.update(d => { d.purchases.push(...purchases); });
-  }
-
-  addSalesBulk(sales: Sale[]): void {
-    this.update(d => { d.sales.push(...sales); });
-  }
-
-  // ─── Settings ─────────────────────────────────────────
-
-  updateSettings(data: Partial<Settings>): Promise<void> {
-    return this.update(d => { d.settings = { ...d.settings, ...data }; });
+  async bulkImport(purchases: Purchase[], sales: Sale[]): Promise<void> {
+    if (purchases.length === 0 && sales.length === 0) return;
+    await this.update(d => {
+      if (purchases.length) d.purchases.push(...purchases);
+      if (sales.length) d.sales.push(...sales);
+    });
   }
 
   // ─── Internals ─────────────────────────────────────────

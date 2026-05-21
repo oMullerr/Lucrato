@@ -203,9 +203,9 @@
         <mat-icon>download</mat-icon>
         Baixar Modelo (.xlsx)
       </button>
-      <button mat-flat-button color="primary" (click)="triggerImport()">
-        <mat-icon>upload</mat-icon>
-        Importar Planilha
+      <button mat-flat-button color="primary" (click)="triggerImport()" [disabled]="importing()">
+        <mat-icon>{{ importing() ? 'hourglass_top' : 'upload' }}</mat-icon>
+        {{ importing() ? 'Importando…' : 'Importar Planilha' }}
       </button>
     </div>
     <input
