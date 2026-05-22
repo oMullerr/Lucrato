@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as XLSX from 'xlsx-js-style';
 import { Purchase, Sale, Settings, SaleChannel, SaleStatus } from '../models/models';
+import { calculatePurchase } from './calculations';
 
 export interface ImportResult {
   purchases: Purchase[];
@@ -514,6 +515,20 @@ export class ImportService {
 
       if (!batchId)          { errors.push(`Venda linha ${lineNum}: "ID do Lote" é obrigatório.`);        continue; }
       if (!validBatchIds.has(batchId)) { errors.push(`Venda linha ${lineNum}: ID do Lote "${batchId}" não encontrado.`); continue; }
+
+      const batch = allPurchases.find(p => p.id === batchId);
+      if (batch) {
+        const computed = calculatePurchase(batch, existingSales, settings);
+        if (computed.status === 'Em trânsito') {
+          errors.push(`Venda linha ${lineNum}: lote "${batchId}" ainda está em trânsito (sem Data de Recebimento). Não pode receber vendas.`);
+          continue;
+        }
+        if (computed.status === 'Vendido') {
+          errors.push(`Venda linha ${lineNum}: lote "${batchId}" já está esgotado (todas as unidades vendidas).`);
+          continue;
+        }
+      }
+
       if (!saleDateRaw)      { errors.push(`Venda linha ${lineNum}: "Data da Venda" é obrigatória.`);     continue; }
       if (quantitySold < 1)  { errors.push(`Venda linha ${lineNum}: "Quantidade Vendida" deve ser ≥ 1.`); continue; }
       if (unitPrice <= 0)    { errors.push(`Venda linha ${lineNum}: "Preço Unitário" deve ser > 0.`);     continue; }

@@ -16,7 +16,7 @@ const STATUS_MAP: Record<StatusType, StatusConfig> = {
   'Vendido':    { label: 'Vendido',    icon: 'check_circle', variant: 'success' },
   'Atenção':    { label: 'Atenção',    icon: 'warning',      variant: 'warning' },
   'Parado':            { label: 'Parado',         icon: 'error',           variant: 'danger' },
-  'Ainda não recebido': { label: 'Não recebido', icon: 'schedule',        variant: 'neutral' },
+  'Em trânsito': { label: 'Em trânsito', icon: 'schedule',        variant: 'neutral' },
   // Venda
   'Concluída':  { label: 'Concluída',  icon: 'check_circle', variant: 'success' },
   'Cancelada':  { label: 'Cancelada',  icon: 'cancel',       variant: 'danger' },

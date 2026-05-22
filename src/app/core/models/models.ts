@@ -1,4 +1,4 @@
-export type InventoryStatus = 'Em Estoque' | 'Vendido' | 'Atenção' | 'Parado' | 'Ainda não recebido';
+export type InventoryStatus = 'Em Estoque' | 'Vendido' | 'Atenção' | 'Parado' | 'Em trânsito';
 export type SaleStatus = 'Concluída' | 'Cancelada' | 'Devolvida' | 'Em disputa';
 export type SaleChannel = 'Mercado Livre' | 'Shopee' | 'Amazon' | 'Instagram' | 'WhatsApp' | 'Outro';
 

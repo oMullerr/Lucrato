@@ -67,6 +67,11 @@ export interface SaleDialogData {
                 }
               </mat-option>
             }
+            @if (availableBatches().length === 0) {
+              <mat-option disabled>
+                Nenhum lote disponível. Cadastre uma compra com Data de Recebimento preenchida.
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
 
@@ -406,10 +411,16 @@ export class SaleFormDialogComponent {
   protected readonly channels = computed(() => this.dataService.settings()?.channels ?? []);
   protected readonly defaultFee = computed(() => this.dataService.settings()?.defaultMlFee ?? 0.12);
 
-  protected readonly availableBatches = computed(() =>
-    this.dataService.computedPurchases()
-      .filter(c => c.currentStock > 0 || (this.isEdit() && c.id === this.model().batchId))
-  );
+  protected readonly availableBatches = computed(() => {
+    const editingBatchId = this.isEdit() ? this.model().batchId : null;
+    return this.dataService.computedPurchases().filter(c => {
+      const eligible = c.currentStock > 0
+                    && c.status !== 'Em trânsito'
+                    && c.status !== 'Vendido';
+      const preservedForEdit = editingBatchId !== null && c.id === editingBatchId;
+      return eligible || preservedForEdit;
+    });
+  });
 
   protected readonly availableStock = computed(() => {
     const batchId = this.model().batchId;
@@ -480,8 +491,18 @@ export class SaleFormDialogComponent {
 
   protected isValid(): boolean {
     const m = this.model();
-    return !!(m.id && m.batchId && m.product && m.quantitySold > 0 &&
-              m.unitPrice > 0 && m.saleDate && m.channel && m.status);
+    if (!(m.id && m.batchId && m.product && m.quantitySold > 0 &&
+          m.unitPrice > 0 && m.saleDate && m.channel && m.status)) {
+      return false;
+    }
+
+    if (!this.isEdit()) {
+      const batch = this.dataService.computedPurchases().find(c => c.id === m.batchId);
+      if (!batch) return false;
+      if (batch.status === 'Em trânsito' || batch.status === 'Vendido') return false;
+    }
+
+    return true;
   }
 
   protected save(): void {

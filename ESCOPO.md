@@ -208,7 +208,7 @@ users/{uid}/db/main → { purchases[], sales[], settings, metadata }
 - `'Atenção'` — estoque > 0, parado entre `yellowAlertDays` e `redAlertDays` dias
 - `'Parado'` — estoque > 0, parado há ≥ `redAlertDays` dias
 - `'Vendido'` — estoque zerado
-- `'Ainda não recebido'` — `receiptDate` não preenchida
+- `'Em trânsito'` — `receiptDate` não preenchida
 
 **`SaleStatus`**
 - `'Concluída'` | `'Cancelada'` | `'Devolvida'` | `'Em disputa'`

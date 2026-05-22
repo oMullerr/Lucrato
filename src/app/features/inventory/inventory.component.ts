@@ -32,7 +32,7 @@ export class InventoryComponent {
     'Parado': 0,
     'Atenção': 1,
     'Em Estoque': 2,
-    'Ainda não recebido': 3,
+    'Em trânsito': 3,
     'Vendido': 4,
   };
 

@@ -32,7 +32,7 @@ export function calculatePurchase(
 
   let status: InventoryStatus;
   if (currentStock <= 0) status = 'Vendido';
-  else if (!purchase.receiptDate) status = 'Ainda não recebido';
+  else if (!purchase.receiptDate) status = 'Em trânsito';
   else if (daysInStock >= config.redAlertDays) status = 'Parado';
   else if (daysInStock >= config.yellowAlertDays) status = 'Atenção';
   else status = 'Em Estoque';
