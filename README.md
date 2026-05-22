@@ -240,6 +240,28 @@ A aplicação implementa as seguintes camadas de proteção:
 
 **Ajuste de CSP**: se algum recurso bloquear em produção, abra DevTools → Console no domínio Vercel e ajuste a diretiva correspondente em [vercel.json](vercel.json). A CSP atual cobre Firebase, reCAPTCHA, App Check e Material.
 
+## TODO
+
+- Revisar textos e labels
+- Revisar estilo e cores do sistema
+- Revisar codigo
+
 ## BUGS
 
-- Ta permitindo registrar a venda de um produto que o status diferente de disponível
+- No formulario de venda, os campor de "Preço unitário", "Taxa Mercado Livre", "Frete Vendedor", "Desconto/Cupom", "outros Custos" e "Estorno Envio flex" não podem aceitar valores negativos
+
+- No formulario de vendas, os campos "Id Lote", "preço Unitário" e "Desconto/Cupom" tem que ficar do mesmo tamanho dos outros
+
+- No formulario de vendas, arrumar o icone de % do campo "Taxa mercado livre"
+
+- No formulário de compra, o campo "Data compra" tem que ser do mesmo tamanho dos outros
+
+- No formulário de compra, o campo "Data de recebimento", não pode ser menor do que a "Data de compra", mas pode ser a mesma data
+
+- Nor formulário de compra, quantidade comprada tem que ser maior ou igual a 1, nao podendo ser zero ou negativo
+
+- No formulario de compra, os campos de "Custo unitário", "Frete da compra" e "outros custos", não pode aceitar valores negativos
+
+- Na tela de configuração, os campos "taxa mercado livre padrao", "margem liquida minima desejada", "dias para alerta amarelo", "dias para alerta vermelho" e "Frete padrão de compra" não podem aceitar valores negativos
+
+- Na tela de configuração, colocar mais margem nos icones que tem no final dos fields do parâmetro do sistema 

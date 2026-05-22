@@ -493,6 +493,12 @@ export class ImportService {
 
     const validStatuses: SaleStatus[] = ['Concluída', 'Cancelada', 'Devolvida', 'Em disputa'];
 
+    const usedByBatch = new Map<string, number>();
+    for (const s of existingSales) {
+      if (s.status !== 'Concluída') continue;
+      usedByBatch.set(s.batchId, (usedByBatch.get(s.batchId) ?? 0) + s.quantitySold);
+    }
+
     for (let i = 3; i < rows.length; i++) {
       const row = rows[i] ?? [];
       if (this.isEmptyRow(row)) continue;
@@ -536,9 +542,28 @@ export class ImportService {
       const saleDate = this.parseDate(saleDateRaw);
       if (!saleDate) { errors.push(`Venda linha ${lineNum}: data inválida "${saleDateRaw}". Use DD/MM/AAAA.`); continue; }
 
+      if (batch && saleDate < batch.purchaseDate) {
+        errors.push(
+          `Venda linha ${lineNum}: data da venda (${this.formatDateBr(saleDate)}) é anterior à data da compra do lote "${batchId}" (${this.formatDateBr(batch.purchaseDate)}).`
+        );
+        continue;
+      }
+
       const status: SaleStatus = validStatuses.includes(statusRaw as SaleStatus)
         ? (statusRaw as SaleStatus)
         : 'Concluída';
+
+      if (status === 'Concluída' && batch) {
+        const alreadyUsed = usedByBatch.get(batchId) ?? 0;
+        const remaining = batch.quantityPurchased - alreadyUsed;
+        if (quantitySold > remaining) {
+          errors.push(
+            `Venda linha ${lineNum}: quantidade vendida (${quantitySold}) excede o estoque disponível do lote "${batchId}" (${remaining} un. restantes).`
+          );
+          continue;
+        }
+        usedByBatch.set(batchId, alreadyUsed + quantitySold);
+      }
 
       const channel = channelRaw as SaleChannel;
       const product = allPurchases.find(p => p.id === batchId)?.product ?? '';
@@ -577,6 +602,11 @@ export class ImportService {
       if (m?.[1]) max = Math.max(max, parseInt(m[1], 10));
     }
     return max + 1;
+  }
+
+  private formatDateBr(iso: string): string {
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
   }
 
   private parseDate(value: any): string | null {

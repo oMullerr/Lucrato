@@ -86,10 +86,16 @@ export interface SaleDialogData {
             [ngModel]="saleDateAsDate()"
             (ngModelChange)="setSaleDate($event)"
             name="saleDate"
+            [min]="minSaleDate()"
             required
           />
           <mat-datepicker-toggle matIconSuffix [for]="pickerSale"></mat-datepicker-toggle>
           <mat-datepicker #pickerSale></mat-datepicker>
+          @if (saleBeforePurchase()) {
+            <mat-hint class="error-hint">
+              Não pode ser anterior à data da compra do lote
+            </mat-hint>
+          }
         </mat-form-field>
 
         <mat-form-field>
@@ -110,8 +116,12 @@ export interface SaleDialogData {
             [ngModel]="model().quantitySold"
             (ngModelChange)="setNum('quantitySold', $event)"
             name="quantitySold" min="1" required />
-          @if (availableStock() !== null) {
-            <mat-hint>Disponível: {{ availableStock() }} un.</mat-hint>
+          @if (exceedsStock()) {
+            <mat-hint class="error-hint">
+              Excede o estoque: máximo {{ maxAvailable() }} un. disponíveis
+            </mat-hint>
+          } @else if (maxAvailable() !== null) {
+            <mat-hint>Disponível: {{ maxAvailable() }} un.</mat-hint>
           }
         </mat-form-field>
 
@@ -384,6 +394,11 @@ export interface SaleDialogData {
       margin-top: 2px;
     }
 
+    .error-hint {
+      color: var(--clr-red) !important;
+      font-weight: 600;
+    }
+
     @media (max-width: 600px) {
       .form-grid { grid-template-columns: 1fr; }
       .preview-stats { grid-template-columns: 1fr; }
@@ -419,11 +434,45 @@ export class SaleFormDialogComponent {
     });
   });
 
-  protected readonly availableStock = computed(() => {
-    const batchId = this.model().batchId;
-    if (!batchId) return null;
-    const batch = this.dataService.computedPurchases().find(c => c.id === batchId);
-    return batch ? batch.currentStock : null;
+  protected readonly maxAvailable = computed(() => {
+    const m = this.model();
+    if (!m.batchId) return null;
+    const batch = this.dataService.purchases().find(p => p.id === m.batchId);
+    if (!batch) return null;
+
+    const editingSaleId = this.isEdit() ? (this.data.sale?.id ?? null) : null;
+    const usedByOthers = this.dataService.sales()
+      .filter(s => s.batchId === m.batchId
+                && s.status === 'Concluída'
+                && s.id !== editingSaleId)
+      .reduce((sum, s) => sum + s.quantitySold, 0);
+
+    return batch.quantityPurchased - usedByOthers;
+  });
+
+  protected readonly exceedsStock = computed(() => {
+    const m = this.model();
+    if (m.status !== 'Concluída') return false;
+    const max = this.maxAvailable();
+    if (max === null) return false;
+    return m.quantitySold > max;
+  });
+
+  protected readonly minSaleDate = computed(() => {
+    const m = this.model();
+    if (!m.batchId) return null;
+    const batch = this.dataService.purchases().find(p => p.id === m.batchId);
+    if (!batch?.purchaseDate) return null;
+    const [y, mo, d] = batch.purchaseDate.split('-').map(Number);
+    return !y || !mo || !d ? null : new Date(y, mo - 1, d);
+  });
+
+  protected readonly saleBeforePurchase = computed(() => {
+    const m = this.model();
+    if (!m.saleDate || !m.batchId) return false;
+    const batch = this.dataService.purchases().find(p => p.id === m.batchId);
+    if (!batch?.purchaseDate) return false;
+    return m.saleDate < batch.purchaseDate;
   });
 
   protected readonly preview = computed(() => {
@@ -498,6 +547,9 @@ export class SaleFormDialogComponent {
       if (!batch) return false;
       if (batch.status === 'Em trânsito' || batch.status === 'Vendido') return false;
     }
+
+    if (this.exceedsStock()) return false;
+    if (this.saleBeforePurchase()) return false;
 
     return true;
   }
