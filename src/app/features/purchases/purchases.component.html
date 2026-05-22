@@ -30,6 +30,10 @@
       <mat-chip-option value="all">
         Todos ({{ totals().total }})
       </mat-chip-option>
+      <mat-chip-option value="in-transit">
+        <mat-icon>schedule</mat-icon>
+        Em trânsito ({{ totals().inTransit }})
+      </mat-chip-option>
       <mat-chip-option value="in-stock">
         <mat-icon>inventory_2</mat-icon>
         Em Estoque ({{ totals().inStock }})

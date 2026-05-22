@@ -18,7 +18,7 @@ import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 import { PurchaseFormDialogComponent } from './purchase-form.dialog';
 
-type StatusFilter = 'all' | 'in-stock' | 'attention' | 'idle' | 'sold';
+type StatusFilter = 'all' | 'in-transit' | 'in-stock' | 'attention' | 'idle' | 'sold';
 
 @Component({
   selector: 'app-purchases',
@@ -49,6 +49,7 @@ export class PurchasesComponent {
     const cs = this.purchases();
     return {
       total: cs.length,
+      inTransit: cs.filter(c => c.status === 'Em trânsito').length,
       inStock: cs.filter(c => c.status === 'Em Estoque').length,
       attention: cs.filter(c => c.status === 'Atenção').length,
       idle: cs.filter(c => c.status === 'Parado').length,
@@ -58,6 +59,7 @@ export class PurchasesComponent {
 
   protected readonly filteredPurchases = computed(() => {
     const statusMap: Record<Exclude<StatusFilter, 'all'>, InventoryStatus> = {
+      'in-transit': 'Em trânsito',
       'in-stock': 'Em Estoque',
       'attention': 'Atenção',
       'idle': 'Parado',

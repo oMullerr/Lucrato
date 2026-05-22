@@ -39,14 +39,11 @@ export interface SaleDialogData {
           <mat-label>ID Venda</mat-label>
           <input
             matInput
-            [ngModel]="model().id"
-            (ngModelChange)="set('id', $event)"
+            [value]="model().id"
             name="id"
-            required
-            pattern="V[0-9]{3,}"
-            [readonly]="isEdit()"
+            readonly
           />
-          <mat-hint>Formato: V001, V002...</mat-hint>
+          <mat-hint>Gerado automaticamente</mat-hint>
         </mat-form-field>
 
         <mat-form-field>
