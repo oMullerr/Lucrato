@@ -248,14 +248,6 @@ A aplicação implementa as seguintes camadas de proteção:
 
 ## BUGS
 
-- No formulário de compra, o campo "Data compra" tem que ser do mesmo tamanho dos outros
-
-- No formulário de compra, o campo "Data de recebimento", não pode ser menor do que a "Data de compra", mas pode ser a mesma data
-
-- Nor formulário de compra, quantidade comprada tem que ser maior ou igual a 1, nao podendo ser zero ou negativo
-
-- No formulario de compra, os campos de "Custo unitário", "Frete da compra" e "outros custos", não pode aceitar valores negativos
-
 - Na tela de configuração, os campos "taxa mercado livre padrao", "margem liquida minima desejada", "dias para alerta amarelo", "dias para alerta vermelho" e "Frete padrão de compra" não podem aceitar valores negativos
 
 - Na tela de configuração, colocar mais margem nos icones que tem no final dos fields do parâmetro do sistema 

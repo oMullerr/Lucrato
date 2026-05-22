@@ -98,6 +98,7 @@ export interface PurchaseDialogData {
             [matDatepicker]="pickerReceipt"
             [ngModel]="receiptDateAsDate()"
             (ngModelChange)="setReceiptDate($event)"
+            [min]="purchaseDateAsDate()"
             name="receiptDate"
           />
           <mat-datepicker-toggle matIconSuffix [for]="pickerReceipt"></mat-datepicker-toggle>
@@ -109,7 +110,7 @@ export interface PurchaseDialogData {
           <mat-label>Quantidade Comprada</mat-label>
           <input matInput type="number"
             [ngModel]="model().quantityPurchased"
-            (ngModelChange)="setNum('quantityPurchased', $event)"
+            (ngModelChange)="setNum('quantityPurchased', $event, 1)"
             name="quantityPurchased" min="1" required />
         </mat-form-field>
 
@@ -193,6 +194,7 @@ export interface PurchaseDialogData {
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
       padding-top: 8px;
+      align-items: start;
     }
 
     .form-grid .full { grid-column: 1 / -1; }
@@ -290,8 +292,9 @@ export class PurchaseFormDialogComponent {
     this.model.update(m => ({ ...m, [field]: value }));
   }
 
-  protected setNum(field: string, value: string | number | null): void {
-    this.model.update(m => ({ ...m, [field]: +(value ?? 0) || 0 }));
+  protected setNum(field: string, value: string | number | null, min = 0): void {
+    const num = +(value ?? 0) || 0;
+    this.model.update(m => ({ ...m, [field]: Math.max(min, num) }));
   }
 
   protected setPurchaseDate(d: Date | null): void {
@@ -316,8 +319,12 @@ export class PurchaseFormDialogComponent {
 
   protected isValid(): boolean {
     const m = this.model();
-    return !!(m.id && m.product && m.category && m.supplier &&
-              m.purchaseDate && m.quantityPurchased > 0 && m.unitCost >= 0);
+    if (!(m.id && m.product && m.category && m.supplier &&
+          m.purchaseDate && m.quantityPurchased > 0 && m.unitCost >= 0)) {
+      return false;
+    }
+    if (m.receiptDate && m.receiptDate < m.purchaseDate) return false;
+    return true;
   }
 
   protected save(): void {
