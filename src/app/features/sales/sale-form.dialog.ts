@@ -70,6 +70,9 @@ export interface SaleDialogData {
               </mat-option>
             }
           </mat-select>
+          @if (!hasBatch()) {
+            <mat-hint>Selecione o lote para liberar os demais campos</mat-hint>
+          }
         </mat-form-field>
 
         <mat-form-field class="full">
@@ -85,11 +88,12 @@ export interface SaleDialogData {
             [matDatepicker]="pickerSale"
             [ngModel]="saleDateAsDate()"
             (ngModelChange)="setSaleDate($event)"
+            [disabled]="!hasBatch()"
             name="saleDate"
             [min]="minSaleDate()"
             required
           />
-          <mat-datepicker-toggle matIconSuffix [for]="pickerSale"></mat-datepicker-toggle>
+          <mat-datepicker-toggle matIconSuffix [for]="pickerSale" [disabled]="!hasBatch()"></mat-datepicker-toggle>
           <mat-datepicker #pickerSale></mat-datepicker>
           @if (saleBeforePurchase()) {
             <mat-hint class="error-hint">
@@ -103,6 +107,7 @@ export interface SaleDialogData {
           <mat-select
             [ngModel]="model().channel"
             (ngModelChange)="set('channel', $event)"
+            [disabled]="!hasBatch()"
             name="channel" required>
             @for (c of channels(); track c) {
               <mat-option [value]="c">{{ c }}</mat-option>
@@ -115,6 +120,7 @@ export interface SaleDialogData {
           <input matInput type="number"
             [ngModel]="model().quantitySold"
             (ngModelChange)="setNum('quantitySold', $event)"
+            [disabled]="!hasBatch()"
             name="quantitySold" min="1" required />
           @if (exceedsStock()) {
             <mat-hint class="error-hint">
@@ -130,6 +136,7 @@ export interface SaleDialogData {
           <input matInput type="number" step="0.01"
             [ngModel]="model().unitPrice"
             (ngModelChange)="setNum('unitPrice', $event)"
+            [disabled]="!hasBatch()"
             name="unitPrice" min="0.01" required />
         </mat-form-field>
 
@@ -144,6 +151,7 @@ export interface SaleDialogData {
               type="button"
               mat-icon-button
               (click)="resetFee()"
+              [disabled]="!hasBatch()"
               matTooltip="Resetar para padrão ({{ (defaultFee() * 100).toFixed(1) }}%)"
             >
               <mat-icon>restart_alt</mat-icon>
@@ -159,9 +167,10 @@ export interface SaleDialogData {
               [(ngModel)]="feeInput"
               name="feeInput"
               (ngModelChange)="onFeeChange()"
+              [disabled]="!hasBatch()"
               required
             />
-            <span matSuffix>%</span>
+            <span matSuffix class="percent-suffix">%</span>
           </mat-form-field>
           <small class="taxa-hint">
             Padrão: {{ (defaultFee() * 100).toFixed(1) }}% · Edite para essa venda específica
@@ -175,6 +184,7 @@ export interface SaleDialogData {
           <mat-slide-toggle
             [checked]="isFlexShipping()"
             (change)="setShippingType($event.checked)"
+            [disabled]="!hasBatch()"
             color="primary"
           ></mat-slide-toggle>
           <span [class.active]="isFlexShipping()">Flex</span>
@@ -186,6 +196,7 @@ export interface SaleDialogData {
             <input matInput type="number" step="0.01"
               [ngModel]="model().sellerShipping"
               (ngModelChange)="setNum('sellerShipping', $event)"
+              [disabled]="!hasBatch()"
               name="sellerShipping" min="0" />
           </mat-form-field>
         } @else {
@@ -194,6 +205,7 @@ export interface SaleDialogData {
             <input matInput type="number" step="0.01"
               [ngModel]="model().flexRefund ?? 0"
               (ngModelChange)="setNum('flexRefund', $event)"
+              [disabled]="!hasBatch()"
               name="flexRefund" min="0" />
             <mat-hint>Valor devolvido pelo ML — somado à receita</mat-hint>
           </mat-form-field>
@@ -204,28 +216,17 @@ export interface SaleDialogData {
           <input matInput type="number" step="0.01"
             [ngModel]="model().discount"
             (ngModelChange)="setNum('discount', $event)"
+            [disabled]="!hasBatch()"
             name="discount" min="0" />
         </mat-form-field>
 
-        <mat-form-field>
+        <mat-form-field class="full">
           <mat-label>Outros Custos (R$)</mat-label>
           <input matInput type="number" step="0.01"
             [ngModel]="model().otherCosts"
             (ngModelChange)="setNum('otherCosts', $event)"
+            [disabled]="!hasBatch()"
             name="otherCosts" min="0" />
-        </mat-form-field>
-
-        <mat-form-field>
-          <mat-label>Status</mat-label>
-          <mat-select
-            [ngModel]="model().status"
-            (ngModelChange)="set('status', $event)"
-            name="status" required>
-            <mat-option value="Concluída">Concluída</mat-option>
-            <mat-option value="Cancelada">Cancelada</mat-option>
-            <mat-option value="Devolvida">Devolvida</mat-option>
-            <mat-option value="Em disputa">Em disputa</mat-option>
-          </mat-select>
         </mat-form-field>
 
         <mat-form-field class="full">
@@ -233,6 +234,7 @@ export interface SaleDialogData {
           <textarea matInput rows="2"
             [ngModel]="model().notes"
             (ngModelChange)="set('notes', $event)"
+            [disabled]="!hasBatch()"
             name="notes"></textarea>
         </mat-form-field>
       </form>
@@ -293,6 +295,7 @@ export interface SaleDialogData {
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
       padding-top: 8px;
+      align-items: start;
     }
 
     .form-grid .full { grid-column: 1 / -1; }
@@ -351,6 +354,10 @@ export interface SaleDialogData {
     .taxa-hint {
       font-size: 11px;
       color: var(--clr-amber);
+    }
+
+    .taxa-field .percent-suffix {
+      margin-right: 12px;
     }
 
     .preview {
@@ -415,6 +422,7 @@ export class SaleFormDialogComponent {
   protected feeInput = (this.data.sale?.feePercentage ?? this.dataService.settings()?.defaultMlFee ?? 0.12) * 100;
 
   protected readonly isFlexShipping = computed(() => this.model().shippingType === 'flex');
+  protected readonly hasBatch = computed(() => !!this.model().batchId);
 
   protected setShippingType(isFlex: boolean): void {
     this.model.update(m => ({ ...m, shippingType: isFlex ? 'flex' : 'correios' }));
@@ -493,7 +501,9 @@ export class SaleFormDialogComponent {
   }
 
   protected onFeeChange(): void {
-    this.model.update(m => ({ ...m, feePercentage: (this.feeInput || 0) / 100 }));
+    const clamped = Math.max(0, this.feeInput || 0);
+    if (clamped !== this.feeInput) this.feeInput = clamped;
+    this.model.update(m => ({ ...m, feePercentage: clamped / 100 }));
   }
 
   protected resetFee(): void {
@@ -527,7 +537,8 @@ export class SaleFormDialogComponent {
   }
 
   protected setNum(field: string, value: string | number | null): void {
-    this.model.update(m => ({ ...m, [field]: +(value ?? 0) || 0 }));
+    const num = +(value ?? 0) || 0;
+    this.model.update(m => ({ ...m, [field]: Math.max(0, num) }));
   }
 
   protected onBatchIdChange(batchId: string): void {
@@ -551,6 +562,12 @@ export class SaleFormDialogComponent {
     if (this.exceedsStock()) return false;
     if (this.saleBeforePurchase()) return false;
 
+    if (m.unitPrice < 0 || m.feePercentage < 0 ||
+        m.sellerShipping < 0 || (m.flexRefund ?? 0) < 0 ||
+        m.discount < 0 || m.otherCosts < 0) {
+      return false;
+    }
+
     return true;
   }
 
@@ -560,7 +577,7 @@ export class SaleFormDialogComponent {
   }
 
   private initialModel(): Sale {
-    if (this.data.sale) return { ...this.data.sale };
+    if (this.data.sale) return { ...this.data.sale, status: 'Concluída' };
     const cfg = this.dataService.settings();
     return {
       id: this.dataService.nextSaleId(),

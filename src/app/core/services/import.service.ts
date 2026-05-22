@@ -538,6 +538,11 @@ export class ImportService {
       if (!saleDateRaw)      { errors.push(`Venda linha ${lineNum}: "Data da Venda" é obrigatória.`);     continue; }
       if (quantitySold < 1)  { errors.push(`Venda linha ${lineNum}: "Quantidade Vendida" deve ser ≥ 1.`); continue; }
       if (unitPrice <= 0)    { errors.push(`Venda linha ${lineNum}: "Preço Unitário" deve ser > 0.`);     continue; }
+      if (feePct < 0)         { errors.push(`Venda linha ${lineNum}: "Taxa Mercado Livre" não pode ser negativa.`);     continue; }
+      if (sellerShipping < 0) { errors.push(`Venda linha ${lineNum}: "Frete Vendedor" não pode ser negativo.`);          continue; }
+      if (flexRefund < 0)     { errors.push(`Venda linha ${lineNum}: "Estorno Envio Flex" não pode ser negativo.`);      continue; }
+      if (discount < 0)       { errors.push(`Venda linha ${lineNum}: "Desconto / Cupom" não pode ser negativo.`);        continue; }
+      if (otherCosts < 0)     { errors.push(`Venda linha ${lineNum}: "Outros Custos" não pode ser negativo.`);           continue; }
 
       const saleDate = this.parseDate(saleDateRaw);
       if (!saleDate) { errors.push(`Venda linha ${lineNum}: data inválida "${saleDateRaw}". Use DD/MM/AAAA.`); continue; }

@@ -248,12 +248,6 @@ A aplicação implementa as seguintes camadas de proteção:
 
 ## BUGS
 
-- No formulario de venda, os campor de "Preço unitário", "Taxa Mercado Livre", "Frete Vendedor", "Desconto/Cupom", "outros Custos" e "Estorno Envio flex" não podem aceitar valores negativos
-
-- No formulario de vendas, os campos "Id Lote", "preço Unitário" e "Desconto/Cupom" tem que ficar do mesmo tamanho dos outros
-
-- No formulario de vendas, arrumar o icone de % do campo "Taxa mercado livre"
-
 - No formulário de compra, o campo "Data compra" tem que ser do mesmo tamanho dos outros
 
 - No formulário de compra, o campo "Data de recebimento", não pode ser menor do que a "Data de compra", mas pode ser a mesma data
