@@ -39,35 +39,36 @@ const STATUS_MAP: Record<StatusType, StatusConfig> = {
     .badge {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       padding: 4px 10px;
-      border-radius: 12px;
+      border-radius: 999px;
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.3px;
       white-space: nowrap;
+      line-height: 1.4;
     }
 
     .icon {
-      font-size: 14px;
-      width: 14px;
-      height: 14px;
+      font-size: 13px;
+      width: 13px;
+      height: 13px;
     }
 
     .badge[data-variant="success"] {
-      background: var(--bg-green);
+      background: color-mix(in srgb, var(--clr-green) 14%, transparent);
       color: var(--clr-green);
     }
     .badge[data-variant="warning"] {
-      background: var(--bg-amber);
+      background: color-mix(in srgb, var(--clr-amber) 14%, transparent);
       color: var(--clr-amber);
     }
     .badge[data-variant="danger"] {
-      background: var(--bg-red);
+      background: color-mix(in srgb, var(--clr-red) 14%, transparent);
       color: var(--clr-red);
     }
     .badge[data-variant="info"] {
-      background: var(--bg-blue);
+      background: color-mix(in srgb, var(--clr-blue) 14%, transparent);
       color: var(--clr-blue);
     }
     .badge[data-variant="neutral"] {

@@ -1,13 +1,17 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import type { ChartConfiguration } from 'chart.js';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { DataService } from '../../core/services/data.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { CHART_COLORS, ChartPalette } from '../../core/constants/app.constants';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { KpiCardComponent } from '../../shared/components/kpi-card.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -17,17 +21,20 @@ const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', '
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    BaseChartDirective, MatCardModule, MatIconModule,
-    PageHeaderComponent, KpiCardComponent, BrlPipe,
+    RouterLink, BaseChartDirective, MatCardModule, MatIconModule, MatButtonModule,
+    PageHeaderComponent, KpiCardComponent, EmptyStateComponent, SkeletonComponent, BrlPipe,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent {
-  private readonly dataService = inject(DataService);
+  protected readonly dataService = inject(DataService);
   private readonly themeService = inject(ThemeService);
 
   protected readonly kpis = this.dataService.kpis;
+  protected readonly hasData = computed(() =>
+    this.dataService.sales().length > 0 || this.dataService.purchases().length > 0
+  );
 
   /** Paleta dinâmica conforme tema atual. */
   protected readonly C = computed(() =>

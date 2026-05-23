@@ -7,6 +7,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Purchase } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
@@ -21,7 +22,7 @@ export interface PurchaseDialogData {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
-    MatSelectModule, MatButtonModule, MatIconModule, MatDatepickerModule, BrlPipe,
+    MatSelectModule, MatButtonModule, MatIconModule, MatDatepickerModule, MatTooltipModule, BrlPipe,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -179,7 +180,14 @@ export interface PurchaseDialogData {
 
     <mat-dialog-actions align="end">
       <button mat-button (click)="ref.close()">Cancelar</button>
-      <button mat-flat-button color="primary" (click)="save()" [disabled]="!isValid()">
+      <button
+        mat-flat-button
+        color="primary"
+        (click)="save()"
+        [disabled]="!isValid()"
+        [matTooltip]="isValid() ? '' : 'Preencha todos os campos obrigatórios'"
+        matTooltipPosition="above"
+      >
         <mat-icon>save</mat-icon>
         {{ isEdit() ? 'Salvar' : 'Adicionar' }}
       </button>
@@ -317,15 +325,18 @@ export class PurchaseFormDialogComponent {
     return `${y}-${m}-${day}`;
   }
 
-  protected isValid(): boolean {
+  private readonly idPattern = /^C\d{3,}$/;
+
+  protected readonly isValid = computed<boolean>(() => {
     const m = this.model();
-    if (!(m.id && m.product && m.category && m.supplier &&
-          m.purchaseDate && m.quantityPurchased > 0 && m.unitCost >= 0)) {
-      return false;
-    }
+    if (!m.id || !this.idPattern.test(m.id)) return false;
+    if (!m.product || m.product.trim().length === 0) return false;
+    if (!m.category || !m.supplier || !m.purchaseDate) return false;
+    if (m.quantityPurchased < 1) return false;
+    if (m.unitCost <= 0) return false;
     if (m.receiptDate && m.receiptDate < m.purchaseDate) return false;
     return true;
-  }
+  });
 
   protected save(): void {
     if (!this.isValid()) return;

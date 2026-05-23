@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -14,6 +14,8 @@ import { map } from 'rxjs';
 import { ThemeService } from './core/services/theme.service';
 import { DataService } from './core/services/data.service';
 import { AuthService } from './core/services/auth.service';
+import { QuickActionsService } from './core/services/quick-actions.service';
+import { FabActionsComponent } from './shared/components/fab-actions.component';
 
 interface NavGroup {
   label: string;
@@ -58,6 +60,7 @@ const NAV_GROUPS: NavGroup[] = [
     RouterOutlet, RouterLink, RouterLinkActive,
     MatSidenavModule, MatToolbarModule, MatListModule,
     MatIconModule, MatButtonModule, MatDividerModule, MatTooltipModule, MatMenuModule,
+    FabActionsComponent,
   ],
   template: `
     <mat-sidenav-container class="app-shell">
@@ -66,14 +69,13 @@ const NAV_GROUPS: NavGroup[] = [
         [opened]="auth.isLoggedIn() && sidebarOpen()"
         (openedChange)="onSidenavChange($event)"
         class="sidebar"
+        [class.rail]="isCompactSidebar()"
       >
         <div class="brand">
-          <div class="logo">
-            <img src="favicon.svg" alt="Lucrato" width="26" height="26" />
-          </div>
+          <div class="brand-logo">L</div>
           <div class="brand-text">
             <strong>Lucrato</strong>
-            <small>Sistema v1.0</small>
+            <small>Gestão Mercado Livre</small>
           </div>
         </div>
 
@@ -88,7 +90,7 @@ const NAV_GROUPS: NavGroup[] = [
                   [routerLink]="item.path"
                   routerLinkActive="active"
                   class="nav-item"
-                  [matTooltip]="item.label"
+                  [matTooltip]="isCompactSidebar() ? item.label : ''"
                   matTooltipPosition="right"
                   (click)="closeSidebarOnMobile()"
                 >
@@ -104,7 +106,7 @@ const NAV_GROUPS: NavGroup[] = [
           @if (data.loaded()) {
             <div class="status">
               <span class="dot"></span>
-              {{ data.purchases().length }} lotes · {{ data.sales().length }} vendas
+              <span class="status-text">{{ data.purchases().length }} lotes · {{ data.sales().length }} vendas</span>
             </div>
           }
         </div>
@@ -119,6 +121,33 @@ const NAV_GROUPS: NavGroup[] = [
               </button>
             }
             <span class="topbar-spacer"></span>
+
+            @if (!isMobile()) {
+              <button
+                mat-flat-button
+                color="primary"
+                class="register-btn"
+                [matMenuTriggerFor]="registerMenu"
+                matTooltip="Atalho: N (venda) · Shift+N (compra)"
+              >
+                <mat-icon>add</mat-icon>
+                <span>Registrar</span>
+                <mat-icon class="chevron">expand_more</mat-icon>
+              </button>
+              <mat-menu #registerMenu="matMenu" xPosition="before">
+                <button mat-menu-item (click)="quick.openNewSale()">
+                  <mat-icon>sell</mat-icon>
+                  <span>Nova venda</span>
+                  <span class="shortcut">N</span>
+                </button>
+                <button mat-menu-item (click)="quick.openNewPurchase()">
+                  <mat-icon>shopping_cart</mat-icon>
+                  <span>Nova compra</span>
+                  <span class="shortcut">⇧ N</span>
+                </button>
+              </mat-menu>
+            }
+
             <button
               mat-icon-button
               (click)="theme.toggle()"
@@ -130,6 +159,7 @@ const NAV_GROUPS: NavGroup[] = [
             <button mat-button [matMenuTriggerFor]="userMenu" class="user-btn">
               <mat-icon>account_circle</mat-icon>
               <span class="user-name">{{ auth.storeName() }}</span>
+              <mat-icon class="chevron">expand_more</mat-icon>
             </button>
             <mat-menu #userMenu="matMenu">
               <button mat-menu-item routerLink="/profile">
@@ -148,6 +178,10 @@ const NAV_GROUPS: NavGroup[] = [
         <div class="page-container" [class.full-height]="!auth.isLoggedIn()">
           <router-outlet />
         </div>
+
+        @if (auth.isLoggedIn() && isMobile()) {
+          <app-fab-actions />
+        }
       </mat-sidenav-content>
     </mat-sidenav-container>
   `,
@@ -164,8 +198,8 @@ const NAV_GROUPS: NavGroup[] = [
 
     .sidebar {
       width: 250px;
-      background: var(--bg-sidebar) !important;
-      border-right: none !important;
+      background: var(--bg-sidebar);
+      border-right: none;
       display: flex;
       flex-direction: column;
     }
@@ -177,15 +211,18 @@ const NAV_GROUPS: NavGroup[] = [
       padding: 20px;
     }
 
-    .logo {
+    .brand-logo {
       width: 38px;
       height: 38px;
-      background: linear-gradient(135deg, #6366F1, #8B5CF6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: linear-gradient(135deg, #1E40AF, #3B82F6);
+      color: #FFFFFF;
+      display: grid;
+      place-items: center;
       border-radius: 10px;
-      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
       flex-shrink: 0;
     }
 
@@ -198,10 +235,10 @@ const NAV_GROUPS: NavGroup[] = [
 
     .brand-text small {
       display: block;
-      font-size: 10px;
-      color: rgba(255, 255, 255, 0.35);
+      font-size: 10.5px;
+      color: rgba(255, 255, 255, 0.45);
       margin-top: 2px;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
     }
 
     .nav {
@@ -218,7 +255,7 @@ const NAV_GROUPS: NavGroup[] = [
       font-size: 10px;
       font-weight: 700;
       letter-spacing: 1.2px;
-      color: rgba(255, 255, 255, 0.25);
+      color: rgba(255, 255, 255, 0.32);
       padding: 0 12px 6px;
     }
 
@@ -227,11 +264,11 @@ const NAV_GROUPS: NavGroup[] = [
       align-items: center;
       gap: 12px;
       padding: 9px 12px;
-      border-radius: 8px;
+      border-radius: 9px;
       color: var(--txt-sidebar);
       font-size: 13.5px;
       font-weight: 500;
-      transition: all 0.15s ease;
+      transition: background 0.15s ease, color 0.15s ease;
       margin-bottom: 2px;
       cursor: pointer;
       text-decoration: none;
@@ -239,16 +276,15 @@ const NAV_GROUPS: NavGroup[] = [
     }
 
     .nav-item:hover {
-      background: rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.06);
       color: #FFFFFF;
-      border-left-color: rgba(255, 255, 255, 0.2);
     }
 
     .nav-item.active {
-      background: rgba(99, 102, 241, 0.18);
+      background: color-mix(in srgb, #3B82F6 20%, transparent);
       color: #FFFFFF;
       font-weight: 600;
-      border-left-color: #818CF8;
+      border-left-color: #60A5FA;
     }
 
     .nav-item mat-icon {
@@ -267,32 +303,46 @@ const NAV_GROUPS: NavGroup[] = [
       align-items: center;
       gap: 8px;
       font-size: 11.5px;
-      color: rgba(255, 255, 255, 0.35);
+      color: rgba(255, 255, 255, 0.42);
+    }
+
+    .status-text {
+      font-variant-numeric: tabular-nums;
     }
 
     .dot {
-      width: 8px;
-      height: 8px;
-      background: var(--clr-green);
+      width: 7px;
+      height: 7px;
+      background: #10B981;
       border-radius: 50%;
-      box-shadow: 0 0 8px var(--clr-green);
+      box-shadow: 0 0 8px #10B981;
       animation: pulse 2s ease-in-out infinite;
     }
 
     @keyframes pulse {
-      50% { opacity: 0.5; }
+      50% { opacity: 0.45; }
     }
 
     .topbar {
-      background: var(--bg-surface) !important;
+      background: var(--bg-surface);
       border-bottom: 1px solid var(--brd-default);
-      box-shadow: 0 1px 0 color-mix(in srgb, var(--clr-blue) 8%, transparent);
       height: 56px;
       min-height: 56px;
       padding: 0 16px;
+      gap: 6px;
     }
 
     .topbar-spacer { flex: 1; }
+
+    .register-btn {
+      font-weight: 600;
+      letter-spacing: 0.1px;
+      border-radius: 10px;
+      padding: 0 14px;
+
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
+      .chevron { margin-left: 2px; opacity: 0.85; }
+    }
 
     .user-btn {
       display: flex;
@@ -306,11 +356,18 @@ const NAV_GROUPS: NavGroup[] = [
       border-radius: 8px;
     }
 
-    .user-btn mat-icon {
+    .user-btn mat-icon:not(.chevron) {
       font-size: 22px;
       width: 22px;
       height: 22px;
       color: var(--txt-secondary);
+    }
+
+    .user-btn .chevron {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--txt-muted);
     }
 
     .user-name {
@@ -318,6 +375,17 @@ const NAV_GROUPS: NavGroup[] = [
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .shortcut {
+      margin-left: auto;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--txt-muted);
+      background: var(--bg-elevated-2);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
     }
 
     .page-container {
@@ -341,20 +409,74 @@ const NAV_GROUPS: NavGroup[] = [
         box-shadow: var(--shadow-lg);
       }
     }
+
+    @media (max-width: 480px) {
+      .topbar { padding: 0 8px; gap: 4px; }
+      .user-name { display: none; }
+      .user-btn { padding: 0 6px; min-width: 0; }
+    }
+
+    .sidebar.rail {
+      width: 64px;
+
+      .brand {
+        justify-content: center;
+        padding: 16px 8px;
+      }
+
+      .brand-text { display: none; }
+
+      .nav { padding: 8px 6px; }
+
+      .nav-label { display: none; }
+
+      .nav-item {
+        justify-content: center;
+        padding: 10px 8px;
+        gap: 0;
+        border-left: none;
+
+        span { display: none; }
+
+        &.active {
+          background: color-mix(in srgb, #3B82F6 22%, transparent);
+          border-left-color: transparent;
+        }
+      }
+
+      .sidebar-footer {
+        padding: 12px 8px;
+      }
+
+      .status-text { display: none; }
+
+      .status {
+        justify-content: center;
+      }
+    }
   `]
 })
 export class AppComponent {
   protected readonly theme = inject(ThemeService);
   protected readonly data = inject(DataService);
   protected readonly auth = inject(AuthService);
+  protected readonly quick = inject(QuickActionsService);
   protected readonly navGroups = NAV_GROUPS;
   private readonly router = inject(Router);
-
   private readonly bp = inject(BreakpointObserver);
 
   protected readonly isMobile = toSignal(
     this.bp.observe('(max-width: 768px)').pipe(map(r => r.matches)),
     { initialValue: globalThis.window ? globalThis.window.innerWidth <= 768 : false }
+  );
+
+  protected readonly isCompactSidebar = toSignal(
+    this.bp.observe('(min-width: 769px) and (max-width: 1024px)').pipe(map(r => r.matches)),
+    {
+      initialValue: globalThis.window
+        ? globalThis.window.innerWidth >= 769 && globalThis.window.innerWidth <= 1024
+        : false,
+    }
   );
 
   protected readonly sidebarOpen = signal(
@@ -384,5 +506,23 @@ export class AppComponent {
 
   protected async logout(): Promise<void> {
     await this.auth.logout();
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleShortcut(event: KeyboardEvent): void {
+    if (!this.auth.isLoggedIn()) return;
+    const target = event.target as HTMLElement | null;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+      return;
+    }
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    const key = event.key.toLowerCase();
+    if (key === 'n' && event.shiftKey) {
+      event.preventDefault();
+      this.quick.openNewPurchase();
+    } else if (key === 'n' && !event.shiftKey) {
+      event.preventDefault();
+      this.quick.openNewSale();
+    }
   }
 }

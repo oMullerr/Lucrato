@@ -1,14 +1,30 @@
 .content {
-  padding: 24px 32px 48px;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: 24px var(--content-pad-x) 48px;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.kpi-grid {
+.hero-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 16px;
+
+  @media (max-width: 1280px) {
+    grid-template-columns: repeat(3, 1fr);
+    > :first-child { grid-column: 1 / -1; }
+  }
+
+  @media (max-width: 760px) {
+    grid-template-columns: repeat(2, 1fr);
+    > :first-child { grid-column: 1 / -1; }
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .chart-grid {
@@ -22,44 +38,50 @@
 }
 
 .chart-card {
-  padding: 0 !important;
+  padding: 0;
   overflow: hidden;
 
   &.full { grid-column: 1 / -1; }
 }
 
 .chart-header {
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--brd-default);
-  background: var(--bg-elevated-2);
+  background: var(--bg-elevated);
+}
+
+.chart-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--clr-blue);
+  }
 
   h3 {
-    display: flex;
-    align-items: center;
-    gap: 8px;
     font-size: 14px;
     color: var(--txt-primary);
     font-weight: 600;
-    margin: 0 0 2px;
-
-    mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      color: var(--clr-blue);
-    }
-  }
-
-  p {
-    font-size: 11.5px;
-    color: var(--txt-secondary);
     margin: 0;
+    letter-spacing: -0.1px;
   }
+}
+
+.chart-header p {
+  font-size: 11.5px;
+  color: var(--txt-secondary);
+  margin: 0;
+  padding-left: 26px;
 }
 
 .chart-body {
   padding: 20px;
-  height: 320px;
+  height: clamp(240px, 38vh, 420px);
   position: relative;
 
   canvas {
@@ -67,7 +89,7 @@
   }
 
   &.chart-tall {
-    height: 380px;
+    height: clamp(280px, 48vh, 520px);
   }
 }
 
@@ -81,10 +103,5 @@
 }
 
 @media (max-width: 768px) {
-  .content { padding: 16px 16px 32px; gap: 16px; }
-  .chart-body { height: 240px; &.chart-tall { height: 280px; } }
-}
-
-@media (max-width: 480px) {
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .content { padding: 16px var(--content-pad-x-sm) 32px; gap: 16px; }
 }

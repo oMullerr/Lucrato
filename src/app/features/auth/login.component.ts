@@ -22,18 +22,49 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
   ],
   template: `
     <div class="login-page">
-      <div class="login-card">
-        <div class="brand">
-          <div class="logo">
-            <img src="favicon.svg" alt="Lucrato" width="32" height="32" />
+      <aside class="hero">
+        <div class="hero-content">
+          <div class="brand">
+            <div class="logo">L</div>
+            <div class="brand-text">
+              <h1>Lucrato</h1>
+              <p>Gestão Mercado Livre</p>
+            </div>
           </div>
-          <div>
-            <h1>Lucrato</h1>
-            <p>Gestão de estoque e vendas</p>
-          </div>
+
+          <h2 class="tagline">Gerencie seu Mercado Livre com clareza.</h2>
+          <p class="hero-sub">Acompanhe lucro, capital parado e margens em tempo real — sem planilha, sem dor de cabeça.</p>
+
+          <ul class="bullets">
+            <li>
+              <mat-icon>insights</mat-icon>
+              <span>Dashboards de receita, taxas e lucro líquido</span>
+            </li>
+            <li>
+              <mat-icon>inventory_2</mat-icon>
+              <span>Controle de lotes com alertas de estoque parado</span>
+            </li>
+            <li>
+              <mat-icon>upload_file</mat-icon>
+              <span>Importação em massa via planilha Excel</span>
+            </li>
+          </ul>
         </div>
 
-        <mat-tab-group dynamicHeight>
+        <div class="hero-decoration"></div>
+      </aside>
+
+      <main class="form-side">
+        <div class="form-card">
+          <div class="brand mobile-only">
+            <div class="logo">L</div>
+            <div class="brand-text">
+              <h1>Lucrato</h1>
+              <p>Gestão Mercado Livre</p>
+            </div>
+          </div>
+
+          <mat-tab-group dynamicHeight>
           <!-- LOGIN TAB -->
           <mat-tab label="Entrar">
             <form class="form" (ngSubmit)="login()" #loginForm="ngForm">
@@ -109,60 +140,152 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
             </form>
           </mat-tab>
         </mat-tab-group>
-      </div>
+        </div>
+      </main>
     </div>
   `,
   styles: [`
     .login-page {
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       background: var(--bg-base);
-      padding: 24px;
     }
 
-    .login-card {
-      width: 100%;
-      max-width: 420px;
-      background: var(--bg-surface);
-      border: 1px solid var(--brd-default);
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: var(--shadow-lg);
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1E40AF 0%, #1D4ED8 55%, #2563EB 100%);
+      color: #FFFFFF;
+      padding: 56px 64px;
+      display: flex;
+      align-items: center;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 460px;
+    }
+
+    .hero-decoration {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 85% 18%, rgba(255, 255, 255, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 12% 85%, rgba(255, 255, 255, 0.12) 0%, transparent 50%);
+      pointer-events: none;
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: 14px;
-      margin-bottom: 28px;
+      margin-bottom: 36px;
     }
 
+    .brand.mobile-only { display: none; }
+
     .logo {
-      width: 52px;
-      height: 52px;
-      background: linear-gradient(135deg, var(--clr-blue), var(--clr-purple));
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: var(--shadow-sm);
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
       flex-shrink: 0;
     }
 
-    .brand h1 {
+    .brand-text h1 {
       font-size: 22px;
       font-weight: 700;
-      color: var(--txt-primary);
       margin: 0;
       letter-spacing: -0.5px;
     }
 
-    .brand p {
+    .brand-text p {
       font-size: 12px;
-      color: var(--txt-secondary);
+      color: rgba(255, 255, 255, 0.65);
       margin: 2px 0 0;
+    }
+
+    .tagline {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.8px;
+      margin: 0 0 14px;
+    }
+
+    .hero-sub {
+      font-size: 15px;
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.82);
+      margin: 0 0 32px;
+    }
+
+    .bullets {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .bullets li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .bullets mat-icon {
+      flex-shrink: 0;
+      font-size: 20px;
+      width: 36px;
+      height: 36px;
+      line-height: 36px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+    }
+
+    .form-side {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 32px;
+      background: var(--bg-base);
+    }
+
+    .form-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg-surface);
+      border: 1px solid var(--brd-default);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .form-card .brand {
+      margin-bottom: 8px;
+
+      .logo {
+        background: linear-gradient(135deg, #1E40AF, #3B82F6);
+        color: #FFFFFF;
+        border: none;
+      }
+
+      .brand-text h1 { color: var(--txt-primary); }
+      .brand-text p  { color: var(--txt-secondary); }
     }
 
     .form {
@@ -201,10 +324,17 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
       margin-top: 4px;
     }
 
+    @media (max-width: 960px) {
+      .login-page { grid-template-columns: 1fr; }
+      .hero { display: none; }
+      .brand.mobile-only { display: flex; }
+      .form-card .brand:not(.mobile-only) { display: none; }
+    }
+
     @media (max-width: 480px) {
-      .login-page { padding: 16px; align-items: flex-start; padding-top: 40px; }
-      .login-card { padding: 20px 16px; border-radius: 12px; }
-      .brand h1 { font-size: 20px; }
+      .form-side { padding: 24px 16px; align-items: flex-start; padding-top: 40px; }
+      .form-card { padding: 20px 16px; border-radius: 12px; }
+      .brand-text h1 { font-size: 20px; }
     }
   `],
 })

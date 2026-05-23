@@ -1,8 +1,5 @@
 .content {
-  padding: 24px 32px 48px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+  padding: 16px 32px 48px;
 }
 
 .loading-state {
@@ -20,8 +17,35 @@
   }
 }
 
+.settings-tabs {
+  ::ng-deep .mat-mdc-tab .mdc-tab__text-label {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .danger-tab-icon {
+      color: var(--clr-red);
+    }
+  }
+}
+
+.tab-body {
+  padding: 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
 .config-card {
-  padding: 24px !important;
+  padding: 22px;
 }
 
 .card-title {
@@ -75,9 +99,9 @@
 }
 
 .danger-card {
-  padding: 24px !important;
-  border: 1px solid var(--clr-red) !important;
-  background: var(--bg-red) !important;
+  padding: 22px;
+  border: 1px solid var(--clr-red);
+  background: color-mix(in srgb, var(--clr-red) 5%, var(--bg-surface));
 }
 
 .drag-handle {
@@ -130,7 +154,6 @@
 }
 
 @media (max-width: 768px) {
-  .content { padding: 16px 16px 32px; gap: 16px; }
-  .config-card { padding: 16px !important; }
-  .import-section { display: none; }
+  .content { padding: 8px 16px 32px; }
+  .config-card { padding: 16px; }
 }

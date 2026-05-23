@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatDialog } from '@angular/material/dialog';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -44,7 +45,7 @@ const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
   imports: [
     FormsModule, DragDropModule,
     MatCardModule, MatIconModule, MatButtonModule,
-    MatFormFieldModule, MatInputModule, MatSelectModule, MatChipsModule,
+    MatFormFieldModule, MatInputModule, MatSelectModule, MatChipsModule, MatTabsModule,
     PageHeaderComponent,
   ],
   templateUrl: './settings.component.html',

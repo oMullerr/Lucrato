@@ -14,6 +14,8 @@ import { Purchase, ComputedPurchase, InventoryStatus } from '../../core/models/m
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 import { PurchaseFormDialogComponent } from './purchase-form.dialog';
@@ -30,20 +32,21 @@ type StatusFilter = 'all' | 'in-transit' | 'in-stock' | 'attention' | 'idle' | '
     MatFormFieldModule, MatInputModule, MatChipsModule,
     MatTooltipModule,
     PageHeaderComponent, StatusBadgeComponent,
+    EmptyStateComponent, SkeletonComponent,
     BrlPipe, BrDatePipe,
   ],
   templateUrl: './purchases.component.html',
   styleUrl: './purchases.component.scss',
 })
 export class PurchasesComponent {
-  private readonly dataService = inject(DataService);
+  protected readonly data = inject(DataService);
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(MatDialog);
 
   protected readonly textFilter = signal('');
   protected readonly statusFilter = signal<StatusFilter>('all');
 
-  protected readonly purchases = this.dataService.computedPurchases;
+  protected readonly purchases = this.data.computedPurchases;
 
   protected readonly totals = computed(() => {
     const cs = this.purchases();
@@ -95,7 +98,7 @@ export class PurchasesComponent {
   }
 
   protected confirmRemove(c: ComputedPurchase): void {
-    const linkedSales = this.dataService.sales().filter(v => v.batchId === c.id);
+    const linkedSales = this.data.sales().filter(v => v.batchId === c.id);
     if (linkedSales.length > 0) {
       this.notify.warning(
         `Existem ${linkedSales.length} venda(s) vinculada(s). Remova-as antes do lote.`
@@ -117,7 +120,7 @@ export class PurchasesComponent {
       .afterClosed()
       .subscribe(confirmed => {
         if (confirmed) {
-          this.dataService.removePurchase(c.id);
+          this.data.removePurchase(c.id);
           this.notify.success(`Lote ${c.id} removido.`);
         }
       });
@@ -133,14 +136,14 @@ export class PurchasesComponent {
       .subscribe(result => {
         if (!result) return;
         if (purchase) {
-          this.dataService.updatePurchase(purchase.id, result);
+          this.data.updatePurchase(purchase.id, result);
           this.notify.success(`Lote ${result.id} atualizado.`);
         } else {
-          if (this.dataService.findPurchase(result.id)) {
+          if (this.data.findPurchase(result.id)) {
             this.notify.error(`ID ${result.id} já existe.`);
             return;
           }
-          this.dataService.addPurchase(result);
+          this.data.addPurchase(result);
           this.notify.success(`Lote ${result.id} adicionado.`);
         }
       });

@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatDialog } from '@angular/material/dialog';
 import { Firestore, deleteDoc, doc } from '@angular/fire/firestore';
 import { AuthService } from '../../core/services/auth.service';
@@ -21,7 +22,7 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/compon
   imports: [
     FormsModule,
     MatCardModule, MatIconModule, MatButtonModule,
-    MatFormFieldModule, MatInputModule,
+    MatFormFieldModule, MatInputModule, MatTabsModule,
     PageHeaderComponent,
   ],
   template: `
@@ -32,7 +33,14 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/compon
     />
 
     <div class="content">
-      <!-- Conta -->
+      <mat-tab-group animationDuration="200ms" class="profile-tabs">
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>person</mat-icon>
+            Conta
+          </ng-template>
+
+          <div class="tab-body">
       <mat-card class="profile-card">
         <h3 class="card-title">
           <mat-icon>badge</mat-icon>
@@ -114,7 +122,16 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/compon
         </div>
       </mat-card>
 
-      <!-- Senha -->
+          </div>
+        </mat-tab>
+
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>lock</mat-icon>
+            Senha
+          </ng-template>
+
+          <div class="tab-body">
       <mat-card class="profile-card">
         <h3 class="card-title">
           <mat-icon>lock</mat-icon>
@@ -183,7 +200,16 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/compon
         </div>
       </mat-card>
 
-      <!-- Zona de perigo -->
+          </div>
+        </mat-tab>
+
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="danger-tab-icon">warning</mat-icon>
+            Zona de perigo
+          </ng-template>
+
+          <div class="tab-body">
       <mat-card class="danger-card">
         <h3 class="card-title danger">
           <mat-icon>warning</mat-icon>
@@ -198,13 +224,34 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/compon
           {{ deletingAccount() ? 'Excluindo…' : 'Excluir conta' }}
         </button>
       </mat-card>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
     </div>
   `,
   styles: [`
     .content {
-      padding: 24px 32px;
-      max-width: 880px;
+      padding: 16px 32px 48px;
+      max-width: 960px;
       margin: 0 auto;
+    }
+
+    .profile-tabs ::ng-deep .mat-mdc-tab .mdc-tab__text-label {
+      display: flex !important;
+      align-items: center;
+      gap: 6px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      .danger-tab-icon { color: var(--clr-red); }
+    }
+
+    .tab-body {
+      padding-top: 24px;
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -213,7 +260,12 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/compon
     .profile-card, .danger-card {
       padding: 22px 24px;
       border: 1px solid var(--brd-default);
-      border-radius: 14px;
+      border-radius: var(--radius-lg);
+    }
+
+    .danger-card {
+      border-color: var(--clr-red);
+      background: color-mix(in srgb, var(--clr-red) 5%, var(--bg-surface));
     }
 
     .card-title {
@@ -331,11 +383,6 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/compon
       display: flex;
       gap: 8px;
       margin-top: 6px;
-    }
-
-    .danger-card {
-      border-color: color-mix(in srgb, var(--clr-red) 30%, var(--brd-default));
-      background: color-mix(in srgb, var(--clr-red) 4%, var(--bg-surface));
     }
 
     .danger-card p {

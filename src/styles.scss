@@ -1,14 +1,11 @@
 @use '@angular/material' as mat;
 
-/* ═══════════════════════════════════════════════════════════════
-   ANGULAR MATERIAL M3 — themes light + dark
-   ═══════════════════════════════════════════════════════════════ */
 @include mat.core();
 
 $light-theme: mat.define-theme((
   color: (
     theme-type: light,
-    primary: mat.$violet-palette,
+    primary: mat.$azure-palette,
     tertiary: mat.$green-palette,
   ),
   density: (scale: -1),
@@ -18,7 +15,7 @@ $light-theme: mat.define-theme((
 $dark-theme: mat.define-theme((
   color: (
     theme-type: dark,
-    primary: mat.$violet-palette,
+    primary: mat.$azure-palette,
     tertiary: mat.$green-palette,
   ),
   density: (scale: -1),
@@ -28,119 +25,112 @@ $dark-theme: mat.define-theme((
 html {
   @include mat.all-component-themes($light-theme);
 }
-html.dark {
-  @include mat.all-component-colors($dark-theme);
-}
 
-/* ═══════════════════════════════════════════════════════════════
-   DESIGN TOKENS — light + dark
-   ═══════════════════════════════════════════════════════════════ */
 :root {
-  /* Surfaces */
-  --bg-base:        #F4F5FB;
+  --bg-base:        #F8FAFC;
   --bg-surface:     #FFFFFF;
-  --bg-elevated:    #F8F9FC;
-  --bg-elevated-2:  #EDEEF5;
-  --bg-input:       #FEFDF5;
-  --bg-auto:        #EEF2FF;
-  --bg-sidebar:     #1E1B4B;
+  --bg-elevated:    #F1F5F9;
+  --bg-elevated-2:  #E2E8F0;
+  --bg-input:       #FFFFFF;
+  --bg-auto:        #EFF6FF;
+  --bg-sidebar:     #0F1B3D;
 
-  /* Accents (light) */
   --bg-red:         #FEF2F2;
   --bg-amber:       #FFFBEB;
   --bg-green:       #ECFDF5;
-  --bg-blue:        #EEF2FF;
+  --bg-blue:        #EFF6FF;
   --bg-teal:        #F0FDFA;
   --bg-purple:      #F5F3FF;
   --bg-orange:      #FFF7ED;
 
-  /* Text */
-  --txt-primary:    #1A1827;
-  --txt-secondary:  #6B7280;
-  --txt-muted:      #9CA3AF;
-  --txt-sidebar:    #C4C6EF;
+  --txt-primary:    #0F172A;
+  --txt-secondary:  #475569;
+  --txt-muted:      #94A3B8;
+  --txt-sidebar:    #CBD5E1;
   --txt-sidebar-active: #FFFFFF;
 
-  /* Functional */
+  --clr-blue:       #1E40AF;
+  --clr-blue-hover: #1D4ED8;
   --clr-green:      #059669;
   --clr-red:        #DC2626;
   --clr-amber:      #D97706;
-  --clr-blue:       #4338CA;
   --clr-teal:       #0D9488;
   --clr-purple:     #7C3AED;
   --clr-orange:     #EA580C;
 
-  /* Borders */
-  --brd-default:    #E5E7EB;
-  --brd-strong:     #D1D5DB;
+  --brd-default:    #E2E8F0;
+  --brd-strong:     #CBD5E1;
   --brd-sidebar:    rgba(255, 255, 255, 0.08);
 
-  /* Shadows */
-  --shadow-sm:  0 1px 3px rgba(67, 56, 202, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md:  0 4px 16px rgba(67, 56, 202, 0.10), 0 2px 6px rgba(0, 0, 0, 0.06);
-  --shadow-lg:  0 12px 36px rgba(67, 56, 202, 0.14), 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 10px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.10), 0 4px 10px rgba(15, 23, 42, 0.06);
+  --ring-focus: 0 0 0 3px color-mix(in srgb, var(--clr-blue) 25%, transparent);
 
-  /* Radii */
-  --radius-sm: 6px;
-  --radius-md: 10px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
   --radius-lg: 16px;
 
-  /* M3 system primary — alinha Material components ao índigo da paleta */
-  --mat-sys-primary:              #4338CA;
+  --content-max:      1680px;
+  --content-pad-x:    32px;
+  --content-pad-x-md: 20px;
+  --content-pad-x-sm: 16px;
+
+  --mat-sys-primary:              #1E40AF;
   --mat-sys-on-primary:           #FFFFFF;
-  --mat-sys-primary-container:    #EEF2FF;
-  --mat-sys-on-primary-container: #1E1B4B;
+  --mat-sys-primary-container:    #DBEAFE;
+  --mat-sys-on-primary-container: #0F1B3D;
 }
 
 html.dark {
-  --bg-base:        #0C0F1A;
-  --bg-surface:     #151929;
-  --bg-elevated:    #1C2038;
-  --bg-elevated-2:  #1A1E34;
-  --bg-input:       #1A2A1A;
-  --bg-auto:        #0F1238;
-  --bg-sidebar:     #0A0D18;
+  @include mat.all-component-colors($dark-theme);
 
-  --bg-red:         #2D0A0A;
-  --bg-amber:       #2D1800;
-  --bg-green:       #042A1A;
-  --bg-blue:        #0F1238;
-  --bg-teal:        #00232A;
-  --bg-purple:      #1A0D3D;
-  --bg-orange:      #2D1000;
+  --bg-base:        #0B1220;
+  --bg-surface:     #111827;
+  --bg-elevated:    #1F2937;
+  --bg-elevated-2:  #374151;
+  --bg-input:       #111827;
+  --bg-auto:        #0B1A3A;
+  --bg-sidebar:     #060B17;
 
-  --txt-primary:    #E8EAFF;
-  --txt-secondary:  #7C85B0;
-  --txt-muted:      #3D4568;
-  --txt-sidebar:    #8892C8;
+  --bg-red:         #2A0E12;
+  --bg-amber:       #2A1A05;
+  --bg-green:       #052E22;
+  --bg-blue:        #0B1A3A;
+  --bg-teal:        #022B2A;
+  --bg-purple:      #1B0E36;
+  --bg-orange:      #2C1305;
+
+  --txt-primary:    #F1F5F9;
+  --txt-secondary:  #94A3B8;
+  --txt-muted:      #64748B;
+  --txt-sidebar:    #94A3B8;
   --txt-sidebar-active: #FFFFFF;
 
-  --clr-green:      #34D399;
+  --clr-blue:       #3B82F6;
+  --clr-blue-hover: #60A5FA;
+  --clr-green:      #10B981;
   --clr-red:        #F87171;
   --clr-amber:      #FBBF24;
-  --clr-blue:       #818CF8;
   --clr-teal:       #2DD4BF;
   --clr-purple:     #A78BFA;
   --clr-orange:     #FB923C;
 
-  --brd-default:    #1E2544;
-  --brd-strong:     #2D3660;
+  --brd-default:    #1F2937;
+  --brd-strong:     #374151;
   --brd-sidebar:    rgba(255, 255, 255, 0.06);
 
-  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.5);
-  --shadow-lg:  0 12px 36px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+  --ring-focus: 0 0 0 3px color-mix(in srgb, var(--clr-blue) 35%, transparent);
 
-  /* M3 system primary (dark) */
-  --mat-sys-primary:              #818CF8;
-  --mat-sys-on-primary:           #0F1238;
-  --mat-sys-primary-container:    #0F1238;
-  --mat-sys-on-primary-container: #C7D2FE;
+  --mat-sys-primary:              #3B82F6;
+  --mat-sys-on-primary:           #0B1220;
+  --mat-sys-primary-container:    #0B1A3A;
+  --mat-sys-on-primary-container: #DBEAFE;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   BASE
-   ═══════════════════════════════════════════════════════════════ */
 * { box-sizing: border-box; }
 
 html, body {
@@ -156,6 +146,21 @@ html, body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+.num,
+.data-table td.text-right,
+.data-table td.text-center,
+.kpi-value,
+.preview-stats strong {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.h-display { font-size: clamp(20px, 3.2vw, 28px); font-weight: 700; letter-spacing: -0.6px; line-height: 1.2; }
+.h-section { font-size: 18px; font-weight: 600; letter-spacing: -0.2px; }
+.h-card    { font-size: 14px; font-weight: 600; letter-spacing: 0.1px; }
+.t-body    { font-size: 13px; font-weight: 400; }
+.t-caption { font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--txt-secondary); }
+
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--bg-base); }
 ::-webkit-scrollbar-thumb {
@@ -164,9 +169,12 @@ html, body {
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--clr-blue); }
 
-/* ═══════════════════════════════════════════════════════════════
-   UTILITY CLASSES
-   ═══════════════════════════════════════════════════════════════ */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+  border-radius: var(--radius-sm);
+}
+
 .text-success { color: var(--clr-green); }
 .text-danger  { color: var(--clr-red); }
 .text-warning { color: var(--clr-amber); }
@@ -176,26 +184,35 @@ html, body {
 .text-center { text-align: center; }
 .text-right  { text-align: right; }
 
-/* ═══════════════════════════════════════════════════════════════
-   MATERIAL OVERRIDES
-   ═══════════════════════════════════════════════════════════════ */
-.mat-mdc-card {
-  background: var(--bg-surface) !important;
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+
+  &.up    { color: var(--clr-green); }
+  &.down  { color: var(--clr-red); }
+  &.flat  { color: var(--txt-muted); }
+}
+
+html .mat-mdc-card {
+  background: var(--bg-surface);
   border: 1px solid var(--brd-default);
-  border-radius: var(--radius-lg) !important;
-  box-shadow: var(--shadow-sm) !important;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
-.mat-mdc-table {
-  background: var(--bg-surface) !important;
+html .mat-mdc-table {
+  background: var(--bg-surface);
 }
 
-.mat-mdc-header-row {
+html .mat-mdc-header-row {
   background: var(--bg-elevated-2);
 }
 
-.mat-mdc-row:hover {
-  background: var(--bg-elevated) !important;
+html .mat-mdc-row:hover {
+  background: var(--bg-elevated);
 }
 
 .mat-mdc-snack-bar-container {
@@ -205,8 +222,8 @@ html, body {
   &.snack-warning { --mdc-snackbar-container-color: var(--clr-amber); }
 }
 
-.mat-mdc-dialog-surface {
-  border-radius: var(--radius-lg) !important;
+html .mat-mdc-dialog-surface {
+  border-radius: var(--radius-lg);
 }
 
 .mat-mdc-dialog-container {
@@ -214,5 +231,20 @@ html, body {
 }
 
 .sidebar .mat-divider {
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-container > * {
+    animation: page-fade-in 240ms cubic-bezier(.2, .8, .2, 1) both;
+  }
+  @keyframes page-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
 }

@@ -14,6 +14,9 @@ import { Sale, ComputedSale } from '../../core/models/models';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
+import { KpiCardComponent } from '../../shared/components/kpi-card.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 import { SaleFormDialogComponent } from './sale-form.dialog';
@@ -26,14 +29,15 @@ import { SaleFormDialogComponent } from './sale-form.dialog';
     FormsModule,
     MatButtonModule, MatIconModule, MatCardModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatTooltipModule,
-    PageHeaderComponent, StatusBadgeComponent,
+    PageHeaderComponent, StatusBadgeComponent, KpiCardComponent,
+    EmptyStateComponent, SkeletonComponent,
     BrlPipe, BrDatePipe,
   ],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss',
 })
 export class SalesComponent {
-  private readonly dataService = inject(DataService);
+  protected readonly data = inject(DataService);
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(MatDialog);
 
@@ -41,9 +45,9 @@ export class SalesComponent {
   protected readonly channelFilter = signal('all');
   protected readonly statusFilter = signal('all');
 
-  protected readonly sales = this.dataService.computedSales;
-  protected readonly channels = computed(() => this.dataService.settings()?.channels ?? []);
-  protected readonly defaultFee = computed(() => this.dataService.settings()?.defaultMlFee ?? 0.12);
+  protected readonly sales = this.data.computedSales;
+  protected readonly channels = computed(() => this.data.settings()?.channels ?? []);
+  protected readonly defaultFee = computed(() => this.data.settings()?.defaultMlFee ?? 0.12);
 
   protected readonly filteredSales = computed(() => {
     let vs = this.sales();
@@ -101,7 +105,7 @@ export class SalesComponent {
       .afterClosed()
       .subscribe(confirmed => {
         if (confirmed) {
-          this.dataService.removeSale(v.id);
+          this.data.removeSale(v.id);
           this.notify.success(`Venda ${v.id} removida.`);
         }
       });
@@ -113,7 +117,7 @@ export class SalesComponent {
 
   protected marginClass(margin: number): string {
     if (margin < 0) return 'text-danger';
-    const cfg = this.dataService.settings();
+    const cfg = this.data.settings();
     if (cfg && margin < cfg.minimumMargin) return 'text-warning';
     return 'text-success';
   }
@@ -128,14 +132,14 @@ export class SalesComponent {
       .subscribe(result => {
         if (!result) return;
         if (sale) {
-          this.dataService.updateSale(sale.id, result);
+          this.data.updateSale(sale.id, result);
           this.notify.success(`Venda ${result.id} atualizada.`);
         } else {
-          if (this.dataService.findSale(result.id)) {
+          if (this.data.findSale(result.id)) {
             this.notify.error(`ID ${result.id} já existe.`);
             return;
           }
-          this.dataService.addSale(result);
+          this.data.addSale(result);
           this.notify.success(`Venda ${result.id} registrada.`);
         }
       });

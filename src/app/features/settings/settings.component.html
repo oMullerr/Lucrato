@@ -15,218 +15,252 @@
 
 @let s = form();
 <div class="content">
-  <!-- Parâmetros -->
-  <mat-card class="config-card">
-    <h3 class="card-title">
-      <mat-icon>tune</mat-icon>
-      Parâmetros do Sistema
-    </h3>
+  <mat-tab-group animationDuration="200ms" class="settings-tabs">
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>tune</mat-icon>
+        Parâmetros
+      </ng-template>
 
-    <div class="form-grid">
-      <mat-form-field>
-        <mat-label>Taxa Mercado Livre padrão (%)</mat-label>
-        <input
-          matInput
-          type="number"
-          step="0.01"
-          min="0"
-          max="100"
-          [ngModel]="feePct"
-          (ngModelChange)="feePct = $event"
-        />
-        <span matSuffix class="unit-suffix">%</span>
-        <mat-hint>Aplicada a novas vendas. Pode ser editada por venda.</mat-hint>
-      </mat-form-field>
+      <div class="tab-body">
+        <mat-card class="config-card">
+          <h3 class="card-title">
+            <mat-icon>tune</mat-icon>
+            Parâmetros do Sistema
+          </h3>
 
-      <mat-form-field>
-        <mat-label>Margem líquida mínima desejada (%)</mat-label>
-        <input
-          matInput
-          type="number"
-          step="0.1"
-          min="0"
-          max="100"
-          [ngModel]="minMarginPct"
-          (ngModelChange)="minMarginPct = $event"
-        />
-        <span matSuffix class="unit-suffix">%</span>
-        <mat-hint>Vendas abaixo desta margem aparecem como alerta.</mat-hint>
-      </mat-form-field>
+          <div class="form-grid">
+            <mat-form-field>
+              <mat-label>Taxa Mercado Livre padrão (%)</mat-label>
+              <input
+                matInput
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                [ngModel]="feePct"
+                (ngModelChange)="feePct = $event"
+              />
+              <span matSuffix class="unit-suffix">%</span>
+              <mat-hint>Aplicada a novas vendas. Pode ser editada por venda.</mat-hint>
+            </mat-form-field>
 
-      <mat-form-field>
-        <mat-label>Dias para alerta amarelo (estoque)</mat-label>
-        <input
-          matInput
-          type="number"
-          min="1"
-          [ngModel]="s.yellowAlertDays"
-          (ngModelChange)="updateField('yellowAlertDays', clamp0($event))"
-        />
-        <span matSuffix class="unit-suffix">dias</span>
-        <mat-hint>Produto fica em "Atenção" após este tempo parado.</mat-hint>
-      </mat-form-field>
+            <mat-form-field>
+              <mat-label>Margem líquida mínima desejada (%)</mat-label>
+              <input
+                matInput
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                [ngModel]="minMarginPct"
+                (ngModelChange)="minMarginPct = $event"
+              />
+              <span matSuffix class="unit-suffix">%</span>
+              <mat-hint>Vendas abaixo desta margem aparecem como alerta.</mat-hint>
+            </mat-form-field>
 
-      <mat-form-field>
-        <mat-label>Dias para alerta vermelho (estoque)</mat-label>
-        <input
-          matInput
-          type="number"
-          min="1"
-          [ngModel]="s.redAlertDays"
-          (ngModelChange)="updateField('redAlertDays', clamp0($event))"
-        />
-        <span matSuffix class="unit-suffix">dias</span>
-        <mat-hint>Produto fica como "Parado" após este tempo.</mat-hint>
-      </mat-form-field>
+            <mat-form-field>
+              <mat-label>Dias para alerta amarelo (estoque)</mat-label>
+              <input
+                matInput
+                type="number"
+                min="1"
+                [ngModel]="s.yellowAlertDays"
+                (ngModelChange)="updateField('yellowAlertDays', clamp0($event))"
+              />
+              <span matSuffix class="unit-suffix">dias</span>
+              <mat-hint>Produto fica em "Atenção" após este tempo parado.</mat-hint>
+            </mat-form-field>
 
-      <mat-form-field>
-        <mat-label>Frete padrão de compra (R$)</mat-label>
-        <input
-          matInput
-          type="number"
-          step="0.01"
-          min="0"
-          [ngModel]="s.defaultShipping"
-          (ngModelChange)="updateField('defaultShipping', clamp0($event))"
-        />
-        <span matSuffix class="unit-suffix">R$</span>
-      </mat-form-field>
+            <mat-form-field>
+              <mat-label>Dias para alerta vermelho (estoque)</mat-label>
+              <input
+                matInput
+                type="number"
+                min="1"
+                [ngModel]="s.redAlertDays"
+                (ngModelChange)="updateField('redAlertDays', clamp0($event))"
+              />
+              <span matSuffix class="unit-suffix">dias</span>
+              <mat-hint>Produto fica como "Parado" após este tempo.</mat-hint>
+            </mat-form-field>
 
-      <mat-form-field>
-        <mat-label>Canal de venda padrão</mat-label>
-        <mat-select
-          [ngModel]="s.defaultChannel"
-          (ngModelChange)="updateField('defaultChannel', $event)">
-          @for (c of s.channels; track c) {
-            <mat-option [value]="c">{{ c }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-    </div>
-  </mat-card>
+            <mat-form-field>
+              <mat-label>Frete padrão de compra (R$)</mat-label>
+              <input
+                matInput
+                type="number"
+                step="0.01"
+                min="0"
+                [ngModel]="s.defaultShipping"
+                (ngModelChange)="updateField('defaultShipping', clamp0($event))"
+              />
+              <span matSuffix class="unit-suffix">R$</span>
+            </mat-form-field>
 
-  <!-- Listas -->
-  <div class="lists-grid">
-    <mat-card class="config-card">
-      <h3 class="card-title">
-        <mat-icon>category</mat-icon>
-        Categorias
-      </h3>
-      <mat-form-field appearance="outline" class="chip-field">
-        <mat-label>Adicionar categoria</mat-label>
-        <mat-chip-grid #chipsCategories cdkDropList (cdkDropListDropped)="drop($event, 'categories')">
-          @for (cat of s.categories; track cat) {
-            <mat-chip-row cdkDrag (removed)="removeItem('categories', cat)">
-              <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
-              {{ cat }}
-              <button matChipRemove>
-                <mat-icon>cancel</mat-icon>
-              </button>
-            </mat-chip-row>
-          }
-        </mat-chip-grid>
-        <input
-          placeholder="Digite e pressione Enter"
-          [matChipInputFor]="chipsCategories"
-          [matChipInputSeparatorKeyCodes]="separators"
-          (matChipInputTokenEnd)="addItem('categories', $event.value); $event.chipInput!.clear()"
-        />
-      </mat-form-field>
-    </mat-card>
+            <mat-form-field>
+              <mat-label>Canal de venda padrão</mat-label>
+              <mat-select
+                [ngModel]="s.defaultChannel"
+                (ngModelChange)="updateField('defaultChannel', $event)">
+                @for (c of s.channels; track c) {
+                  <mat-option [value]="c">{{ c }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </mat-card>
+      </div>
+    </mat-tab>
 
-    <mat-card class="config-card">
-      <h3 class="card-title">
-        <mat-icon>store</mat-icon>
-        Fornecedores
-      </h3>
-      <mat-form-field appearance="outline" class="chip-field">
-        <mat-label>Adicionar fornecedor</mat-label>
-        <mat-chip-grid #chipsSuppliers cdkDropList (cdkDropListDropped)="drop($event, 'suppliers')">
-          @for (sup of s.suppliers; track sup) {
-            <mat-chip-row cdkDrag (removed)="removeItem('suppliers', sup)">
-              <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
-              {{ sup }}
-              <button matChipRemove>
-                <mat-icon>cancel</mat-icon>
-              </button>
-            </mat-chip-row>
-          }
-        </mat-chip-grid>
-        <input
-          placeholder="Digite e pressione Enter"
-          [matChipInputFor]="chipsSuppliers"
-          [matChipInputSeparatorKeyCodes]="separators"
-          (matChipInputTokenEnd)="addItem('suppliers', $event.value); $event.chipInput!.clear()"
-        />
-      </mat-form-field>
-    </mat-card>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>list_alt</mat-icon>
+        Listas
+      </ng-template>
 
-    <mat-card class="config-card">
-      <h3 class="card-title">
-        <mat-icon>storefront</mat-icon>
-        Canais de Venda
-      </h3>
-      <mat-form-field appearance="outline" class="chip-field">
-        <mat-label>Adicionar canal</mat-label>
-        <mat-chip-grid #chipsChannels cdkDropList (cdkDropListDropped)="drop($event, 'channels')">
-          @for (ch of s.channels; track ch) {
-            <mat-chip-row cdkDrag (removed)="removeItem('channels', ch)">
-              <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
-              {{ ch }}
-              <button matChipRemove>
-                <mat-icon>cancel</mat-icon>
-              </button>
-            </mat-chip-row>
-          }
-        </mat-chip-grid>
-        <input
-          placeholder="Digite e pressione Enter"
-          [matChipInputFor]="chipsChannels"
-          [matChipInputSeparatorKeyCodes]="separators"
-          (matChipInputTokenEnd)="addItem('channels', $event.value); $event.chipInput!.clear()"
-        />
-      </mat-form-field>
-    </mat-card>
-  </div>
+      <div class="tab-body">
+        <div class="lists-grid">
+          <mat-card class="config-card">
+            <h3 class="card-title">
+              <mat-icon>category</mat-icon>
+              Categorias
+            </h3>
+            <mat-form-field appearance="outline" class="chip-field">
+              <mat-label>Adicionar categoria</mat-label>
+              <mat-chip-grid #chipsCategories cdkDropList (cdkDropListDropped)="drop($event, 'categories')">
+                @for (cat of s.categories; track cat) {
+                  <mat-chip-row cdkDrag (removed)="removeItem('categories', cat)">
+                    <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
+                    {{ cat }}
+                    <button matChipRemove>
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                  </mat-chip-row>
+                }
+              </mat-chip-grid>
+              <input
+                placeholder="Digite e pressione Enter"
+                [matChipInputFor]="chipsCategories"
+                [matChipInputSeparatorKeyCodes]="separators"
+                (matChipInputTokenEnd)="addItem('categories', $event.value); $event.chipInput!.clear()"
+              />
+            </mat-form-field>
+          </mat-card>
 
-  <!-- Importação em Massa -->
-  <mat-card class="config-card import-section">
-    <h3 class="card-title">
-      <mat-icon>upload_file</mat-icon>
-      Importação em Massa
-    </h3>
-    <p class="import-description">
-      Baixe o modelo Excel, preencha com suas compras e vendas (a partir da linha 3) e reimporte.
-    </p>
-    <div class="import-actions">
-      <button mat-stroked-button (click)="downloadTemplate()">
-        <mat-icon>download</mat-icon>
-        Baixar Modelo (.xlsx)
-      </button>
-      <button mat-flat-button color="primary" (click)="triggerImport()" [disabled]="importing()">
-        <mat-icon>{{ importing() ? 'hourglass_top' : 'upload' }}</mat-icon>
-        {{ importing() ? 'Importando…' : 'Importar Planilha' }}
-      </button>
-    </div>
-    <input
-      #fileInputRef
-      type="file"
-      accept=".xlsx,.xls"
-      style="display:none"
-      (change)="onFileSelected($event)"
-    />
-  </mat-card>
+          <mat-card class="config-card">
+            <h3 class="card-title">
+              <mat-icon>store</mat-icon>
+              Fornecedores
+            </h3>
+            <mat-form-field appearance="outline" class="chip-field">
+              <mat-label>Adicionar fornecedor</mat-label>
+              <mat-chip-grid #chipsSuppliers cdkDropList (cdkDropListDropped)="drop($event, 'suppliers')">
+                @for (sup of s.suppliers; track sup) {
+                  <mat-chip-row cdkDrag (removed)="removeItem('suppliers', sup)">
+                    <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
+                    {{ sup }}
+                    <button matChipRemove>
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                  </mat-chip-row>
+                }
+              </mat-chip-grid>
+              <input
+                placeholder="Digite e pressione Enter"
+                [matChipInputFor]="chipsSuppliers"
+                [matChipInputSeparatorKeyCodes]="separators"
+                (matChipInputTokenEnd)="addItem('suppliers', $event.value); $event.chipInput!.clear()"
+              />
+            </mat-form-field>
+          </mat-card>
 
-  <!-- Zona de perigo -->
-  <mat-card class="danger-card">
-    <h3 class="card-title danger">
-      <mat-icon>warning</mat-icon>
-      Zona de Perigo
-    </h3>
-    <p>Resetar o sistema apaga todos os dados (compras, vendas e configurações) e restaura o exemplo inicial.</p>
-    <button mat-stroked-button color="warn" (click)="resetAll()">
-      <mat-icon>delete_forever</mat-icon>
-      Resetar Sistema
-    </button>
-  </mat-card>
+          <mat-card class="config-card">
+            <h3 class="card-title">
+              <mat-icon>storefront</mat-icon>
+              Canais de Venda
+            </h3>
+            <mat-form-field appearance="outline" class="chip-field">
+              <mat-label>Adicionar canal</mat-label>
+              <mat-chip-grid #chipsChannels cdkDropList (cdkDropListDropped)="drop($event, 'channels')">
+                @for (ch of s.channels; track ch) {
+                  <mat-chip-row cdkDrag (removed)="removeItem('channels', ch)">
+                    <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
+                    {{ ch }}
+                    <button matChipRemove>
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                  </mat-chip-row>
+                }
+              </mat-chip-grid>
+              <input
+                placeholder="Digite e pressione Enter"
+                [matChipInputFor]="chipsChannels"
+                [matChipInputSeparatorKeyCodes]="separators"
+                (matChipInputTokenEnd)="addItem('channels', $event.value); $event.chipInput!.clear()"
+              />
+            </mat-form-field>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>upload_file</mat-icon>
+        Importação
+      </ng-template>
+
+      <div class="tab-body">
+        <mat-card class="config-card import-section">
+          <h3 class="card-title">
+            <mat-icon>upload_file</mat-icon>
+            Importação em Massa
+          </h3>
+          <p class="import-description">
+            Baixe o modelo Excel, preencha com suas compras e vendas (a partir da linha 3) e reimporte.
+          </p>
+          <div class="import-actions">
+            <button mat-stroked-button (click)="downloadTemplate()">
+              <mat-icon>download</mat-icon>
+              Baixar Modelo (.xlsx)
+            </button>
+            <button mat-flat-button color="primary" (click)="triggerImport()" [disabled]="importing()">
+              <mat-icon>{{ importing() ? 'hourglass_top' : 'upload' }}</mat-icon>
+              {{ importing() ? 'Importando…' : 'Importar Planilha' }}
+            </button>
+          </div>
+          <input
+            #fileInputRef
+            type="file"
+            accept=".xlsx,.xls"
+            style="display:none"
+            (change)="onFileSelected($event)"
+          />
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="danger-tab-icon">warning</mat-icon>
+        Zona de Perigo
+      </ng-template>
+
+      <div class="tab-body">
+        <mat-card class="danger-card">
+          <h3 class="card-title danger">
+            <mat-icon>warning</mat-icon>
+            Zona de Perigo
+          </h3>
+          <p>Resetar o sistema apaga todos os dados (compras, vendas e configurações) e restaura o exemplo inicial.</p>
+          <button mat-stroked-button color="warn" (click)="resetAll()">
+            <mat-icon>delete_forever</mat-icon>
+            Resetar Sistema
+          </button>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
 </div>

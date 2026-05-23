@@ -5,262 +5,284 @@
 />
 
 <div class="content">
-  <!-- Resumo financeiro -->
-  <mat-card class="resume-card">
-    <h3 class="card-title">
-      <mat-icon>account_balance_wallet</mat-icon>
-      Resumo Financeiro Geral
-    </h3>
-    <div class="resume-grid">
-      <div class="resume-row">
-        <span>Total Investido em Compras</span>
-        <strong class="text-danger">{{ kpis().totalInvested | brl }}</strong>
-      </div>
-      <div class="resume-row">
-        <span>Capital Parado em Estoque</span>
-        <strong class="text-warning">{{ kpis().idleCapital | brl }}</strong>
-      </div>
-      <div class="resume-row">
-        <span>Receita Bruta Total</span>
-        <strong class="text-info">{{ kpis().grossRevenue | brl }}</strong>
-      </div>
-      <div class="resume-row">
-        <span>Total Taxas L Pagas</span>
-        <strong class="text-warning">{{ kpis().totalFees | brl }}</strong>
-      </div>
-      <div class="resume-row">
-        <span>Total Fretes Vendedor</span>
-        <strong class="text-muted">{{ kpis().totalShipping | brl }}</strong>
-      </div>
-      <div class="resume-row">
-        <span>Total Descontos / Cupons</span>
-        <strong class="text-muted">{{ kpis().totalDiscounts | brl }}</strong>
-      </div>
-      <div class="resume-row">
-        <span>Receita Líquida Total</span>
-        <strong>{{ kpis().netRevenue | brl }}</strong>
-      </div>
-      <div class="resume-row">
-        <span>Lucro Bruto Total</span>
-        <strong class="text-success">{{ kpis().grossProfit | brl }}</strong>
-      </div>
-      <div class="resume-row highlight">
-        <span><mat-icon>emoji_events</mat-icon> Lucro Líquido Total</span>
-        <strong class="text-success">{{ kpis().netProfit | brl }}</strong>
-      </div>
-      <div class="resume-row highlight">
-        <span><mat-icon>percent</mat-icon> Margem Líquida Média</span>
-        <strong class="text-success">{{ (kpis().netMargin * 100).toFixed(1) }}%</strong>
-      </div>
-    </div>
-  </mat-card>
-
-  <!-- Tabs com análises detalhadas -->
-  <mat-card class="tabs-card">
-    <mat-tab-group animationDuration="200ms">
-      <!-- Ranking por produto -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>emoji_events</mat-icon>
-          Ranking por Produto
-        </ng-template>
-
-        <div class="tab-body">
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th class="text-center">#</th>
-                  <th>Produto</th>
-                  <th class="text-center">Qtd Vendida</th>
-                  <th class="text-right">Receita Bruta</th>
-                  <th class="text-right">Receita Líquida</th>
-                  <th class="text-right">Custo Total</th>
-                  <th class="text-right">Lucro Bruto</th>
-                  <th class="text-right">Lucro Líquido</th>
-                  <th class="text-center">Margem %</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (p of productRanking(); track p.product; let i = $index) {
-                  <tr>
-                    <td class="text-center pos">{{ i + 1 }}</td>
-                    <td class="product-cell">{{ p.product }}</td>
-                    <td class="text-center">{{ p.qty }}</td>
-                    <td class="text-right">{{ p.revenue | brl }}</td>
-                    <td class="text-right">{{ p.netRevenue | brl }}</td>
-                    <td class="text-right text-muted">{{ p.cost | brl }}</td>
-                    <td class="text-right">{{ p.grossProfit | brl }}</td>
-                    <td
-                      class="text-right"
-                      [class.text-success]="p.netProfit > 0"
-                      [class.text-danger]="p.netProfit < 0"
-                    >
-                      <strong>{{ p.netProfit | brl }}</strong>
-                    </td>
-                    <td class="text-center" [class]="marginClass(p.margin)">
-                      <strong>{{ (p.margin * 100).toFixed(1) }}%</strong>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-          @if (productRanking().length === 0) {
-            <div class="empty">Sem vendas registradas ainda</div>
-          }
+  @if (!data.loaded()) {
+    <app-skeleton variant="card" />
+    <app-skeleton variant="card" />
+  } @else if (!hasData()) {
+    <app-empty-state
+      icon="insights"
+      title="Análises ganham vida com vendas"
+      description="Registre algumas vendas para visualizar rankings por produto, comparativo por categoria e evolução mensal."
+    >
+      <a mat-flat-button color="primary" routerLink="/sales">
+        <mat-icon>sell</mat-icon>
+        Registrar venda
+      </a>
+    </app-empty-state>
+  } @else {
+    <mat-card class="resume-card">
+      <h3 class="card-title">
+        <mat-icon>account_balance_wallet</mat-icon>
+        Resumo Financeiro Geral
+      </h3>
+      <div class="resume-grid">
+        <div class="resume-row">
+          <span>Total Investido em Compras</span>
+          <strong class="text-danger">{{ kpis().totalInvested | brl }}</strong>
         </div>
-      </mat-tab>
-
-      <!-- Categorias -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>category</mat-icon>
-          Por Categoria
-        </ng-template>
-
-        <div class="tab-body">
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Categoria</th>
-                  <th class="text-center">Lotes</th>
-                  <th class="text-right">Investido</th>
-                  <th class="text-right">Capital Parado</th>
-                  <th class="text-right">Receita Bruta</th>
-                  <th class="text-right">Lucro Líquido</th>
-                  <th class="text-center">Margem %</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (c of categoryStats(); track c.category) {
-                  <tr>
-                    <td><span class="category-pill">{{ c.category }}</span></td>
-                    <td class="text-center">{{ c.batches }}</td>
-                    <td class="text-right text-danger">{{ c.invested | brl }}</td>
-                    <td class="text-right text-warning">{{ c.idleCapital | brl }}</td>
-                    <td class="text-right">{{ c.revenue | brl }}</td>
-                    <td
-                      class="text-right"
-                      [class.text-success]="c.profit > 0"
-                      [class.text-danger]="c.profit < 0"
-                    >
-                      <strong>{{ c.profit | brl }}</strong>
-                    </td>
-                    <td class="text-center" [class]="marginClass(c.margin)">
-                      {{ (c.margin * 100).toFixed(1) }}%
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+        <div class="resume-row">
+          <span>Capital Parado em Estoque</span>
+          <strong class="text-warning">{{ kpis().idleCapital | brl }}</strong>
         </div>
-      </mat-tab>
-
-      <!-- Mensal -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>calendar_month</mat-icon>
-          Evolução Mensal
-        </ng-template>
-
-        <div class="tab-body">
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Mês</th>
-                  <th class="text-center">Vendas</th>
-                  <th class="text-right">Receita Bruta</th>
-                  <th class="text-right">Taxas L</th>
-                  <th class="text-right">Receita Líquida</th>
-                  <th class="text-right">Custo</th>
-                  <th class="text-right">Lucro Líquido</th>
-                  <th class="text-center">Margem %</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (m of monthlyStats(); track m.month) {
-                  <tr>
-                    <td><strong>{{ m.month }}</strong></td>
-                    <td class="text-center">{{ m.qty }}</td>
-                    <td class="text-right">{{ m.revenue | brl }}</td>
-                    <td class="text-right text-warning">{{ m.fees | brl }}</td>
-                    <td class="text-right">{{ m.netRevenue | brl }}</td>
-                    <td class="text-right text-muted">{{ m.cost | brl }}</td>
-                    <td
-                      class="text-right"
-                      [class.text-success]="m.profit > 0"
-                      [class.text-danger]="m.profit < 0"
-                    >
-                      <strong>{{ m.profit | brl }}</strong>
-                    </td>
-                    <td class="text-center" [class]="marginClass(m.margin)">
-                      {{ (m.margin * 100).toFixed(1) }}%
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-          @if (monthlyStats().length === 0) {
-            <div class="empty">Sem dados mensais ainda</div>
-          }
+        <div class="resume-row">
+          <span>Receita Bruta Total</span>
+          <strong class="text-info">{{ kpis().grossRevenue | brl }}</strong>
         </div>
-      </mat-tab>
+        <div class="resume-row">
+          <span>Total Taxas L Pagas</span>
+          <strong class="text-warning">{{ kpis().totalFees | brl }}</strong>
+        </div>
+        <div class="resume-row">
+          <span>Total Fretes Vendedor</span>
+          <strong class="text-muted">{{ kpis().totalShipping | brl }}</strong>
+        </div>
+        <div class="resume-row">
+          <span>Total Descontos / Cupons</span>
+          <strong class="text-muted">{{ kpis().totalDiscounts | brl }}</strong>
+        </div>
+        <div class="resume-row">
+          <span>Receita Líquida Total</span>
+          <strong>{{ kpis().netRevenue | brl }}</strong>
+        </div>
+        <div class="resume-row">
+          <span>Lucro Bruto Total</span>
+          <strong class="text-success">{{ kpis().grossProfit | brl }}</strong>
+        </div>
+        <div class="resume-row highlight">
+          <span><mat-icon>emoji_events</mat-icon> Lucro Líquido Total</span>
+          <strong class="text-success">{{ kpis().netProfit | brl }}</strong>
+        </div>
+        <div class="resume-row highlight">
+          <span><mat-icon>percent</mat-icon> Margem Líquida Média</span>
+          <strong class="text-success">{{ (kpis().netMargin * 100).toFixed(1) }}%</strong>
+        </div>
+      </div>
+    </mat-card>
 
-      <!-- Estoque parado -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>warning</mat-icon>
-          Estoque Parado
-        </ng-template>
+    <mat-card class="tabs-card">
+      <mat-tab-group animationDuration="200ms">
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>emoji_events</mat-icon>
+            Ranking por Produto
+          </ng-template>
 
-        <div class="tab-body">
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Produto</th>
-                  <th class="text-center">Estoque</th>
-                  <th class="text-right">Custo Unit.</th>
-                  <th class="text-right">Capital Parado</th>
-                  <th class="text-center">Dias Parado</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (c of idleInventory(); track c.id) {
-                  <tr>
-                    <td><span class="id-tag">{{ c.id }}</span></td>
-                    <td class="product-cell">{{ c.product }}</td>
-                    <td class="text-center text-warning"><strong>{{ c.currentStock }}</strong></td>
-                    <td class="text-right text-muted">{{ c.actualUnitCost | brl }}</td>
-                    <td class="text-right text-warning"><strong>{{ c.idleValue | brl }}</strong></td>
-                    <td
-                      class="text-center"
-                      [class.text-danger]="c.daysInStock >= 30"
-                      [class.text-warning]="c.daysInStock >= 25 && c.daysInStock < 30"
-                    >
-                      {{ c.daysInStock }}d
-                    </td>
-                    <td><app-status-badge [status]="c.status" /></td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+          <div class="tab-body">
+            @if (productRanking().length === 0) {
+              <app-empty-state
+                icon="sell"
+                title="Sem vendas registradas ainda"
+                description="O ranking aparece automaticamente assim que você registrar a primeira venda concluída."
+              />
+            } @else {
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th class="text-center">#</th>
+                      <th>Produto</th>
+                      <th class="text-center">Qtd Vendida</th>
+                      <th class="text-right">Receita Bruta</th>
+                      <th class="text-right">Receita Líquida</th>
+                      <th class="text-right">Custo Total</th>
+                      <th class="text-right">Lucro Bruto</th>
+                      <th class="text-right">Lucro Líquido</th>
+                      <th class="text-center">Margem %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (p of productRanking(); track p.product; let i = $index) {
+                      <tr>
+                        <td class="text-center pos">{{ i + 1 }}</td>
+                        <td class="product-cell">{{ p.product }}</td>
+                        <td class="text-center">{{ p.qty }}</td>
+                        <td class="text-right">{{ p.revenue | brl }}</td>
+                        <td class="text-right">{{ p.netRevenue | brl }}</td>
+                        <td class="text-right text-muted">{{ p.cost | brl }}</td>
+                        <td class="text-right">{{ p.grossProfit | brl }}</td>
+                        <td
+                          class="text-right"
+                          [class.text-success]="p.netProfit > 0"
+                          [class.text-danger]="p.netProfit < 0"
+                        >
+                          <strong>{{ p.netProfit | brl }}</strong>
+                        </td>
+                        <td class="text-center" [class]="marginClass(p.margin)">
+                          <strong>{{ (p.margin * 100).toFixed(1) }}%</strong>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
           </div>
-          @if (idleInventory().length === 0) {
-            <div class="empty">
-              <mat-icon>celebration</mat-icon>
-              Nenhum produto parado!
+        </mat-tab>
+
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>category</mat-icon>
+            Por Categoria
+          </ng-template>
+
+          <div class="tab-body">
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Categoria</th>
+                    <th class="text-center">Lotes</th>
+                    <th class="text-right">Investido</th>
+                    <th class="text-right">Capital Parado</th>
+                    <th class="text-right">Receita Bruta</th>
+                    <th class="text-right">Lucro Líquido</th>
+                    <th class="text-center">Margem %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of categoryStats(); track c.category) {
+                    <tr>
+                      <td><span class="category-pill">{{ c.category }}</span></td>
+                      <td class="text-center">{{ c.batches }}</td>
+                      <td class="text-right text-danger">{{ c.invested | brl }}</td>
+                      <td class="text-right text-warning">{{ c.idleCapital | brl }}</td>
+                      <td class="text-right">{{ c.revenue | brl }}</td>
+                      <td
+                        class="text-right"
+                        [class.text-success]="c.profit > 0"
+                        [class.text-danger]="c.profit < 0"
+                      >
+                        <strong>{{ c.profit | brl }}</strong>
+                      </td>
+                      <td class="text-center" [class]="marginClass(c.margin)">
+                        {{ (c.margin * 100).toFixed(1) }}%
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
             </div>
-          }
-        </div>
-      </mat-tab>
-    </mat-tab-group>
-  </mat-card>
+          </div>
+        </mat-tab>
+
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>calendar_month</mat-icon>
+            Evolução Mensal
+          </ng-template>
+
+          <div class="tab-body">
+            @if (monthlyStats().length === 0) {
+              <app-empty-state
+                icon="calendar_month"
+                title="Sem dados mensais ainda"
+                description="A evolução mensal aparece conforme as vendas são registradas em meses diferentes."
+              />
+            } @else {
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Mês</th>
+                      <th class="text-center">Vendas</th>
+                      <th class="text-right">Receita Bruta</th>
+                      <th class="text-right">Taxas L</th>
+                      <th class="text-right">Receita Líquida</th>
+                      <th class="text-right">Custo</th>
+                      <th class="text-right">Lucro Líquido</th>
+                      <th class="text-center">Margem %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (m of monthlyStats(); track m.month) {
+                      <tr>
+                        <td><strong>{{ m.month }}</strong></td>
+                        <td class="text-center">{{ m.qty }}</td>
+                        <td class="text-right">{{ m.revenue | brl }}</td>
+                        <td class="text-right text-warning">{{ m.fees | brl }}</td>
+                        <td class="text-right">{{ m.netRevenue | brl }}</td>
+                        <td class="text-right text-muted">{{ m.cost | brl }}</td>
+                        <td
+                          class="text-right"
+                          [class.text-success]="m.profit > 0"
+                          [class.text-danger]="m.profit < 0"
+                        >
+                          <strong>{{ m.profit | brl }}</strong>
+                        </td>
+                        <td class="text-center" [class]="marginClass(m.margin)">
+                          {{ (m.margin * 100).toFixed(1) }}%
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </mat-tab>
+
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>warning</mat-icon>
+            Estoque Parado
+          </ng-template>
+
+          <div class="tab-body">
+            @if (idleInventory().length === 0) {
+              <app-empty-state
+                icon="celebration"
+                title="Nenhum produto parado!"
+                description="Todos os lotes estão girando dentro do prazo configurado. Continue assim!"
+              />
+            } @else {
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Produto</th>
+                      <th class="text-center">Estoque</th>
+                      <th class="text-right">Custo Unit.</th>
+                      <th class="text-right">Capital Parado</th>
+                      <th class="text-center">Dias Parado</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (c of idleInventory(); track c.id) {
+                      <tr>
+                        <td><span class="id-tag">{{ c.id }}</span></td>
+                        <td class="product-cell">{{ c.product }}</td>
+                        <td class="text-center text-warning"><strong>{{ c.currentStock }}</strong></td>
+                        <td class="text-right text-muted">{{ c.actualUnitCost | brl }}</td>
+                        <td class="text-right text-warning"><strong>{{ c.idleValue | brl }}</strong></td>
+                        <td
+                          class="text-center"
+                          [class.text-danger]="c.daysInStock >= 30"
+                          [class.text-warning]="c.daysInStock >= 25 && c.daysInStock < 30"
+                        >
+                          {{ c.daysInStock }}d
+                        </td>
+                        <td><app-status-badge [status]="c.status" /></td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card>
+  }
 </div>

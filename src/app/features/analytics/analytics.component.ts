@@ -1,11 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { MatTabsModule } from '@angular/material/tabs';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../core/services/data.service';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 
 interface ProductStat {
@@ -48,19 +52,22 @@ const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', '
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, MatCardModule, MatIconModule, MatTabsModule,
-    PageHeaderComponent, StatusBadgeComponent, BrlPipe,
+    RouterLink, CommonModule, MatCardModule, MatIconModule, MatButtonModule, MatTabsModule,
+    PageHeaderComponent, StatusBadgeComponent, EmptyStateComponent, SkeletonComponent, BrlPipe,
   ],
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.scss',
 })
 export class AnalyticsComponent {
-  private readonly dataService = inject(DataService);
+  protected readonly data = inject(DataService);
 
-  protected readonly kpis = this.dataService.kpis;
+  protected readonly kpis = this.data.kpis;
+  protected readonly hasData = computed(() =>
+    this.data.sales().length > 0 || this.data.purchases().length > 0
+  );
 
   protected readonly productRanking = computed<ProductStat[]>(() => {
-    const completed = this.dataService.computedSales().filter(v => v.status === 'Concluída');
+    const completed = this.data.computedSales().filter(v => v.status === 'Concluída');
     const map = new Map<string, ProductStat>();
 
     for (const v of completed) {
@@ -83,8 +90,8 @@ export class AnalyticsComponent {
   });
 
   protected readonly categoryStats = computed<CategoryStat[]>(() => {
-    const purchases = this.dataService.computedPurchases();
-    const completed = this.dataService.computedSales().filter(v => v.status === 'Concluída');
+    const purchases = this.data.computedPurchases();
+    const completed = this.data.computedSales().filter(v => v.status === 'Concluída');
     const map = new Map<string, CategoryStat>();
 
     for (const c of purchases) {
@@ -113,7 +120,7 @@ export class AnalyticsComponent {
   });
 
   protected readonly monthlyStats = computed<MonthStat[]>(() => {
-    const completed = this.dataService.computedSales().filter(v => v.status === 'Concluída');
+    const completed = this.data.computedSales().filter(v => v.status === 'Concluída');
     const map = new Map<string, MonthStat>();
 
     for (const v of completed) {
@@ -141,14 +148,14 @@ export class AnalyticsComponent {
   });
 
   protected readonly idleInventory = computed(() =>
-    this.dataService.computedPurchases()
+    this.data.computedPurchases()
       .filter(c => c.currentStock > 0)
       .sort((a, b) => b.idleValue - a.idleValue)
   );
 
   protected marginClass(m: number): string {
     if (m < 0) return 'text-danger';
-    const cfg = this.dataService.settings();
+    const cfg = this.data.settings();
     if (cfg && m < cfg.minimumMargin) return 'text-warning';
     return 'text-success';
   }

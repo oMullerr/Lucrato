@@ -1,6 +1,6 @@
 <app-page-header
   icon="sell"
-  title="Vendas Detalhadas"
+  title="Vendas"
   subtitle="Cada linha = uma venda. Mesmo produto pode ter preços diferentes."
 >
   <button mat-flat-button color="primary" (click)="openNew()">
@@ -10,142 +10,166 @@
 </app-page-header>
 
 <div class="content">
-  <!-- Resumo rápido -->
-  <div class="quick-stats">
-    <mat-card class="stat-card">
-      <small>Total de Vendas</small>
-      <strong>{{ summary().total }}</strong>
-    </mat-card>
-    <mat-card class="stat-card">
-      <small>Receita Bruta</small>
-      <strong class="text-info">{{ summary().revenue | brl }}</strong>
-    </mat-card>
-    <mat-card class="stat-card">
-      <small>Taxas Pagas</small>
-      <strong class="text-warning">{{ summary().fees | brl }}</strong>
-    </mat-card>
-    <mat-card class="stat-card">
-      <small>Lucro Líquido</small>
-      <strong [class.text-success]="summary().profit > 0" [class.text-danger]="summary().profit < 0">
-        {{ summary().profit | brl }}
-      </strong>
-    </mat-card>
-    <mat-card class="stat-card">
-      <small>Margem Média</small>
-      <strong class="text-info">{{ (summary().margin * 100).toFixed(1) }}%</strong>
-    </mat-card>
-  </div>
-
-  <!-- Filtros -->
-  <div class="filtros">
-    <mat-form-field class="search" appearance="outline" subscriptSizing="dynamic">
-      <mat-icon matPrefix>search</mat-icon>
-      <input
-        matInput
-        placeholder="Buscar por produto, ID venda ou ID lote..."
-        [ngModel]="textFilter()"
-        (ngModelChange)="textFilter.set($event)"
-      />
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Canal</mat-label>
-      <mat-select [ngModel]="channelFilter()" (ngModelChange)="channelFilter.set($event)">
-        <mat-option value="all">Todos os canais</mat-option>
-        @for (c of channels(); track c) {
-          <mat-option [value]="c">{{ c }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Status</mat-label>
-      <mat-select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
-        <mat-option value="all">Todos</mat-option>
-        <mat-option value="Concluída">Concluída</mat-option>
-        <mat-option value="Cancelada">Cancelada</mat-option>
-        <mat-option value="Devolvida">Devolvida</mat-option>
-        <mat-option value="Em disputa">Em disputa</mat-option>
-      </mat-select>
-    </mat-form-field>
-  </div>
-
-  <!-- Tabela -->
-  @if (filteredSales().length > 0) {
-    <mat-card class="table-card">
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID Venda</th>
-              <th>ID Lote</th>
-              <th>Produto</th>
-              <th>Data</th>
-              <th>Canal</th>
-              <th class="text-center">Qtd.</th>
-              <th class="text-right">Preço Unit.</th>
-              <th class="text-right">Receita Bruta</th>
-              <th class="text-center">Taxa %</th>
-              <th class="text-right">Receita Líquida</th>
-              <th class="text-right">Custo</th>
-              <th class="text-right">Lucro Líquido</th>
-              <th class="text-center">Margem %</th>
-              <th>Status</th>
-              <th class="text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (v of filteredSales(); track v.id) {
-              <tr>
-                <td><span class="id-tag id-sale">{{ v.id }}</span></td>
-                <td><span class="id-tag id-batch">{{ v.batchId }}</span></td>
-                <td class="product-cell" [title]="v.product">{{ v.product }}</td>
-                <td>{{ v.saleDate | brDate }}</td>
-                <td><span class="channel-pill">{{ v.channel }}</span></td>
-                <td class="text-center">{{ v.quantitySold }}</td>
-                <td class="text-right">{{ v.unitPrice | brl }}</td>
-                <td class="text-right"><strong>{{ v.grossRevenue | brl }}</strong></td>
-                <td class="text-center" [class.text-warning]="isCustomFee(v.feePercentage)">
-                  {{ (v.feePercentage * 100).toFixed(1) }}%
-                </td>
-                <td class="text-right">{{ v.netRevenue | brl }}</td>
-                <td class="text-right text-muted">{{ v.proportionalCost | brl }}</td>
-                <td
-                  class="text-right"
-                  [class.text-success]="v.netProfit > 0"
-                  [class.text-danger]="v.netProfit < 0"
-                >
-                  <strong>{{ v.netProfit | brl }}</strong>
-                </td>
-                <td class="text-center" [class]="marginClass(v.netMargin)">
-                  <strong>{{ (v.netMargin * 100).toFixed(1) }}%</strong>
-                </td>
-                <td><app-status-badge [status]="v.status" /></td>
-                <td class="text-center actions">
-                  <button mat-icon-button matTooltip="Editar" (click)="edit(v)">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-icon-button matTooltip="Remover" color="warn" (click)="confirmRemove(v)">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </mat-card>
+  @if (!data.loaded()) {
+    <section class="quick-stats">
+      <app-skeleton variant="kpi" [count]="5" />
+    </section>
+    <app-skeleton variant="table-row" [count]="8" />
+  } @else if (sales().length === 0) {
+    <app-empty-state
+      icon="sell"
+      title="Nenhuma venda registrada"
+      description="Comece a acompanhar receita, taxas e margens registrando sua primeira venda."
+    >
+      <button mat-flat-button color="primary" (click)="openNew()">
+        <mat-icon>add</mat-icon>
+        Registrar venda
+      </button>
+    </app-empty-state>
   } @else {
-    <mat-card class="empty">
-      <mat-icon class="empty-icon">sell</mat-icon>
-      <h3>Nenhuma venda encontrada</h3>
-      <p>
-        @if (sales().length === 0) {
-          Adicione sua primeira venda clicando em "Nova Venda"
-        } @else {
-          Ajuste os filtros para ver outras vendas
-        }
-      </p>
-    </mat-card>
+    <section class="quick-stats">
+      <app-kpi-card
+        size="compact"
+        icon="format_list_numbered"
+        title="Vendas"
+        [value]="summary().total"
+        variant="gray"
+      />
+      <app-kpi-card
+        size="compact"
+        icon="trending_up"
+        title="Receita Bruta"
+        [value]="summary().revenue | brl"
+        variant="blue"
+      />
+      <app-kpi-card
+        size="compact"
+        icon="local_offer"
+        title="Taxas Pagas"
+        [value]="summary().fees | brl"
+        variant="amber"
+      />
+      <app-kpi-card
+        size="compact"
+        icon="emoji_events"
+        title="Lucro Líquido"
+        [value]="summary().profit | brl"
+        [variant]="summary().profit >= 0 ? 'green' : 'red'"
+      />
+      <app-kpi-card
+        size="compact"
+        icon="percent"
+        title="Margem Média"
+        [value]="(summary().margin * 100).toFixed(1) + '%'"
+        variant="teal"
+      />
+    </section>
+
+    <section class="filters">
+      <mat-form-field class="search" appearance="outline" subscriptSizing="dynamic">
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          placeholder="Buscar por produto, ID venda ou ID lote..."
+          [ngModel]="textFilter()"
+          (ngModelChange)="textFilter.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Canal</mat-label>
+        <mat-select [ngModel]="channelFilter()" (ngModelChange)="channelFilter.set($event)">
+          <mat-option value="all">Todos os canais</mat-option>
+          @for (c of channels(); track c) {
+            <mat-option [value]="c">{{ c }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Status</mat-label>
+        <mat-select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+          <mat-option value="all">Todos</mat-option>
+          <mat-option value="Concluída">Concluída</mat-option>
+          <mat-option value="Cancelada">Cancelada</mat-option>
+          <mat-option value="Devolvida">Devolvida</mat-option>
+          <mat-option value="Em disputa">Em disputa</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <span class="result-count">{{ filteredSales().length }} resultado(s)</span>
+    </section>
+
+    @if (filteredSales().length > 0) {
+      <mat-card class="table-card">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID Venda</th>
+                <th>ID Lote</th>
+                <th>Produto</th>
+                <th>Data</th>
+                <th>Canal</th>
+                <th class="text-center">Qtd.</th>
+                <th class="text-right">Preço Unit.</th>
+                <th class="text-right">Receita Bruta</th>
+                <th class="text-center">Taxa %</th>
+                <th class="text-right">Receita Líquida</th>
+                <th class="text-right">Custo</th>
+                <th class="text-right">Lucro Líquido</th>
+                <th class="text-center">Margem %</th>
+                <th>Status</th>
+                <th class="text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (v of filteredSales(); track v.id) {
+                <tr>
+                  <td><span class="id-tag id-sale">{{ v.id }}</span></td>
+                  <td><span class="id-tag id-batch">{{ v.batchId }}</span></td>
+                  <td class="product-cell" [title]="v.product">{{ v.product }}</td>
+                  <td>{{ v.saleDate | brDate }}</td>
+                  <td><span class="channel-pill">{{ v.channel }}</span></td>
+                  <td class="text-center">{{ v.quantitySold }}</td>
+                  <td class="text-right">{{ v.unitPrice | brl }}</td>
+                  <td class="text-right"><strong>{{ v.grossRevenue | brl }}</strong></td>
+                  <td class="text-center" [class.text-warning]="isCustomFee(v.feePercentage)">
+                    {{ (v.feePercentage * 100).toFixed(1) }}%
+                  </td>
+                  <td class="text-right">{{ v.netRevenue | brl }}</td>
+                  <td class="text-right text-muted">{{ v.proportionalCost | brl }}</td>
+                  <td
+                    class="text-right"
+                    [class.text-success]="v.netProfit > 0"
+                    [class.text-danger]="v.netProfit < 0"
+                  >
+                    <strong>{{ v.netProfit | brl }}</strong>
+                  </td>
+                  <td class="text-center" [class]="marginClass(v.netMargin)">
+                    <strong>{{ (v.netMargin * 100).toFixed(1) }}%</strong>
+                  </td>
+                  <td><app-status-badge [status]="v.status" /></td>
+                  <td class="text-center actions">
+                    <button mat-icon-button matTooltip="Editar" (click)="edit(v)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button matTooltip="Remover" color="warn" (click)="confirmRemove(v)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </mat-card>
+    } @else {
+      <app-empty-state
+        icon="filter_alt_off"
+        title="Nenhuma venda encontrada com esses filtros"
+        description="Ajuste a busca, o canal ou o status para ver outras vendas."
+      />
+    }
   }
 </div>

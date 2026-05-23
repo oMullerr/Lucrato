@@ -5,158 +5,172 @@
 />
 
 <div class="content">
-  <!-- KPIs principais -->
-  <section class="kpi-grid">
-    <app-kpi-card
-      icon="payments"
-      title="Total Investido"
-      [value]="kpis().totalInvested | brl"
-      variant="red"
-    />
-    <app-kpi-card
-      icon="account_balance"
-      title="Capital Parado"
-      [value]="kpis().idleCapital | brl"
-      variant="amber"
-    />
-    <app-kpi-card
-      icon="trending_up"
-      title="Receita Bruta"
-      [value]="kpis().grossRevenue | brl"
-      variant="blue"
-    />
-    <app-kpi-card
-      icon="emoji_events"
-      title="Lucro Líquido"
-      [value]="kpis().netProfit | brl"
-      variant="green"
-    />
-    <app-kpi-card
-      icon="percent"
-      title="Margem"
-      [value]="(kpis().netMargin * 100).toFixed(1) + '%'"
-      variant="teal"
-    />
-    <app-kpi-card
-      icon="local_offer"
-      title="Taxas Pagas"
-      [value]="kpis().totalFees | brl"
-      variant="orange"
-    />
-  </section>
+  @if (!dataService.loaded()) {
+    <section class="hero-grid">
+      <app-skeleton variant="kpi" />
+      <app-skeleton variant="kpi" />
+      <app-skeleton variant="kpi" />
+      <app-skeleton variant="kpi" />
+    </section>
+    <section class="chart-grid">
+      <app-skeleton variant="chart" />
+      <app-skeleton variant="chart" />
+    </section>
+  } @else if (!hasData()) {
+    <app-empty-state
+      icon="analytics"
+      title="Seu dashboard ganha vida com dados"
+      description="Cadastre algumas compras e registre vendas para ver gráficos, evolução mensal e composição da receita."
+    >
+      <a mat-stroked-button routerLink="/purchases">
+        <mat-icon>shopping_cart</mat-icon>
+        Adicionar compra
+      </a>
+      <a mat-flat-button color="primary" routerLink="/sales">
+        <mat-icon>sell</mat-icon>
+        Registrar venda
+      </a>
+    </app-empty-state>
+  } @else {
+    <section class="hero-grid">
+      <app-kpi-card
+        size="hero"
+        icon="emoji_events"
+        title="Lucro Líquido"
+        [value]="kpis().netProfit | brl"
+        variant="green"
+        note="Resultado consolidado"
+      />
+      <app-kpi-card
+        icon="trending_up"
+        title="Receita Bruta"
+        [value]="kpis().grossRevenue | brl"
+        variant="blue"
+      />
+      <app-kpi-card
+        icon="percent"
+        title="Margem"
+        [value]="(kpis().netMargin * 100).toFixed(1) + '%'"
+        variant="teal"
+      />
+      <app-kpi-card
+        icon="local_offer"
+        title="Taxas Pagas"
+        [value]="kpis().totalFees | brl"
+        variant="orange"
+      />
+    </section>
 
-  <!-- Gráficos linha 1 -->
-  <section class="chart-grid">
-    <mat-card class="chart-card">
-      <div class="chart-header">
-        <h3>
-          <mat-icon>show_chart</mat-icon>
-          Evolução Mensal
-        </h3>
-        <p>Receita Líquida vs Lucro Líquido</p>
-      </div>
-      <div class="chart-body">
-        @if (monthlyChart().labels?.length) {
+    <section class="chart-grid">
+      <mat-card class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">
+            <mat-icon>show_chart</mat-icon>
+            <h3>Evolução Mensal</h3>
+          </div>
+          <p>Receita Líquida vs Lucro Líquido</p>
+        </div>
+        <div class="chart-body">
+          @if (monthlyChart().labels?.length) {
+            <canvas
+              baseChart
+              [data]="monthlyChart()"
+              [options]="lineOptions()"
+              type="line"
+            ></canvas>
+          } @else {
+            <div class="no-data">Sem dados para exibir</div>
+          }
+        </div>
+      </mat-card>
+
+      <mat-card class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">
+            <mat-icon>emoji_events</mat-icon>
+            <h3>Lucro Líquido por Produto</h3>
+          </div>
+          <p>Top produtos mais rentáveis</p>
+        </div>
+        <div class="chart-body">
+          @if (productProfitChart().labels?.length) {
+            <canvas
+              baseChart
+              [data]="productProfitChart()"
+              [options]="barOptions()"
+              type="bar"
+            ></canvas>
+          } @else {
+            <div class="no-data">Sem vendas registradas</div>
+          }
+        </div>
+      </mat-card>
+    </section>
+
+    <section class="chart-grid">
+      <mat-card class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">
+            <mat-icon>donut_large</mat-icon>
+            <h3>Composição da Receita</h3>
+          </div>
+          <p>Como sua receita bruta é distribuída</p>
+        </div>
+        <div class="chart-body">
+          @if (kpis().grossRevenue > 0) {
+            <canvas
+              baseChart
+              [data]="compositionChart()"
+              [options]="doughnutOptions()"
+              type="doughnut"
+            ></canvas>
+          } @else {
+            <div class="no-data">Sem receita registrada</div>
+          }
+        </div>
+      </mat-card>
+
+      <mat-card class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">
+            <mat-icon>inventory_2</mat-icon>
+            <h3>Capital Parado por Lote</h3>
+          </div>
+          <p>Onde seu dinheiro está preso</p>
+        </div>
+        <div class="chart-body">
+          @if (idleCapitalChart().labels?.length) {
+            <canvas
+              baseChart
+              [data]="idleCapitalChart()"
+              [options]="horizontalBarOptions()"
+              type="bar"
+            ></canvas>
+          } @else {
+            <div class="no-data">Sem capital parado</div>
+          }
+        </div>
+      </mat-card>
+    </section>
+
+    <section>
+      <mat-card class="chart-card full">
+        <div class="chart-header">
+          <div class="chart-title">
+            <mat-icon>compare</mat-icon>
+            <h3>Comparativo Financeiro Geral</h3>
+          </div>
+          <p>Visão consolidada das métricas principais</p>
+        </div>
+        <div class="chart-body chart-tall">
           <canvas
             baseChart
-            [data]="monthlyChart()"
-            [options]="lineOptions()"
-            type="line"
-          ></canvas>
-        } @else {
-          <div class="no-data">Sem dados para exibir</div>
-        }
-      </div>
-    </mat-card>
-
-    <mat-card class="chart-card">
-      <div class="chart-header">
-        <h3>
-          <mat-icon>emoji_events</mat-icon>
-          Lucro Líquido por Produto
-        </h3>
-        <p>Top produtos mais rentáveis</p>
-      </div>
-      <div class="chart-body">
-        @if (productProfitChart().labels?.length) {
-          <canvas
-            baseChart
-            [data]="productProfitChart()"
+            [data]="comparativeChart()"
             [options]="barOptions()"
             type="bar"
           ></canvas>
-        } @else {
-          <div class="no-data">Sem vendas registradas</div>
-        }
-      </div>
-    </mat-card>
-  </section>
-
-  <!-- Gráficos linha 2 -->
-  <section class="chart-grid">
-    <mat-card class="chart-card">
-      <div class="chart-header">
-        <h3>
-          <mat-icon>donut_large</mat-icon>
-          Composição da Receita
-        </h3>
-        <p>Como sua receita bruta é distribuída</p>
-      </div>
-      <div class="chart-body">
-        @if (kpis().grossRevenue > 0) {
-          <canvas
-            baseChart
-            [data]="compositionChart()"
-            [options]="doughnutOptions()"
-            type="doughnut"
-          ></canvas>
-        } @else {
-          <div class="no-data">Sem receita registrada</div>
-        }
-      </div>
-    </mat-card>
-
-    <mat-card class="chart-card">
-      <div class="chart-header">
-        <h3>
-          <mat-icon>inventory_2</mat-icon>
-          Capital Parado por Lote
-        </h3>
-        <p>Onde seu dinheiro está preso</p>
-      </div>
-      <div class="chart-body">
-        @if (idleCapitalChart().labels?.length) {
-          <canvas
-            baseChart
-            [data]="idleCapitalChart()"
-            [options]="horizontalBarOptions()"
-            type="bar"
-          ></canvas>
-        } @else {
-          <div class="no-data">Sem capital parado</div>
-        }
-      </div>
-    </mat-card>
-  </section>
-
-  <!-- Comparativo geral -->
-  <section>
-    <mat-card class="chart-card full">
-      <div class="chart-header">
-        <h3>
-          <mat-icon>compare</mat-icon>
-          Comparativo Financeiro Geral
-        </h3>
-        <p>Visão consolidada das métricas principais</p>
-      </div>
-      <div class="chart-body chart-tall">
-        <canvas
-          baseChart
-          [data]="comparativeChart()"
-          [options]="barOptions()"
-          type="bar"
-        ></canvas>
-      </div>
-    </mat-card>
-  </section>
+        </div>
+      </mat-card>
+    </section>
+  }
 </div>

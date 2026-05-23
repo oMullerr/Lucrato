@@ -8,92 +8,97 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [MatIconModule],
   template: `
     <header class="page-header">
-      <div class="header-text">
-        <div class="title">
-          <mat-icon class="icon">{{ icon() }}</mat-icon>
-          <h1>{{ title() }}</h1>
+      <div class="header-inner">
+        <div class="header-text">
+          <div class="title-row">
+            <div class="icon-badge" aria-hidden="true">
+              <mat-icon>{{ icon() }}</mat-icon>
+            </div>
+            <div class="title-text">
+              <h1 class="h-display">{{ title() }}</h1>
+              @if (subtitle()) {
+                <p class="subtitle">{{ subtitle() }}</p>
+              }
+            </div>
+          </div>
         </div>
-        @if (subtitle()) {
-          <p class="subtitle">{{ subtitle() }}</p>
-        }
-      </div>
-      <div class="actions">
-        <ng-content></ng-content>
+        <div class="actions">
+          <ng-content></ng-content>
+        </div>
       </div>
     </header>
   `,
   styles: [`
     .page-header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--brd-default);
+    }
+
+    .header-inner {
+      max-width: var(--content-max);
+      margin-inline: auto;
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       gap: 24px;
-      padding: 24px 32px 20px;
-      background: linear-gradient(
-        to bottom,
-        color-mix(in srgb, var(--clr-blue) 5%, var(--bg-surface)),
-        var(--bg-surface)
-      );
-      border-bottom: 1px solid var(--brd-default);
-      position: relative;
-    }
-
-    .page-header::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 25%;
-      bottom: 25%;
-      width: 3px;
-      background: var(--clr-blue);
-      border-radius: 0 2px 2px 0;
-      opacity: 0.7;
+      padding: 24px var(--content-pad-x) 20px;
     }
 
     .header-text { flex: 1; min-width: 0; }
 
-    .title {
+    .title-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
-    .title .icon {
-      font-size: 22px;
-      width: 44px !important;
-      height: 44px !important;
-      line-height: 44px !important;
-      text-align: center;
-      color: var(--clr-blue);
-      background: color-mix(in srgb, var(--clr-blue) 11%, transparent);
-      border-radius: 11px;
-      border: 1px solid color-mix(in srgb, var(--clr-blue) 18%, transparent);
+    .icon-badge {
       flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      background: color-mix(in srgb, var(--clr-blue) 10%, transparent);
+      color: var(--clr-blue);
     }
 
-    .title h1 {
+    .icon-badge mat-icon {
       font-size: 22px;
-      font-weight: 700;
-      color: var(--txt-primary);
-      letter-spacing: -0.4px;
+      width: 22px;
+      height: 22px;
+    }
+
+    .title-text h1 {
       margin: 0;
+      color: var(--txt-primary);
     }
 
     .subtitle {
       color: var(--txt-secondary);
       font-size: 13px;
-      margin: 5px 0 0 58px;
+      margin: 3px 0 0;
     }
 
     .actions {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     @media (max-width: 768px) {
-      .page-header { padding: 20px 16px 16px; flex-direction: column; }
+      .header-inner {
+        flex-direction: column;
+        padding: 20px var(--content-pad-x-sm) 16px;
+      }
       .actions { width: 100%; }
+    }
+
+    @media (max-width: 480px) {
+      .icon-badge { width: 36px; height: 36px; }
+      .icon-badge mat-icon { font-size: 20px; width: 20px; height: 20px; }
+      .subtitle { font-size: 12px; }
     }
   `]
 })
