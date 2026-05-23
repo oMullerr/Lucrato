@@ -147,18 +147,22 @@ export class SettingsComponent implements OnDestroy {
     this.form.update(f => ({ ...f, [key]: value }));
   }
 
+  protected clamp0(value: string | number | null): number {
+    return Math.max(0, +(value ?? 0) || 0);
+  }
+
   protected get feePct(): number {
     return this.form().defaultMlFee * 100;
   }
   protected set feePct(v: number) {
-    this.updateField('defaultMlFee', (Number(v) || 0) / 100);
+    this.updateField('defaultMlFee', this.clamp0(v) / 100);
   }
 
   protected get minMarginPct(): number {
     return this.form().minimumMargin * 100;
   }
   protected set minMarginPct(v: number) {
-    this.updateField('minimumMargin', (Number(v) || 0) / 100);
+    this.updateField('minimumMargin', this.clamp0(v) / 100);
   }
 
   protected addItem(list: ListKey, value: string): void {

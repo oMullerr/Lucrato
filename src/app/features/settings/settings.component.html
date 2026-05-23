@@ -34,7 +34,7 @@
           [ngModel]="feePct"
           (ngModelChange)="feePct = $event"
         />
-        <span matSuffix>%</span>
+        <span matSuffix class="unit-suffix">%</span>
         <mat-hint>Aplicada a novas vendas. Pode ser editada por venda.</mat-hint>
       </mat-form-field>
 
@@ -49,7 +49,7 @@
           [ngModel]="minMarginPct"
           (ngModelChange)="minMarginPct = $event"
         />
-        <span matSuffix>%</span>
+        <span matSuffix class="unit-suffix">%</span>
         <mat-hint>Vendas abaixo desta margem aparecem como alerta.</mat-hint>
       </mat-form-field>
 
@@ -60,9 +60,9 @@
           type="number"
           min="1"
           [ngModel]="s.yellowAlertDays"
-          (ngModelChange)="updateField('yellowAlertDays', +$event || 0)"
+          (ngModelChange)="updateField('yellowAlertDays', clamp0($event))"
         />
-        <span matSuffix>dias</span>
+        <span matSuffix class="unit-suffix">dias</span>
         <mat-hint>Produto fica em "Atenção" após este tempo parado.</mat-hint>
       </mat-form-field>
 
@@ -73,9 +73,9 @@
           type="number"
           min="1"
           [ngModel]="s.redAlertDays"
-          (ngModelChange)="updateField('redAlertDays', +$event || 0)"
+          (ngModelChange)="updateField('redAlertDays', clamp0($event))"
         />
-        <span matSuffix>dias</span>
+        <span matSuffix class="unit-suffix">dias</span>
         <mat-hint>Produto fica como "Parado" após este tempo.</mat-hint>
       </mat-form-field>
 
@@ -87,9 +87,9 @@
           step="0.01"
           min="0"
           [ngModel]="s.defaultShipping"
-          (ngModelChange)="updateField('defaultShipping', +$event || 0)"
+          (ngModelChange)="updateField('defaultShipping', clamp0($event))"
         />
-        <span matSuffix>R$</span>
+        <span matSuffix class="unit-suffix">R$</span>
       </mat-form-field>
 
       <mat-form-field>

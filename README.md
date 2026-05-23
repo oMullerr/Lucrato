@@ -245,9 +245,3 @@ A aplicação implementa as seguintes camadas de proteção:
 - Revisar textos e labels
 - Revisar estilo e cores do sistema
 - Revisar codigo
-
-## BUGS
-
-- Na tela de configuração, os campos "taxa mercado livre padrao", "margem liquida minima desejada", "dias para alerta amarelo", "dias para alerta vermelho" e "Frete padrão de compra" não podem aceitar valores negativos
-
-- Na tela de configuração, colocar mais margem nos icones que tem no final dos fields do parâmetro do sistema 
