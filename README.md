@@ -245,12 +245,8 @@ A aplicação implementa as seguintes camadas de proteção:
 - Revisar textos e labels
 - Revisar estilo e cores do sistema
 - Revisar codigo
+- Revisar texto de instruções
 - Redistribuir o codigo (html so com html, css so com css e ts so com ts)
 
 
 ## BUGS
-
-- Ao tentar criar uma conta, da erro 403 - apenas na vercel, no localhost não
-- Ao clicar na tela de login, no botao de "Esqueci minha senha", abre a modal no canto inferior esquerda
-- Adicionar mascara de moeda em todos os campos do formulario de compra e venda
-- Remover filtro de status na tela de vendas

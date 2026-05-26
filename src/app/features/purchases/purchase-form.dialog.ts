@@ -11,6 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Purchase } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
+import { CurrencyInputDirective } from '../../shared/directives/currency-input.directive';
 
 export interface PurchaseDialogData {
   purchase?: Purchase;
@@ -23,6 +24,7 @@ export interface PurchaseDialogData {
   imports: [
     FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatDatepickerModule, MatTooltipModule, BrlPipe,
+    CurrencyInputDirective,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -109,34 +111,37 @@ export interface PurchaseDialogData {
 
         <mat-form-field>
           <mat-label>Quantidade Comprada</mat-label>
-          <input matInput type="number"
+          <input matInput type="number" step="1" inputmode="numeric"
             [ngModel]="model().quantityPurchased"
-            (ngModelChange)="setNum('quantityPurchased', $event, 1)"
+            (ngModelChange)="setInt('quantityPurchased', $event, 1)"
             name="quantityPurchased" min="1" required />
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Custo Unitário (R$)</mat-label>
-          <input matInput type="number" step="0.01"
+          <mat-label>Custo Unitário</mat-label>
+          <span matTextPrefix>R$&nbsp;</span>
+          <input matInput appCurrencyInput inputmode="numeric"
             [ngModel]="model().unitCost"
             (ngModelChange)="setNum('unitCost', $event)"
-            name="unitCost" min="0" required />
+            name="unitCost" required />
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Frete da Compra (R$)</mat-label>
-          <input matInput type="number" step="0.01"
+          <mat-label>Frete da Compra</mat-label>
+          <span matTextPrefix>R$&nbsp;</span>
+          <input matInput appCurrencyInput inputmode="numeric"
             [ngModel]="model().purchaseShipping"
             (ngModelChange)="setNum('purchaseShipping', $event)"
-            name="purchaseShipping" min="0" />
+            name="purchaseShipping" />
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Outros Custos (R$)</mat-label>
-          <input matInput type="number" step="0.01"
+          <mat-label>Outros Custos</mat-label>
+          <span matTextPrefix>R$&nbsp;</span>
+          <input matInput appCurrencyInput inputmode="numeric"
             [ngModel]="model().otherCosts"
             (ngModelChange)="setNum('otherCosts', $event)"
-            name="otherCosts" min="0" />
+            name="otherCosts" />
         </mat-form-field>
 
         <mat-form-field class="full">
@@ -305,6 +310,11 @@ export class PurchaseFormDialogComponent {
     this.model.update(m => ({ ...m, [field]: Math.max(min, num) }));
   }
 
+  protected setInt(field: string, value: string | number | null, min = 0): void {
+    const num = Math.floor(+(value ?? 0) || 0);
+    this.model.update(m => ({ ...m, [field]: Math.max(min, num) }));
+  }
+
   protected setPurchaseDate(d: Date | null): void {
     const newStr = this.dateAsString(d);
     if (newStr === this.model().purchaseDate) return;
@@ -332,7 +342,7 @@ export class PurchaseFormDialogComponent {
     if (!m.id || !this.idPattern.test(m.id)) return false;
     if (!m.product || m.product.trim().length === 0) return false;
     if (!m.category || !m.supplier || !m.purchaseDate) return false;
-    if (m.quantityPurchased < 1) return false;
+    if (m.quantityPurchased < 1 || !Number.isInteger(m.quantityPurchased)) return false;
     if (m.unitCost <= 0) return false;
     if (m.receiptDate && m.receiptDate < m.purchaseDate) return false;
     return true;

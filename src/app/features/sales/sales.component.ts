@@ -43,7 +43,6 @@ export class SalesComponent {
 
   protected readonly textFilter = signal('');
   protected readonly channelFilter = signal('all');
-  protected readonly statusFilter = signal('all');
 
   protected readonly sales = this.data.computedSales;
   protected readonly channels = computed(() => this.data.settings()?.channels ?? []);
@@ -53,9 +52,6 @@ export class SalesComponent {
     let vs = this.sales();
     if (this.channelFilter() !== 'all') {
       vs = vs.filter(v => v.channel === this.channelFilter());
-    }
-    if (this.statusFilter() !== 'all') {
-      vs = vs.filter(v => v.status === this.statusFilter());
     }
     const text = this.textFilter().trim().toLowerCase();
     if (text) {

@@ -13,6 +13,7 @@ import { Sale } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { calculateSale } from '../../core/services/calculations';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
+import { CurrencyInputDirective } from '../../shared/directives/currency-input.directive';
 
 export interface SaleDialogData {
   sale?: Sale;
@@ -26,6 +27,7 @@ export interface SaleDialogData {
     FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatTooltipModule,
     MatDatepickerModule, MatSlideToggleModule, BrlPipe,
+    CurrencyInputDirective,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -132,12 +134,13 @@ export interface SaleDialogData {
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Preço Unitário (R$)</mat-label>
-          <input matInput type="number" step="0.01"
+          <mat-label>Preço Unitário</mat-label>
+          <span matTextPrefix>R$&nbsp;</span>
+          <input matInput appCurrencyInput inputmode="numeric"
             [ngModel]="model().unitPrice"
             (ngModelChange)="setNum('unitPrice', $event)"
             [disabled]="!hasBatch()"
-            name="unitPrice" min="0.01" required />
+            name="unitPrice" required />
         </mat-form-field>
 
         <!-- Taxa customizada -->
@@ -192,41 +195,45 @@ export interface SaleDialogData {
 
         @if (!isFlexShipping()) {
           <mat-form-field>
-            <mat-label>Frete Vendedor (R$)</mat-label>
-            <input matInput type="number" step="0.01"
+            <mat-label>Frete Vendedor</mat-label>
+            <span matTextPrefix>R$&nbsp;</span>
+            <input matInput appCurrencyInput inputmode="numeric"
               [ngModel]="model().sellerShipping"
               (ngModelChange)="setNum('sellerShipping', $event)"
               [disabled]="!hasBatch()"
-              name="sellerShipping" min="0" />
+              name="sellerShipping" />
           </mat-form-field>
         } @else {
           <mat-form-field>
-            <mat-label>Estorno Envio Flex (R$)</mat-label>
-            <input matInput type="number" step="0.01"
+            <mat-label>Estorno Envio Flex</mat-label>
+            <span matTextPrefix>R$&nbsp;</span>
+            <input matInput appCurrencyInput inputmode="numeric"
               [ngModel]="model().flexRefund ?? 0"
               (ngModelChange)="setNum('flexRefund', $event)"
               [disabled]="!hasBatch()"
-              name="flexRefund" min="0" />
+              name="flexRefund" />
             <mat-hint>Valor devolvido pelo ML — somado à receita</mat-hint>
           </mat-form-field>
         }
 
         <mat-form-field>
-          <mat-label>Desconto / Cupom (R$)</mat-label>
-          <input matInput type="number" step="0.01"
+          <mat-label>Desconto / Cupom</mat-label>
+          <span matTextPrefix>R$&nbsp;</span>
+          <input matInput appCurrencyInput inputmode="numeric"
             [ngModel]="model().discount"
             (ngModelChange)="setNum('discount', $event)"
             [disabled]="!hasBatch()"
-            name="discount" min="0" />
+            name="discount" />
         </mat-form-field>
 
         <mat-form-field class="full">
-          <mat-label>Outros Custos (R$)</mat-label>
-          <input matInput type="number" step="0.01"
+          <mat-label>Outros Custos</mat-label>
+          <span matTextPrefix>R$&nbsp;</span>
+          <input matInput appCurrencyInput inputmode="numeric"
             [ngModel]="model().otherCosts"
             (ngModelChange)="setNum('otherCosts', $event)"
             [disabled]="!hasBatch()"
-            name="otherCosts" min="0" />
+            name="otherCosts" />
         </mat-form-field>
 
         <mat-form-field class="full">

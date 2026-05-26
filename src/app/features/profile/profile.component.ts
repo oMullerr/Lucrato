@@ -232,8 +232,6 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/compon
   styles: [`
     .content {
       padding: 16px 32px 48px;
-      max-width: 960px;
-      margin: 0 auto;
     }
 
     .profile-tabs ::ng-deep .mat-mdc-tab .mdc-tab__text-label {

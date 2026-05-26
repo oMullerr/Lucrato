@@ -86,17 +86,6 @@
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Status</mat-label>
-        <mat-select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
-          <mat-option value="all">Todos</mat-option>
-          <mat-option value="Concluída">Concluída</mat-option>
-          <mat-option value="Cancelada">Cancelada</mat-option>
-          <mat-option value="Devolvida">Devolvida</mat-option>
-          <mat-option value="Em disputa">Em disputa</mat-option>
-        </mat-select>
-      </mat-form-field>
-
       <span class="result-count">{{ filteredSales().length }} resultado(s)</span>
     </section>
 
@@ -168,7 +157,7 @@
       <app-empty-state
         icon="filter_alt_off"
         title="Nenhuma venda encontrada com esses filtros"
-        description="Ajuste a busca, o canal ou o status para ver outras vendas."
+        description="Ajuste a busca ou o canal para ver outras vendas."
       />
     }
   }
