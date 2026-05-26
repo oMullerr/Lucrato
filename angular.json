@@ -42,7 +42,7 @@
               "outputHashing": "all",
               "optimization": {
                 "scripts": true,
-                "styles": { "minify": true, "inlineCritical": true },
+                "styles": { "minify": true, "inlineCritical": false },
                 "fonts": false
               },
               "fileReplacements": [
