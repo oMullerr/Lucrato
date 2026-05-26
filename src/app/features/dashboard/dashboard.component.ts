@@ -36,6 +36,15 @@ export class DashboardComponent {
     this.dataService.sales().length > 0 || this.dataService.purchases().length > 0
   );
 
+  protected readonly initialCapital = computed(() =>
+    this.dataService.settings()?.initialCapital ?? 0
+  );
+  protected readonly hasInitialCapital = computed(() => this.initialCapital() > 0);
+  protected readonly roiOverInitial = computed(() => {
+    const cap = this.initialCapital();
+    return cap > 0 ? this.kpis().netProfit / cap : 0;
+  });
+
   /** Paleta dinâmica conforme tema atual. */
   protected readonly C = computed(() =>
     this.themeService.isDark() ? CHART_COLORS.dark : CHART_COLORS.light
@@ -149,6 +158,24 @@ export class DashboardComponent {
         data: compras.map(x => x.idleValue),
         backgroundColor: c.amber + 'CC',
         borderColor: c.amber,
+        borderWidth: 1.5,
+        borderRadius: 4,
+      }],
+    };
+  });
+
+  // ── Aporte inicial vs. lucros ────────────────────────
+  protected readonly initialCapitalChart = computed<ChartConfiguration<'bar'>['data']>(() => {
+    const k = this.kpis();
+    const cap = this.initialCapital();
+    const c = this.C();
+    return {
+      labels: ['Aporte Inicial', 'Lucro Bruto', 'Lucro Líquido'],
+      datasets: [{
+        label: 'Valor (R$)',
+        data: [cap, k.grossProfit, k.netProfit],
+        backgroundColor: [c.red + 'CC', c.amber + 'CC', c.green + 'CC'],
+        borderColor: [c.red, c.amber, c.green],
         borderWidth: 1.5,
         borderRadius: 4,
       }],

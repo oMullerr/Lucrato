@@ -100,6 +100,19 @@
             </mat-form-field>
 
             <mat-form-field>
+              <mat-label>Aporte inicial</mat-label>
+              <span matTextPrefix>R$&nbsp;</span>
+              <input
+                matInput
+                appCurrencyInput
+                inputmode="numeric"
+                [ngModel]="s.initialCapital ?? 0"
+                (ngModelChange)="updateField('initialCapital', clamp0($event))"
+              />
+              <mat-hint>Opcional. Capital colocado para iniciar as vendas. Usado para calcular o ROI no dashboard.</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field>
               <mat-label>Canal de venda padrão</mat-label>
               <mat-select
                 [ngModel]="s.defaultChannel"

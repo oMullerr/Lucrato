@@ -247,6 +247,6 @@ A aplicação implementa as seguintes camadas de proteção:
 - Revisar codigo
 - Revisar texto de instruções
 - Redistribuir o codigo (html so com html, css so com css e ts so com ts)
-
+- Nova logo
 
 ## BUGS

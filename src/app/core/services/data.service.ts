@@ -205,6 +205,7 @@ export class DataService {
       categories: cfg.categories ?? defaults.categories,
       suppliers: cfg.suppliers ?? defaults.suppliers,
       channels: cfg.channels ?? defaults.channels,
+      initialCapital: cfg.initialCapital ?? defaults.initialCapital,
     };
 
     return {
@@ -227,6 +228,7 @@ export class DataService {
       categories: ['Eletrônicos', 'Outros'],
       suppliers: ['Amazon BR', 'Outro'],
       channels: ['Mercado Livre', 'Outro'],
+      initialCapital: 0,
     };
   }
 
