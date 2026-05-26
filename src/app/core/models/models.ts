@@ -48,7 +48,6 @@ export interface Settings {
   categories: string[];
   suppliers: string[];
   channels: string[];
-  initialCapital?: number;
 }
 
 /** Purchase with derived computed fields */

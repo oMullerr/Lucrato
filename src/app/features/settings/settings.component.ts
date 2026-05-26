@@ -19,7 +19,6 @@ import { ImportService } from '../../core/services/import.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
-import { CurrencyInputDirective } from '../../shared/directives/currency-input.directive';
 import { ImportResultDialogComponent } from './import-result-dialog.component';
 
 type ListKey = 'categories' | 'suppliers' | 'channels';
@@ -35,7 +34,6 @@ const DEFAULT_SETTINGS: Settings = {
   categories: [],
   suppliers: [],
   channels: [],
-  initialCapital: 0,
 };
 
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
@@ -48,7 +46,7 @@ const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
     FormsModule, DragDropModule,
     MatCardModule, MatIconModule, MatButtonModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatChipsModule, MatTabsModule,
-    PageHeaderComponent, CurrencyInputDirective,
+    PageHeaderComponent,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
@@ -130,7 +128,6 @@ export class SettingsComponent implements OnDestroy {
           categories: raw?.categories ?? DEFAULT_SETTINGS.categories,
           suppliers: raw?.suppliers ?? DEFAULT_SETTINGS.suppliers,
           channels: raw?.channels ?? DEFAULT_SETTINGS.channels,
-          initialCapital: raw?.initialCapital ?? DEFAULT_SETTINGS.initialCapital,
         };
         this.serverSettings.set(composed);
       },
@@ -357,8 +354,6 @@ export class SettingsComponent implements OnDestroy {
       return 'Alerta de estoque baixo deve ser inteiro não-negativo.';
     if (!Number.isFinite(s.defaultShipping) || s.defaultShipping < 0)
       return 'Frete padrão não pode ser negativo.';
-    if (s.initialCapital !== undefined && (!Number.isFinite(s.initialCapital) || s.initialCapital < 0))
-      return 'Aporte inicial não pode ser negativo.';
     return null;
   }
 }

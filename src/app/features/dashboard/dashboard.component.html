@@ -59,15 +59,6 @@
         [value]="kpis().totalFees | brl"
         variant="orange"
       />
-      @if (hasInitialCapital()) {
-        <app-kpi-card
-          icon="savings"
-          title="ROI sobre Aporte"
-          [value]="(roiOverInitial() * 100).toFixed(1) + '%'"
-          [variant]="roiOverInitial() >= 0 ? 'green' : 'orange'"
-          note="Lucro líquido / aporte inicial"
-        />
-      }
     </section>
 
     <section class="chart-grid">
@@ -181,27 +172,5 @@
         </div>
       </mat-card>
     </section>
-
-    @if (hasInitialCapital()) {
-      <section>
-        <mat-card class="chart-card full">
-          <div class="chart-header">
-            <div class="chart-title">
-              <mat-icon>savings</mat-icon>
-              <h3>Aporte Inicial vs. Lucros Acumulados</h3>
-            </div>
-            <p>Quanto o capital inicial já se converteu em lucro</p>
-          </div>
-          <div class="chart-body chart-tall">
-            <canvas
-              baseChart
-              [data]="initialCapitalChart()"
-              [options]="barOptions()"
-              type="bar"
-            ></canvas>
-          </div>
-        </mat-card>
-      </section>
-    }
   }
 </div>
