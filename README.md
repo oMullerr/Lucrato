@@ -251,3 +251,5 @@ A aplicação implementa as seguintes camadas de proteção:
 
 - Ao tentar criar uma conta, da erro 403 - apenas na vercel, no localhost não
 - Ao clicar na tela de login, no botao de "Esqueci minha senha", abre a modal no canto inferior esquerda
+- Adicionar mascara de moeda em todos os campos do formulario de compra e venda
+- Remover filtro de status na tela de vendas
