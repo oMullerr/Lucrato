@@ -245,6 +245,7 @@ A aplicação implementa as seguintes camadas de proteção:
 - Revisar textos e labels
 - Revisar estilo e cores do sistema
 - Revisar codigo
+- Redistribuir o codigo (html so com html, css so com css e ts so com ts)
 
 
 ## BUGS

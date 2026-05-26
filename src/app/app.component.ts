@@ -122,32 +122,6 @@ const NAV_GROUPS: NavGroup[] = [
             }
             <span class="topbar-spacer"></span>
 
-            @if (!isMobile()) {
-              <button
-                mat-flat-button
-                color="primary"
-                class="register-btn"
-                [matMenuTriggerFor]="registerMenu"
-                matTooltip="Atalho: N (venda) · Shift+N (compra)"
-              >
-                <mat-icon>add</mat-icon>
-                <span>Registrar</span>
-                <mat-icon class="chevron">expand_more</mat-icon>
-              </button>
-              <mat-menu #registerMenu="matMenu" xPosition="before">
-                <button mat-menu-item (click)="quick.openNewSale()">
-                  <mat-icon>sell</mat-icon>
-                  <span>Nova venda</span>
-                  <span class="shortcut">N</span>
-                </button>
-                <button mat-menu-item (click)="quick.openNewPurchase()">
-                  <mat-icon>shopping_cart</mat-icon>
-                  <span>Nova compra</span>
-                  <span class="shortcut">⇧ N</span>
-                </button>
-              </mat-menu>
-            }
-
             <button
               mat-icon-button
               (click)="theme.toggle()"
@@ -334,16 +308,6 @@ const NAV_GROUPS: NavGroup[] = [
 
     .topbar-spacer { flex: 1; }
 
-    .register-btn {
-      font-weight: 600;
-      letter-spacing: 0.1px;
-      border-radius: 10px;
-      padding: 0 14px;
-
-      mat-icon { font-size: 18px; width: 18px; height: 18px; }
-      .chevron { margin-left: 2px; opacity: 0.85; }
-    }
-
     .user-btn {
       display: flex;
       align-items: center;
@@ -375,17 +339,6 @@ const NAV_GROUPS: NavGroup[] = [
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-    }
-
-    .shortcut {
-      margin-left: auto;
-      font-size: 10.5px;
-      font-weight: 600;
-      color: var(--txt-muted);
-      background: var(--bg-elevated-2);
-      padding: 1px 6px;
-      border-radius: 4px;
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
     }
 
     .page-container {
