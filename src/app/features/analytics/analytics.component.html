@@ -1,83 +1,79 @@
 <app-page-header
-  icon="insights"
-  title="Análises Detalhadas"
-  subtitle="Resumos por produto, categoria e período"
+  title="Análises detalhadas"
+  eyebrow="RELATÓRIOS"
+  subtitle="Rankings por produto, categoria, evolução mensal e estoque parado. Ordenação e exportação por tabela."
 />
 
-<div class="content">
+<div class="page-content analytics-body">
+
   @if (!data.loaded()) {
+    <section class="resume-grid">
+      <app-skeleton variant="card" />
+      <app-skeleton variant="card" />
+      <app-skeleton variant="card" />
+    </section>
     <app-skeleton variant="card" />
-    <app-skeleton variant="card" />
+
   } @else if (!hasData()) {
     <app-empty-state
       icon="insights"
       title="Análises ganham vida com vendas"
-      description="Registre algumas vendas para visualizar rankings por produto, comparativo por categoria e evolução mensal."
+      description="Registre algumas vendas para visualizar rankings, comparativo por categoria, evolução mensal e capital travado."
     >
-      <a mat-flat-button color="primary" routerLink="/sales">
+      <a mat-flat-button class="primary-cta" routerLink="/sales">
         <mat-icon>sell</mat-icon>
         Registrar venda
       </a>
     </app-empty-state>
-  } @else {
-    <mat-card class="resume-card">
-      <h3 class="card-title">
-        <mat-icon>account_balance_wallet</mat-icon>
-        Resumo Financeiro Geral
-      </h3>
-      <div class="resume-grid">
-        <div class="resume-row">
-          <span>Total Investido em Compras</span>
-          <strong class="text-danger">{{ kpis().totalInvested | brl }}</strong>
-        </div>
-        <div class="resume-row">
-          <span>Capital Parado em Estoque</span>
-          <strong class="text-warning">{{ kpis().idleCapital | brl }}</strong>
-        </div>
-        <div class="resume-row">
-          <span>Receita Bruta Total</span>
-          <strong class="text-info">{{ kpis().grossRevenue | brl }}</strong>
-        </div>
-        <div class="resume-row">
-          <span>Total Taxas L Pagas</span>
-          <strong class="text-warning">{{ kpis().totalFees | brl }}</strong>
-        </div>
-        <div class="resume-row">
-          <span>Total Fretes Vendedor</span>
-          <strong class="text-muted">{{ kpis().totalShipping | brl }}</strong>
-        </div>
-        <div class="resume-row">
-          <span>Total Descontos / Cupons</span>
-          <strong class="text-muted">{{ kpis().totalDiscounts | brl }}</strong>
-        </div>
-        <div class="resume-row">
-          <span>Receita Líquida Total</span>
-          <strong>{{ kpis().netRevenue | brl }}</strong>
-        </div>
-        <div class="resume-row">
-          <span>Lucro Bruto Total</span>
-          <strong class="text-success">{{ kpis().grossProfit | brl }}</strong>
-        </div>
-        <div class="resume-row highlight">
-          <span><mat-icon>emoji_events</mat-icon> Lucro Líquido Total</span>
-          <strong class="text-success">{{ kpis().netProfit | brl }}</strong>
-        </div>
-        <div class="resume-row highlight">
-          <span><mat-icon>percent</mat-icon> Margem Líquida Média</span>
-          <strong class="text-success">{{ (kpis().netMargin * 100).toFixed(1) }}%</strong>
-        </div>
-      </div>
-    </mat-card>
 
-    <mat-card class="tabs-card">
-      <mat-tab-group animationDuration="200ms">
+  } @else {
+
+    <!-- Resume — 3 cards (Investimento / Resultado / Eficiência) -->
+    <section class="resume-grid" aria-label="Resumo financeiro">
+      @for (block of resumeBlocks(); track block.title) {
+        <article class="resume-card">
+          <header class="rc-head">
+            <mat-icon class="rc-icon">{{ block.icon }}</mat-icon>
+            <h3>{{ block.title }}</h3>
+          </header>
+          <ul class="rc-rows">
+            @for (row of block.rows; track row.label) {
+              <li class="rc-row" [class.emphasis]="$any(row).emphasis">
+                <span class="rc-label">{{ row.label }}</span>
+                <strong class="rc-value mono" [class.text-success]="row.tone === 'success' && $any(row).kind !== 'count'"
+                                              [class.text-warning]="row.tone === 'warning'">
+                  @if ($any(row).kind === 'percent') {
+                    {{ (row.value * 100).toFixed(1) }}%
+                  } @else if ($any(row).kind === 'count') {
+                    {{ row.value }}
+                  } @else {
+                    {{ row.value | brl }}
+                  }
+                </strong>
+              </li>
+            }
+          </ul>
+        </article>
+      }
+    </section>
+
+    <!-- Tabbed tables -->
+    <section class="tabs-card">
+      <mat-tab-group animationDuration="180ms">
+        <!-- ====== Produto ====== -->
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon>emoji_events</mat-icon>
-            Ranking por Produto
+            Produto
           </ng-template>
-
           <div class="tab-body">
+            <div class="tab-head">
+              <span class="t-caption">{{ productRanking().length }} produtos</span>
+              <button mat-stroked-button class="export-btn" (click)="exportProducts()" [disabled]="productRanking().length === 0">
+                <mat-icon>file_download</mat-icon>
+                Exportar CSV
+              </button>
+            </div>
             @if (productRanking().length === 0) {
               <app-empty-state
                 icon="sell"
@@ -90,34 +86,30 @@
                   <thead>
                     <tr>
                       <th class="text-center">#</th>
-                      <th>Produto</th>
-                      <th class="text-center">Qtd Vendida</th>
-                      <th class="text-right">Receita Bruta</th>
-                      <th class="text-right">Receita Líquida</th>
-                      <th class="text-right">Custo Total</th>
-                      <th class="text-right">Lucro Bruto</th>
-                      <th class="text-right">Lucro Líquido</th>
-                      <th class="text-center">Margem %</th>
+                      <th><button class="sort-btn" (click)="sortProduct('product')">Produto <mat-icon>{{ sortIcon(productSort(), 'product') }}</mat-icon></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortProduct('qty')">Qtd <mat-icon>{{ sortIcon(productSort(), 'qty') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('revenue')">Receita bruta <mat-icon>{{ sortIcon(productSort(), 'revenue') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('netRevenue')">Receita líq. <mat-icon>{{ sortIcon(productSort(), 'netRevenue') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('cost')">Custo <mat-icon>{{ sortIcon(productSort(), 'cost') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('netProfit')">Lucro líq. <mat-icon>{{ sortIcon(productSort(), 'netProfit') }}</mat-icon></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortProduct('margin')">Margem <mat-icon>{{ sortIcon(productSort(), 'margin') }}</mat-icon></button></th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (p of productRanking(); track p.product; let i = $index) {
                       <tr>
-                        <td class="text-center pos">{{ i + 1 }}</td>
+                        <td class="text-center pos mono">{{ i + 1 }}</td>
                         <td class="product-cell">{{ p.product }}</td>
-                        <td class="text-center">{{ p.qty }}</td>
-                        <td class="text-right">{{ p.revenue | brl }}</td>
-                        <td class="text-right">{{ p.netRevenue | brl }}</td>
-                        <td class="text-right text-muted">{{ p.cost | brl }}</td>
-                        <td class="text-right">{{ p.grossProfit | brl }}</td>
-                        <td
-                          class="text-right"
-                          [class.text-success]="p.netProfit > 0"
-                          [class.text-danger]="p.netProfit < 0"
-                        >
+                        <td class="text-center mono">{{ p.qty }}</td>
+                        <td class="text-right mono">{{ p.revenue | brl }}</td>
+                        <td class="text-right mono">{{ p.netRevenue | brl }}</td>
+                        <td class="text-right text-muted mono">{{ p.cost | brl }}</td>
+                        <td class="text-right mono"
+                            [class.text-success]="p.netProfit > 0"
+                            [class.text-danger]="p.netProfit < 0">
                           <strong>{{ p.netProfit | brl }}</strong>
                         </td>
-                        <td class="text-center" [class]="marginClass(p.margin)">
+                        <td class="text-center mono" [class]="marginClass(p.margin)">
                           <strong>{{ (p.margin * 100).toFixed(1) }}%</strong>
                         </td>
                       </tr>
@@ -129,42 +121,47 @@
           </div>
         </mat-tab>
 
+        <!-- ====== Categoria ====== -->
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon>category</mat-icon>
-            Por Categoria
+            Categoria
           </ng-template>
-
           <div class="tab-body">
+            <div class="tab-head">
+              <span class="t-caption">{{ categoryStats().length }} categorias</span>
+              <button mat-stroked-button class="export-btn" (click)="exportCategories()" [disabled]="categoryStats().length === 0">
+                <mat-icon>file_download</mat-icon>
+                Exportar CSV
+              </button>
+            </div>
             <div class="table-wrapper">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Categoria</th>
-                    <th class="text-center">Lotes</th>
-                    <th class="text-right">Investido</th>
-                    <th class="text-right">Capital Parado</th>
-                    <th class="text-right">Receita Bruta</th>
-                    <th class="text-right">Lucro Líquido</th>
-                    <th class="text-center">Margem %</th>
+                    <th><button class="sort-btn" (click)="sortCategory('category')">Categoria <mat-icon>{{ sortIcon(categorySort(), 'category') }}</mat-icon></button></th>
+                    <th class="text-center"><button class="sort-btn" (click)="sortCategory('batches')">Lotes <mat-icon>{{ sortIcon(categorySort(), 'batches') }}</mat-icon></button></th>
+                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('invested')">Investido <mat-icon>{{ sortIcon(categorySort(), 'invested') }}</mat-icon></button></th>
+                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('idleCapital')">Cap. parado <mat-icon>{{ sortIcon(categorySort(), 'idleCapital') }}</mat-icon></button></th>
+                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('revenue')">Receita <mat-icon>{{ sortIcon(categorySort(), 'revenue') }}</mat-icon></button></th>
+                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('profit')">Lucro líq. <mat-icon>{{ sortIcon(categorySort(), 'profit') }}</mat-icon></button></th>
+                    <th class="text-center"><button class="sort-btn" (click)="sortCategory('margin')">Margem <mat-icon>{{ sortIcon(categorySort(), 'margin') }}</mat-icon></button></th>
                   </tr>
                 </thead>
                 <tbody>
                   @for (c of categoryStats(); track c.category) {
                     <tr>
                       <td><span class="category-pill">{{ c.category }}</span></td>
-                      <td class="text-center">{{ c.batches }}</td>
-                      <td class="text-right text-danger">{{ c.invested | brl }}</td>
-                      <td class="text-right text-warning">{{ c.idleCapital | brl }}</td>
-                      <td class="text-right">{{ c.revenue | brl }}</td>
-                      <td
-                        class="text-right"
-                        [class.text-success]="c.profit > 0"
-                        [class.text-danger]="c.profit < 0"
-                      >
+                      <td class="text-center mono">{{ c.batches }}</td>
+                      <td class="text-right mono">{{ c.invested | brl }}</td>
+                      <td class="text-right mono text-warning">{{ c.idleCapital | brl }}</td>
+                      <td class="text-right mono">{{ c.revenue | brl }}</td>
+                      <td class="text-right mono"
+                          [class.text-success]="c.profit > 0"
+                          [class.text-danger]="c.profit < 0">
                         <strong>{{ c.profit | brl }}</strong>
                       </td>
-                      <td class="text-center" [class]="marginClass(c.margin)">
+                      <td class="text-center mono" [class]="marginClass(c.margin)">
                         {{ (c.margin * 100).toFixed(1) }}%
                       </td>
                     </tr>
@@ -175,13 +172,20 @@
           </div>
         </mat-tab>
 
+        <!-- ====== Mensal ====== -->
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon>calendar_month</mat-icon>
-            Evolução Mensal
+            Mensal
           </ng-template>
-
           <div class="tab-body">
+            <div class="tab-head">
+              <span class="t-caption">{{ monthlyStats().length }} meses</span>
+              <button mat-stroked-button class="export-btn" (click)="exportMonthly()" [disabled]="monthlyStats().length === 0">
+                <mat-icon>file_download</mat-icon>
+                Exportar CSV
+              </button>
+            </div>
             @if (monthlyStats().length === 0) {
               <app-empty-state
                 icon="calendar_month"
@@ -193,33 +197,31 @@
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>Mês</th>
-                      <th class="text-center">Vendas</th>
-                      <th class="text-right">Receita Bruta</th>
-                      <th class="text-right">Taxas L</th>
-                      <th class="text-right">Receita Líquida</th>
-                      <th class="text-right">Custo</th>
-                      <th class="text-right">Lucro Líquido</th>
-                      <th class="text-center">Margem %</th>
+                      <th><button class="sort-btn" (click)="sortMonth('sortKey')">Mês <mat-icon>{{ sortIcon(monthSort(), 'sortKey') }}</mat-icon></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortMonth('qty')">Vendas <mat-icon>{{ sortIcon(monthSort(), 'qty') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('revenue')">Receita <mat-icon>{{ sortIcon(monthSort(), 'revenue') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('fees')">Taxas <mat-icon>{{ sortIcon(monthSort(), 'fees') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('netRevenue')">Receita líq. <mat-icon>{{ sortIcon(monthSort(), 'netRevenue') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('cost')">Custo <mat-icon>{{ sortIcon(monthSort(), 'cost') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('profit')">Lucro <mat-icon>{{ sortIcon(monthSort(), 'profit') }}</mat-icon></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortMonth('margin')">Margem <mat-icon>{{ sortIcon(monthSort(), 'margin') }}</mat-icon></button></th>
                     </tr>
                   </thead>
                   <tbody>
-                    @for (m of monthlyStats(); track m.month) {
+                    @for (m of monthlyStats(); track m.sortKey) {
                       <tr>
                         <td><strong>{{ m.month }}</strong></td>
-                        <td class="text-center">{{ m.qty }}</td>
-                        <td class="text-right">{{ m.revenue | brl }}</td>
-                        <td class="text-right text-warning">{{ m.fees | brl }}</td>
-                        <td class="text-right">{{ m.netRevenue | brl }}</td>
-                        <td class="text-right text-muted">{{ m.cost | brl }}</td>
-                        <td
-                          class="text-right"
-                          [class.text-success]="m.profit > 0"
-                          [class.text-danger]="m.profit < 0"
-                        >
+                        <td class="text-center mono">{{ m.qty }}</td>
+                        <td class="text-right mono">{{ m.revenue | brl }}</td>
+                        <td class="text-right text-warning mono">{{ m.fees | brl }}</td>
+                        <td class="text-right mono">{{ m.netRevenue | brl }}</td>
+                        <td class="text-right text-muted mono">{{ m.cost | brl }}</td>
+                        <td class="text-right mono"
+                            [class.text-success]="m.profit > 0"
+                            [class.text-danger]="m.profit < 0">
                           <strong>{{ m.profit | brl }}</strong>
                         </td>
-                        <td class="text-center" [class]="marginClass(m.margin)">
+                        <td class="text-center mono" [class]="marginClass(m.margin)">
                           {{ (m.margin * 100).toFixed(1) }}%
                         </td>
                       </tr>
@@ -231,18 +233,25 @@
           </div>
         </mat-tab>
 
+        <!-- ====== Estoque parado ====== -->
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon>warning</mat-icon>
-            Estoque Parado
+            Estoque parado
           </ng-template>
-
           <div class="tab-body">
+            <div class="tab-head">
+              <span class="t-caption">{{ idleInventory().length }} lotes com estoque</span>
+              <button mat-stroked-button class="export-btn" (click)="exportIdle()" [disabled]="idleInventory().length === 0">
+                <mat-icon>file_download</mat-icon>
+                Exportar CSV
+              </button>
+            </div>
             @if (idleInventory().length === 0) {
               <app-empty-state
                 icon="celebration"
-                title="Nenhum produto parado!"
-                description="Todos os lotes estão girando dentro do prazo configurado. Continue assim!"
+                title="Nenhum lote com estoque!"
+                description="Todos os lotes foram totalmente vendidos. Excelente giro."
               />
             } @else {
               <div class="table-wrapper">
@@ -251,27 +260,36 @@
                     <tr>
                       <th>ID</th>
                       <th>Produto</th>
-                      <th class="text-center">Estoque</th>
-                      <th class="text-right">Custo Unit.</th>
-                      <th class="text-right">Capital Parado</th>
-                      <th class="text-center">Dias Parado</th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortIdle('currentStock')">Estoque <mat-icon>{{ sortIcon(idleSort(), 'currentStock') }}</mat-icon></button></th>
+                      <th class="text-right">Custo unit.</th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortIdle('idleValue')">Cap. parado <mat-icon>{{ sortIcon(idleSort(), 'idleValue') }}</mat-icon></button></th>
+                      <th class="text-left col-days"><button class="sort-btn" (click)="sortIdle('daysInStock')">Dias parado <mat-icon>{{ sortIcon(idleSort(), 'daysInStock') }}</mat-icon></button></th>
                       <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (c of idleInventory(); track c.id) {
                       <tr>
-                        <td><span class="id-tag">{{ c.id }}</span></td>
+                        <td><span class="id-tag mono">{{ c.id }}</span></td>
                         <td class="product-cell">{{ c.product }}</td>
-                        <td class="text-center text-warning"><strong>{{ c.currentStock }}</strong></td>
-                        <td class="text-right text-muted">{{ c.actualUnitCost | brl }}</td>
-                        <td class="text-right text-warning"><strong>{{ c.idleValue | brl }}</strong></td>
-                        <td
-                          class="text-center"
-                          [class.text-danger]="c.daysInStock >= 30"
-                          [class.text-warning]="c.daysInStock >= 25 && c.daysInStock < 30"
-                        >
-                          {{ c.daysInStock }}d
+                        <td class="text-center mono"><strong>{{ c.currentStock }}</strong></td>
+                        <td class="text-right text-muted mono">{{ c.actualUnitCost | brl }}</td>
+                        <td class="text-right text-warning mono"><strong>{{ c.idleValue | brl }}</strong></td>
+                        <td class="col-days">
+                          <div class="days-cell">
+                            <div class="days-bar-wrap">
+                              <div class="days-bar"
+                                   [style.width.%]="maxIdleDays() > 0 ? (c.daysInStock / maxIdleDays()) * 100 : 0"
+                                   [class.warn]="c.daysInStock >= 25 && c.daysInStock < 30"
+                                   [class.danger]="c.daysInStock >= 30">
+                              </div>
+                            </div>
+                            <span class="days-num mono"
+                                  [class.text-danger]="c.daysInStock >= 30"
+                                  [class.text-warning]="c.daysInStock >= 25 && c.daysInStock < 30">
+                              {{ c.daysInStock }}d
+                            </span>
+                          </div>
                         </td>
                         <td><app-status-badge [status]="c.status" /></td>
                       </tr>
@@ -283,6 +301,6 @@
           </div>
         </mat-tab>
       </mat-tab-group>
-    </mat-card>
+    </section>
   }
 </div>

@@ -243,10 +243,13 @@ A aplicação implementa as seguintes camadas de proteção:
 ## TODO
 
 - Revisar textos e labels
-- Revisar estilo e cores do sistema
 - Revisar codigo
 - Revisar texto de instruções
 - Redistribuir o codigo (html so com html, css so com css e ts so com ts)
-- Nova logo
+- Teste unitário
+- Na tela de dashboard, no filtro de dias, colocar uma data customizada (abre o calendario e seleciona o range de dias)
+- Ler como ficou o texto das instruções
 
 ## BUGS
+- No topbar, o icone da loja aparece em cima do nome da loja, deixe tudo na mesma linha
+- Emoji na aba, trocar para o estilo novo do app

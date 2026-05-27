@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, HostListener, effect, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, HostListener, computed, effect, inject, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
@@ -10,7 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { filter, map } from 'rxjs';
 import { ThemeService } from './core/services/theme.service';
 import { DataService } from './core/services/data.service';
 import { AuthService } from './core/services/auth.service';
@@ -25,29 +25,30 @@ interface NavItem {
   path: string;
   label: string;
   icon: string;
+  title?: string;
 }
 
 const NAV_GROUPS: NavGroup[] = [
   {
     label: 'PRINCIPAL',
     items: [
-      { path: '/inventory',  label: 'Estoque',   icon: 'inventory_2' },
-      { path: '/dashboard',  label: 'Dashboard', icon: 'analytics' },
-      { path: '/analytics',  label: 'Análises',  icon: 'insights' },
+      { path: '/inventory',  label: 'Estoque',   icon: 'inventory_2', title: 'Panorama' },
+      { path: '/dashboard',  label: 'Dashboard', icon: 'analytics',   title: 'Dashboard' },
+      { path: '/analytics',  label: 'Análises',  icon: 'insights',    title: 'Análises' },
     ],
   },
   {
     label: 'REGISTROS',
     items: [
-      { path: '/purchases', label: 'Compras', icon: 'shopping_cart' },
-      { path: '/sales',     label: 'Vendas',  icon: 'sell' },
+      { path: '/purchases', label: 'Compras', icon: 'shopping_cart', title: 'Compras' },
+      { path: '/sales',     label: 'Vendas',  icon: 'sell',          title: 'Vendas' },
     ],
   },
   {
     label: 'SISTEMA',
     items: [
-      { path: '/settings',     label: 'Configurações', icon: 'settings' },
-      { path: '/instructions', label: 'Instruções',    icon: 'help_outline' },
+      { path: '/settings',     label: 'Configurações', icon: 'tune',         title: 'Configurações' },
+      { path: '/instructions', label: 'Instruções',    icon: 'menu_book',    title: 'Instruções' },
     ],
   },
 ];
@@ -71,17 +72,21 @@ const NAV_GROUPS: NavGroup[] = [
         class="sidebar"
         [class.rail]="isCompactSidebar()"
       >
-        <div class="brand">
-          <div class="brand-logo">L</div>
-          <div class="brand-text">
-            <strong>Lucrato</strong>
-            <small>Gestão Mercado Livre</small>
-          </div>
-        </div>
+        <a class="brand" routerLink="/inventory" aria-label="Lucrato">
+          @if (isCompactSidebar()) {
+            <span class="brand-mark">L</span>
+          } @else {
+            <span class="wordmark">
+              <span class="wm-l">L</span><span class="wm-u">u</span><span>crato</span>
+              <svg class="wm-arrow" viewBox="0 0 12 8" aria-hidden="true">
+                <path d="M1 7 L6 1 L11 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="wm-tag">Gestão Mercado Livre</span>
+          }
+        </a>
 
-        <mat-divider />
-
-        <nav class="nav">
+        <nav class="nav" aria-label="Navegação principal">
           @for (group of navGroups; track group.label) {
             <div class="nav-group">
               <div class="nav-label">{{ group.label }}</div>
@@ -94,8 +99,9 @@ const NAV_GROUPS: NavGroup[] = [
                   matTooltipPosition="right"
                   (click)="closeSidebarOnMobile()"
                 >
+                  <span class="active-dot" aria-hidden="true"></span>
                   <mat-icon>{{ item.icon }}</mat-icon>
-                  <span>{{ item.label }}</span>
+                  <span class="nav-text">{{ item.label }}</span>
                 </a>
               }
             </div>
@@ -104,9 +110,9 @@ const NAV_GROUPS: NavGroup[] = [
 
         <div class="sidebar-footer">
           @if (data.loaded()) {
-            <div class="status">
-              <span class="dot"></span>
-              <span class="status-text">{{ data.purchases().length }} lotes · {{ data.sales().length }} vendas</span>
+            <div class="status" [matTooltip]="isCompactSidebar() ? statusLabel() : ''" matTooltipPosition="right">
+              <span class="status-dot success"></span>
+              <span class="status-text">{{ statusLabel() }}</span>
             </div>
           }
         </div>
@@ -116,26 +122,35 @@ const NAV_GROUPS: NavGroup[] = [
         @if (auth.isLoggedIn()) {
           <mat-toolbar class="topbar">
             @if (isMobile()) {
-              <button mat-icon-button class="hamburger-btn" (click)="toggleSidebar()" aria-label="Abrir menu de navegação">
+              <button mat-icon-button class="hamburger-btn" (click)="toggleSidebar()" aria-label="Abrir menu">
                 <mat-icon>menu</mat-icon>
               </button>
             }
+
+            <div class="breadcrumb" aria-label="Localização">
+              <span class="bc-root">Lucrato</span>
+              <span class="bc-sep">/</span>
+              <span class="bc-current">{{ currentPageTitle() }}</span>
+            </div>
+
             <span class="topbar-spacer"></span>
 
             <button
               mat-icon-button
+              class="topbar-btn"
               (click)="theme.toggle()"
               [matTooltip]="theme.isDark() ? 'Modo claro' : 'Modo escuro'"
               aria-label="Alternar tema"
             >
               <mat-icon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
             </button>
+
             <button mat-button [matMenuTriggerFor]="userMenu" class="user-btn">
-              <mat-icon>account_circle</mat-icon>
+              <span class="avatar" aria-hidden="true">{{ avatarInitials() }}</span>
               <span class="user-name">{{ auth.storeName() }}</span>
               <mat-icon class="chevron">expand_more</mat-icon>
             </button>
-            <mat-menu #userMenu="matMenu">
+            <mat-menu #userMenu="matMenu" xPosition="before">
               <button mat-menu-item routerLink="/profile">
                 <mat-icon>person</mat-icon>
                 <span>Perfil</span>
@@ -167,171 +182,255 @@ const NAV_GROUPS: NavGroup[] = [
 
     .app-shell {
       height: 100vh;
-      background: var(--bg-base);
+      background: var(--bg-canvas);
     }
 
+    /* =================================================================
+       SIDEBAR
+       ================================================================= */
     .sidebar {
-      width: 250px;
+      width: var(--sidebar-width);
       background: var(--bg-sidebar);
-      border-right: none;
+      border-right: 1px solid var(--border-sidebar);
       display: flex;
       flex-direction: column;
     }
 
+    /* ----------- Brand / wordmark ----------- */
     .brand {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 20px;
-    }
-
-    .brand-logo {
-      width: 38px;
-      height: 38px;
-      background: linear-gradient(135deg, #1E40AF, #3B82F6);
+      flex-direction: column;
+      gap: 4px;
+      padding: 22px 22px 16px;
+      text-decoration: none;
       color: #FFFFFF;
-      display: grid;
-      place-items: center;
-      border-radius: 10px;
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
-      flex-shrink: 0;
+      border-bottom: 1px solid var(--border-sidebar);
     }
 
-    .brand-text strong {
-      display: block;
-      font-size: 15px;
+    .wordmark {
+      font-family: 'Geist', sans-serif;
+      font-weight: 600;
+      font-size: 22px;
+      letter-spacing: -0.04em;
       color: #FFFFFF;
-      letter-spacing: -0.3px;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 1px;
     }
 
-    .brand-text small {
-      display: block;
-      font-size: 10.5px;
-      color: rgba(255, 255, 255, 0.45);
-      margin-top: 2px;
-      letter-spacing: 0.3px;
+    .wordmark .wm-l { color: var(--brand-primary-3); }
+
+    .wordmark .wm-u {
+      position: relative;
+      display: inline-block;
     }
 
+    .wordmark .wm-arrow {
+      width: 10px;
+      height: 6px;
+      margin-left: 1px;
+      color: var(--brand-accent);
+      transform: translateY(-2px);
+    }
+
+    .wm-tag {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-sidebar-muted);
+    }
+
+    .brand-mark {
+      font-family: 'Geist', sans-serif;
+      font-weight: 700;
+      font-size: 24px;
+      color: var(--brand-primary-3);
+      letter-spacing: -0.04em;
+      text-align: center;
+      width: 100%;
+    }
+
+    /* ----------- Nav ----------- */
     .nav {
       flex: 1;
       overflow-y: auto;
-      padding: 8px 12px;
+      padding: 14px 12px;
     }
 
     .nav-group {
-      margin: 12px 0 16px;
+      margin: 0 0 18px;
+
+      &:last-child { margin-bottom: 0; }
     }
 
     .nav-label {
       font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      color: rgba(255, 255, 255, 0.32);
-      padding: 0 12px 6px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--text-sidebar-muted);
+      padding: 4px 12px 8px;
     }
 
     .nav-item {
+      position: relative;
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 9px 12px;
-      border-radius: 9px;
-      color: var(--txt-sidebar);
+      border-radius: var(--radius-md);
+      color: var(--text-sidebar);
       font-size: 13.5px;
       font-weight: 500;
-      transition: background 0.15s ease, color 0.15s ease;
+      transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
       margin-bottom: 2px;
-      cursor: pointer;
       text-decoration: none;
-      border-left: 2px solid transparent;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        opacity: 0.85;
+      }
+
+      .nav-text { flex: 1; }
+
+      .active-dot {
+        position: absolute;
+        left: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 4px;
+        border-radius: var(--radius-full);
+        background: transparent;
+        transition: background var(--dur-fast) var(--ease-out), height var(--dur-fast) var(--ease-out);
+      }
     }
 
     .nav-item:hover {
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.05);
       color: #FFFFFF;
+
+      mat-icon { opacity: 1; }
     }
 
     .nav-item.active {
-      background: color-mix(in srgb, #3B82F6 20%, transparent);
+      background: var(--bg-sidebar-2);
       color: #FFFFFF;
-      font-weight: 600;
-      border-left-color: #60A5FA;
+      font-weight: 500;
+
+      mat-icon { opacity: 1; color: var(--brand-primary-3); }
+
+      .active-dot {
+        background: var(--brand-accent);
+        height: 16px;
+      }
     }
 
-    .nav-item mat-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-    }
-
+    /* ----------- Footer ----------- */
     .sidebar-footer {
-      padding: 14px 20px;
-      border-top: 1px solid var(--brd-sidebar);
+      padding: 14px 16px 18px;
+      border-top: 1px solid var(--border-sidebar);
     }
 
     .status {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 11.5px;
-      color: rgba(255, 255, 255, 0.42);
+      font-size: 11px;
+      color: var(--text-sidebar-muted);
+      letter-spacing: 0.02em;
     }
 
     .status-text {
       font-variant-numeric: tabular-nums;
     }
 
-    .dot {
-      width: 7px;
-      height: 7px;
-      background: #10B981;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #10B981;
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      50% { opacity: 0.45; }
-    }
-
+    /* =================================================================
+       TOPBAR
+       ================================================================= */
     .topbar {
-      background: var(--bg-surface);
-      border-bottom: 1px solid var(--brd-default);
-      height: 56px;
-      min-height: 56px;
-      padding: 0 16px;
+      background: var(--bg-canvas);
+      border-bottom: 1px solid var(--border-subtle);
+      height: var(--topbar-height);
+      min-height: var(--topbar-height);
+      padding: 0 24px;
       gap: 6px;
     }
 
     .topbar-spacer { flex: 1; }
 
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+
+      .bc-root {
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      .bc-sep {
+        color: var(--text-muted);
+        opacity: 0.6;
+      }
+
+      .bc-current {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+    }
+
+    .topbar-btn {
+      color: var(--text-secondary);
+      transition: color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+
+      &:hover { color: var(--text-primary); }
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+
     .user-btn {
       display: flex;
       align-items: center;
-      gap: 6px;
-      color: var(--txt-primary);
+      gap: 8px;
+      color: var(--text-primary);
       font-size: 13px;
       font-weight: 500;
-      height: 36px;
-      padding: 0 10px;
-      border-radius: 8px;
-    }
+      height: 38px;
+      padding: 0 10px 0 4px;
+      border-radius: var(--radius-md);
 
-    .user-btn mat-icon:not(.chevron) {
-      font-size: 22px;
-      width: 22px;
-      height: 22px;
-      color: var(--txt-secondary);
-    }
+      .avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: var(--radius-full);
+        background: var(--brand-primary);
+        color: #FFFFFF;
+        font-size: 11px;
+        font-weight: 600;
+        font-family: 'Geist', sans-serif;
+        letter-spacing: 0.02em;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+      }
 
-    .user-btn .chevron {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      color: var(--txt-muted);
+      .chevron {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: var(--text-muted);
+      }
     }
 
     .user-name {
@@ -341,9 +440,13 @@ const NAV_GROUPS: NavGroup[] = [
       white-space: nowrap;
     }
 
+    /* =================================================================
+       CONTENT
+       ================================================================= */
     .page-container {
-      height: calc(100vh - 56px);
+      height: calc(100vh - var(--topbar-height));
       overflow-y: auto;
+      background: var(--bg-canvas);
     }
 
     .page-container.full-height {
@@ -351,49 +454,56 @@ const NAV_GROUPS: NavGroup[] = [
     }
 
     .hamburger-btn {
-      color: var(--txt-primary);
+      color: var(--text-primary);
       margin-right: 8px;
       flex-shrink: 0;
     }
 
+    /* =================================================================
+       RESPONSIVE
+       ================================================================= */
     @media (max-width: 768px) {
       .sidebar {
-        width: 260px;
-        box-shadow: var(--shadow-lg);
+        width: 270px;
+        box-shadow: var(--shadow-xl);
       }
+      .topbar { padding: 0 16px; }
+      .breadcrumb .bc-root { display: none; }
+      .breadcrumb .bc-sep { display: none; }
     }
 
     @media (max-width: 480px) {
-      .topbar { padding: 0 8px; gap: 4px; }
+      .topbar { padding: 0 12px; gap: 4px; }
       .user-name { display: none; }
-      .user-btn { padding: 0 6px; min-width: 0; }
+      .user-btn { padding: 0 4px; min-width: 0; }
     }
 
+    /* =================================================================
+       RAIL (compact sidebar 769–1024px)
+       ================================================================= */
     .sidebar.rail {
-      width: 64px;
+      width: var(--sidebar-rail);
 
       .brand {
-        justify-content: center;
-        padding: 16px 8px;
+        padding: 18px 8px 14px;
+        align-items: center;
       }
 
-      .brand-text { display: none; }
-
-      .nav { padding: 8px 6px; }
+      .nav { padding: 14px 8px; }
 
       .nav-label { display: none; }
 
       .nav-item {
         justify-content: center;
-        padding: 10px 8px;
+        padding: 10px;
         gap: 0;
-        border-left: none;
 
-        span { display: none; }
+        .nav-text { display: none; }
+
+        .active-dot { display: none; }
 
         &.active {
-          background: color-mix(in srgb, #3B82F6 22%, transparent);
-          border-left-color: transparent;
+          background: var(--bg-sidebar-2);
         }
       }
 
@@ -403,9 +513,7 @@ const NAV_GROUPS: NavGroup[] = [
 
       .status-text { display: none; }
 
-      .status {
-        justify-content: center;
-      }
+      .status { justify-content: center; }
     }
   `]
 })
@@ -435,6 +543,39 @@ export class AppComponent {
   protected readonly sidebarOpen = signal(
     globalThis.window ? globalThis.window.innerWidth > 768 : true
   );
+
+  /** Title of the current page, derived from the active route. */
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd),
+      map(e => (e as NavigationEnd).urlAfterRedirects)
+    ),
+    { initialValue: this.router.url }
+  );
+
+  protected readonly currentPageTitle = computed(() => {
+    const url = this.currentUrl() ?? '/';
+    for (const group of NAV_GROUPS) {
+      const found = group.items.find(it => url.startsWith(it.path));
+      if (found) return found.title ?? found.label;
+    }
+    if (url.startsWith('/profile')) return 'Perfil';
+    return '';
+  });
+
+  protected readonly statusLabel = computed(() => {
+    const p = this.data.purchases().length;
+    const s = this.data.sales().length;
+    return `${p} ${p === 1 ? 'lote' : 'lotes'} · ${s} ${s === 1 ? 'venda' : 'vendas'}`;
+  });
+
+  protected readonly avatarInitials = computed(() => {
+    const name = (this.auth.storeName() ?? '').trim();
+    if (!name) return 'L';
+    const parts = name.split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  });
 
   constructor() {
     effect(() => {

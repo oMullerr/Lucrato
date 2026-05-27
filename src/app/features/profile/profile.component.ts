@@ -1,12 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatDialog } from '@angular/material/dialog';
 import { Firestore, deleteDoc, doc } from '@angular/fire/firestore';
 import { AuthService } from '../../core/services/auth.service';
@@ -15,87 +13,66 @@ import { validatePasswordStrength } from '../../core/services/password-validator
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/components/confirm-dialog.component';
 
+type StrengthLevel = 0 | 1 | 2 | 3 | 4;
+
 @Component({
   selector: 'app-profile',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    MatCardModule, MatIconModule, MatButtonModule,
-    MatFormFieldModule, MatInputModule, MatTabsModule,
+    MatIconModule, MatButtonModule,
+    MatFormFieldModule, MatInputModule,
     PageHeaderComponent,
   ],
   template: `
     <app-page-header
-      icon="person"
       title="Perfil"
-      subtitle="Dados da conta, segurança e zona de perigo"
+      eyebrow="CONTA"
+      subtitle="Dados da loja, segurança e zona de perigo"
     />
 
-    <div class="content">
-      <mat-tab-group animationDuration="200ms" class="profile-tabs">
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <mat-icon>person</mat-icon>
-            Conta
-          </ng-template>
+    <div class="page-content profile-body">
 
-          <div class="tab-body">
-      <mat-card class="profile-card">
-        <h3 class="card-title">
-          <mat-icon>badge</mat-icon>
-          Conta
-        </h3>
-
-        <div class="info-grid">
-          <div class="info-row">
-            <span class="info-label">E-mail</span>
-            <span class="info-value">{{ email() || '—' }}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Verificação do e-mail</span>
-            <span class="info-value">
-              @if (emailVerified()) {
-                <span class="badge verified">
-                  <mat-icon>verified</mat-icon>
-                  Verificado
-                </span>
-              } @else {
-                <span class="badge unverified">
-                  <mat-icon>error_outline</mat-icon>
-                  Não verificado
-                </span>
-                <button
-                  mat-stroked-button
-                  class="verify-btn"
-                  (click)="resendVerification()"
-                  [disabled]="sendingVerification()"
-                >
-                  <mat-icon>send</mat-icon>
-                  {{ sendingVerification() ? 'Enviando…' : 'Reenviar verificação' }}
-                </button>
-              }
-            </span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Conta criada em</span>
-            <span class="info-value">{{ formatDate(createdAt()) }}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Último acesso</span>
-            <span class="info-value">{{ formatDate(lastLogin()) }}</span>
+      <!-- Hero -->
+      <section class="profile-hero">
+        <div class="avatar-lg" aria-hidden="true">{{ initials() }}</div>
+        <div class="hero-info">
+          <h1 class="hero-name">{{ storeNameInput() || 'Sua loja' }}</h1>
+          <span class="hero-email">{{ email() || '—' }}</span>
+          <div class="hero-meta">
+            <span>Conta criada<strong>{{ formatDate(createdAt()) }}</strong></span>
+            <span>Último acesso<strong>{{ formatDate(lastLogin()) }}</strong></span>
           </div>
         </div>
-      </mat-card>
+      </section>
 
-      <!-- Dados da loja -->
-      <mat-card class="profile-card">
-        <h3 class="card-title">
-          <mat-icon>store</mat-icon>
-          Dados da loja
-        </h3>
+      <!-- Email verification banner (when not verified) -->
+      @if (!emailVerified()) {
+        <section class="verify-banner" aria-live="polite">
+          <mat-icon class="vb-icon">mark_email_unread</mat-icon>
+          <div class="vb-text">
+            <strong>Confirme seu e-mail para liberar todos os recursos</strong>
+            <p>Enviamos um link de verificação. Confira sua caixa de entrada e spam.</p>
+          </div>
+          <button
+            mat-stroked-button
+            (click)="resendVerification()"
+            [disabled]="sendingVerification()"
+          >
+            <mat-icon>send</mat-icon>
+            {{ sendingVerification() ? 'Enviando…' : 'Reenviar' }}
+          </button>
+        </section>
+      }
 
-        <div class="form-grid">
+      <!-- Conta section -->
+      <section class="profile-section">
+        <header class="section-head">
+          <h2>Identidade da loja</h2>
+          <p>O nome aparece no topo do sistema e nos relatórios exportados.</p>
+        </header>
+        <div class="section-body form-grid">
           <mat-form-field appearance="outline">
             <mat-label>Nome da loja</mat-label>
             <input
@@ -105,13 +82,12 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/compon
               (ngModelChange)="storeNameInput.set($event)"
               autocomplete="organization"
             />
-            <mat-hint>Aparece no topo do sistema e em relatórios.</mat-hint>
           </mat-form-field>
 
           <div class="actions-row">
             <button
               mat-flat-button
-              color="primary"
+              class="primary-cta"
               (click)="saveStoreName()"
               [disabled]="!canSaveStoreName() || savingStoreName()"
             >
@@ -120,28 +96,15 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/compon
             </button>
           </div>
         </div>
-      </mat-card>
+      </section>
 
-          </div>
-        </mat-tab>
-
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <mat-icon>lock</mat-icon>
-            Senha
-          </ng-template>
-
-          <div class="tab-body">
-      <mat-card class="profile-card">
-        <h3 class="card-title">
-          <mat-icon>lock</mat-icon>
-          Trocar senha
-        </h3>
-        <p class="card-description">
-          Por segurança, você precisa informar sua senha atual antes de definir uma nova.
-        </p>
-
-        <div class="form-grid">
+      <!-- Senha section -->
+      <section class="profile-section">
+        <header class="section-head">
+          <h2>Senha de acesso</h2>
+          <p>Informe a senha atual antes de definir uma nova.</p>
+        </header>
+        <div class="section-body form-grid">
           <mat-form-field appearance="outline">
             <mat-label>Senha atual</mat-label>
             <input
@@ -164,13 +127,24 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/compon
               [ngModel]="newPwd()"
               (ngModelChange)="newPwd.set($event)"
               autocomplete="new-password"
-              minlength="6"
+              minlength="8"
             />
             <button type="button" mat-icon-button matSuffix (click)="showNewPwd.set(!showNewPwd())">
               <mat-icon>{{ showNewPwd() ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
-            <mat-hint>Mínimo 6 caracteres.</mat-hint>
           </mat-form-field>
+
+          @if (newPwd().length > 0) {
+            <div class="strength-meter" aria-live="polite">
+              <div class="strength-bars">
+                <span class="strength-bar" [class.active-weak]="strength() >= 1" [class.active-medium]="strength() >= 2 && strength() < 4" [class.active-strong]="strength() >= 4"></span>
+                <span class="strength-bar" [class.active-weak]="strength() >= 2" [class.active-medium]="strength() >= 2 && strength() < 4" [class.active-strong]="strength() >= 4"></span>
+                <span class="strength-bar" [class.active-medium]="strength() >= 3 && strength() < 4" [class.active-strong]="strength() >= 4"></span>
+                <span class="strength-bar" [class.active-strong]="strength() >= 4"></span>
+              </div>
+              <span class="strength-label" [class]="strengthClass()">{{ strengthLabel() }}</span>
+            </div>
+          }
 
           <mat-form-field appearance="outline">
             <mat-label>Confirmar nova senha</mat-label>
@@ -189,7 +163,7 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/compon
           <div class="actions-row">
             <button
               mat-flat-button
-              color="primary"
+              class="primary-cta"
               (click)="changePassword()"
               [disabled]="!canChangePassword() || changingPassword()"
             >
@@ -198,212 +172,25 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/compon
             </button>
           </div>
         </div>
-      </mat-card>
+      </section>
 
-          </div>
-        </mat-tab>
-
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <mat-icon class="danger-tab-icon">warning</mat-icon>
-            Zona de perigo
-          </ng-template>
-
-          <div class="tab-body">
-      <mat-card class="danger-card">
-        <h3 class="card-title danger">
-          <mat-icon>warning</mat-icon>
-          Zona de perigo
-        </h3>
+      <!-- Danger -->
+      <section class="danger-section">
+        <header class="section-head">
+          <h2>Zona de perigo</h2>
+        </header>
         <p>
           Excluir a conta apaga permanentemente todos os seus dados no Lucrato (compras, vendas, configurações)
           e remove o acesso. Esta ação não pode ser desfeita.
         </p>
-        <button mat-stroked-button color="warn" (click)="deleteAccount()" [disabled]="deletingAccount()">
+        <button mat-stroked-button class="danger-btn" (click)="deleteAccount()" [disabled]="deletingAccount()">
           <mat-icon>delete_forever</mat-icon>
           {{ deletingAccount() ? 'Excluindo…' : 'Excluir conta' }}
         </button>
-      </mat-card>
-          </div>
-        </mat-tab>
-      </mat-tab-group>
+      </section>
     </div>
   `,
-  styles: [`
-    .content {
-      padding: 16px 32px 48px;
-    }
-
-    .profile-tabs ::ng-deep .mat-mdc-tab .mdc-tab__text-label {
-      display: flex !important;
-      align-items: center;
-      gap: 6px;
-
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-      }
-
-      .danger-tab-icon { color: var(--clr-red); }
-    }
-
-    .tab-body {
-      padding-top: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .profile-card, .danger-card {
-      padding: 22px 24px;
-      border: 1px solid var(--brd-default);
-      border-radius: var(--radius-lg);
-    }
-
-    .danger-card {
-      border-color: var(--clr-red);
-      background: color-mix(in srgb, var(--clr-red) 5%, var(--bg-surface));
-    }
-
-    .card-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--txt-primary);
-      margin: 0 0 18px;
-    }
-
-    .card-title mat-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      color: var(--clr-blue);
-    }
-
-    .card-title.danger {
-      color: var(--clr-red);
-    }
-
-    .card-title.danger mat-icon {
-      color: var(--clr-red);
-    }
-
-    .card-description {
-      color: var(--txt-secondary);
-      font-size: 13px;
-      margin: -10px 0 18px;
-    }
-
-    .info-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--brd-default);
-    }
-
-    .info-row:last-child {
-      border-bottom: none;
-    }
-
-    .info-label {
-      font-size: 13px;
-      color: var(--txt-secondary);
-      font-weight: 500;
-    }
-
-    .info-value {
-      font-size: 13px;
-      color: var(--txt-primary);
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      text-align: right;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: 999px;
-    }
-
-    .badge mat-icon {
-      font-size: 14px;
-      width: 14px;
-      height: 14px;
-    }
-
-    .badge.verified {
-      color: var(--clr-green);
-      background: color-mix(in srgb, var(--clr-green) 14%, transparent);
-    }
-
-    .badge.unverified {
-      color: var(--clr-yellow, #C57F00);
-      background: color-mix(in srgb, var(--clr-yellow, #C57F00) 14%, transparent);
-    }
-
-    .verify-btn {
-      font-size: 12px;
-      height: 32px;
-      padding: 0 12px;
-    }
-
-    .form-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      max-width: 460px;
-    }
-
-    .form-grid mat-form-field {
-      width: 100%;
-    }
-
-    .actions-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 6px;
-    }
-
-    .danger-card p {
-      color: var(--txt-secondary);
-      font-size: 13px;
-      line-height: 1.5;
-      margin: 0 0 16px;
-    }
-
-    @media (max-width: 768px) {
-      .content { padding: 16px; }
-      .profile-card, .danger-card { padding: 16px; }
-      .info-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-      }
-      .info-value {
-        justify-content: flex-start;
-        text-align: left;
-      }
-    }
-  `],
+  styleUrl: './profile.component.scss',
 })
 export class ProfileComponent {
   private readonly auth = inject(AuthService);
@@ -429,6 +216,40 @@ export class ProfileComponent {
 
   protected readonly sendingVerification = signal(false);
   protected readonly deletingAccount = signal(false);
+
+  protected readonly initials = computed(() => {
+    const name = (this.storeNameInput() ?? '').trim();
+    if (!name) return 'L';
+    const parts = name.split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  });
+
+  protected readonly strength = computed<StrengthLevel>(() => {
+    const pwd = this.newPwd();
+    if (!pwd) return 0;
+    let score: StrengthLevel = 0;
+    if (pwd.length >= 8) score++;
+    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
+    if (/\d/.test(pwd)) score++;
+    if (/[^\w\s]/.test(pwd) || pwd.length >= 12) score++;
+    return score as StrengthLevel;
+  });
+
+  protected readonly strengthLabel = computed(() => {
+    const s = this.strength();
+    if (s <= 1) return 'Fraca';
+    if (s <= 2) return 'Razoável';
+    if (s === 3) return 'Boa';
+    return 'Forte';
+  });
+
+  protected readonly strengthClass = computed(() => {
+    const s = this.strength();
+    if (s <= 1) return 'weak';
+    if (s === 4) return 'strong';
+    return 'medium';
+  });
 
   protected readonly canSaveStoreName = computed(() => {
     const next = this.storeNameInput().trim();
@@ -461,7 +282,7 @@ export class ProfileComponent {
     try {
       await this.auth.updateStoreName(next);
       this.notify.success('Nome da loja atualizado.');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[Profile] updateStoreName falhou:', err);
       this.notify.error('Não foi possível atualizar o nome da loja.');
     } finally {
@@ -485,9 +306,9 @@ export class ProfileComponent {
       this.currentPwd.set('');
       this.newPwd.set('');
       this.confirmPwd.set('');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[Profile] changePassword falhou:', err);
-      this.notify.error(this.friendlyAuthError(err?.code));
+      this.notify.error(this.friendlyAuthError((err as { code?: string })?.code));
     } finally {
       this.changingPassword.set(false);
     }
@@ -498,9 +319,9 @@ export class ProfileComponent {
     try {
       await this.auth.sendVerificationEmail();
       this.notify.success('E-mail de verificação enviado. Confira sua caixa de entrada.');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[Profile] sendVerificationEmail falhou:', err);
-      this.notify.error(this.friendlyAuthError(err?.code));
+      this.notify.error(this.friendlyAuthError((err as { code?: string })?.code));
     } finally {
       this.sendingVerification.set(false);
     }
@@ -545,9 +366,9 @@ export class ProfileComponent {
       await this.auth.deleteAccount();
       this.notify.success('Conta excluída.');
       this.router.navigate(['/login']);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[Profile] deleteAccount falhou:', err);
-      this.notify.error(this.friendlyAuthError(err?.code));
+      this.notify.error(this.friendlyAuthError((err as { code?: string })?.code));
     } finally {
       this.deletingAccount.set(false);
     }

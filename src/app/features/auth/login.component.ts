@@ -4,7 +4,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../core/services/auth.service';
@@ -18,55 +17,69 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
   imports: [
     FormsModule,
     MatFormFieldModule, MatInputModule, MatButtonModule,
-    MatIconModule, MatTabsModule, MatProgressSpinnerModule,
+    MatIconModule, MatProgressSpinnerModule,
   ],
   template: `
     <div class="login-page">
+      <!-- ============ HERO ============ -->
       <aside class="hero">
         <div class="hero-content">
-          <div class="brand">
-            <div class="logo">L</div>
-            <div class="brand-text">
-              <h1>Lucrato</h1>
-              <p>Gestão Mercado Livre</p>
-            </div>
-          </div>
+          <a class="hero-wordmark" href="/" aria-label="Lucrato">
+            <span class="wm-l">L</span><span class="wm-u">u</span><span>crato</span>
+            <svg class="wm-arrow" viewBox="0 0 12 8" aria-hidden="true">
+              <path d="M1 7 L6 1 L11 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
 
-          <h2 class="tagline">Gerencie seu Mercado Livre com clareza.</h2>
-          <p class="hero-sub">Acompanhe lucro, capital parado e margens em tempo real — sem planilha, sem dor de cabeça.</p>
+          <h2 class="tagline">O painel financeiro do vendedor de Mercado Livre.</h2>
+          <p class="hero-sub">Sério como um extrato bancário. Vivo como um app de investimento. Honesto como uma planilha bem feita.</p>
 
           <ul class="bullets">
             <li>
-              <mat-icon>insights</mat-icon>
-              <span>Dashboards de receita, taxas e lucro líquido</span>
+              <span class="bullet-dot" aria-hidden="true"></span>
+              <span>Lucro líquido, capital parado e margens em tempo real</span>
             </li>
             <li>
-              <mat-icon>inventory_2</mat-icon>
-              <span>Controle de lotes com alertas de estoque parado</span>
+              <span class="bullet-dot" aria-hidden="true"></span>
+              <span>Alertas de estoque parado antes que vire prejuízo</span>
             </li>
             <li>
-              <mat-icon>upload_file</mat-icon>
-              <span>Importação em massa via planilha Excel</span>
+              <span class="bullet-dot" aria-hidden="true"></span>
+              <span>Importação Excel e exportação CSV para o contador</span>
             </li>
           </ul>
         </div>
 
-        <div class="hero-decoration"></div>
+        <div class="hero-decoration" aria-hidden="true"></div>
       </aside>
 
+      <!-- ============ FORM ============ -->
       <main class="form-side">
         <div class="form-card">
-          <div class="brand mobile-only">
-            <div class="logo">L</div>
-            <div class="brand-text">
-              <h1>Lucrato</h1>
-              <p>Gestão Mercado Livre</p>
-            </div>
+          <a class="form-wordmark mobile-only" href="/" aria-label="Lucrato">
+            <span class="wm-l">L</span><span class="wm-u">u</span><span>crato</span>
+          </a>
+
+          <div class="seg-toggle" role="tablist">
+            <button
+              type="button"
+              class="seg"
+              [class.active]="mode() === 'login'"
+              (click)="setMode('login')"
+              role="tab"
+              [attr.aria-selected]="mode() === 'login'"
+            >Entrar</button>
+            <button
+              type="button"
+              class="seg"
+              [class.active]="mode() === 'register'"
+              (click)="setMode('register')"
+              role="tab"
+              [attr.aria-selected]="mode() === 'register'"
+            >Criar conta</button>
           </div>
 
-          <mat-tab-group dynamicHeight>
-          <!-- LOGIN TAB -->
-          <mat-tab label="Entrar">
+          @if (mode() === 'login') {
             <form class="form" (ngSubmit)="login()" #loginForm="ngForm">
               <mat-form-field>
                 <mat-label>E-mail</mat-label>
@@ -84,10 +97,13 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
               </mat-form-field>
 
               @if (loginError()) {
-                <div class="error-msg">{{ loginError() }}</div>
+                <div class="error-msg">
+                  <mat-icon>error_outline</mat-icon>
+                  <span>{{ loginError() }}</span>
+                </div>
               }
 
-              <button mat-flat-button color="primary" type="submit" [disabled]="loginLoading() || loginForm.invalid">
+              <button mat-flat-button class="submit-btn" type="submit" [disabled]="loginLoading() || loginForm.invalid">
                 @if (loginLoading()) {
                   <mat-spinner diameter="20" />
                 } @else {
@@ -99,10 +115,7 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
                 Esqueci minha senha
               </button>
             </form>
-          </mat-tab>
-
-          <!-- REGISTER TAB -->
-          <mat-tab label="Criar conta">
+          } @else {
             <form class="form" (ngSubmit)="register()" #regForm="ngForm">
               <mat-form-field>
                 <mat-label>Nome da loja</mat-label>
@@ -127,10 +140,13 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
               </mat-form-field>
 
               @if (regError()) {
-                <div class="error-msg">{{ regError() }}</div>
+                <div class="error-msg">
+                  <mat-icon>error_outline</mat-icon>
+                  <span>{{ regError() }}</span>
+                </div>
               }
 
-              <button mat-flat-button color="primary" type="submit" [disabled]="regLoading() || regForm.invalid">
+              <button mat-flat-button class="submit-btn" type="submit" [disabled]="regLoading() || regForm.invalid">
                 @if (regLoading()) {
                   <mat-spinner diameter="20" />
                 } @else {
@@ -138,26 +154,28 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
                 }
               </button>
             </form>
-          </mat-tab>
-        </mat-tab-group>
+          }
         </div>
       </main>
     </div>
   `,
   styles: [`
+    :host { display: block; }
+
     .login-page {
       min-height: 100vh;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      background: var(--bg-base);
+      grid-template-columns: 1.1fr 1fr;
+      background: var(--bg-canvas);
     }
 
+    /* ============ Hero ============ */
     .hero {
       position: relative;
       overflow: hidden;
-      background: linear-gradient(135deg, #1E40AF 0%, #1D4ED8 55%, #2563EB 100%);
+      background: linear-gradient(135deg, #0A6E5C 0%, #0E8C77 55%, #2BAE96 100%);
       color: #FFFFFF;
-      padding: 56px 64px;
+      padding: 64px 72px;
       display: flex;
       align-items: center;
     }
@@ -165,68 +183,56 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
     .hero-content {
       position: relative;
       z-index: 1;
-      max-width: 460px;
+      max-width: 480px;
     }
 
     .hero-decoration {
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at 85% 18%, rgba(255, 255, 255, 0.18) 0%, transparent 45%),
-        radial-gradient(circle at 12% 85%, rgba(255, 255, 255, 0.12) 0%, transparent 50%);
+        radial-gradient(ellipse at 88% 18%, rgba(232, 199, 123, 0.22) 0%, transparent 50%),
+        radial-gradient(ellipse at 12% 92%, rgba(255, 255, 255, 0.12) 0%, transparent 55%);
       pointer-events: none;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 36px;
-    }
+    .hero-wordmark {
+      font-family: 'Geist', sans-serif;
+      font-weight: 600;
+      font-size: 28px;
+      letter-spacing: -0.04em;
+      color: #FFFFFF;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 1px;
+      margin-bottom: 48px;
+      text-decoration: none;
 
-    .brand.mobile-only { display: none; }
+      .wm-l { color: #E8C77B; }
 
-    .logo {
-      width: 48px;
-      height: 48px;
-      background: rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 12px;
-      display: grid;
-      place-items: center;
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      flex-shrink: 0;
-    }
-
-    .brand-text h1 {
-      font-size: 22px;
-      font-weight: 700;
-      margin: 0;
-      letter-spacing: -0.5px;
-    }
-
-    .brand-text p {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.65);
-      margin: 2px 0 0;
+      .wm-arrow {
+        width: 12px;
+        height: 8px;
+        margin-left: 2px;
+        color: #E8C77B;
+        transform: translateY(-2px);
+      }
     }
 
     .tagline {
-      font-size: 32px;
+      font-family: 'Geist', 'Inter', sans-serif;
+      font-size: clamp(28px, 3.5vw, 38px);
       font-weight: 700;
-      line-height: 1.2;
-      letter-spacing: -0.8px;
-      margin: 0 0 14px;
+      line-height: 1.1;
+      letter-spacing: -0.035em;
+      margin: 0 0 18px;
     }
 
     .hero-sub {
       font-size: 15px;
-      line-height: 1.55;
+      line-height: 1.6;
       color: rgba(255, 255, 255, 0.82);
-      margin: 0 0 32px;
+      margin: 0 0 36px;
+      max-width: 440px;
     }
 
     .bullets {
@@ -242,105 +248,148 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.88);
+      font-size: 14.5px;
+      color: rgba(255, 255, 255, 0.92);
+      line-height: 1.5;
     }
 
-    .bullets mat-icon {
+    .bullet-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: var(--radius-full);
+      background: #E8C77B;
       flex-shrink: 0;
-      font-size: 20px;
-      width: 36px;
-      height: 36px;
-      line-height: 36px;
-      text-align: center;
-      background: rgba(255, 255, 255, 0.12);
-      border-radius: 10px;
+      box-shadow: 0 0 0 3px rgba(232, 199, 123, 0.18);
     }
 
+    /* ============ Form ============ */
     .form-side {
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 48px 32px;
-      background: var(--bg-base);
+      background: var(--bg-canvas);
     }
 
     .form-card {
       width: 100%;
-      max-width: 420px;
-      background: var(--bg-surface);
-      border: 1px solid var(--brd-default);
-      border-radius: var(--radius-lg);
-      padding: 32px;
-      box-shadow: var(--shadow-md);
+      max-width: 440px;
+      background: var(--bg-surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 36px;
     }
 
-    .form-card .brand {
-      margin-bottom: 8px;
+    .form-wordmark {
+      font-family: 'Geist', sans-serif;
+      font-weight: 600;
+      font-size: 22px;
+      letter-spacing: -0.04em;
+      color: var(--text-primary);
+      display: none;
+      align-items: baseline;
+      gap: 1px;
+      margin-bottom: 20px;
+      text-decoration: none;
 
-      .logo {
-        background: linear-gradient(135deg, #1E40AF, #3B82F6);
-        color: #FFFFFF;
-        border: none;
+      .wm-l { color: var(--brand-primary); }
+    }
+
+    .seg-toggle {
+      display: inline-flex;
+      width: 100%;
+      background: var(--bg-surface-2);
+      border-radius: var(--radius-full);
+      padding: 4px;
+      margin-bottom: 22px;
+    }
+
+    .seg {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+
+      &.active {
+        background: var(--bg-surface-1);
+        color: var(--text-primary);
+        box-shadow: var(--shadow-sm);
+        font-weight: 600;
       }
-
-      .brand-text h1 { color: var(--txt-primary); }
-      .brand-text p  { color: var(--txt-secondary); }
     }
 
     .form {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      padding: 20px 0 8px;
+      gap: 6px;
 
-      mat-form-field { width: 100%; }
+      mat-form-field {
+        width: 100%;
+      }
 
-      button[type="submit"] {
-        height: 44px;
-        font-size: 14px;
-        font-weight: 600;
-        margin-top: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
+      mat-form-field mat-icon {
+        color: var(--text-muted);
       }
     }
 
+    .submit-btn {
+      height: 48px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      --mdc-filled-button-container-color: var(--brand-primary);
+      --mdc-filled-button-label-text-color: #FFFFFF;
+    }
+
     .error-msg {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-size: 12.5px;
-      color: var(--clr-red);
-      padding: 8px 12px;
-      background: color-mix(in srgb, var(--clr-red) 12%, transparent);
-      border-radius: 8px;
-      border-left: 3px solid var(--clr-red);
+      color: var(--color-danger);
+      padding: 10px 12px;
+      background: var(--tint-danger);
+      border-radius: var(--radius-md);
+      border-left: 3px solid var(--color-danger);
+      line-height: 1.45;
+
+      mat-icon { font-size: 16px; width: 16px; height: 16px; flex-shrink: 0; }
     }
 
     .forgot-link {
       align-self: center;
       font-size: 12.5px;
-      color: var(--txt-secondary);
+      color: var(--text-secondary);
       margin-top: 4px;
     }
 
     @media (max-width: 960px) {
       .login-page { grid-template-columns: 1fr; }
       .hero { display: none; }
-      .brand.mobile-only { display: flex; }
-      .form-card .brand:not(.mobile-only) { display: none; }
+      .form-wordmark.mobile-only { display: inline-flex; }
     }
 
     @media (max-width: 480px) {
       .form-side { padding: 24px 16px; align-items: flex-start; padding-top: 40px; }
-      .form-card { padding: 20px 16px; border-radius: 12px; }
-      .brand-text h1 { font-size: 20px; }
+      .form-card { padding: 24px 20px; border-radius: var(--radius-lg); }
     }
   `],
 })
 export class LoginComponent {
   private readonly authService = inject(AuthService);
   private readonly dialog = inject(MatDialog);
+
+  protected readonly mode = signal<'login' | 'register'>('login');
 
   loginEmail = '';
   loginPassword = '';
@@ -355,13 +404,19 @@ export class LoginComponent {
   regLoading = signal(false);
   showRegPwd = signal(false);
 
+  protected setMode(m: 'login' | 'register'): void {
+    this.mode.set(m);
+    this.loginError.set('');
+    this.regError.set('');
+  }
+
   async login(): Promise<void> {
     this.loginError.set('');
     this.loginLoading.set(true);
     try {
       await this.authService.login(this.loginEmail, this.loginPassword);
-    } catch (e: any) {
-      this.loginError.set(this.friendlyError(e?.code));
+    } catch (e: unknown) {
+      this.loginError.set(this.friendlyError((e as { code?: string })?.code));
     } finally {
       this.loginLoading.set(false);
     }
@@ -390,8 +445,8 @@ export class LoginComponent {
       } catch {
         // não bloqueia o cadastro caso o envio falhe; usuário pode reenviar depois
       }
-    } catch (e: any) {
-      this.regError.set(this.friendlyError(e?.code));
+    } catch (e: unknown) {
+      this.regError.set(this.friendlyError((e as { code?: string })?.code));
     } finally {
       this.regLoading.set(false);
     }
@@ -405,7 +460,7 @@ export class LoginComponent {
     });
   }
 
-  private friendlyError(code: string): string {
+  private friendlyError(code: string | undefined): string {
     switch (code) {
       case 'auth/invalid-credential':
       case 'auth/wrong-password':

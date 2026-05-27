@@ -1,134 +1,211 @@
-<app-page-header
-  icon="shopping_cart"
-  title="Compras / Lotes"
-  subtitle="Cadastre cada lote comprado para revenda"
->
-  <button mat-flat-button color="primary" (click)="openNew()">
-    <mat-icon>add</mat-icon>
-    Nova Compra
-  </button>
-</app-page-header>
+<mat-sidenav-container class="pur-container" autosize>
+  <mat-sidenav
+    mode="over"
+    position="end"
+    [opened]="panelOpen()"
+    (closed)="closeDetail()"
+    class="pur-detail-drawer"
+  >
+    <app-batch-detail-panel
+      [batch]="selectedBatch()"
+      (closed)="closeDetail()"
+      (editRequested)="onEditRequested($event)"
+    />
+  </mat-sidenav>
 
-<div class="content">
-  @if (!data.loaded()) {
-    <app-skeleton variant="kpi" />
-    <app-skeleton variant="table-row" [count]="8" />
-  } @else if (purchases().length === 0) {
-    <app-empty-state
-      icon="shopping_cart"
-      title="Nenhuma compra cadastrada"
-      description="Cadastre o primeiro lote para começar a acompanhar custos, estoque e margens."
+  <mat-sidenav-content>
+
+    <app-page-header
+      title="Compras"
+      eyebrow="LOTES · {{ purchases().length }}"
+      subtitle="Cadastre cada lote comprado. Custos com frete e outros são distribuídos automaticamente."
     >
-      <button mat-flat-button color="primary" (click)="openNew()">
+      <button mat-flat-button class="primary-cta" (click)="openNew()">
         <mat-icon>add</mat-icon>
-        Adicionar compra
+        Nova Compra
       </button>
-    </app-empty-state>
-  } @else {
-    <div class="filters">
-      <mat-form-field class="search" appearance="outline" subscriptSizing="dynamic">
-        <mat-icon matPrefix>search</mat-icon>
-        <input
-          matInput
-          placeholder="Buscar por produto, ID ou categoria..."
-          [ngModel]="textFilter()"
-          (ngModelChange)="textFilter.set($event)"
-        />
-      </mat-form-field>
+    </app-page-header>
 
-      <mat-chip-listbox
-        [value]="statusFilter()"
-        (change)="setStatus($event.value)"
-        class="status-filter"
-      >
-        <mat-chip-option value="all">
-          Todos ({{ totals().total }})
-        </mat-chip-option>
-        <mat-chip-option value="in-transit">
-          <mat-icon>schedule</mat-icon>
-          Em trânsito ({{ totals().inTransit }})
-        </mat-chip-option>
-        <mat-chip-option value="in-stock">
-          <mat-icon>inventory_2</mat-icon>
-          Em Estoque ({{ totals().inStock }})
-        </mat-chip-option>
-        <mat-chip-option value="attention">
-          <mat-icon>warning</mat-icon>
-          Atenção ({{ totals().attention }})
-        </mat-chip-option>
-        <mat-chip-option value="idle">
-          <mat-icon>error</mat-icon>
-          Parado ({{ totals().idle }})
-        </mat-chip-option>
-        <mat-chip-option value="sold">
-          <mat-icon>check_circle</mat-icon>
-          Vendido ({{ totals().sold }})
-        </mat-chip-option>
-      </mat-chip-listbox>
+    <div class="page-content pur-body">
+
+      @if (!data.loaded()) {
+        <app-skeleton variant="table-row" [count]="8" />
+
+      } @else if (purchases().length === 0) {
+        <app-empty-state
+          icon="shopping_cart"
+          title="Nenhuma compra cadastrada"
+          description="Cadastre o primeiro lote para começar a acompanhar custos, estoque e margens."
+        >
+          <button mat-flat-button class="primary-cta" (click)="openNew()">
+            <mat-icon>add</mat-icon>
+            Adicionar compra
+          </button>
+        </app-empty-state>
+
+      } @else {
+
+        <section class="filters">
+          <mat-form-field class="search" appearance="outline" subscriptSizing="dynamic">
+            <mat-icon matPrefix>search</mat-icon>
+            <input
+              matInput
+              placeholder="Buscar por produto, ID, categoria ou fornecedor..."
+              [ngModel]="textFilter()"
+              (ngModelChange)="textFilter.set($event)"
+            />
+          </mat-form-field>
+
+          <div class="filter-chips" role="tablist">
+            <button
+              type="button"
+              class="chip"
+              [class.active]="statusFilter() === 'all'"
+              (click)="setStatus('all')"
+            >Todos <span class="chip-count">{{ totals().all }}</span></button>
+
+            <button
+              type="button"
+              class="chip"
+              [class.active]="statusFilter() === 'Em Estoque'"
+              (click)="setStatus('Em Estoque')"
+            >
+              <span class="status-dot success" aria-hidden="true"></span>
+              Em estoque <span class="chip-count">{{ totals()['Em Estoque'] }}</span>
+            </button>
+
+            <button
+              type="button"
+              class="chip"
+              [class.active]="statusFilter() === 'Atenção'"
+              (click)="setStatus('Atenção')"
+            >
+              <span class="status-dot warning" aria-hidden="true"></span>
+              Atenção <span class="chip-count">{{ totals()['Atenção'] }}</span>
+            </button>
+
+            <button
+              type="button"
+              class="chip"
+              [class.active]="statusFilter() === 'Parado'"
+              (click)="setStatus('Parado')"
+            >
+              <span class="status-dot danger" aria-hidden="true"></span>
+              Parado <span class="chip-count">{{ totals()['Parado'] }}</span>
+            </button>
+
+            <button
+              type="button"
+              class="chip"
+              [class.active]="statusFilter() === 'Em trânsito'"
+              (click)="setStatus('Em trânsito')"
+            >
+              <span class="status-dot info" aria-hidden="true"></span>
+              Em trânsito <span class="chip-count">{{ totals()['Em trânsito'] }}</span>
+            </button>
+
+            <button
+              type="button"
+              class="chip"
+              [class.active]="statusFilter() === 'Vendido'"
+              (click)="setStatus('Vendido')"
+            >
+              <span class="status-dot neutral" aria-hidden="true"></span>
+              Vendido <span class="chip-count">{{ totals()['Vendido'] }}</span>
+            </button>
+          </div>
+        </section>
+
+        @if (filteredPurchases().length > 0) {
+          <div class="table-card">
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Produto</th>
+                    <th>Categoria</th>
+                    <th>Fornecedor</th>
+                    <th>Data</th>
+                    <th class="text-center">Qtd</th>
+                    <th class="text-right">Custo total</th>
+                    <th>Status</th>
+                    <th class="text-right col-actions"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of filteredPurchases(); track c.id) {
+                    <tr
+                      class="row"
+                      [class.expanded]="expandedRow() === c.id"
+                      (click)="openDetail(c)"
+                    >
+                      <td><span class="id-tag mono">{{ c.id }}</span></td>
+                      <td class="product-cell" [title]="c.product">{{ c.product }}</td>
+                      <td><span class="category-pill">{{ c.category }}</span></td>
+                      <td class="text-muted">{{ c.supplier }}</td>
+                      <td class="mono">{{ c.purchaseDate | brDate }}</td>
+                      <td class="text-center mono">{{ c.quantityPurchased }}</td>
+                      <td class="text-right mono"><strong>{{ c.totalActualCost | brl }}</strong></td>
+                      <td><app-status-badge [status]="c.status" /></td>
+                      <td class="text-right col-actions">
+                        <button
+                          mat-icon-button
+                          class="row-action"
+                          (click)="toggleRow(c.id, $event)"
+                          [matTooltip]="expandedRow() === c.id ? 'Recolher' : 'Detalhes inline'"
+                        >
+                          <mat-icon>{{ expandedRow() === c.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+                        </button>
+                        <button
+                          mat-icon-button
+                          class="row-action"
+                          (click)="edit(c, $event)"
+                          matTooltip="Editar"
+                        >
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        <button
+                          mat-icon-button
+                          class="row-action danger"
+                          (click)="confirmRemove(c, $event)"
+                          matTooltip="Remover"
+                        >
+                          <mat-icon>delete_outline</mat-icon>
+                        </button>
+                      </td>
+                    </tr>
+                    @if (expandedRow() === c.id) {
+                      <tr class="row-expansion" (click)="$event.stopPropagation()">
+                        <td colspan="9">
+                          <div class="expansion-grid">
+                            <div><span class="t-caption">Recebido em</span><strong class="mono">{{ c.receiptDate ? (c.receiptDate | brDate) : '—' }}</strong></div>
+                            <div><span class="t-caption">Custo unit. nominal</span><strong class="mono">{{ c.unitCost | brl }}</strong></div>
+                            <div><span class="t-caption">Custo unit. real</span><strong class="mono">{{ c.actualUnitCost | brl }}</strong></div>
+                            <div><span class="t-caption">Frete</span><strong class="mono">{{ c.purchaseShipping | brl }}</strong></div>
+                            <div><span class="t-caption">Outros custos</span><strong class="mono">{{ c.otherCosts | brl }}</strong></div>
+                            <div><span class="t-caption">Vendido</span><strong class="mono">{{ c.quantitySold }}</strong></div>
+                            <div><span class="t-caption">Estoque atual</span><strong class="mono">{{ c.currentStock }}</strong></div>
+                            <div><span class="t-caption">Capital parado</span><strong class="mono">{{ c.idleValue | brl }}</strong></div>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        } @else {
+          <app-empty-state
+            icon="filter_alt_off"
+            title="Nenhum lote encontrado"
+            description="Ajuste a busca ou o filtro de status para ver outros lotes."
+          />
+        }
+      }
+
     </div>
 
-    @if (filteredPurchases().length > 0) {
-      <mat-card class="table-card">
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Produto</th>
-                <th>Categoria</th>
-                <th>Fornecedor</th>
-                <th>Data</th>
-                <th>Recebido</th>
-                <th class="text-center">Qtd.</th>
-                <th class="text-right">Custo Unit.</th>
-                <th class="text-right">Custo Total Real</th>
-                <th class="text-center">Vendida</th>
-                <th class="text-center">Estoque</th>
-                <th>Status</th>
-                <th class="text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (c of filteredPurchases(); track c.id) {
-                <tr>
-                  <td><span class="id-tag">{{ c.id }}</span></td>
-                  <td class="product-cell" [title]="c.product">{{ c.product }}</td>
-                  <td><span class="category-pill">{{ c.category }}</span></td>
-                  <td class="text-muted">{{ c.supplier }}</td>
-                  <td>{{ c.purchaseDate | brDate }}</td>
-                  <td>{{ c.receiptDate | brDate }}</td>
-                  <td class="text-center">{{ c.quantityPurchased }}</td>
-                  <td class="text-right text-muted">{{ c.unitCost | brl }}</td>
-                  <td class="text-right"><strong>{{ c.totalActualCost | brl }}</strong></td>
-                  <td class="text-center text-muted">{{ c.quantitySold }}</td>
-                  <td
-                    class="text-center"
-                    [class.text-success]="c.currentStock === 0"
-                    [class.text-warning]="c.currentStock > 0"
-                  >
-                    <strong>{{ c.currentStock }}</strong>
-                  </td>
-                  <td><app-status-badge [status]="c.status" /></td>
-                  <td class="text-center actions">
-                    <button mat-icon-button matTooltip="Editar" (click)="edit(c)">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-icon-button matTooltip="Remover" color="warn" (click)="confirmRemove(c)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </mat-card>
-    } @else {
-      <app-empty-state
-        icon="filter_alt_off"
-        title="Nenhum lote encontrado com esses filtros"
-        description="Ajuste a busca ou os filtros para ver outros lotes."
-      />
-    }
-  }
-</div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

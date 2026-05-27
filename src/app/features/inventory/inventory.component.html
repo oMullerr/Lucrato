@@ -1,249 +1,341 @@
-<app-page-header
-  icon="inventory_2"
-  title="Panorama do Estoque"
-  subtitle="Visão executiva — bata o olho e saiba como está seu negócio"
->
-  <a mat-stroked-button routerLink="/purchases">
-    <mat-icon>shopping_cart</mat-icon>
-    Compras
-  </a>
-  <a mat-flat-button color="primary" routerLink="/sales">
-    <mat-icon>sell</mat-icon>
-    Registrar Venda
-  </a>
-</app-page-header>
+<mat-sidenav-container class="inv-container" autosize>
+  <mat-sidenav
+    #detailSidenav
+    mode="over"
+    position="end"
+    [opened]="panelOpen()"
+    (closed)="closeDetail()"
+    class="inv-detail-drawer"
+  >
+    <app-batch-detail-panel
+      [batch]="selectedBatch()"
+      (closed)="closeDetail()"
+      (editRequested)="onEditRequested($event)"
+    />
+  </mat-sidenav>
 
-<div class="content">
-  @if (!data.loaded()) {
-    <section class="hero-grid">
-      <app-skeleton variant="kpi" />
-      <app-skeleton variant="kpi" />
-      <app-skeleton variant="kpi" />
-      <app-skeleton variant="kpi" />
-    </section>
-    <section class="kpi-grid">
-      <app-skeleton variant="kpi" [count]="8" />
-    </section>
-    <app-skeleton variant="table-row" [count]="6" />
-  } @else if (sortedPurchases().length === 0) {
-    <app-empty-state
-      icon="inventory_2"
-      title="Comece pelo primeiro lote"
-      description="Cadastre uma compra para começar a acompanhar seu estoque, capital investido e margens."
+  <mat-sidenav-content>
+
+    <app-page-header
+      title="Panorama do Estoque"
+      [eyebrow]="'Panorama · atualizado ' + (updatedAt() | date:'HH:mm')"
+      [subtitle]="sortedPurchases().length === 0
+        ? 'Comece cadastrando seu primeiro lote para acompanhar a saúde do seu estoque.'
+        : (statusCounts().all + ' lotes ativos · ' + alerts().length + ' demandam atenção')"
     >
-      <a mat-flat-button color="primary" routerLink="/purchases">
-        <mat-icon>add</mat-icon>
-        Adicionar compra
+      <a mat-stroked-button routerLink="/purchases">
+        <mat-icon>shopping_cart</mat-icon>
+        Compras
       </a>
-    </app-empty-state>
-  } @else {
-    @if (alerts().length > 0) {
-      <section class="alert-banner" [attr.data-level]="alertLevel()">
-        <mat-icon class="alert-icon">{{ alertLevel() === 'high' ? 'error' : 'warning' }}</mat-icon>
-        <div class="alert-content">
-          <strong>{{ alerts().length }} {{ alerts().length === 1 ? 'lote' : 'lotes' }} pedindo atenção</strong>
-          <span>Capital parado há mais tempo que o ideal — revise para liberar caixa.</span>
-        </div>
-        <a class="alert-cta" href="#alerts-section">Ver detalhes →</a>
-      </section>
-    }
+      <a mat-flat-button class="primary-cta" routerLink="/sales">
+        <mat-icon>sell</mat-icon>
+        Registrar Venda
+      </a>
+    </app-page-header>
 
-    <section class="hero-grid">
-      <app-kpi-card
-        size="hero"
-        icon="emoji_events"
-        title="Lucro Líquido"
-        [value]="kpis().netProfit | brl"
-        variant="green"
-        note="Resultado final consolidado"
-      />
-      <app-kpi-card
-        icon="payments"
-        title="Total Investido"
-        [value]="kpis().totalInvested | brl"
-        variant="red"
-        note="Custo real de todas as compras"
-      />
-      <app-kpi-card
-        icon="account_balance"
-        title="Capital Parado"
-        [value]="kpis().idleCapital | brl"
-        variant="amber"
-        note="Estoque × custo unit. real"
-      />
-      <app-kpi-card
-        icon="percent"
-        title="Margem Líquida"
-        [value]="(kpis().netMargin * 100).toFixed(1) + '%'"
-        variant="teal"
-        note="Lucro líq. / receita bruta"
-      />
-    </section>
+    <div class="page-content inv-body">
 
-    <section>
-      <h2 class="section-title">
-        <mat-icon>insights</mat-icon>
-        Operação em números
-      </h2>
-      <div class="kpi-grid">
-        <app-kpi-card
-          icon="trending_up"
-          title="Receita Bruta"
-          [value]="kpis().grossRevenue | brl"
-          variant="blue"
-          note="Total faturado"
-        />
-        <app-kpi-card
-          icon="credit_card"
-          title="Receita Líquida"
-          [value]="kpis().netRevenue | brl"
-          variant="blue"
-          note="Após deduções"
-        />
-        <app-kpi-card
-          icon="local_offer"
-          title="Taxas ML Pagas"
-          [value]="kpis().totalFees | brl"
-          variant="orange"
-          note="Total ao Mercado Livre"
-        />
-        <app-kpi-card
-          icon="receipt_long"
-          title="Ticket Médio"
-          [value]="kpis().averageTicket | brl"
-          variant="purple"
-          note="Preço médio unit. de venda"
-        />
-        <app-kpi-card
-          icon="inventory"
-          title="Lotes em Estoque"
-          [value]="kpis().batchesInStock"
-          variant="amber"
-          note="Com estoque > 0"
-        />
-        <app-kpi-card
-          icon="check_circle"
-          title="Lotes Vendidos"
-          [value]="kpis().soldBatches"
-          variant="green"
-          note="Totalmente vendidos"
-        />
-        <app-kpi-card
-          icon="shopping_basket"
-          title="Qtd. Vendida"
-          [value]="kpis().totalSold"
-          variant="green"
-          note="Unidades vendidas"
-        />
-        <app-kpi-card
-          icon="bar_chart"
-          title="Total de Lotes"
-          [value]="kpis().totalBatches"
-          variant="gray"
-          note="Lotes cadastrados"
-        />
-      </div>
-    </section>
+      @if (!data.loaded()) {
+        <!-- Loading skeleton -->
+        <section class="hero-skel">
+          <app-skeleton variant="card" />
+        </section>
+        <section class="kpis-skel">
+          <app-skeleton variant="kpi" [count]="4" />
+        </section>
+        <section class="table-skel">
+          <app-skeleton variant="table-row" [count]="6" />
+        </section>
 
-    <section>
-      <h2 class="section-title">
-        <mat-icon>format_list_bulleted</mat-icon>
-        Posição detalhada por lote
-        <span class="result-count">{{ sortedPurchases().length }} {{ sortedPurchases().length === 1 ? 'lote' : 'lotes' }}</span>
-      </h2>
+      } @else if (sortedPurchases().length === 0) {
+        <!-- First-time onboarding -->
+        <app-empty-state
+          icon="inventory_2"
+          title="Comece pelo primeiro lote"
+          description="Cadastre uma compra para começar a acompanhar seu estoque, capital investido e margens. Em seguida, registre vendas e veja o panorama se desenhar automaticamente."
+        >
+          <a mat-flat-button class="primary-cta" routerLink="/purchases">
+            <mat-icon>add</mat-icon>
+            Cadastrar primeiro lote
+          </a>
+        </app-empty-state>
 
-      <mat-card class="table-card">
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Produto</th>
-                <th>Categoria</th>
-                <th>Data Compra</th>
-                <th>Recebido</th>
-                <th class="text-center">Qtd.</th>
-                <th class="text-center">Vendida</th>
-                <th class="text-center">Estoque</th>
-                <th class="text-right">Custo Unit.</th>
-                <th class="text-right">Capital Parado</th>
-                <th>1ª Venda</th>
-                <th>Última Venda</th>
-                <th class="text-center">Dias</th>
-                <th>Status</th>
-                <th class="text-center">Margem</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (c of sortedPurchases(); track c.id) {
-                <tr>
-                  <td><span class="id-tag">{{ c.id }}</span></td>
-                  <td class="product-cell" [title]="c.product">{{ c.product }}</td>
-                  <td><span class="category-pill">{{ c.category }}</span></td>
-                  <td>{{ c.purchaseDate | brDate }}</td>
-                  <td [class]="dayClass(c)">{{ c.receiptDate | brDate }}</td>
-                  <td class="text-center">{{ c.quantityPurchased }}</td>
-                  <td class="text-center text-muted">{{ c.quantitySold }}</td>
-                  <td
-                    class="text-center"
-                    [class.text-success]="c.currentStock === 0"
-                    [class.text-warning]="c.currentStock > 0"
-                  >
-                    <strong>{{ c.currentStock }}</strong>
-                  </td>
-                  <td class="text-right text-muted">{{ c.actualUnitCost | brl }}</td>
-                  <td class="text-right" [class.text-warning]="c.idleValue > 0">
-                    <strong>{{ c.idleValue | brl: true }}</strong>
-                  </td>
-                  <td class="text-muted">{{ c.firstSale | brDate }}</td>
-                  <td class="text-muted">{{ c.lastSale | brDate }}</td>
-                  <td class="text-center">
-                    <strong>{{ c.daysInStock }}d</strong>
-                  </td>
-                  <td><app-status-badge [status]="c.status" /></td>
-                  <td class="text-center" [class]="marginClass(c.averageMargin)">
-                    {{ c.averageMargin !== undefined ? (c.averageMargin * 100).toFixed(1) + '%' : '—' }}
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </mat-card>
-    </section>
-
-    @if (alerts().length > 0) {
-      <section id="alerts-section">
-        <h2 class="section-title text-warning">
-          <mat-icon>warning</mat-icon>
-          Atenção — Estoque Parado
-        </h2>
-        <div class="alerts-grid">
-          @for (a of alerts(); track a.id) {
-            <mat-card class="alert-card" [attr.data-status]="a.status">
-              <div class="alert-header">
-                <app-status-badge [status]="a.status" />
-                <span class="alert-id">{{ a.id }}</span>
-              </div>
-              <h4>{{ a.product }}</h4>
-              <div class="alert-stats">
-                <div>
-                  <span>Estoque</span>
-                  <strong>{{ a.currentStock }} un.</strong>
-                </div>
-                <div>
-                  <span>Parado há</span>
-                  <strong>{{ a.daysInStock }}d</strong>
-                </div>
-                <div>
-                  <span>Capital</span>
-                  <strong>{{ a.idleValue | brl }}</strong>
+      } @else {
+        <!-- =========================
+             ZONA A — PULSO
+             ========================= -->
+        <section class="hero" aria-label="Resumo financeiro">
+          <article class="hero-card" data-tone="success">
+            <header class="hero-head">
+              <span class="eyebrow">Lucro líquido</span>
+              <span class="status-dot success" aria-hidden="true"></span>
+            </header>
+            <div class="hero-row">
+              <div class="hero-value-wrap">
+                <div class="hero-value">{{ kpis().netProfit | brl }}</div>
+                <div class="waterfall">
+                  <span class="wf-step">
+                    <span class="wf-label">Receita</span>
+                    <span class="wf-num">{{ kpis().grossRevenue | brl }}</span>
+                  </span>
+                  <mat-icon class="wf-arrow">chevron_right</mat-icon>
+                  <span class="wf-step">
+                    <span class="wf-label">Custos + taxas</span>
+                    <span class="wf-num">{{ (kpis().grossRevenue - kpis().netProfit) | brl }}</span>
+                  </span>
+                  <mat-icon class="wf-arrow">chevron_right</mat-icon>
+                  <span class="wf-step strong">
+                    <span class="wf-label">Lucro</span>
+                    <span class="wf-num text-success">{{ kpis().netProfit | brl }}</span>
+                  </span>
                 </div>
               </div>
-            </mat-card>
+              <app-kpi-card
+                [title]="'Margem líquida'"
+                [value]="(kpis().netMargin * 100).toFixed(1) + '%'"
+                size="compact"
+                variant="brand"
+                [sparkline]="marginSparkline()"
+                class="hero-mini"
+              />
+            </div>
+          </article>
+        </section>
+
+        <section class="kpi-strip" aria-label="Indicadores secundários">
+          <app-kpi-card
+            title="Receita bruta"
+            [value]="kpis().grossRevenue | brl"
+            variant="brand"
+            [sparkline]="revenueSparkline()"
+            note="Total faturado"
+          />
+          <app-kpi-card
+            title="Capital parado"
+            [value]="kpis().idleCapital | brl"
+            [variant]="kpis().idleCapital > 0 ? 'warning' : 'neutral'"
+            [sparkline]="idleSparkline()"
+            note="Estoque × custo real"
+          />
+          <app-kpi-card
+            title="Lotes em estoque"
+            [value]="kpis().batchesInStock"
+            variant="neutral"
+            [note]="kpis().totalBatches + ' lotes no total'"
+          />
+          <app-kpi-card
+            title="Ticket médio"
+            [value]="kpis().averageTicket | brl"
+            variant="neutral"
+            [note]="kpis().totalSold + ' unidades vendidas'"
+          />
+        </section>
+
+        <!-- =========================
+             ZONA B — ALERTAS
+             ========================= -->
+        @if (alerts().length > 0) {
+          <section class="alert-card" [attr.data-level]="alertLevel()" aria-label="Alertas">
+            <div class="alert-stripe" aria-hidden="true"></div>
+            <div class="alert-body">
+              <div class="alert-text">
+                <strong>
+                  @if (alertSummary().stalledCount > 0) {
+                    {{ alertSummary().stalledCount }} {{ alertSummary().stalledCount === 1 ? 'lote parado' : 'lotes parados' }} há mais de 30 dias
+                  } @else {
+                    {{ alerts().length }} {{ alerts().length === 1 ? 'lote' : 'lotes' }} pedindo atenção
+                  }
+                </strong>
+                @if (alertSummary().idleValue > 0) {
+                  <span class="alert-desc">{{ alertSummary().idleValue | brl }} em capital travado — considere reduzir preços ou reposicionar.</span>
+                } @else {
+                  <span class="alert-desc">Acompanhe para evitar que vire capital parado.</span>
+                }
+              </div>
+              <button mat-button class="alert-cta" (click)="scrollToAlerts()">
+                Ver lotes
+                <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+          </section>
+        }
+
+        <!-- =========================
+             ZONA C — POSIÇÃO DETALHADA
+             ========================= -->
+        <section class="positions" id="positions-table" aria-label="Posição detalhada por lote">
+          <header class="positions-head">
+            <div class="ph-text">
+              <h2 class="h-section">Posição por lote</h2>
+              <span class="t-caption">{{ filteredPurchases().length }} de {{ statusCounts().all }} lotes</span>
+            </div>
+            <div class="filter-chips" role="tablist">
+              <button
+                type="button"
+                class="chip"
+                [class.active]="filter() === 'all'"
+                (click)="setFilter('all')"
+                role="tab"
+                [attr.aria-selected]="filter() === 'all'"
+              >Todos <span class="chip-count">{{ statusCounts().all }}</span></button>
+
+              <button
+                type="button"
+                class="chip"
+                [class.active]="filter() === 'Em Estoque'"
+                (click)="setFilter('Em Estoque')"
+                role="tab"
+                [attr.aria-selected]="filter() === 'Em Estoque'"
+              >
+                <span class="status-dot success" aria-hidden="true"></span>
+                Em estoque <span class="chip-count">{{ statusCounts()['Em Estoque'] }}</span>
+              </button>
+
+              <button
+                type="button"
+                class="chip"
+                [class.active]="filter() === 'Atenção'"
+                (click)="setFilter('Atenção')"
+                role="tab"
+                [attr.aria-selected]="filter() === 'Atenção'"
+              >
+                <span class="status-dot warning" aria-hidden="true"></span>
+                Atenção <span class="chip-count">{{ statusCounts()['Atenção'] }}</span>
+              </button>
+
+              <button
+                type="button"
+                class="chip"
+                [class.active]="filter() === 'Parado'"
+                (click)="setFilter('Parado')"
+                role="tab"
+                [attr.aria-selected]="filter() === 'Parado'"
+              >
+                <span class="status-dot danger" aria-hidden="true"></span>
+                Parado <span class="chip-count">{{ statusCounts()['Parado'] }}</span>
+              </button>
+
+              <button
+                type="button"
+                class="chip"
+                [class.active]="filter() === 'Em trânsito'"
+                (click)="setFilter('Em trânsito')"
+                role="tab"
+                [attr.aria-selected]="filter() === 'Em trânsito'"
+              >
+                <span class="status-dot info" aria-hidden="true"></span>
+                Em trânsito <span class="chip-count">{{ statusCounts()['Em trânsito'] }}</span>
+              </button>
+
+              <button
+                type="button"
+                class="chip"
+                [class.active]="filter() === 'Vendido'"
+                (click)="setFilter('Vendido')"
+                role="tab"
+                [attr.aria-selected]="filter() === 'Vendido'"
+              >
+                <span class="status-dot neutral" aria-hidden="true"></span>
+                Vendido <span class="chip-count">{{ statusCounts()['Vendido'] }}</span>
+              </button>
+            </div>
+          </header>
+
+          @if (filteredPurchases().length === 0) {
+            <div class="empty-filter">
+              <span class="t-caption">Nenhum lote com este status.</span>
+            </div>
+          } @else {
+            <div class="table-card">
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th class="col-edge"></th>
+                      <th>ID</th>
+                      <th>Produto</th>
+                      <th>Categoria</th>
+                      <th class="text-center">Estoque</th>
+                      <th class="text-right">Capital parado</th>
+                      <th class="text-center">Margem</th>
+                      <th>Status</th>
+                      <th class="text-right col-actions"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (c of filteredPurchases(); track c.id) {
+                      <tr
+                        class="row"
+                        [class.expanded]="expandedRow() === c.id"
+                        (click)="openDetail(c)"
+                      >
+                        <td class="col-edge">
+                          <span class="row-stripe" [class]="rowStripeClass(c)" aria-hidden="true"></span>
+                        </td>
+                        <td><span class="id-tag mono">{{ c.id }}</span></td>
+                        <td class="product-cell" [title]="c.product">{{ c.product }}</td>
+                        <td><span class="category-pill">{{ c.category }}</span></td>
+                        <td
+                          class="text-center"
+                          [class.text-muted]="c.currentStock === 0"
+                          [class.text-warning]="c.currentStock > 0 && c.currentStock <= 2"
+                        >
+                          <strong class="mono">{{ c.currentStock }}</strong>
+                          <span class="of-total mono">/ {{ c.quantityPurchased }}</span>
+                        </td>
+                        <td class="text-right mono" [class.text-warning]="c.idleValue > 0">
+                          {{ c.idleValue | brl: true }}
+                        </td>
+                        <td class="text-center mono" [class]="marginClass(c.averageMargin)">
+                          {{ c.averageMargin !== undefined ? (c.averageMargin * 100).toFixed(1) + '%' : '—' }}
+                        </td>
+                        <td><app-status-badge [status]="c.status" /></td>
+                        <td class="text-right col-actions">
+                          <button
+                            mat-icon-button
+                            class="row-action"
+                            (click)="toggleRow(c.id, $event)"
+                            [matTooltip]="expandedRow() === c.id ? 'Recolher' : 'Detalhes inline'"
+                          >
+                            <mat-icon>{{ expandedRow() === c.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+                          </button>
+                          <button
+                            mat-icon-button
+                            class="row-action danger"
+                            (click)="confirmDelete(c, $event)"
+                            matTooltip="Excluir"
+                          >
+                            <mat-icon>delete_outline</mat-icon>
+                          </button>
+                        </td>
+                      </tr>
+                      @if (expandedRow() === c.id) {
+                        <tr class="row-expansion" (click)="$event.stopPropagation()">
+                          <td class="col-edge"></td>
+                          <td colspan="8">
+                            <div class="expansion-grid">
+                              <div><span class="t-caption">Data compra</span><strong class="mono">{{ c.purchaseDate | brDate }}</strong></div>
+                              <div><span class="t-caption">Recebido em</span><strong class="mono">{{ c.receiptDate ? (c.receiptDate | brDate) : '—' }}</strong></div>
+                              <div><span class="t-caption">Custo unit. real</span><strong class="mono">{{ c.actualUnitCost | brl }}</strong></div>
+                              <div><span class="t-caption">Custo total</span><strong class="mono">{{ c.totalActualCost | brl }}</strong></div>
+                              <div><span class="t-caption">Vendido</span><strong class="mono">{{ c.quantitySold }}</strong></div>
+                              <div><span class="t-caption">Dias em estoque</span><strong class="mono">{{ c.daysInStock }}d</strong></div>
+                              <div><span class="t-caption">Primeira venda</span><strong class="mono">{{ c.firstSale ? (c.firstSale | brDate) : '—' }}</strong></div>
+                              <div><span class="t-caption">Última venda</span><strong class="mono">{{ c.lastSale ? (c.lastSale | brDate) : '—' }}</strong></div>
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
           }
-        </div>
-      </section>
-    }
-  }
-</div>
+        </section>
+      }
+
+    </div>
+
+  </mat-sidenav-content>
+</mat-sidenav-container>

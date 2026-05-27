@@ -2,11 +2,10 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
@@ -16,11 +15,12 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
+import { BatchDetailPanelComponent } from '../../shared/components/batch-detail-panel.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 import { PurchaseFormDialogComponent } from './purchase-form.dialog';
 
-type StatusFilter = 'all' | 'in-transit' | 'in-stock' | 'attention' | 'idle' | 'sold';
+type StatusFilter = 'all' | InventoryStatus;
 
 @Component({
   selector: 'app-purchases',
@@ -28,11 +28,10 @@ type StatusFilter = 'all' | 'in-transit' | 'in-stock' | 'attention' | 'idle' | '
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    MatButtonModule, MatIconModule, MatCardModule,
-    MatFormFieldModule, MatInputModule, MatChipsModule,
-    MatTooltipModule,
+    MatButtonModule, MatIconModule, MatSidenavModule,
+    MatFormFieldModule, MatInputModule, MatTooltipModule,
     PageHeaderComponent, StatusBadgeComponent,
-    EmptyStateComponent, SkeletonComponent,
+    EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent,
     BrlPipe, BrDatePipe,
   ],
   templateUrl: './purchases.component.html',
@@ -45,41 +44,37 @@ export class PurchasesComponent {
 
   protected readonly textFilter = signal('');
   protected readonly statusFilter = signal<StatusFilter>('all');
+  protected readonly expandedRow = signal<string | null>(null);
+  protected readonly selectedBatch = signal<ComputedPurchase | null>(null);
+  protected readonly panelOpen = computed(() => this.selectedBatch() !== null);
 
   protected readonly purchases = this.data.computedPurchases;
 
   protected readonly totals = computed(() => {
     const cs = this.purchases();
     return {
-      total: cs.length,
-      inTransit: cs.filter(c => c.status === 'Em trânsito').length,
-      inStock: cs.filter(c => c.status === 'Em Estoque').length,
-      attention: cs.filter(c => c.status === 'Atenção').length,
-      idle: cs.filter(c => c.status === 'Parado').length,
-      sold: cs.filter(c => c.status === 'Vendido').length,
+      all: cs.length,
+      'Em trânsito': cs.filter(c => c.status === 'Em trânsito').length,
+      'Em Estoque':  cs.filter(c => c.status === 'Em Estoque').length,
+      'Atenção':     cs.filter(c => c.status === 'Atenção').length,
+      'Parado':      cs.filter(c => c.status === 'Parado').length,
+      'Vendido':     cs.filter(c => c.status === 'Vendido').length,
     };
   });
 
   protected readonly filteredPurchases = computed(() => {
-    const statusMap: Record<Exclude<StatusFilter, 'all'>, InventoryStatus> = {
-      'in-transit': 'Em trânsito',
-      'in-stock': 'Em Estoque',
-      'attention': 'Atenção',
-      'idle': 'Parado',
-      'sold': 'Vendido',
-    };
-
     let cs = this.purchases();
     const status = this.statusFilter();
     if (status !== 'all') {
-      cs = cs.filter(c => c.status === statusMap[status]);
+      cs = cs.filter(c => c.status === status);
     }
     const text = this.textFilter().trim().toLowerCase();
     if (text) {
       cs = cs.filter(c =>
         c.product.toLowerCase().includes(text) ||
         c.id.toLowerCase().includes(text) ||
-        c.category.toLowerCase().includes(text)
+        c.category.toLowerCase().includes(text) ||
+        c.supplier.toLowerCase().includes(text)
       );
     }
     return [...cs].sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate));
@@ -87,17 +82,39 @@ export class PurchasesComponent {
 
   protected setStatus(s: StatusFilter): void {
     this.statusFilter.set(s);
+    this.expandedRow.set(null);
   }
 
   protected openNew(): void {
     this.openForm();
   }
 
-  protected edit(c: ComputedPurchase): void {
-    this.openForm({ ...c });
+  protected edit(c: ComputedPurchase, event: Event): void {
+    event.stopPropagation();
+    const { ...purchase } = c as Purchase;
+    this.openForm(purchase);
   }
 
-  protected confirmRemove(c: ComputedPurchase): void {
+  protected toggleRow(id: string, event: Event): void {
+    event.stopPropagation();
+    this.expandedRow.update(curr => curr === id ? null : id);
+  }
+
+  protected openDetail(batch: ComputedPurchase): void {
+    this.selectedBatch.set(batch);
+  }
+
+  protected closeDetail(): void {
+    this.selectedBatch.set(null);
+  }
+
+  protected onEditRequested(batch: ComputedPurchase): void {
+    this.closeDetail();
+    this.edit(batch, new Event('synthetic'));
+  }
+
+  protected confirmRemove(c: ComputedPurchase, event: Event): void {
+    event.stopPropagation();
     const linkedSales = this.data.sales().filter(v => v.batchId === c.id);
     if (linkedSales.length > 0) {
       this.notify.warning(
@@ -109,8 +126,8 @@ export class PurchasesComponent {
     this.dialog
       .open(ConfirmDialogComponent, {
         data: {
-          title: 'Remover Lote',
-          message: `Remover o lote ${c.id} — "${c.product}"?`,
+          title: 'Remover este lote?',
+          message: `O lote ${c.id} ("${c.product}") será removido permanentemente.`,
           danger: true,
           confirmText: 'Remover',
         },

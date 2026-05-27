@@ -35,60 +35,110 @@ export type ConfirmDialogResult =
     MatInputModule,
   ],
   template: `
-    <h2 mat-dialog-title>
-      <mat-icon [class.danger]="data.danger">{{ data.danger ? 'warning' : 'help' }}</mat-icon>
-      {{ data.title }}
-    </h2>
-    <mat-dialog-content>
-      <p>{{ data.message }}</p>
+    <div class="confirm-dialog" [class.danger]="data.danger">
+      <div class="accent" aria-hidden="true"></div>
+      <div class="content-wrap">
+        <h2 mat-dialog-title>{{ data.title }}</h2>
+        <mat-dialog-content>
+          <p class="message">{{ data.message }}</p>
 
-      @if (data.requireTextMatch) {
-        <mat-form-field class="match-field" appearance="outline">
-          <mat-label>{{ data.requireTextLabel ?? 'Digite para confirmar' }}</mat-label>
-          <input
-            matInput
-            [ngModel]="typedText()"
-            (ngModelChange)="typedText.set($event)"
-            autocomplete="off"
-          />
-          <mat-hint>Digite exatamente: <strong>{{ data.requireTextMatch }}</strong></mat-hint>
-        </mat-form-field>
-      }
+          @if (data.requireTextMatch) {
+            <mat-form-field class="match-field" appearance="outline">
+              <mat-label>{{ data.requireTextLabel ?? 'Digite para confirmar' }}</mat-label>
+              <input
+                matInput
+                [ngModel]="typedText()"
+                (ngModelChange)="typedText.set($event)"
+                autocomplete="off"
+              />
+              <mat-hint>Digite exatamente: <strong>{{ data.requireTextMatch }}</strong></mat-hint>
+            </mat-form-field>
+          }
 
-      @if (data.requirePassword) {
-        <mat-form-field class="match-field" appearance="outline">
-          <mat-label>{{ data.requirePasswordLabel ?? 'Senha atual' }}</mat-label>
-          <input
-            matInput
-            type="password"
-            [ngModel]="password()"
-            (ngModelChange)="password.set($event)"
-            autocomplete="current-password"
-          />
-        </mat-form-field>
-      }
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()">
-        {{ data.cancelText ?? 'Cancelar' }}
-      </button>
-      <button
-        mat-flat-button
-        [color]="data.danger ? 'warn' : 'primary'"
-        [disabled]="!canConfirm()"
-        (click)="confirm()"
-        cdkFocusInitial
-      >
-        {{ data.confirmText ?? 'Confirmar' }}
-      </button>
-    </mat-dialog-actions>
+          @if (data.requirePassword) {
+            <mat-form-field class="match-field" appearance="outline">
+              <mat-label>{{ data.requirePasswordLabel ?? 'Senha atual' }}</mat-label>
+              <input
+                matInput
+                type="password"
+                [ngModel]="password()"
+                (ngModelChange)="password.set($event)"
+                autocomplete="current-password"
+              />
+            </mat-form-field>
+          }
+        </mat-dialog-content>
+        <mat-dialog-actions align="end">
+          <button mat-button (click)="cancel()">
+            {{ data.cancelText ?? 'Cancelar' }}
+          </button>
+          <button
+            mat-flat-button
+            class="confirm-btn"
+            [class.danger]="data.danger"
+            [disabled]="!canConfirm()"
+            (click)="confirm()"
+            cdkFocusInitial
+          >
+            {{ data.confirmText ?? 'Confirmar' }}
+          </button>
+        </mat-dialog-actions>
+      </div>
+    </div>
   `,
   styles: [`
-    h2 { display: flex; align-items: center; gap: 10px; }
-    h2 mat-icon { color: var(--clr-blue); }
-    h2 mat-icon.danger { color: var(--clr-red); }
-    p { color: var(--txt-secondary); line-height: 1.5; }
-    .match-field { width: 100%; margin-top: 8px; }
+    .confirm-dialog {
+      position: relative;
+      display: flex;
+    }
+
+    .accent {
+      width: 4px;
+      background: var(--brand-primary);
+      flex-shrink: 0;
+      border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+      margin: 24px 0;
+    }
+
+    .confirm-dialog.danger .accent {
+      background: var(--color-danger);
+    }
+
+    .content-wrap {
+      flex: 1;
+      padding-left: 16px;
+    }
+
+    h2 {
+      font-family: 'Geist', 'Inter', sans-serif;
+      font-size: var(--fs-h2);
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      color: var(--text-primary);
+      margin: 0 0 8px;
+    }
+
+    .message {
+      color: var(--text-secondary);
+      line-height: 1.55;
+      font-size: var(--fs-body);
+      margin: 0;
+    }
+
+    .match-field {
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .confirm-btn {
+      --mdc-filled-button-container-color: var(--brand-primary);
+      --mdc-filled-button-label-text-color: #FFFFFF;
+    }
+
+    .confirm-btn.danger {
+      --mdc-filled-button-container-color: var(--color-danger);
+      --mdc-filled-button-label-text-color: #FFFFFF;
+    }
   `]
 })
 export class ConfirmDialogComponent {

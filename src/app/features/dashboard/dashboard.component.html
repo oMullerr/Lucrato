@@ -1,21 +1,36 @@
 <app-page-header
-  icon="analytics"
   title="Dashboard"
-  subtitle="Análises visuais e indicadores chave"
-/>
+  eyebrow="ANÁLISE · {{ rangeLabel(range()) }}"
+  subtitle="Visão visual da operação. Filtre por período para entender ciclos e tendências."
+>
+  <div class="range-picker" role="tablist" aria-label="Período">
+    @for (r of rangeOptions; track r.key) {
+      <button
+        type="button"
+        class="range-pill"
+        [class.active]="range() === r.key"
+        (click)="setRange(r.key)"
+        role="tab"
+        [attr.aria-selected]="range() === r.key"
+      >{{ r.label }}</button>
+    }
+  </div>
+</app-page-header>
 
-<div class="content">
+<div class="page-content dash-body">
+
   @if (!dataService.loaded()) {
-    <section class="hero-grid">
-      <app-skeleton variant="kpi" />
-      <app-skeleton variant="kpi" />
-      <app-skeleton variant="kpi" />
-      <app-skeleton variant="kpi" />
+    <section class="kpi-strip">
+      <app-skeleton variant="kpi" [count]="4" />
+    </section>
+    <section class="chart-hero-skel">
+      <app-skeleton variant="chart" />
     </section>
     <section class="chart-grid">
       <app-skeleton variant="chart" />
       <app-skeleton variant="chart" />
     </section>
+
   } @else if (!hasData()) {
     <app-empty-state
       icon="analytics"
@@ -26,151 +41,172 @@
         <mat-icon>shopping_cart</mat-icon>
         Adicionar compra
       </a>
-      <a mat-flat-button color="primary" routerLink="/sales">
+      <a mat-flat-button class="primary-cta" routerLink="/sales">
         <mat-icon>sell</mat-icon>
         Registrar venda
       </a>
     </app-empty-state>
+
   } @else {
-    <section class="hero-grid">
+
+    <!-- KPI strip -->
+    <section class="kpi-strip" aria-label="Indicadores do período">
       <app-kpi-card
-        size="hero"
-        icon="emoji_events"
-        title="Lucro Líquido"
-        [value]="kpis().netProfit | brl"
-        variant="green"
-        note="Resultado consolidado"
+        title="Lucro líquido"
+        [value]="periodKpis().netProfit | brl"
+        [variant]="periodKpis().netProfit >= 0 ? 'success' : 'danger'"
+        [sparkline]="profitSpark()"
+        [note]="periodKpis().salesCount + ' vendas no período'"
       />
       <app-kpi-card
-        icon="trending_up"
-        title="Receita Bruta"
-        [value]="kpis().grossRevenue | brl"
-        variant="blue"
+        title="Receita bruta"
+        [value]="periodKpis().grossRevenue | brl"
+        variant="brand"
+        [sparkline]="revenueSpark()"
+        note="Faturamento total"
       />
       <app-kpi-card
-        icon="percent"
         title="Margem"
-        [value]="(kpis().netMargin * 100).toFixed(1) + '%'"
-        variant="teal"
+        [value]="(periodKpis().netMargin * 100).toFixed(1) + '%'"
+        variant="neutral"
+        [sparkline]="marginSpark()"
+        note="Lucro líq. / receita"
       />
       <app-kpi-card
-        icon="local_offer"
-        title="Taxas Pagas"
-        [value]="kpis().totalFees | brl"
-        variant="orange"
+        title="Taxas pagas"
+        [value]="periodKpis().totalFees | brl"
+        variant="warning"
+        [sparkline]="feesSpark()"
+        note="Total ao Mercado Livre"
       />
     </section>
 
-    <section class="chart-grid">
-      <mat-card class="chart-card">
-        <div class="chart-header">
-          <div class="chart-title">
-            <mat-icon>show_chart</mat-icon>
-            <h3>Evolução Mensal</h3>
-          </div>
-          <p>Receita Líquida vs Lucro Líquido</p>
+    <!-- Hero chart -->
+    <section class="chart-card chart-hero" aria-label="Evolução mensal">
+      <header class="cc-head">
+        <div class="cc-title">
+          <h3 class="h-section">Evolução mensal</h3>
+          <p>Receita líquida vs Lucro líquido por mês</p>
         </div>
-        <div class="chart-body">
-          @if (monthlyChart().labels?.length) {
-            <canvas
-              baseChart
-              [data]="monthlyChart()"
-              [options]="lineOptions()"
-              type="line"
-            ></canvas>
-          } @else {
-            <div class="no-data">Sem dados para exibir</div>
-          }
-        </div>
-      </mat-card>
+      </header>
+      <div class="cc-body cc-tall">
+        @if (monthlyChart().labels?.length) {
+          <canvas baseChart [data]="monthlyChart()" [options]="lineOptions()" type="line"></canvas>
+        } @else {
+          <div class="no-data">Sem vendas no período selecionado.</div>
+        }
+      </div>
+    </section>
 
-      <mat-card class="chart-card">
-        <div class="chart-header">
-          <div class="chart-title">
-            <mat-icon>emoji_events</mat-icon>
-            <h3>Lucro Líquido por Produto</h3>
+    <!-- 2-col grid -->
+    <section class="chart-grid">
+      <article class="chart-card">
+        <header class="cc-head">
+          <div class="cc-title">
+            <h3 class="h-section">Lucro por produto</h3>
+            <p>Top 8 produtos mais rentáveis</p>
           </div>
-          <p>Top produtos mais rentáveis</p>
-        </div>
-        <div class="chart-body">
+        </header>
+        <div class="cc-body">
           @if (productProfitChart().labels?.length) {
-            <canvas
-              baseChart
-              [data]="productProfitChart()"
-              [options]="barOptions()"
-              type="bar"
-            ></canvas>
+            <canvas baseChart [data]="productProfitChart()" [options]="horizontalBarOptions()" type="bar"></canvas>
           } @else {
-            <div class="no-data">Sem vendas registradas</div>
+            <div class="no-data">Sem vendas no período.</div>
           }
         </div>
-      </mat-card>
-    </section>
+      </article>
 
-    <section class="chart-grid">
-      <mat-card class="chart-card">
-        <div class="chart-header">
-          <div class="chart-title">
-            <mat-icon>donut_large</mat-icon>
-            <h3>Composição da Receita</h3>
+      <article class="chart-card">
+        <header class="cc-head">
+          <div class="cc-title">
+            <h3 class="h-section">Composição da receita</h3>
+            <p>Onde sua receita bruta vai parar</p>
           </div>
-          <p>Como sua receita bruta é distribuída</p>
-        </div>
-        <div class="chart-body">
-          @if (kpis().grossRevenue > 0) {
-            <canvas
-              baseChart
-              [data]="compositionChart()"
-              [options]="doughnutOptions()"
-              type="doughnut"
-            ></canvas>
+        </header>
+        <div class="cc-body composition-body">
+          @if (periodKpis().grossRevenue > 0) {
+            <div class="dough-wrap">
+              <canvas baseChart [data]="compositionChart()" [options]="doughnutOptions()" type="doughnut"></canvas>
+              <div class="dough-center">
+                <span class="dough-label">Receita bruta</span>
+                <span class="dough-value">{{ periodKpis().grossRevenue | brl }}</span>
+              </div>
+            </div>
+            <ul class="comp-legend">
+              @for (item of compositionLegend(); track item.label) {
+                <li>
+                  <span class="comp-swatch" [style.background-color]="item.color" aria-hidden="true"></span>
+                  <span class="comp-text">{{ item.label }}</span>
+                  <span class="comp-pct mono">{{ item.pct.toFixed(1) }}%</span>
+                </li>
+              }
+            </ul>
           } @else {
-            <div class="no-data">Sem receita registrada</div>
+            <div class="no-data">Sem receita registrada no período.</div>
           }
         </div>
-      </mat-card>
+      </article>
+    </section>
 
-      <mat-card class="chart-card">
-        <div class="chart-header">
-          <div class="chart-title">
-            <mat-icon>inventory_2</mat-icon>
-            <h3>Capital Parado por Lote</h3>
-          </div>
-          <p>Onde seu dinheiro está preso</p>
+    <!-- Idle capital ranking table -->
+    <section class="chart-card" aria-label="Capital parado por lote">
+      <header class="cc-head">
+        <div class="cc-title">
+          <h3 class="h-section">Capital parado por lote</h3>
+          <p>Top 5 onde mais dinheiro está preso</p>
         </div>
-        <div class="chart-body">
-          @if (idleCapitalChart().labels?.length) {
-            <canvas
-              baseChart
-              [data]="idleCapitalChart()"
-              [options]="horizontalBarOptions()"
-              type="bar"
-            ></canvas>
-          } @else {
-            <div class="no-data">Sem capital parado</div>
+      </header>
+      <div class="cc-body">
+        @if (idleRanking().length > 0) {
+          <ol class="idle-list">
+            @for (b of idleRanking(); track b.id) {
+              <li class="idle-item">
+                <div class="idle-info">
+                  <span class="idle-id mono">{{ b.id }}</span>
+                  <span class="idle-product">{{ b.product }}</span>
+                  <span class="idle-meta">{{ b.daysInStock }}d · {{ b.currentStock }} un</span>
+                </div>
+                <div class="idle-bar-wrap">
+                  <div class="idle-bar" [style.width.%]="(b.idleValue / maxIdle()) * 100"></div>
+                </div>
+                <span class="idle-value mono">{{ b.idleValue | brl }}</span>
+              </li>
+            }
+          </ol>
+        } @else {
+          <div class="no-data">Nenhum capital parado. Excelente giro!</div>
+        }
+      </div>
+    </section>
+
+    <!-- Waterfall -->
+    <section class="chart-card waterfall-card" aria-label="Resumo cascata">
+      <header class="cc-head">
+        <div class="cc-title">
+          <h3 class="h-section">Da receita ao lucro</h3>
+          <p>Acompanhe o caminho de cada real</p>
+        </div>
+      </header>
+      <div class="cc-body">
+        <div class="waterfall">
+          @for (step of waterfall(); track step.label; let last = $last) {
+            <div class="wf-step" [attr.data-tone]="step.tone" [attr.data-kind]="step.kind">
+              <span class="wf-step-label">{{ step.label }}</span>
+              <span class="wf-step-value mono">
+                {{ step.value < 0 ? '−' : '' }}{{ (step.value < 0 ? -step.value : step.value) | brl }}
+              </span>
+              @if (step.kind === 'total') {
+                <span class="wf-step-tag">{{ (periodKpis().netMargin * 100).toFixed(1) }}% margem</span>
+              }
+            </div>
+            @if (!last) {
+              <mat-icon class="wf-sep" aria-hidden="true">arrow_forward</mat-icon>
+            }
           }
         </div>
-      </mat-card>
+      </div>
     </section>
 
-    <section>
-      <mat-card class="chart-card full">
-        <div class="chart-header">
-          <div class="chart-title">
-            <mat-icon>compare</mat-icon>
-            <h3>Comparativo Financeiro Geral</h3>
-          </div>
-          <p>Visão consolidada das métricas principais</p>
-        </div>
-        <div class="chart-body chart-tall">
-          <canvas
-            baseChart
-            [data]="comparativeChart()"
-            [options]="barOptions()"
-            type="bar"
-          ></canvas>
-        </div>
-      </mat-card>
-    </section>
   }
+
 </div>

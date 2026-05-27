@@ -19,8 +19,8 @@ export type SkeletonVariant = 'kpi' | 'table-row' | 'chart' | 'text' | 'card';
     .skeleton {
       position: relative;
       overflow: hidden;
-      background: var(--bg-elevated);
-      border: 1px solid var(--brd-default);
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
     }
 
@@ -31,22 +31,24 @@ export type SkeletonVariant = 'kpi' | 'table-row' | 'chart' | 'text' | 'card';
       background: linear-gradient(
         90deg,
         transparent 0%,
-        color-mix(in srgb, var(--bg-elevated-2) 80%, transparent) 50%,
+        color-mix(in srgb, var(--bg-surface-3) 90%, transparent) 50%,
         transparent 100%
       );
       background-size: 1000px 100%;
-      animation: shimmer 1.4s linear infinite;
+      animation: shimmer 1.6s linear infinite;
     }
 
     .skeleton[data-variant="kpi"] {
-      height: 88px;
+      height: 96px;
       border-radius: var(--radius-lg);
     }
 
     .skeleton[data-variant="table-row"] {
-      height: 44px;
+      height: 48px;
       border-radius: var(--radius-sm);
       margin-bottom: 6px;
+      border: none;
+      background: var(--bg-surface-2);
     }
 
     .skeleton[data-variant="chart"] {
@@ -56,8 +58,9 @@ export type SkeletonVariant = 'kpi' | 'table-row' | 'chart' | 'text' | 'card';
 
     .skeleton[data-variant="text"] {
       height: 14px;
-      border-radius: 4px;
+      border-radius: var(--radius-xs);
       margin: 6px 0;
+      border: none;
     }
 
     .skeleton[data-variant="card"] {

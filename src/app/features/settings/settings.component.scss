@@ -1,5 +1,16 @@
-.content {
-  padding: 16px 32px 48px;
+/* =========================================================================
+   Settings
+   ========================================================================= */
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.primary-cta {
+  --mdc-filled-button-container-color: var(--brand-primary);
+  --mdc-filled-button-label-text-color: #FFFFFF;
 }
 
 .loading-state {
@@ -9,41 +20,89 @@
   align-items: center;
   justify-content: center;
   gap: 16px;
-  color: var(--txt-secondary);
+  color: var(--text-secondary);
 
-  p {
-    margin: 0;
-    font-size: 13px;
-  }
+  p { margin: 0; font-size: 13px; }
 }
 
+/* =========================================================================
+   Tab card + Material overrides
+   ========================================================================= */
 .settings-tabs {
+  background: var(--bg-surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+
+  ::ng-deep .mat-mdc-tab-header {
+    background: var(--bg-surface-2);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
   ::ng-deep .mat-mdc-tab .mdc-tab__text-label {
-    display: flex !important;
+    display: inline-flex !important;
     align-items: center;
     gap: 6px;
+    color: var(--text-muted);
+    font-weight: 500;
 
-    mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
 
-    .danger-tab-icon {
-      color: var(--clr-red);
-    }
+    .danger-tab-icon { color: var(--color-danger); }
   }
+
+  ::ng-deep .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label { color: var(--brand-primary); }
 }
 
 .tab-body {
-  padding: 24px 0 0;
+  padding: 24px 24px 28px;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
+/* =========================================================================
+   Config card
+   ========================================================================= */
 .config-card {
+  background: var(--bg-surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
   padding: 22px;
+}
+
+.config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  & + .config-section {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+.section-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+
+  h3 {
+    margin: 0;
+    font-family: 'Geist', 'Inter', sans-serif;
+    font-size: var(--fs-h3);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
 }
 
 .card-title {
@@ -52,77 +111,66 @@
   gap: 10px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--txt-secondary);
+  color: var(--text-secondary);
   margin: 0 0 16px;
-  letter-spacing: 0.3px;
+  letter-spacing: -0.005em;
 
   mat-icon {
     font-size: 20px;
     width: 20px;
     height: 20px;
-    color: var(--clr-blue);
+    color: var(--brand-primary);
   }
 
-  &.danger mat-icon {
-    color: var(--clr-red);
-  }
+  &.danger mat-icon { color: var(--color-danger); }
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 14px;
 
-  @media (max-width: 700px) {
-    grid-template-columns: 1fr;
-  }
+  @media (max-width: 700px) { grid-template-columns: 1fr; }
 }
 
-.unit-suffix {
-  margin-right: 12px;
-}
+.unit-suffix { margin-right: 12px; }
 
+/* =========================================================================
+   Lists tab
+   ========================================================================= */
 .lists-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 14px;
 
-  @media (max-width: 1100px) {
-    grid-template-columns: 1fr;
-  }
+  @media (max-width: 1100px) { grid-template-columns: 1fr; }
 }
 
-.chip-field {
-  width: 100%;
-}
-
-.danger-card {
-  padding: 22px;
-  border: 1px solid var(--clr-red);
-  background: color-mix(in srgb, var(--clr-red) 5%, var(--bg-surface));
-}
+.chip-field { width: 100%; }
 
 .drag-handle {
   font-size: 16px;
   width: 16px;
   height: 16px;
-  color: var(--txt-secondary);
+  color: var(--text-muted);
   cursor: grab;
   margin-right: 4px;
-  opacity: 0.5;
+  opacity: 0.45;
+  transition: opacity var(--dur-fast) var(--ease-out);
 
   &:hover { opacity: 1; }
 }
 
 ::ng-deep .cdk-drag-preview {
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  background: var(--bg-surface-1);
   padding: 4px 12px;
   display: flex;
   align-items: center;
   font-size: 13px;
   font-weight: 500;
+  color: var(--text-primary);
 }
 
 ::ng-deep .cdk-drag-placeholder { opacity: 0.3; }
@@ -131,11 +179,14 @@
   transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
 }
 
+/* =========================================================================
+   Import / Danger
+   ========================================================================= */
 .import-description {
-  color: var(--txt-secondary);
+  color: var(--text-secondary);
   margin: 0 0 16px;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .import-actions {
@@ -144,14 +195,22 @@
   flex-wrap: wrap;
 }
 
-.danger-card p {
-  color: var(--txt-secondary);
-  margin: 0 0 16px;
-  font-size: 13px;
-  line-height: 1.5;
+.danger-card {
+  padding: 22px;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 25%, transparent);
+  background: var(--tint-danger);
+  border-radius: var(--radius-lg);
+  border-left: 4px solid var(--color-danger);
+
+  p {
+    color: var(--text-secondary);
+    margin: 0 0 16px;
+    font-size: 13px;
+    line-height: 1.55;
+  }
 }
 
 @media (max-width: 768px) {
-  .content { padding: 8px 16px 32px; }
-  .config-card { padding: 16px; }
+  .tab-body { padding: 18px 16px 22px; }
+  .config-card { padding: 18px; }
 }

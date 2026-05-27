@@ -9,11 +9,26 @@ import { MatIconModule } from '@angular/material/icon';
   template: `
     <div class="empty-state">
       <div class="illustration" aria-hidden="true">
-        <div class="ring ring-1"></div>
-        <div class="ring ring-2"></div>
-        <div class="icon-circle">
-          <mat-icon>{{ icon() }}</mat-icon>
-        </div>
+        <svg viewBox="0 0 96 96" width="96" height="96">
+          <!-- 7×7 dot grid with center highlighted -->
+          @for (row of grid; track $index; let r = $index) {
+            @for (col of grid; track $index; let c = $index) {
+              <circle
+                [attr.cx]="8 + c * 13"
+                [attr.cy]="8 + r * 13"
+                [attr.r]="r === 3 && c === 3 ? 4 : 1.5"
+                [attr.class]="r === 3 && c === 3 ? 'dot center' : 'dot'"
+              />
+            }
+          }
+          @if (icon()) {
+            <foreignObject x="32" y="32" width="32" height="32">
+              <div class="icon-wrap">
+                <mat-icon>{{ icon() }}</mat-icon>
+              </div>
+            </foreignObject>
+          }
+        </svg>
       </div>
       <h3 class="title">{{ title() }}</h3>
       @if (description()) {
@@ -31,79 +46,63 @@ import { MatIconModule } from '@angular/material/icon';
       align-items: center;
       text-align: center;
       padding: 56px 24px;
-      background: var(--bg-surface);
-      border: 1px solid var(--brd-default);
-      border-radius: var(--radius-lg);
-      gap: 12px;
+      background: var(--bg-surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      gap: 14px;
     }
 
     .illustration {
-      position: relative;
-      width: 100px;
-      height: 100px;
+      width: 96px;
+      height: 96px;
       display: grid;
       place-items: center;
       margin-bottom: 4px;
     }
 
-    .ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 1px solid color-mix(in srgb, var(--clr-blue) 22%, transparent);
+    .dot {
+      fill: var(--text-muted);
+      opacity: 0.18;
     }
 
-    .ring-1 {
-      transform: scale(1);
-      opacity: 0.5;
+    .dot.center {
+      fill: var(--brand-primary);
+      opacity: 0.9;
     }
 
-    .ring-2 {
-      transform: scale(0.78);
-      opacity: 0.8;
-      background: color-mix(in srgb, var(--clr-blue) 6%, transparent);
-    }
-
-    .icon-circle {
-      position: relative;
-      z-index: 1;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
+    .icon-wrap {
+      width: 32px;
+      height: 32px;
       display: grid;
       place-items: center;
-      background: linear-gradient(135deg,
-        color-mix(in srgb, var(--clr-blue) 100%, transparent),
-        color-mix(in srgb, var(--clr-green) 80%, var(--clr-blue))
-      );
-      color: #FFFFFF;
-      box-shadow: var(--shadow-md);
+      color: var(--brand-primary);
     }
 
-    .icon-circle mat-icon {
-      font-size: 30px;
-      width: 30px;
-      height: 30px;
+    .icon-wrap mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
     }
 
     .title {
-      font-size: 17px;
+      font-family: 'Geist', 'Inter', sans-serif;
+      font-size: var(--fs-h2);
       font-weight: 600;
-      color: var(--txt-primary);
-      margin: 8px 0 0;
-      letter-spacing: -0.2px;
+      color: var(--text-primary);
+      margin: 4px 0 0;
+      letter-spacing: -0.015em;
     }
 
     .description {
-      font-size: 13px;
-      color: var(--txt-secondary);
+      font-size: var(--fs-body);
+      color: var(--text-secondary);
       margin: 0;
-      max-width: 420px;
-      line-height: 1.5;
+      max-width: 440px;
+      line-height: 1.55;
     }
 
     .actions {
-      margin-top: 8px;
+      margin-top: 10px;
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
@@ -112,7 +111,9 @@ import { MatIconModule } from '@angular/material/icon';
   `]
 })
 export class EmptyStateComponent {
-  readonly icon = input<string>('inbox');
+  readonly icon = input<string>('');
   readonly title = input.required<string>();
   readonly description = input<string>('');
+
+  protected readonly grid = Array.from({ length: 7 });
 }

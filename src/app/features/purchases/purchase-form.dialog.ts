@@ -199,8 +199,15 @@ export interface PurchaseDialogData {
     </mat-dialog-actions>
   `,
   styles: [`
-    h2 { display: flex; align-items: center; gap: 10px; }
-    h2 mat-icon { color: var(--clr-blue); }
+    h2 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Geist', 'Inter', sans-serif;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+    }
+    h2 mat-icon { color: var(--brand-primary); }
 
     .form-grid {
       display: grid;
@@ -214,21 +221,22 @@ export interface PurchaseDialogData {
 
     .preview {
       margin-top: 16px;
-      padding: 16px;
-      background: var(--bg-blue);
-      border: 1px solid var(--clr-blue);
-      border-radius: 10px;
+      padding: 18px;
+      background: linear-gradient(135deg, var(--bg-surface-2) 0%, var(--tint-brand) 100%);
+      border: 1px solid color-mix(in srgb, var(--brand-primary) 25%, transparent);
+      border-radius: var(--radius-lg);
     }
 
     .preview-title {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
-      color: var(--clr-blue);
-      margin-bottom: 12px;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--brand-primary);
+      margin-bottom: 14px;
 
       mat-icon {
         font-size: 16px;
@@ -240,22 +248,30 @@ export interface PurchaseDialogData {
     .preview-stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      gap: 14px;
     }
 
     .preview-stats > div {
       display: flex;
       flex-direction: column;
+      gap: 2px;
     }
 
     .preview-stats span {
       font-size: 11px;
-      color: var(--txt-secondary);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
     }
 
     .preview-stats strong {
+      font-family: 'Geist', 'Inter', sans-serif;
       font-size: 15px;
-      color: var(--clr-blue);
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
       margin-top: 2px;
     }
 

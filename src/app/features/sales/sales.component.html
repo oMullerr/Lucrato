@@ -1,67 +1,58 @@
 <app-page-header
-  icon="sell"
   title="Vendas"
-  subtitle="Cada linha = uma venda. Mesmo produto pode ter preços diferentes."
+  eyebrow="REGISTRO · {{ sales().length }} VENDAS"
+  subtitle="Cada linha é uma venda. Receita, taxas e margem calculadas automaticamente."
 >
-  <button mat-flat-button color="primary" (click)="openNew()">
+  <button mat-flat-button class="primary-cta" (click)="openNew()">
     <mat-icon>add</mat-icon>
     Nova Venda
   </button>
 </app-page-header>
 
-<div class="content">
+<div class="page-content sales-body">
+
   @if (!data.loaded()) {
     <section class="quick-stats">
-      <app-skeleton variant="kpi" [count]="5" />
+      <app-skeleton variant="kpi" [count]="4" />
     </section>
     <app-skeleton variant="table-row" [count]="8" />
+
   } @else if (sales().length === 0) {
     <app-empty-state
       icon="sell"
       title="Nenhuma venda registrada"
       description="Comece a acompanhar receita, taxas e margens registrando sua primeira venda."
     >
-      <button mat-flat-button color="primary" (click)="openNew()">
+      <button mat-flat-button class="primary-cta" (click)="openNew()">
         <mat-icon>add</mat-icon>
         Registrar venda
       </button>
     </app-empty-state>
+
   } @else {
+
     <section class="quick-stats">
       <app-kpi-card
-        size="compact"
-        icon="format_list_numbered"
         title="Vendas"
         [value]="summary().total"
-        variant="gray"
+        variant="neutral"
+        [note]="quickFilter() === 'all' ? 'No total' : 'Com filtro aplicado'"
       />
       <app-kpi-card
-        size="compact"
-        icon="trending_up"
-        title="Receita Bruta"
+        title="Receita bruta"
         [value]="summary().revenue | brl"
-        variant="blue"
+        variant="brand"
+        note="Concluídas no filtro"
       />
       <app-kpi-card
-        size="compact"
-        icon="local_offer"
-        title="Taxas Pagas"
-        [value]="summary().fees | brl"
-        variant="amber"
-      />
-      <app-kpi-card
-        size="compact"
-        icon="emoji_events"
-        title="Lucro Líquido"
+        title="Lucro líquido"
         [value]="summary().profit | brl"
-        [variant]="summary().profit >= 0 ? 'green' : 'red'"
+        [variant]="summary().profit >= 0 ? 'success' : 'danger'"
       />
       <app-kpi-card
-        size="compact"
-        icon="percent"
-        title="Margem Média"
+        title="Margem média"
         [value]="(summary().margin * 100).toFixed(1) + '%'"
-        variant="teal"
+        variant="neutral"
       />
     </section>
 
@@ -76,7 +67,7 @@
         />
       </mat-form-field>
 
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-form-field class="channel-select" appearance="outline" subscriptSizing="dynamic">
         <mat-label>Canal</mat-label>
         <mat-select [ngModel]="channelFilter()" (ngModelChange)="channelFilter.set($event)">
           <mat-option value="all">Todos os canais</mat-option>
@@ -86,78 +77,140 @@
         </mat-select>
       </mat-form-field>
 
-      <span class="result-count">{{ filteredSales().length }} resultado(s)</span>
+      <div class="quick-chips" role="tablist">
+        <button
+          type="button"
+          class="chip"
+          [class.active]="quickFilter() === 'all'"
+          (click)="setQuickFilter('all')"
+        >Todas <span class="chip-count">{{ quickCounts().all }}</span></button>
+        <button
+          type="button"
+          class="chip"
+          [class.active]="quickFilter() === 'profit'"
+          (click)="setQuickFilter('profit')"
+        >
+          <span class="status-dot success" aria-hidden="true"></span>
+          Lucrativas <span class="chip-count">{{ quickCounts().profit }}</span>
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.active]="quickFilter() === 'loss'"
+          (click)="setQuickFilter('loss')"
+        >
+          <span class="status-dot danger" aria-hidden="true"></span>
+          Prejuízo <span class="chip-count">{{ quickCounts().loss }}</span>
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.active]="quickFilter() === 'low-margin'"
+          (click)="setQuickFilter('low-margin')"
+        >
+          <span class="status-dot warning" aria-hidden="true"></span>
+          Margem baixa <span class="chip-count">{{ quickCounts().lowMargin }}</span>
+        </button>
+      </div>
     </section>
 
     @if (filteredSales().length > 0) {
-      <mat-card class="table-card">
+      <div class="table-card">
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
               <tr>
-                <th>ID Venda</th>
-                <th>ID Lote</th>
+                <th class="col-edge"></th>
+                <th>ID</th>
+                <th>Lote</th>
                 <th>Produto</th>
                 <th>Data</th>
                 <th>Canal</th>
-                <th class="text-center">Qtd.</th>
-                <th class="text-right">Preço Unit.</th>
-                <th class="text-right">Receita Bruta</th>
-                <th class="text-center">Taxa %</th>
-                <th class="text-right">Receita Líquida</th>
-                <th class="text-right">Custo</th>
-                <th class="text-right">Lucro Líquido</th>
-                <th class="text-center">Margem %</th>
+                <th class="text-center">Qtd</th>
+                <th class="text-right">Lucro líquido</th>
+                <th class="text-center">Margem</th>
                 <th>Status</th>
-                <th class="text-center">Ações</th>
+                <th class="text-right col-actions"></th>
               </tr>
             </thead>
             <tbody>
               @for (v of filteredSales(); track v.id) {
-                <tr>
-                  <td><span class="id-tag id-sale">{{ v.id }}</span></td>
-                  <td><span class="id-tag id-batch">{{ v.batchId }}</span></td>
-                  <td class="product-cell" [title]="v.product">{{ v.product }}</td>
-                  <td>{{ v.saleDate | brDate }}</td>
-                  <td><span class="channel-pill">{{ v.channel }}</span></td>
-                  <td class="text-center">{{ v.quantitySold }}</td>
-                  <td class="text-right">{{ v.unitPrice | brl }}</td>
-                  <td class="text-right"><strong>{{ v.grossRevenue | brl }}</strong></td>
-                  <td class="text-center" [class.text-warning]="isCustomFee(v.feePercentage)">
-                    {{ (v.feePercentage * 100).toFixed(1) }}%
+                <tr
+                  class="row"
+                  [class.expanded]="expandedRow() === v.id"
+                  (click)="toggleRow(v.id, $event)"
+                >
+                  <td class="col-edge">
+                    <span class="row-stripe" [class.stripe-danger]="v.netProfit < 0" aria-hidden="true"></span>
                   </td>
-                  <td class="text-right">{{ v.netRevenue | brl }}</td>
-                  <td class="text-right text-muted">{{ v.proportionalCost | brl }}</td>
+                  <td><span class="id-tag id-sale mono">{{ v.id }}</span></td>
+                  <td><span class="id-tag mono">{{ v.batchId }}</span></td>
+                  <td class="product-cell" [title]="v.product">{{ v.product }}</td>
+                  <td class="mono">{{ v.saleDate | brDate }}</td>
+                  <td><span class="channel-pill">{{ v.channel }}</span></td>
+                  <td class="text-center mono">{{ v.quantitySold }}</td>
                   <td
-                    class="text-right"
+                    class="text-right mono"
                     [class.text-success]="v.netProfit > 0"
                     [class.text-danger]="v.netProfit < 0"
                   >
                     <strong>{{ v.netProfit | brl }}</strong>
                   </td>
-                  <td class="text-center" [class]="marginClass(v.netMargin)">
+                  <td class="text-center mono" [class]="marginClass(v.netMargin)">
                     <strong>{{ (v.netMargin * 100).toFixed(1) }}%</strong>
                   </td>
                   <td><app-status-badge [status]="v.status" /></td>
-                  <td class="text-center actions">
-                    <button mat-icon-button matTooltip="Editar" (click)="edit(v)">
+                  <td class="text-right col-actions">
+                    <button
+                      mat-icon-button
+                      class="row-action"
+                      (click)="edit(v, $event)"
+                      matTooltip="Editar"
+                    >
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-icon-button matTooltip="Remover" color="warn" (click)="confirmRemove(v)">
-                      <mat-icon>delete</mat-icon>
+                    <button
+                      mat-icon-button
+                      class="row-action danger"
+                      (click)="confirmRemove(v, $event)"
+                      matTooltip="Remover"
+                    >
+                      <mat-icon>delete_outline</mat-icon>
                     </button>
                   </td>
                 </tr>
+                @if (expandedRow() === v.id) {
+                  <tr class="row-expansion" (click)="$event.stopPropagation()">
+                    <td class="col-edge"></td>
+                    <td colspan="10">
+                      <div class="expansion-grid">
+                        <div><span class="t-caption">Preço unit.</span><strong class="mono">{{ v.unitPrice | brl }}</strong></div>
+                        <div><span class="t-caption">Receita bruta</span><strong class="mono">{{ v.grossRevenue | brl }}</strong></div>
+                        <div>
+                          <span class="t-caption">Taxa ML</span>
+                          <strong class="mono" [class.text-warning]="isCustomFee(v.feePercentage)">
+                            {{ (v.feePercentage * 100).toFixed(1) }}%
+                          </strong>
+                        </div>
+                        <div><span class="t-caption">Taxa em R$</span><strong class="mono">{{ v.feeAmount | brl }}</strong></div>
+                        <div><span class="t-caption">Frete vendedor</span><strong class="mono">{{ v.sellerShipping | brl }}</strong></div>
+                        <div><span class="t-caption">Desconto</span><strong class="mono">{{ v.discount | brl }}</strong></div>
+                        <div><span class="t-caption">Receita líq.</span><strong class="mono">{{ v.netRevenue | brl }}</strong></div>
+                        <div><span class="t-caption">Custo (rateado)</span><strong class="mono">{{ v.proportionalCost | brl }}</strong></div>
+                      </div>
+                    </td>
+                  </tr>
+                }
               }
             </tbody>
           </table>
         </div>
-      </mat-card>
+      </div>
     } @else {
       <app-empty-state
         icon="filter_alt_off"
-        title="Nenhuma venda encontrada com esses filtros"
-        description="Ajuste a busca ou o canal para ver outras vendas."
+        title="Nenhuma venda encontrada"
+        description="Ajuste a busca, canal ou filtro rápido para ver outras vendas."
       />
     }
   }

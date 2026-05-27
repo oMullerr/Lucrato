@@ -1,26 +1,20 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-page-header',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule],
   template: `
     <header class="page-header">
       <div class="header-inner">
         <div class="header-text">
-          <div class="title-row">
-            <div class="icon-badge" aria-hidden="true">
-              <mat-icon>{{ icon() }}</mat-icon>
-            </div>
-            <div class="title-text">
-              <h1 class="h-display">{{ title() }}</h1>
-              @if (subtitle()) {
-                <p class="subtitle">{{ subtitle() }}</p>
-              }
-            </div>
-          </div>
+          @if (eyebrow()) {
+            <div class="eyebrow">{{ eyebrow() }}</div>
+          }
+          <h1 class="h-display">{{ title() }}</h1>
+          @if (subtitle()) {
+            <p class="subtitle">{{ subtitle() }}</p>
+          }
         </div>
         <div class="actions">
           <ng-content></ng-content>
@@ -30,8 +24,7 @@ import { MatIconModule } from '@angular/material/icon';
   `,
   styles: [`
     .page-header {
-      background: var(--bg-surface);
-      border-bottom: 1px solid var(--brd-default);
+      background: transparent;
     }
 
     .header-inner {
@@ -39,45 +32,44 @@ import { MatIconModule } from '@angular/material/icon';
       margin-inline: auto;
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: flex-end;
       gap: 24px;
-      padding: 24px var(--content-pad-x) 20px;
+      padding: 28px var(--content-pad-x) 22px;
     }
 
-    .header-text { flex: 1; min-width: 0; }
-
-    .title-row {
+    .header-text {
+      flex: 1;
+      min-width: 0;
       display: flex;
-      align-items: center;
-      gap: 14px;
+      flex-direction: column;
+      gap: 6px;
     }
 
-    .icon-badge {
-      flex-shrink: 0;
-      width: 40px;
-      height: 40px;
-      display: grid;
-      place-items: center;
-      border-radius: 11px;
-      background: color-mix(in srgb, var(--clr-blue) 10%, transparent);
-      color: var(--clr-blue);
+    .eyebrow {
+      font-size: var(--fs-caption);
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      line-height: 1;
     }
 
-    .icon-badge mat-icon {
-      font-size: 22px;
-      width: 22px;
-      height: 22px;
-    }
-
-    .title-text h1 {
+    h1.h-display {
       margin: 0;
-      color: var(--txt-primary);
+      font-family: 'Geist', 'Inter', sans-serif;
+      font-size: var(--fs-display-lg);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      color: var(--text-primary);
     }
 
     .subtitle {
-      color: var(--txt-secondary);
-      font-size: 13px;
-      margin: 3px 0 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+      max-width: 60ch;
+      margin: 2px 0 0;
+      line-height: 1.5;
     }
 
     .actions {
@@ -85,25 +77,28 @@ import { MatIconModule } from '@angular/material/icon';
       gap: 8px;
       flex-wrap: wrap;
       align-items: center;
+      flex-shrink: 0;
     }
 
     @media (max-width: 768px) {
       .header-inner {
         flex-direction: column;
-        padding: 20px var(--content-pad-x-sm) 16px;
+        align-items: flex-start;
+        padding: 20px var(--content-pad-x-sm) 18px;
       }
       .actions { width: 100%; }
     }
 
     @media (max-width: 480px) {
-      .icon-badge { width: 36px; height: 36px; }
-      .icon-badge mat-icon { font-size: 20px; width: 20px; height: 20px; }
-      .subtitle { font-size: 12px; }
+      .subtitle { font-size: 13px; }
     }
   `]
 })
 export class PageHeaderComponent {
   readonly title = input.required<string>();
   readonly subtitle = input<string>('');
-  readonly icon = input<string>('dashboard');
+  /** Tiny uppercased label above the title (eg. "PANORAMA · ATUALIZADO 14:32"). */
+  readonly eyebrow = input<string>('');
+  /** Kept for backwards compatibility — ignored visually in the new design. */
+  readonly icon = input<string>('');
 }

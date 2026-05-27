@@ -1,6 +1,4 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 
 interface InstructionItem {
@@ -138,199 +136,160 @@ Revisão semanal (5 minutos):
   selector: 'app-instructions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    MatIconModule,
-    PageHeaderComponent,
-  ],
+  imports: [PageHeaderComponent],
   template: `
     <app-page-header
-      icon="help_outline"
-      title="Instruções de Uso"
-      subtitle="Guia completo do sistema Lucrato"
+      title="Instruções"
+      eyebrow="GUIA · {{ instructions.length }} TÓPICOS"
+      subtitle="Tudo o que você precisa saber para tirar o máximo do Lucrato no dia a dia."
     />
 
-    <div class="content">
-      <div class="hero">
-        <div class="hero-icon">
-          <mat-icon>menu_book</mat-icon>
-        </div>
-        <div class="hero-text">
-          <h2>Bem-vindo ao Lucrato</h2>
-          <p>Este guia cobre todas as funcionalidades do sistema. Cada seção explica um aspecto diferente — do cadastro de compras aos alertas de estoque parado.</p>
-        </div>
-        <div class="hero-stat">
-          <span class="stat-number">{{ instructions.length }}</span>
-          <span class="stat-label">seções</span>
-        </div>
-      </div>
+    <div class="page-content inst-body">
+      <div class="layout">
+        <!-- TOC sticky -->
+        <aside class="toc" aria-label="Índice">
+          <span class="toc-title">Nesta página</span>
+          <ol class="toc-list">
+            @for (item of instructions; track item.title; let i = $index) {
+              <li>
+                <a [href]="'#sec-' + i" class="toc-link">
+                  <span class="toc-num mono">{{ i + 1 < 10 ? '0' + (i + 1) : (i + 1) }}</span>
+                  <span class="toc-label">{{ item.title }}</span>
+                </a>
+              </li>
+            }
+          </ol>
+        </aside>
 
-      <div class="cards-grid">
-        @for (item of instructions; track item.title) {
-          <div class="instruction-card">
-            <div class="card-header">
-              <div class="icon-badge">
-                <mat-icon>{{ item.icon }}</mat-icon>
-              </div>
-              <h3 class="card-title">{{ item.title }}</h3>
-            </div>
-            <p class="card-body">{{ item.body }}</p>
-          </div>
-        }
+        <!-- Sections -->
+        <article class="sections">
+          @for (item of instructions; track item.title; let i = $index) {
+            <section class="inst-section" [attr.id]="'sec-' + i">
+              <header class="inst-head">
+                <span class="inst-num mono">{{ i + 1 < 10 ? '0' + (i + 1) : (i + 1) }}</span>
+                <h2>{{ item.title }}</h2>
+              </header>
+              <p class="inst-body-text">{{ item.body }}</p>
+            </section>
+          }
+        </article>
       </div>
     </div>
   `,
   styles: [`
-    .content {
-      padding: 24px 32px 48px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
+    .inst-body {
+      display: block;
     }
 
-    .hero {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      padding: 28px 32px;
-      background: linear-gradient(135deg, var(--bg-blue) 0%, var(--bg-surface) 100%);
-      border: 1px solid color-mix(in srgb, var(--clr-blue) 30%, transparent);
-      border-radius: 14px;
-    }
-
-    .hero-icon {
-      width: 56px;
-      height: 56px;
-      background: var(--clr-blue);
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      box-shadow: 0 4px 14px color-mix(in srgb, var(--clr-blue) 35%, transparent);
-
-      mat-icon {
-        font-size: 28px;
-        width: 28px;
-        height: 28px;
-        color: #fff;
-      }
-    }
-
-    .hero-text {
-      flex: 1;
-
-      h2 {
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--txt-primary);
-        margin: 0 0 6px;
-      }
-
-      p {
-        font-size: 13.5px;
-        color: var(--txt-secondary);
-        margin: 0;
-        line-height: 1.55;
-      }
-    }
-
-    .hero-stat {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 14px 24px;
-      background: var(--bg-surface);
-      border-radius: 12px;
-      border: 1px solid var(--brd-default);
-      flex-shrink: 0;
-    }
-
-    .stat-number {
-      font-size: 32px;
-      font-weight: 800;
-      color: var(--clr-blue);
-      line-height: 1;
-    }
-
-    .stat-label {
-      font-size: 11px;
-      color: var(--txt-muted);
-      margin-top: 3px;
-      letter-spacing: 0.3px;
-    }
-
-    .cards-grid {
+    .layout {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
+      grid-template-columns: 240px 1fr;
+      gap: 48px;
+      max-width: 980px;
+      margin: 0 auto;
     }
 
-    .instruction-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--brd-default);
-      border-radius: 12px;
-      padding: 20px 24px;
-      box-shadow: var(--shadow-sm);
+    /* ============ TOC ============ */
+    .toc {
+      position: sticky;
+      top: 24px;
+      align-self: start;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .toc-title {
+      font-size: var(--fs-caption);
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .toc-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.35;
 
       &:hover {
-        box-shadow: var(--shadow-md);
-        border-color: color-mix(in srgb, var(--clr-blue) 25%, var(--brd-default));
+        background: var(--bg-surface-2);
+        color: var(--text-primary);
       }
     }
 
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .icon-badge {
-      width: 36px;
-      height: 36px;
-      background: var(--bg-blue);
-      border-radius: 9px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .toc-num {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
       flex-shrink: 0;
-
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        color: var(--clr-blue);
-      }
     }
 
-    .card-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--txt-primary);
+    .toc-label { flex: 1; }
+
+    /* ============ Sections ============ */
+    .sections {
+      display: flex;
+      flex-direction: column;
+      gap: 56px;
+    }
+
+    .inst-section { scroll-margin-top: 80px; }
+
+    .inst-head {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .inst-num {
+      font-family: 'Geist Mono', monospace;
+      font-size: 12px;
+      color: var(--brand-primary);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    .inst-head h2 {
       margin: 0;
+      font-family: 'Geist', 'Inter', sans-serif;
+      font-size: clamp(1.25rem, 1.5vw + 0.5rem, 1.5rem);
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      color: var(--text-primary);
     }
 
-    .card-body {
-      font-size: 13px;
-      color: var(--txt-secondary);
-      line-height: 1.75;
+    .inst-body-text {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.7;
       margin: 0;
       white-space: pre-wrap;
+      max-width: 65ch;
     }
 
-    @media (max-width: 1000px) {
-      .cards-grid { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 700px) {
-      .content { padding: 16px 16px 32px; }
-      .hero { flex-wrap: wrap; padding: 20px 16px; gap: 16px; }
-      .hero-stat { display: none; }
-      .hero-text h2 { font-size: 16px; }
-      .hero-text p { font-size: 13px; }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; gap: 28px; }
+      .toc { position: static; }
     }
   `]
 })
