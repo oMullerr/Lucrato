@@ -1,25 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Interior (open top - dark) -->
-  <polygon points="14,52 74,52 88,42 28,42"
-           fill="#8B500F" stroke="#1A0904" stroke-width="3.5" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lucrato">
+  <!-- Phthalo deep teal background -->
+  <rect width="64" height="64" rx="14" fill="#0A6E5C"/>
 
-  <!-- Left lid flap -->
-  <polygon points="14,52 28,42 22,17 8,26"
-           fill="#F5C27A" stroke="#1A0904" stroke-width="3.5" stroke-linejoin="round"/>
+  <!-- Bold geometric "L" in champagne -->
+  <path d="M 21 14 L 21 46 L 46 46"
+        fill="none"
+        stroke="#E8C77B"
+        stroke-width="8"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
 
-  <!-- Right lid flap -->
-  <polygon points="74,52 88,42 88,15 70,24"
-           fill="#E0A04C" stroke="#1A0904" stroke-width="3.5" stroke-linejoin="round"/>
-
-  <!-- Box front face -->
-  <polygon points="14,52 74,52 74,90 14,90"
-           fill="#F5C27A" stroke="#1A0904" stroke-width="3.5" stroke-linejoin="round"/>
-
-  <!-- Box right side (3D depth) -->
-  <polygon points="74,52 88,42 88,80 74,90"
-           fill="#E0A04C" stroke="#1A0904" stroke-width="3.5" stroke-linejoin="round"/>
-
-  <!-- Center fold line (front face) -->
-  <line x1="44" y1="52" x2="44" y2="90"
-        stroke="#1A0904" stroke-width="1.5" stroke-dasharray="5,4" opacity="0.28"/>
+  <!-- Champagne accent dot (premium product mark) -->
+  <circle cx="48" cy="18" r="3.5" fill="#E8C77B"/>
 </svg>

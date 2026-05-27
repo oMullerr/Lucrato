@@ -146,9 +146,11 @@ const NAV_GROUPS: NavGroup[] = [
             </button>
 
             <button mat-button [matMenuTriggerFor]="userMenu" class="user-btn">
-              <span class="avatar" aria-hidden="true">{{ avatarInitials() }}</span>
-              <span class="user-name">{{ auth.storeName() }}</span>
-              <mat-icon class="chevron">expand_more</mat-icon>
+              <span class="user-btn-inner">
+                <span class="avatar" aria-hidden="true">{{ avatarInitials() }}</span>
+                <span class="user-name">{{ auth.storeName() }}</span>
+                <mat-icon class="chevron">expand_more</mat-icon>
+              </span>
             </button>
             <mat-menu #userMenu="matMenu" xPosition="before">
               <button mat-menu-item routerLink="/profile">
@@ -400,15 +402,20 @@ const NAV_GROUPS: NavGroup[] = [
     }
 
     .user-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
       color: var(--text-primary);
       font-size: 13px;
       font-weight: 500;
       height: 38px;
       padding: 0 10px 0 4px;
       border-radius: var(--radius-md);
+    }
+
+    .user-btn-inner {
+      display: inline-flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+      line-height: 1;
 
       .avatar {
         width: 28px;
@@ -420,8 +427,9 @@ const NAV_GROUPS: NavGroup[] = [
         font-weight: 600;
         font-family: 'Geist', sans-serif;
         letter-spacing: 0.02em;
-        display: grid;
-        place-items: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         flex-shrink: 0;
       }
 
@@ -430,6 +438,7 @@ const NAV_GROUPS: NavGroup[] = [
         width: 18px;
         height: 18px;
         color: var(--text-muted);
+        flex-shrink: 0;
       }
     }
 

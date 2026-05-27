@@ -249,7 +249,6 @@ A aplicação implementa as seguintes camadas de proteção:
 - Teste unitário
 - Na tela de dashboard, no filtro de dias, colocar uma data customizada (abre o calendario e seleciona o range de dias)
 - Ler como ficou o texto das instruções
+- Quando o sistema cai, como fica a tela? como o sistema reage?
 
 ## BUGS
-- No topbar, o icone da loja aparece em cima do nome da loja, deixe tudo na mesma linha
-- Emoji na aba, trocar para o estilo novo do app
