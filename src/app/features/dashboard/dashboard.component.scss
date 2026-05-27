@@ -43,6 +43,47 @@
   }
 }
 
+.range-pill-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 10px;
+  padding-right: 12px;
+
+  .pill-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    opacity: 0.85;
+  }
+
+  &.active .pill-icon {
+    opacity: 1;
+    color: var(--brand-primary);
+  }
+
+  .mono {
+    font-family: 'Geist Mono', 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.01em;
+  }
+}
+
+/* Picker invisible host — keeps mat-date-range-picker functional without taking space */
+.range-picker-host {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+
+  mat-form-field {
+    width: 0;
+    height: 0;
+  }
+}
+
 /* =========================================================================
    KPI strip
    ========================================================================= */

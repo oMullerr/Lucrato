@@ -1,10 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import type { ChartConfiguration } from 'chart.js';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { DataService } from '../../core/services/data.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { CHART_COLORS } from '../../core/constants/app.constants';
@@ -17,7 +21,7 @@ import { ComputedSale } from '../../core/models/models';
 
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
-type RangeKey = '7d' | '30d' | '90d' | '12m' | 'all';
+type RangeKey = '7d' | '30d' | '90d' | '12m' | 'all' | 'custom';
 
 interface RangeOption { key: RangeKey; label: string; }
 
@@ -34,7 +38,9 @@ const RANGE_OPTIONS: RangeOption[] = [
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    RouterLink, BaseChartDirective, MatIconModule, MatButtonModule, MatTooltipModule,
+    FormsModule, RouterLink, BaseChartDirective,
+    MatIconModule, MatButtonModule, MatTooltipModule,
+    MatFormFieldModule, MatInputModule, MatDatepickerModule,
     PageHeaderComponent, KpiCardComponent, EmptyStateComponent, SkeletonComponent, BrlPipe,
   ],
   templateUrl: './dashboard.component.html',
@@ -46,18 +52,55 @@ export class DashboardComponent {
 
   protected readonly rangeOptions = RANGE_OPTIONS;
   protected readonly range = signal<RangeKey>('30d');
+  protected readonly customStart = signal<Date | null>(null);
+  protected readonly customEnd = signal<Date | null>(null);
+  protected readonly today = new Date();
 
   /** All completed sales — unfiltered base. */
   private readonly allSales = computed(() =>
     this.dataService.computedSales().filter(s => s.status === 'Concluída')
   );
 
+  /** Bounds [start, end] for the active range, or null for "all" or incomplete custom. */
+  protected readonly rangeBounds = computed<{ start: Date; end: Date } | null>(() => {
+    const r = this.range();
+    if (r === 'custom') {
+      const s = this.customStart();
+      const e = this.customEnd();
+      if (!s || !e) return null;
+      const start = new Date(s); start.setHours(0, 0, 0, 0);
+      const end = new Date(e); end.setHours(23, 59, 59, 999);
+      return { start, end };
+    }
+    if (r === 'all') return null;
+    const end = new Date(); end.setHours(23, 59, 59, 999);
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    switch (r) {
+      case '7d':  start.setDate(start.getDate() - 7); break;
+      case '30d': start.setDate(start.getDate() - 30); break;
+      case '90d': start.setDate(start.getDate() - 90); break;
+      case '12m': start.setMonth(start.getMonth() - 12); break;
+    }
+    return { start, end };
+  });
+
   /** Period-filtered sales. */
   protected readonly periodSales = computed(() => {
-    const r = this.range();
-    if (r === 'all') return this.allSales();
-    const cutoff = this.cutoffDate(r);
-    return this.allSales().filter(s => new Date(s.saleDate) >= cutoff);
+    const bounds = this.rangeBounds();
+    if (!bounds) return this.allSales();
+    return this.allSales().filter(s => {
+      const d = new Date(s.saleDate);
+      return d >= bounds.start && d <= bounds.end;
+    });
+  });
+
+  /** Compact label for the custom pill (DD/MM – DD/MM). */
+  protected readonly customRangeLabel = computed(() => {
+    const s = this.customStart();
+    const e = this.customEnd();
+    if (!s || !e) return '';
+    const fmt = (d: Date) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+    return `${fmt(s)} – ${fmt(e)}`;
   });
 
   protected readonly hasData = computed(() =>
@@ -364,7 +407,17 @@ export class DashboardComponent {
     this.range.set(r);
   }
 
+  /** Called when the date-range picker closes. Only commits if both dates are set. */
+  protected onPickerClosed(): void {
+    if (this.customStart() && this.customEnd()) {
+      this.range.set('custom');
+    }
+  }
+
   protected rangeLabel(r: RangeKey): string {
+    if (r === 'custom' && this.customStart() && this.customEnd()) {
+      return `PERSONALIZADO · ${this.customRangeLabel()}`;
+    }
     return RANGE_OPTIONS.find(o => o.key === r)?.label.toUpperCase() ?? '';
   }
 
@@ -372,45 +425,33 @@ export class DashboardComponent {
   // Helpers
   // ────────────────────────────────────────────────────────
 
-  private cutoffDate(r: RangeKey): Date {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    switch (r) {
-      case '7d':  now.setDate(now.getDate() - 7); break;
-      case '30d': now.setDate(now.getDate() - 30); break;
-      case '90d': now.setDate(now.getDate() - 90); break;
-      case '12m': now.setMonth(now.getMonth() - 12); break;
-      default: break;
-    }
-    return now;
-  }
-
-  /** Number of buckets used by sparklines (matches range length). */
+  /** Number of buckets used by sparklines. Adapts to range length. */
   private bucketCount(): number {
-    switch (this.range()) {
-      case '7d':  return 7;
-      case '30d': return 30;
-      case '90d': return 30;
-      case '12m': return 30;
-      default:    return 30;
+    const r = this.range();
+    if (r === '7d') return 7;
+    if (r === 'custom') {
+      const b = this.rangeBounds();
+      if (!b) return 30;
+      const days = Math.floor((b.end.getTime() - b.start.getTime()) / 86400000);
+      return Math.max(7, Math.min(30, days));
     }
+    return 30;
   }
 
   private buildSparkline(picker: (s: ComputedSale) => number): number[] {
     const sales = this.periodSales();
     if (sales.length < 2) return [];
+    const bounds = this.rangeBounds();
+    if (!bounds) return [];
     const days = this.bucketCount();
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    const points: number[] = [];
-    const start = this.cutoffDate(this.range());
-    const totalSpan = today.getTime() - start.getTime();
+    const totalSpan = bounds.end.getTime() - bounds.start.getTime();
     if (totalSpan <= 0) return [];
     const bucketSpan = totalSpan / days;
+    const points: number[] = [];
     let acc = 0;
     for (let i = 0; i < days; i++) {
-      const bEnd = new Date(start.getTime() + bucketSpan * (i + 1));
-      const bStart = new Date(start.getTime() + bucketSpan * i);
+      const bStart = new Date(bounds.start.getTime() + bucketSpan * i);
+      const bEnd = new Date(bounds.start.getTime() + bucketSpan * (i + 1));
       const bucketVal = sales
         .filter(s => {
           const d = new Date(s.saleDate);

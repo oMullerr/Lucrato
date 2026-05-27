@@ -14,6 +14,33 @@
         [attr.aria-selected]="range() === r.key"
       >{{ r.label }}</button>
     }
+
+    <button
+      type="button"
+      class="range-pill range-pill-custom"
+      [class.active]="range() === 'custom'"
+      (click)="picker.open()"
+      role="tab"
+      [attr.aria-selected]="range() === 'custom'"
+      aria-label="Período personalizado"
+    >
+      <mat-icon class="pill-icon">calendar_month</mat-icon>
+      @if (range() === 'custom' && customStart() && customEnd()) {
+        <span class="mono">{{ customRangeLabel() }}</span>
+      } @else {
+        <span>Personalizado</span>
+      }
+    </button>
+
+    <div class="range-picker-host" aria-hidden="true">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-date-range-input [rangePicker]="picker" [max]="today">
+          <input matStartDate [value]="customStart()" (dateChange)="customStart.set($event.value)" />
+          <input matEndDate [value]="customEnd()" (dateChange)="customEnd.set($event.value)" />
+        </mat-date-range-input>
+        <mat-date-range-picker #picker (closed)="onPickerClosed()"></mat-date-range-picker>
+      </mat-form-field>
+    </div>
   </div>
 </app-page-header>
 
