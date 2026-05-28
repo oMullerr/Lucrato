@@ -249,6 +249,8 @@ A aplicação implementa as seguintes camadas de proteção:
 - Teste unitário
 - Ler como ficou o texto das instruções
 - Quando o sistema cai, como fica a tela? como o sistema reage?
+- adicionar regra para mandar mensagem de warning se o usuario tenta remover uma compra que ja tem venda
+- botao para registrar recebimento de mercadoria
 
 ## BUGS
 

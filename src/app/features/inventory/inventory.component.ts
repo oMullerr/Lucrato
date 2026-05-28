@@ -1,12 +1,11 @@
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   computed,
   effect,
   inject,
   signal,
-  ViewChild,
+  viewChild,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -47,7 +46,7 @@ type FilterKey = 'all' | InventoryStatus;
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss',
 })
-export class InventoryComponent implements AfterViewInit {
+export class InventoryComponent {
   protected readonly data = inject(DataService);
   private readonly dialog = inject(MatDialog);
   private readonly notify = inject(NotifyService);
@@ -72,24 +71,31 @@ export class InventoryComponent implements AfterViewInit {
 
   protected readonly pageSizeOptions = [15, 30, 50, 100, 150];
 
-  @ViewChild(MatSort) private readonly sort?: MatSort;
-  @ViewChild(MatPaginator) private readonly paginator?: MatPaginator;
+  private readonly sortRef = viewChild(MatSort);
+  private readonly paginatorRef = viewChild(MatPaginator);
 
   constructor() {
+    // Subscribe to sortChange whenever the MatSort instance becomes available.
+    effect((onCleanup) => {
+      const s = this.sortRef();
+      if (!s) return;
+      const sub = s.sortChange.subscribe((sort: Sort) => this.sortState.set(sort));
+      onCleanup(() => sub.unsubscribe());
+    });
+
+    // Subscribe to page events whenever the MatPaginator instance becomes available.
+    effect((onCleanup) => {
+      const p = this.paginatorRef();
+      if (!p) return;
+      const sub = p.page.subscribe((evt: PageEvent) => this.pageState.set(evt));
+      onCleanup(() => sub.unsubscribe());
+    });
+
     // Reset to first page when filter changes so we don't end up on a page that no longer exists.
     effect(() => {
       this.filter();
-      this.paginator?.firstPage();
+      this.paginatorRef()?.firstPage();
     });
-  }
-
-  ngAfterViewInit(): void {
-    if (this.sort) {
-      this.sort.sortChange.subscribe((s: Sort) => this.sortState.set(s));
-    }
-    if (this.paginator) {
-      this.paginator.page.subscribe((p: PageEvent) => this.pageState.set(p));
-    }
   }
 
   /** Updated timestamp shown in the eyebrow (refreshes when data changes). */

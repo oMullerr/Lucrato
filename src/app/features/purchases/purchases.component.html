@@ -119,22 +119,22 @@
         @if (filteredPurchases().length > 0) {
           <div class="table-card">
             <div class="table-wrapper">
-              <table class="data-table">
+              <table class="data-table" matSort>
                 <thead>
                   <tr>
-                    <th>ID</th>
-                    <th>Produto</th>
-                    <th>Categoria</th>
-                    <th>Fornecedor</th>
-                    <th>Data</th>
-                    <th class="text-center">Qtd</th>
-                    <th class="text-right">Custo total</th>
-                    <th>Status</th>
+                    <th mat-sort-header="id">ID</th>
+                    <th mat-sort-header="product">Produto</th>
+                    <th mat-sort-header="category">Categoria</th>
+                    <th mat-sort-header="supplier">Fornecedor</th>
+                    <th mat-sort-header="purchaseDate">Data</th>
+                    <th class="text-center" mat-sort-header="quantityPurchased" arrowPosition="before">Qtd</th>
+                    <th class="text-right" mat-sort-header="totalActualCost" arrowPosition="before">Custo total</th>
+                    <th mat-sort-header="status">Status</th>
                     <th class="text-right col-actions"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (c of filteredPurchases(); track c.id) {
+                  @for (c of pagedPurchases(); track c.id) {
                     <tr
                       class="row"
                       [class.expanded]="expandedRow() === c.id"
@@ -195,6 +195,13 @@
                 </tbody>
               </table>
             </div>
+            <mat-paginator
+              class="pur-paginator"
+              [length]="filteredPurchases().length"
+              [pageSize]="15"
+              [pageSizeOptions]="pageSizeOptions"
+              showFirstLastButtons
+            />
           </div>
         } @else {
           <app-empty-state

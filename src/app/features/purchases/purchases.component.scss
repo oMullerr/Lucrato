@@ -137,6 +137,13 @@
 
     &.text-right { text-align: right; }
     &.text-center { text-align: center; }
+
+    &[mat-sort-header] {
+      cursor: pointer;
+      user-select: none;
+
+      &:hover { color: var(--text-primary); }
+    }
   }
 
   td {
@@ -227,4 +234,37 @@
 
 @media (max-width: 900px) {
   .expansion-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* =========================================================================
+   Sort headers (MatSort on native <th>)
+   ========================================================================= */
+:host ::ng-deep .data-table .mat-sort-header-container {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  border-bottom: none;
+}
+
+:host ::ng-deep .data-table .mat-sort-header-content {
+  text-align: inherit;
+}
+
+:host ::ng-deep .data-table .mat-sort-header-arrow {
+  color: var(--text-secondary);
+}
+
+/* =========================================================================
+   Paginator
+   ========================================================================= */
+.pur-paginator {
+  background: var(--bg-surface-1);
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+:host ::ng-deep .pur-paginator .mat-mdc-paginator-container {
+  min-height: 48px;
+  padding: 4px 12px;
 }

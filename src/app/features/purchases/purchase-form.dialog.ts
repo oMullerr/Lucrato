@@ -102,11 +102,16 @@ export interface PurchaseDialogData {
             [ngModel]="receiptDateAsDate()"
             (ngModelChange)="setReceiptDate($event)"
             [min]="purchaseDateAsDate()"
+            [max]="today"
             name="receiptDate"
           />
           <mat-datepicker-toggle matIconSuffix [for]="pickerReceipt"></mat-datepicker-toggle>
           <mat-datepicker #pickerReceipt></mat-datepicker>
-          <mat-hint>O prazo de alerta conta a partir desta data.</mat-hint>
+          @if (receiptDateInFuture()) {
+            <mat-hint class="error-hint">A data de recebimento não pode ser maior que hoje.</mat-hint>
+          } @else {
+            <mat-hint>O prazo de alerta conta a partir desta data.</mat-hint>
+          }
         </mat-form-field>
 
         <mat-form-field>
@@ -275,6 +280,11 @@ export interface PurchaseDialogData {
       margin-top: 2px;
     }
 
+    .error-hint {
+      color: var(--color-danger) !important;
+      font-weight: 600;
+    }
+
     @media (max-width: 600px) {
       .form-grid { grid-template-columns: 1fr; }
       .preview-stats { grid-template-columns: 1fr; }
@@ -315,6 +325,20 @@ export class PurchaseFormDialogComponent {
     if (!s) return null;
     const [y, m, d] = s.split('-').map(Number);
     return !y || !m || !d ? null : new Date(y, m - 1, d);
+  });
+
+  /** Upper bound for the receipt-date picker — disables any date after today. */
+  protected readonly today = (() => {
+    const t = new Date();
+    t.setHours(23, 59, 59, 999);
+    return t;
+  })();
+
+  /** True when the current receiptDate is strictly in the future. */
+  protected readonly receiptDateInFuture = computed(() => {
+    const r = this.model().receiptDate;
+    if (!r) return false;
+    return r > this.dateAsString(new Date());
   });
 
   protected set(field: string, value: unknown): void {
@@ -361,6 +385,7 @@ export class PurchaseFormDialogComponent {
     if (m.quantityPurchased < 1 || !Number.isInteger(m.quantityPurchased)) return false;
     if (m.unitCost <= 0) return false;
     if (m.receiptDate && m.receiptDate < m.purchaseDate) return false;
+    if (m.receiptDate && m.receiptDate > this.dateAsString(new Date())) return false;
     return true;
   });
 

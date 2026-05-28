@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npx --no-install ng build --configuration development)",
-      "Bash(npx ng *)"
+      "Bash(npx ng *)",
+      "Bash(npm run *)"
     ]
   }
 }
