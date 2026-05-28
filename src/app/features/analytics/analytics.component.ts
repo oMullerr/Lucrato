@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, Signal, viewChild, WritableSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../core/services/data.service';
 import { CsvExportService } from '../../core/services/csv-export.service';
@@ -56,6 +57,7 @@ const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', '
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink, CommonModule, MatIconModule, MatButtonModule, MatTabsModule, MatTooltipModule,
+    MatPaginatorModule,
     PageHeaderComponent, StatusBadgeComponent, EmptyStateComponent, SkeletonComponent, BrlPipe,
   ],
   templateUrl: './analytics.component.html',
@@ -75,6 +77,42 @@ export class AnalyticsComponent {
   protected readonly categorySort = signal<{ key: keyof CategoryStat; dir: SortDir }>({ key: 'profit', dir: 'desc' });
   protected readonly monthSort = signal<{ key: keyof MonthStat; dir: SortDir }>({ key: 'sortKey', dir: 'asc' });
   protected readonly idleSort = signal<{ key: 'daysInStock' | 'idleValue' | 'currentStock'; dir: SortDir }>({ key: 'idleValue', dir: 'desc' });
+
+  /** Pagination — one state signal + one paginator ref per table. */
+  protected readonly pageSizeOptions = [15, 30, 50, 100, 150];
+  protected readonly productPage = signal<PageEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
+  protected readonly categoryPage = signal<PageEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
+  protected readonly monthPage = signal<PageEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
+  protected readonly idlePage = signal<PageEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
+
+  private readonly productPaginator = viewChild('productPaginator', { read: MatPaginator });
+  private readonly categoryPaginator = viewChild('categoryPaginator', { read: MatPaginator });
+  private readonly monthPaginator = viewChild('monthPaginator', { read: MatPaginator });
+  private readonly idlePaginator = viewChild('idlePaginator', { read: MatPaginator });
+
+  constructor() {
+    this.wirePaginator(this.productPaginator, this.productPage);
+    this.wirePaginator(this.categoryPaginator, this.categoryPage);
+    this.wirePaginator(this.monthPaginator, this.monthPage);
+    this.wirePaginator(this.idlePaginator, this.idlePage);
+  }
+
+  private wirePaginator(
+    ref: Signal<MatPaginator | undefined>,
+    state: WritableSignal<PageEvent>,
+  ): void {
+    effect((onCleanup) => {
+      const p = ref();
+      if (!p) return;
+      const sub = p.page.subscribe((evt: PageEvent) => state.set(evt));
+      onCleanup(() => sub.unsubscribe());
+    });
+  }
+
+  private slicePage<T>(list: T[], state: PageEvent): T[] {
+    const start = state.pageIndex * state.pageSize;
+    return list.slice(start, start + state.pageSize);
+  }
 
   // Raw stats (un-sorted)
   private readonly productRankingRaw = computed<ProductStat[]>(() => {
@@ -181,6 +219,16 @@ export class AnalyticsComponent {
     if (list.length === 0) return 0;
     return Math.max(...list.map(b => b.daysInStock));
   });
+
+  /** Page slices for each tab — derived from the already-sorted base signals. */
+  protected readonly pagedProductRanking = computed(() =>
+    this.slicePage(this.productRanking(), this.productPage()));
+  protected readonly pagedCategoryStats = computed(() =>
+    this.slicePage(this.categoryStats(), this.categoryPage()));
+  protected readonly pagedMonthlyStats = computed(() =>
+    this.slicePage(this.monthlyStats(), this.monthPage()));
+  protected readonly pagedIdleInventory = computed(() =>
+    this.slicePage(this.idleInventory(), this.idlePage()));
 
   /** Resume cards (3 columns: Investment / Result / Efficiency). */
   protected readonly resumeBlocks = computed(() => {

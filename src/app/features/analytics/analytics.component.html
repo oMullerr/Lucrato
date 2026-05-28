@@ -96,9 +96,9 @@
                     </tr>
                   </thead>
                   <tbody>
-                    @for (p of productRanking(); track p.product; let i = $index) {
+                    @for (p of pagedProductRanking(); track p.product; let i = $index) {
                       <tr>
-                        <td class="text-center pos mono">{{ i + 1 }}</td>
+                        <td class="text-center pos mono">{{ productPage().pageIndex * productPage().pageSize + i + 1 }}</td>
                         <td class="product-cell">{{ p.product }}</td>
                         <td class="text-center mono">{{ p.qty }}</td>
                         <td class="text-right mono">{{ p.revenue | brl }}</td>
@@ -117,6 +117,14 @@
                   </tbody>
                 </table>
               </div>
+              <mat-paginator
+                #productPaginator
+                class="anl-paginator"
+                [length]="productRanking().length"
+                [pageSize]="15"
+                [pageSizeOptions]="pageSizeOptions"
+                showFirstLastButtons
+              />
             }
           </div>
         </mat-tab>
@@ -149,7 +157,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @for (c of categoryStats(); track c.category) {
+                  @for (c of pagedCategoryStats(); track c.category) {
                     <tr>
                       <td><span class="category-pill">{{ c.category }}</span></td>
                       <td class="text-center mono">{{ c.batches }}</td>
@@ -169,6 +177,14 @@
                 </tbody>
               </table>
             </div>
+            <mat-paginator
+              #categoryPaginator
+              class="anl-paginator"
+              [length]="categoryStats().length"
+              [pageSize]="15"
+              [pageSizeOptions]="pageSizeOptions"
+              showFirstLastButtons
+            />
           </div>
         </mat-tab>
 
@@ -208,7 +224,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    @for (m of monthlyStats(); track m.sortKey) {
+                    @for (m of pagedMonthlyStats(); track m.sortKey) {
                       <tr>
                         <td><strong>{{ m.month }}</strong></td>
                         <td class="text-center mono">{{ m.qty }}</td>
@@ -229,6 +245,14 @@
                   </tbody>
                 </table>
               </div>
+              <mat-paginator
+                #monthPaginator
+                class="anl-paginator"
+                [length]="monthlyStats().length"
+                [pageSize]="15"
+                [pageSizeOptions]="pageSizeOptions"
+                showFirstLastButtons
+              />
             }
           </div>
         </mat-tab>
@@ -268,7 +292,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    @for (c of idleInventory(); track c.id) {
+                    @for (c of pagedIdleInventory(); track c.id) {
                       <tr>
                         <td><span class="id-tag mono">{{ c.id }}</span></td>
                         <td class="product-cell">{{ c.product }}</td>
@@ -297,6 +321,14 @@
                   </tbody>
                 </table>
               </div>
+              <mat-paginator
+                #idlePaginator
+                class="anl-paginator"
+                [length]="idleInventory().length"
+                [pageSize]="15"
+                [pageSizeOptions]="pageSizeOptions"
+                showFirstLastButtons
+              />
             }
           </div>
         </mat-tab>

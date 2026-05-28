@@ -248,7 +248,6 @@ A aplicação implementa as seguintes camadas de proteção:
 - Redistribuir o codigo (html so com html, css so com css e ts so com ts)
 - Teste unitário
 - Ler como ficou o texto das instruções
-- Quando o sistema cai, como fica a tela? como o sistema reage?
 - adicionar regra para mandar mensagem de warning se o usuario tenta remover uma compra que ja tem venda
 - botao para registrar recebimento de mercadoria
 
@@ -257,10 +256,3 @@ A aplicação implementa as seguintes camadas de proteção:
 
 TELA DE DASHBOARD
 - scroll no grafico de "capital parado por lote"
-
-TELA DE ANALISES
-- paginação nas opções de Produto, Categoria, Mensal e Estoque parado
-
-TELA DE VENDAS
-- Ordenação padrao por lote (crescente)
-- filtos no header da tabela
