@@ -261,11 +261,6 @@ TELA DE DASHBOARD
 TELA DE ANALISES
 - paginação nas opções de Produto, Categoria, Mensal e Estoque parado
 
-TELA DE COMPRA
-- Ordenação padrao por lote (crescente)
-- filtos no header da tabela
-- Data de recebimento nao pode ser maior que a data de hoje
-
 TELA DE VENDAS
 - Ordenação padrao por lote (crescente)
 - filtos no header da tabela

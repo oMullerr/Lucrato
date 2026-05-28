@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,9 +7,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
-import { Sale, ComputedSale } from '../../core/models/models';
+import { Sale, ComputedSale, SaleStatus } from '../../core/models/models';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
@@ -30,6 +32,7 @@ type SaleFilter = 'all' | 'profit' | 'loss' | 'low-margin';
     FormsModule,
     MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatTooltipModule,
+    MatSortModule, MatPaginatorModule,
     PageHeaderComponent, StatusBadgeComponent, KpiCardComponent,
     EmptyStateComponent, SkeletonComponent,
     BrlPipe, BrDatePipe,
@@ -52,7 +55,60 @@ export class SalesComponent {
   protected readonly defaultFee = computed(() => this.data.settings()?.defaultMlFee ?? 0.12);
   protected readonly minimumMargin = computed(() => this.data.settings()?.minimumMargin ?? 0.10);
 
-  protected readonly filteredSales = computed(() => {
+  protected readonly sortState = signal<Sort>({ active: '', direction: '' });
+  protected readonly pageState = signal<PageEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
+  protected readonly pageSizeOptions = [15, 30, 50, 100, 150];
+
+  private readonly sortRef = viewChild(MatSort);
+  private readonly paginatorRef = viewChild(MatPaginator);
+
+  private readonly STATUS_PRIORITY: Record<SaleStatus, number> = {
+    'Concluída': 0,
+    'Em disputa': 1,
+    'Devolvida': 2,
+    'Cancelada': 3,
+  };
+
+  private readonly SORT_ACCESSORS: Record<string, (row: ComputedSale) => string | number> = {
+    id: row => row.id,
+    batchId: row => row.batchId,
+    product: row => row.product,
+    saleDate: row => row.saleDate,
+    channel: row => row.channel,
+    quantitySold: row => row.quantitySold,
+    netProfit: row => row.netProfit,
+    netMargin: row => row.netMargin,
+    status: row => this.STATUS_PRIORITY[row.status] ?? 99,
+  };
+
+  constructor() {
+    // Subscribe to sortChange whenever the MatSort instance becomes available.
+    effect((onCleanup) => {
+      const s = this.sortRef();
+      if (!s) return;
+      const sub = s.sortChange.subscribe((sort: Sort) => this.sortState.set(sort));
+      onCleanup(() => sub.unsubscribe());
+    });
+
+    // Subscribe to page events whenever the MatPaginator instance becomes available.
+    effect((onCleanup) => {
+      const p = this.paginatorRef();
+      if (!p) return;
+      const sub = p.page.subscribe((evt: PageEvent) => this.pageState.set(evt));
+      onCleanup(() => sub.unsubscribe());
+    });
+
+    // Reset to first page whenever any filter changes.
+    effect(() => {
+      this.textFilter();
+      this.channelFilter();
+      this.quickFilter();
+      this.paginatorRef()?.firstPage();
+    });
+  }
+
+  /** Filtered list (channel + text + quick) sorted by id ASC — the default order. */
+  private readonly filteredBase = computed(() => {
     let vs = this.sales();
     if (this.channelFilter() !== 'all') {
       vs = vs.filter(v => v.channel === this.channelFilter());
@@ -69,7 +125,33 @@ export class SalesComponent {
     if (qf === 'loss') vs = vs.filter(v => v.netProfit < 0);
     else if (qf === 'profit') vs = vs.filter(v => v.netProfit > 0);
     else if (qf === 'low-margin') vs = vs.filter(v => v.netMargin < this.minimumMargin() && v.status === 'Concluída');
-    return [...vs].sort((a, b) => b.saleDate.localeCompare(a.saleDate));
+    return [...vs].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+  });
+
+  /** Applies user-driven column sort on top of the filtered list, or returns the default order. */
+  protected readonly filteredSales = computed(() => {
+    const base = this.filteredBase();
+    const s = this.sortState();
+    if (!s.active || !s.direction) return base;
+    const accessor = this.SORT_ACCESSORS[s.active];
+    if (!accessor) return base;
+    const dir = s.direction === 'asc' ? 1 : -1;
+    return [...base].sort((a, b) => {
+      const va = accessor(a);
+      const vb = accessor(b);
+      if (typeof va === 'number' && typeof vb === 'number') {
+        return (va - vb) * dir;
+      }
+      return String(va).localeCompare(String(vb), undefined, { numeric: true }) * dir;
+    });
+  });
+
+  /** Page slice of the filtered/sorted list. */
+  protected readonly pagedSales = computed(() => {
+    const list = this.filteredSales();
+    const { pageIndex, pageSize } = this.pageState();
+    const start = pageIndex * pageSize;
+    return list.slice(start, start + pageSize);
   });
 
   protected readonly summary = computed(() => {
