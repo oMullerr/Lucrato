@@ -211,9 +211,28 @@ export class PurchasesComponent {
     event.stopPropagation();
     const linkedSales = this.data.sales().filter(v => v.batchId === c.id);
     if (linkedSales.length > 0) {
-      this.notify.warning(
-        `Existem ${linkedSales.length} venda(s) vinculada(s). Remova-as antes do lote.`
-      );
+      const salesList = linkedSales.map(v => v.id).join(', ');
+      this.dialog
+        .open(ConfirmDialogComponent, {
+          data: {
+            title: 'Remover lote e vendas vinculadas?',
+            message:
+              `O lote ${c.id} ("${c.product}") possui ` +
+              `${linkedSales.length} venda(s) vinculada(s): ${salesList}.\n\n` +
+              `Ao confirmar, o lote e todas as suas vendas serão removidos permanentemente.`,
+            danger: true,
+            confirmText: 'Remover tudo',
+          },
+          width: '460px',
+          maxWidth: '95vw',
+        })
+        .afterClosed()
+        .subscribe(confirmed => {
+          if (confirmed) {
+            this.data.removePurchaseWithSales(c.id);
+            this.notify.success(`Lote ${c.id} e ${linkedSales.length} venda(s) removidos.`);
+          }
+        });
       return;
     }
 

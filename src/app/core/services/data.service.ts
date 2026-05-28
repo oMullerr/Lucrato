@@ -208,6 +208,13 @@ export class DataService {
     this.update(d => { d.purchases = d.purchases.filter(c => c.id !== id); });
   }
 
+  removePurchaseWithSales(purchaseId: string): void {
+    this.update(d => {
+      d.purchases = d.purchases.filter(c => c.id !== purchaseId);
+      d.sales     = d.sales.filter(v => v.batchId !== purchaseId);
+    });
+  }
+
   // ─── Sales CRUD ───────────────────────────────────────
 
   nextSaleId(): string {
