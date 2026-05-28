@@ -252,14 +252,6 @@ A aplicação implementa as seguintes camadas de proteção:
 
 ## BUGS
 
-Quando o sistema cai, como fica a tela? como o sistema reage?
-
-Ex: instabilidade na firebase, instabilidade na vercel
-
-Pense nos casos que possa prejudicar a disponibilidade do sistema e como ele reagiria nesses casos
-
-TELA DE ESTOQUE
-- filtos no header da tabela
 
 TELA DE DASHBOARD
 - scroll no grafico de "capital parado por lote"

@@ -4,6 +4,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
+import { MatPaginatorIntl } from '@angular/material/paginator';
 import {
   MAT_DATE_FORMATS,
   MAT_DATE_LOCALE,
@@ -22,6 +23,7 @@ import { getApp } from 'firebase/app';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { GlobalErrorHandler } from './core/services/global-error-handler';
+import { PaginatorIntlPtBr } from './shared/i18n/paginator-intl-pt-br';
 
 registerLocaleData(localePt);
 
@@ -71,5 +73,6 @@ export const appConfig: ApplicationConfig = {
       provide: MAT_DIALOG_DEFAULT_OPTIONS,
       useValue: { autoFocus: 'first-tabbable', restoreFocus: true },
     },
+    { provide: MatPaginatorIntl, useClass: PaginatorIntlPtBr },
   ],
 };

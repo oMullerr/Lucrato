@@ -248,22 +248,22 @@
           } @else {
             <div class="table-card">
               <div class="table-wrapper">
-                <table class="data-table">
+                <table class="data-table" matSort matSortDisableClear="false">
                   <thead>
                     <tr>
                       <th class="col-edge"></th>
-                      <th>ID</th>
-                      <th>Produto</th>
-                      <th>Categoria</th>
-                      <th class="text-center">Estoque</th>
-                      <th class="text-right">Capital parado</th>
-                      <th class="text-center">Margem</th>
-                      <th>Status</th>
+                      <th mat-sort-header="id">ID</th>
+                      <th mat-sort-header="product">Produto</th>
+                      <th mat-sort-header="category">Categoria</th>
+                      <th class="text-center" mat-sort-header="currentStock" arrowPosition="before">Estoque</th>
+                      <th class="text-right" mat-sort-header="idleValue" arrowPosition="before">Capital parado</th>
+                      <th class="text-center" mat-sort-header="averageMargin" arrowPosition="before">Margem</th>
+                      <th mat-sort-header="status">Status</th>
                       <th class="text-right col-actions"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    @for (c of filteredPurchases(); track c.id) {
+                    @for (c of pagedPurchases(); track c.id) {
                       <tr
                         class="row"
                         [class.expanded]="expandedRow() === c.id"
@@ -330,6 +330,13 @@
                   </tbody>
                 </table>
               </div>
+              <mat-paginator
+                class="inv-paginator"
+                [length]="filteredPurchases().length"
+                [pageSize]="15"
+                [pageSizeOptions]="pageSizeOptions"
+                showFirstLastButtons
+              />
             </div>
           }
         </section>

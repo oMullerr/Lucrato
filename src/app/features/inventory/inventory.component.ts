@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+  ViewChild,
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,6 +15,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { ComputedPurchase, InventoryStatus, Purchase } from '../../core/models/models';
@@ -28,6 +39,7 @@ type FilterKey = 'all' | InventoryStatus;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink, MatButtonModule, MatIconModule, MatSidenavModule, MatTooltipModule,
+    MatSortModule, MatPaginatorModule,
     PageHeaderComponent, KpiCardComponent, StatusBadgeComponent,
     EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent,
     BrlPipe, BrDatePipe, DatePipe,
@@ -35,7 +47,7 @@ type FilterKey = 'all' | InventoryStatus;
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss',
 })
-export class InventoryComponent {
+export class InventoryComponent implements AfterViewInit {
   protected readonly data = inject(DataService);
   private readonly dialog = inject(MatDialog);
   private readonly notify = inject(NotifyService);
@@ -51,6 +63,34 @@ export class InventoryComponent {
   /** Selected batch for the lateral detail panel. */
   protected readonly selectedBatch = signal<ComputedPurchase | null>(null);
   protected readonly panelOpen = computed(() => this.selectedBatch() !== null);
+
+  /** Current sort state from MatSort. Empty `active`/`direction` means use the default sort. */
+  protected readonly sortState = signal<Sort>({ active: '', direction: '' });
+
+  /** Current paginator state. Defaults to first page, 15 items per page. */
+  protected readonly pageState = signal<PageEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
+
+  protected readonly pageSizeOptions = [15, 30, 50, 100, 150];
+
+  @ViewChild(MatSort) private readonly sort?: MatSort;
+  @ViewChild(MatPaginator) private readonly paginator?: MatPaginator;
+
+  constructor() {
+    // Reset to first page when filter changes so we don't end up on a page that no longer exists.
+    effect(() => {
+      this.filter();
+      this.paginator?.firstPage();
+    });
+  }
+
+  ngAfterViewInit(): void {
+    if (this.sort) {
+      this.sort.sortChange.subscribe((s: Sort) => this.sortState.set(s));
+    }
+    if (this.paginator) {
+      this.paginator.page.subscribe((p: PageEvent) => this.pageState.set(p));
+    }
+  }
 
   /** Updated timestamp shown in the eyebrow (refreshes when data changes). */
   protected readonly updatedAt = computed(() => {
@@ -68,20 +108,59 @@ export class InventoryComponent {
     'Vendido': 4,
   };
 
+  /** Accessors used by user-driven column sorting. Return a value comparable for the column. */
+  private readonly SORT_ACCESSORS: Record<string, (row: ComputedPurchase) => string | number> = {
+    id: row => row.id,
+    product: row => row.product,
+    category: row => row.category,
+    currentStock: row => row.currentStock,
+    idleValue: row => row.idleValue,
+    averageMargin: row => row.averageMargin ?? 0,
+    status: row => this.STATUS_PRIORITY[row.status] ?? 99,
+  };
+
+  /** Default ordering: status priority, then lote (id) ascending as tie-break. */
   protected readonly sortedPurchases = computed(() =>
     [...this.data.computedPurchases()].sort((a, b) => {
       const pa = this.STATUS_PRIORITY[a.status] ?? 99;
       const pb = this.STATUS_PRIORITY[b.status] ?? 99;
       if (pa !== pb) return pa - pb;
-      return b.daysInStock - a.daysInStock;
+      return a.id.localeCompare(b.id, undefined, { numeric: true });
     })
   );
 
-  protected readonly filteredPurchases = computed(() => {
+  /** Filter by status chip, applied over the default-sorted list. */
+  private readonly filteredDefault = computed(() => {
     const f = this.filter();
     const list = this.sortedPurchases();
     if (f === 'all') return list;
     return list.filter(c => c.status === f);
+  });
+
+  /** Filtered + user-driven column sort (or default order if no column is active). */
+  protected readonly filteredPurchases = computed(() => {
+    const base = this.filteredDefault();
+    const s = this.sortState();
+    if (!s.active || !s.direction) return base;
+    const accessor = this.SORT_ACCESSORS[s.active];
+    if (!accessor) return base;
+    const dir = s.direction === 'asc' ? 1 : -1;
+    return [...base].sort((a, b) => {
+      const va = accessor(a);
+      const vb = accessor(b);
+      if (typeof va === 'number' && typeof vb === 'number') {
+        return (va - vb) * dir;
+      }
+      return String(va).localeCompare(String(vb), undefined, { numeric: true }) * dir;
+    });
+  });
+
+  /** Page slice of the filtered/sorted list. */
+  protected readonly pagedPurchases = computed(() => {
+    const list = this.filteredPurchases();
+    const { pageIndex, pageSize } = this.pageState();
+    const start = pageIndex * pageSize;
+    return list.slice(start, start + pageSize);
   });
 
   protected readonly statusCounts = computed(() => {
