@@ -8,15 +8,23 @@ import {
 import { calculatePurchase, calculateKpis, calculateSale, nextId } from './calculations';
 import { AuthService } from './auth.service';
 import { NotifyService } from './notify.service';
+import { ConnectionService } from './connection.service';
+import { firestoreErrorMessage } from './firestore-errors';
+
+const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 16000, 30000];
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
   private readonly firestore = inject(Firestore);
   private readonly auth = inject(AuthService);
   private readonly notify = inject(NotifyService);
+  private readonly connection = inject(ConnectionService);
 
   private readonly db = signal<Database | null>(null);
   private _unsub?: Unsubscribe;
+  private _retryTimer?: ReturnType<typeof setTimeout>;
+  private _retryAttempt = 0;
+  private _warnedFirstOffline = false;
 
   readonly loaded = computed(() => this.db() !== null);
   readonly purchases = computed(() => this.db()?.purchases ?? []);
@@ -53,27 +61,72 @@ export class DataService {
   // ─── Firestore sync ────────────────────────────────────
 
   private async startSync(uid: string): Promise<void> {
-    this.stopSync();
+    this.cancelRetry();
+    this._unsub?.();
     await this.auth.refreshIdToken();
     const ref = doc(this.firestore, `users/${uid}/db/main`);
-    this._unsub = onSnapshot(ref, snap => {
-      if (snap.exists()) {
-        this.db.set(this.migrateDatabase(snap.data()));
-      } else if (snap.metadata.fromCache) {
-        if (this.db() === null) {
-          this.db.set(this.createEmpty());
+    this._unsub = onSnapshot(
+      ref,
+      snap => {
+        this.connection.reportSnapshot(snap.metadata);
+        if (this.connection.syncError()) {
+          this.connection.clearSyncError();
+          this.notify.success('Sincronização restaurada');
         }
-      } else {
-        const empty = this.createEmpty();
-        this.db.set(empty);
-        setDoc(ref, empty).catch(err => console.error('[Firestore] Falha ao criar documento inicial:', err));
-      }
-    }, err => console.error('[Firestore] onSnapshot falhou:', err));
+        this._retryAttempt = 0;
+
+        if (snap.exists()) {
+          this.db.set(this.migrateDatabase(snap.data()));
+        } else if (snap.metadata.fromCache) {
+          if (this.db() === null) {
+            this.db.set(this.createEmpty());
+            if (!this._warnedFirstOffline) {
+              this._warnedFirstOffline = true;
+              this.notify.warning('Você está offline. Seus dados aparecerão quando conectar ao servidor.');
+            }
+          }
+        } else {
+          const empty = this.createEmpty();
+          this.db.set(empty);
+          setDoc(ref, empty).catch(err => {
+            console.error('[Firestore] Falha ao criar documento inicial:', err);
+            this.connection.reportSnapshotError(err);
+            this.notify.warning('Não foi possível criar seu banco de dados inicial. Recarregue a página.');
+          });
+        }
+      },
+      err => {
+        console.error('[Firestore] onSnapshot falhou:', err);
+        this.connection.reportSnapshotError(err);
+        this.notify.error(firestoreErrorMessage(err));
+        this.scheduleRetry(uid);
+      },
+    );
+  }
+
+  private scheduleRetry(uid: string): void {
+    this.cancelRetry();
+    const delay = RETRY_DELAYS_MS[Math.min(this._retryAttempt, RETRY_DELAYS_MS.length - 1)];
+    this._retryAttempt += 1;
+    this._retryTimer = setTimeout(() => {
+      this._retryTimer = undefined;
+      this.startSync(uid).catch(err => console.error('[DataService] retry startSync falhou:', err));
+    }, delay);
+  }
+
+  private cancelRetry(): void {
+    if (this._retryTimer) {
+      clearTimeout(this._retryTimer);
+      this._retryTimer = undefined;
+    }
   }
 
   private stopSync(): void {
+    this.cancelRetry();
     this._unsub?.();
     this._unsub = undefined;
+    this._retryAttempt = 0;
+    this._warnedFirstOffline = false;
     this.db.set(null);
   }
 
@@ -93,7 +146,7 @@ export class DataService {
     return setDoc(doc(this.firestore, `users/${uid}/db/main`), payload, { merge: true })
       .catch(err => {
         console.error('[Firestore] Falha ao salvar:', err);
-        this.notify.error('Erro ao sincronizar dados com o servidor. Verifique sua conexão.');
+        this.notify.error(firestoreErrorMessage(err));
         throw err;
       });
   }
@@ -101,6 +154,7 @@ export class DataService {
   async reset(): Promise<void> {
     const uid = this.auth.currentUser()?.uid;
     if (!uid) return;
+    const prev = this.db();
     const zeroed: Database = {
       purchases: [],
       sales: [],
@@ -119,7 +173,14 @@ export class DataService {
       metadata: { versao: APP.version, ultimaAtualizacao: new Date().toISOString() },
     };
     this.db.set(zeroed);
-    await setDoc(doc(this.firestore, `users/${uid}/db/main`), zeroed);
+    try {
+      await setDoc(doc(this.firestore, `users/${uid}/db/main`), zeroed);
+    } catch (err) {
+      console.error('[Firestore] Falha ao zerar dados:', err);
+      this.db.set(prev);
+      this.notify.error(firestoreErrorMessage(err));
+      throw err;
+    }
   }
 
   // ─── Purchases CRUD ──────────────────────────────────────
@@ -185,10 +246,14 @@ export class DataService {
   private update(mutator: (db: Database) => void): Promise<void> {
     const current = this.db();
     if (!current) return Promise.resolve();
+    const prev = current;
     const next: Database = JSON.parse(JSON.stringify(current));
     mutator(next);
     this.db.set(next);
-    return this.persist();
+    return this.persist().catch(err => {
+      this.db.set(prev);
+      throw err;
+    });
   }
 
   private migrateDatabase(data: any): Database {

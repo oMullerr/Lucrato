@@ -1,4 +1,4 @@
-import { ApplicationConfig, LOCALE_ID, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, LOCALE_ID, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
@@ -16,11 +16,12 @@ import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 import { provideFirestore } from '@angular/fire/firestore';
 import { provideAppCheck, initializeAppCheck, ReCaptchaEnterpriseProvider } from '@angular/fire/app-check';
-import { initializeFirestore, persistentLocalCache } from 'firebase/firestore';
+import { initializeFirestore, memoryLocalCache, persistentLocalCache } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
 
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
+import { GlobalErrorHandler } from './core/services/global-error-handler';
 
 registerLocaleData(localePt);
 
@@ -55,9 +56,10 @@ export const appConfig: ApplicationConfig = {
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideAuth(() => getAuth()),
     provideFirestore(() => initializeFirestore(getApp(), {
-      localCache: persistentLocalCache()
+      localCache: typeof indexedDB !== 'undefined' ? persistentLocalCache() : memoryLocalCache(),
     })),
     ...appCheckProvider,
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
     { provide: LOCALE_ID, useValue: 'pt-BR' },
     { provide: MAT_DATE_LOCALE, useValue: 'pt-BR' },
     { provide: MAT_DATE_FORMATS, useValue: BR_DATE_FORMATS },

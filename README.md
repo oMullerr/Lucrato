@@ -247,8 +247,31 @@ A aplicação implementa as seguintes camadas de proteção:
 - Revisar texto de instruções
 - Redistribuir o codigo (html so com html, css so com css e ts so com ts)
 - Teste unitário
-- Na tela de dashboard, no filtro de dias, colocar uma data customizada (abre o calendario e seleciona o range de dias)
 - Ler como ficou o texto das instruções
 - Quando o sistema cai, como fica a tela? como o sistema reage?
 
 ## BUGS
+
+Quando o sistema cai, como fica a tela? como o sistema reage?
+
+Ex: instabilidade na firebase, instabilidade na vercel
+
+Pense nos casos que possa prejudicar a disponibilidade do sistema e como ele reagiria nesses casos
+
+TELA DE ESTOQUE
+- filtos no header da tabela
+
+TELA DE DASHBOARD
+- scroll no grafico de "capital parado por lote"
+
+TELA DE ANALISES
+- paginação nas opções de Produto, Categoria, Mensal e Estoque parado
+
+TELA DE COMPRA
+- Ordenação padrao por lote (crescente)
+- filtos no header da tabela
+- Data de recebimento nao pode ser maior que a data de hoje
+
+TELA DE VENDAS
+- Ordenação padrao por lote (crescente)
+- filtos no header da tabela

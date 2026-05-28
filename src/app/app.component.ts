@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, HostListener, computed, effect, inject, signal } from '@angular/core';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, NavigationError, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
@@ -15,7 +15,10 @@ import { ThemeService } from './core/services/theme.service';
 import { DataService } from './core/services/data.service';
 import { AuthService } from './core/services/auth.service';
 import { QuickActionsService } from './core/services/quick-actions.service';
+import { NotifyService } from './core/services/notify.service';
 import { FabActionsComponent } from './shared/components/fab-actions.component';
+import { ConnectionBannerComponent } from './shared/components/connection-banner.component';
+import { isChunkLoadError } from './core/services/firestore-errors';
 
 interface NavGroup {
   label: string;
@@ -62,6 +65,7 @@ const NAV_GROUPS: NavGroup[] = [
     MatSidenavModule, MatToolbarModule, MatListModule,
     MatIconModule, MatButtonModule, MatDividerModule, MatTooltipModule, MatMenuModule,
     FabActionsComponent,
+    ConnectionBannerComponent,
   ],
   template: `
     <mat-sidenav-container class="app-shell">
@@ -165,6 +169,8 @@ const NAV_GROUPS: NavGroup[] = [
             </mat-menu>
           </mat-toolbar>
         }
+
+        <app-connection-banner />
 
         <div class="page-container" [class.full-height]="!auth.isLoggedIn()">
           <router-outlet />
@@ -452,14 +458,23 @@ const NAV_GROUPS: NavGroup[] = [
     /* =================================================================
        CONTENT
        ================================================================= */
+    mat-sidenav-content {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    app-connection-banner { flex-shrink: 0; }
+
     .page-container {
-      height: calc(100vh - var(--topbar-height));
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
       background: var(--bg-canvas);
     }
 
     .page-container.full-height {
-      height: 100vh;
+      flex: 1;
     }
 
     .hamburger-btn {
@@ -534,6 +549,7 @@ export class AppComponent {
   protected readonly navGroups = NAV_GROUPS;
   private readonly router = inject(Router);
   private readonly bp = inject(BreakpointObserver);
+  private readonly notify = inject(NotifyService);
 
   protected readonly isMobile = toSignal(
     this.bp.observe('(max-width: 768px)').pipe(map(r => r.matches)),
@@ -595,6 +611,19 @@ export class AppComponent {
         this.router.navigate(['/inventory']);
       }
     });
+
+    this.router.events
+      .pipe(filter((e): e is NavigationError => e instanceof NavigationError))
+      .subscribe(event => {
+        if (isChunkLoadError(event.error)) {
+          this.notify.withAction(
+            'Nova versão disponível. Recarregue a página.',
+            'Recarregar',
+            () => globalThis.location?.reload(),
+            'warning',
+          );
+        }
+      });
   }
 
   protected toggleSidebar(): void { this.sidebarOpen.update(v => !v); }

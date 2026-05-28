@@ -20,4 +20,20 @@ export class NotifyService {
   error(msg: string): void { this.show(msg, 'error', 5000); }
   info(msg: string): void { this.show(msg, 'info'); }
   warning(msg: string): void { this.show(msg, 'warning', 4500); }
+
+  withAction(
+    message: string,
+    actionLabel: string,
+    onAction: () => void,
+    kind: NotifyKind = 'warning',
+    durationMs = 10000,
+  ): void {
+    const ref = this.snack.open(message, actionLabel, {
+      duration: durationMs,
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+      panelClass: [`snack-${kind}`],
+    });
+    ref.onAction().subscribe(() => onAction());
+  }
 }
