@@ -217,14 +217,14 @@ export class DashboardComponent {
     };
   });
 
-  /** Bar — profit by product (top 8). */
+  /** Bar — profit by product (all products in period, with internal scroll). */
   protected readonly productProfitChart = computed<ChartConfiguration<'bar'>['data']>(() => {
     const sales = this.periodSales();
     const map = new Map<string, number>();
     for (const v of sales) {
       map.set(v.product, (map.get(v.product) ?? 0) + v.netProfit);
     }
-    const arr = [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+    const arr = [...map.entries()].sort((a, b) => b[1] - a[1]);
     const c = this.palette();
 
     return {
@@ -239,6 +239,18 @@ export class DashboardComponent {
         barThickness: 14,
       }],
     };
+  });
+
+  /** Number of products in the chart — drives the subtitle and the scroll height. */
+  protected readonly productCount = computed(() =>
+    this.productProfitChart().labels?.length ?? 0
+  );
+
+  /** Dynamic canvas height: keeps every bar at ~36px so nothing overlaps. */
+  protected readonly productChartHeight = computed(() => {
+    const n = this.productCount();
+    if (n === 0) return 280;
+    return Math.max(280, n * 36 + 50);
   });
 
   /** Doughnut — revenue composition. */
@@ -263,12 +275,11 @@ export class DashboardComponent {
     };
   });
 
-  /** Top 5 batches by idle capital, sorted desc. Used for table-with-bars. */
+  /** All batches with idle capital, sorted desc. Rendered inside a scrollable list. */
   protected readonly idleRanking = computed(() =>
     this.dataService.computedPurchases()
       .filter(c => c.idleValue > 0)
       .sort((a, b) => b.idleValue - a.idleValue)
-      .slice(0, 5)
   );
 
   protected readonly maxIdle = computed(() => {

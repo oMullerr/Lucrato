@@ -135,6 +135,29 @@
 }
 
 .cc-tall { height: 360px; }
+.cc-auto { height: auto; }
+
+/* Product chart — internal vertical scroll when the canvas grows past the viewport. */
+.product-chart-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-track { background: transparent; }
+}
+
+.product-chart-canvas {
+  position: relative;
+  width: 100%;
+  /* height set inline via [style.height.px] from productChartHeight() */
+}
 
 .no-data {
   height: 100%;
@@ -246,10 +269,25 @@
 /* =========================================================================
    Idle ranking
    ========================================================================= */
+.idle-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-track { background: transparent; }
+}
+
 .idle-list {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 4px 0 0;
   display: flex;
   flex-direction: column;
   gap: 10px;

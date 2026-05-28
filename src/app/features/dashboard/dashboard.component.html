@@ -131,12 +131,16 @@
         <header class="cc-head">
           <div class="cc-title">
             <h3 class="h-section">Lucro por produto</h3>
-            <p>Top 8 produtos mais rentáveis</p>
+            <p>{{ productCount() }} {{ productCount() === 1 ? 'produto' : 'produtos' }} no período</p>
           </div>
         </header>
         <div class="cc-body">
           @if (productProfitChart().labels?.length) {
-            <canvas baseChart [data]="productProfitChart()" [options]="horizontalBarOptions()" type="bar"></canvas>
+            <div class="product-chart-scroll">
+              <div class="product-chart-canvas" [style.height.px]="productChartHeight()">
+                <canvas baseChart [data]="productProfitChart()" [options]="horizontalBarOptions()" type="bar"></canvas>
+              </div>
+            </div>
           } @else {
             <div class="no-data">Sem vendas no período.</div>
           }
@@ -180,26 +184,28 @@
       <header class="cc-head">
         <div class="cc-title">
           <h3 class="h-section">Capital parado por lote</h3>
-          <p>Top 5 onde mais dinheiro está preso</p>
+          <p>{{ idleRanking().length }} {{ idleRanking().length === 1 ? 'lote' : 'lotes' }} com capital preso</p>
         </div>
       </header>
       <div class="cc-body">
         @if (idleRanking().length > 0) {
-          <ol class="idle-list">
-            @for (b of idleRanking(); track b.id) {
-              <li class="idle-item">
-                <div class="idle-info">
-                  <span class="idle-id mono">{{ b.id }}</span>
-                  <span class="idle-product">{{ b.product }}</span>
-                  <span class="idle-meta">{{ b.daysInStock }}d · {{ b.currentStock }} un</span>
-                </div>
-                <div class="idle-bar-wrap">
-                  <div class="idle-bar" [style.width.%]="(b.idleValue / maxIdle()) * 100"></div>
-                </div>
-                <span class="idle-value mono">{{ b.idleValue | brl }}</span>
-              </li>
-            }
-          </ol>
+          <div class="idle-scroll">
+            <ol class="idle-list">
+              @for (b of idleRanking(); track b.id) {
+                <li class="idle-item">
+                  <div class="idle-info">
+                    <span class="idle-id mono">{{ b.id }}</span>
+                    <span class="idle-product">{{ b.product }}</span>
+                    <span class="idle-meta">{{ b.daysInStock }}d · {{ b.currentStock }} un</span>
+                  </div>
+                  <div class="idle-bar-wrap">
+                    <div class="idle-bar" [style.width.%]="(b.idleValue / maxIdle()) * 100"></div>
+                  </div>
+                  <span class="idle-value mono">{{ b.idleValue | brl }}</span>
+                </li>
+              }
+            </ol>
+          </div>
         } @else {
           <div class="no-data">Nenhum capital parado. Excelente giro!</div>
         }
@@ -214,7 +220,7 @@
           <p>Acompanhe o caminho de cada real</p>
         </div>
       </header>
-      <div class="cc-body">
+      <div class="cc-body cc-auto">
         <div class="waterfall">
           @for (step of waterfall(); track step.label; let last = $last) {
             <div class="wf-step" [attr.data-tone]="step.tone" [attr.data-kind]="step.kind">

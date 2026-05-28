@@ -252,7 +252,3 @@ A aplicação implementa as seguintes camadas de proteção:
 - botao para registrar recebimento de mercadoria
 
 ## BUGS
-
-
-TELA DE DASHBOARD
-- scroll no grafico de "capital parado por lote"
