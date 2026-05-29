@@ -15,6 +15,11 @@
   box-shadow: var(--shadow-xl);
 }
 
+/* When mode="side" (>=1600px), the drawer is part of the layout, not an overlay. */
+:host ::ng-deep .inv-detail-drawer.mat-drawer-side {
+  box-shadow: none;
+}
+
 @media (max-width: 600px) {
   :host ::ng-deep .inv-detail-drawer { width: 100vw; }
 }

@@ -16,6 +16,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { ComputedPurchase, InventoryStatus, Purchase } from '../../core/models/models';
@@ -50,8 +53,15 @@ export class InventoryComponent {
   protected readonly data = inject(DataService);
   private readonly dialog = inject(MatDialog);
   private readonly notify = inject(NotifyService);
+  private readonly bp = inject(BreakpointObserver);
 
   protected readonly kpis = this.data.kpis;
+
+  /** Wide viewport (>=1600px) — detail drawer becomes a pinned side column instead of an overlay. */
+  protected readonly isWideViewport = toSignal(
+    this.bp.observe('(min-width: 1600px)').pipe(map(r => r.matches)),
+    { initialValue: globalThis.window ? globalThis.window.innerWidth >= 1600 : false }
+  );
 
   /** Currently selected filter chip. */
   protected readonly filter = signal<FilterKey>('all');

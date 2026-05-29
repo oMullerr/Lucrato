@@ -1,7 +1,7 @@
 <mat-sidenav-container class="inv-container" autosize>
   <mat-sidenav
     #detailSidenav
-    mode="over"
+    [mode]="isWideViewport() ? 'side' : 'over'"
     position="end"
     [opened]="panelOpen()"
     (closed)="closeDetail()"
@@ -254,10 +254,10 @@
                       <th class="col-edge"></th>
                       <th mat-sort-header="id">ID</th>
                       <th mat-sort-header="product">Produto</th>
-                      <th mat-sort-header="category">Categoria</th>
+                      <th class="hide-on-mobile" mat-sort-header="category">Categoria</th>
                       <th class="text-center" mat-sort-header="currentStock" arrowPosition="before">Estoque</th>
                       <th class="text-right" mat-sort-header="idleValue" arrowPosition="before">Capital parado</th>
-                      <th class="text-center" mat-sort-header="averageMargin" arrowPosition="before">Margem</th>
+                      <th class="text-center hide-on-mobile" mat-sort-header="averageMargin" arrowPosition="before">Margem</th>
                       <th mat-sort-header="status">Status</th>
                       <th class="text-right col-actions"></th>
                     </tr>
@@ -274,7 +274,7 @@
                         </td>
                         <td><span class="id-tag mono">{{ c.id }}</span></td>
                         <td class="product-cell" [title]="c.product">{{ c.product }}</td>
-                        <td><span class="category-pill">{{ c.category }}</span></td>
+                        <td class="hide-on-mobile"><span class="category-pill">{{ c.category }}</span></td>
                         <td
                           class="text-center"
                           [class.text-muted]="c.currentStock === 0"
@@ -286,7 +286,7 @@
                         <td class="text-right mono" [class.text-warning]="c.idleValue > 0">
                           {{ c.idleValue | brl: true }}
                         </td>
-                        <td class="text-center mono" [class]="marginClass(c.averageMargin)">
+                        <td class="text-center mono hide-on-mobile" [class]="marginClass(c.averageMargin)">
                           {{ c.averageMargin !== undefined ? (c.averageMargin * 100).toFixed(1) + '%' : '—' }}
                         </td>
                         <td><app-status-badge [status]="c.status" /></td>

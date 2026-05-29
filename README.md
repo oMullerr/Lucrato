@@ -248,9 +248,6 @@ A aplicação implementa as seguintes camadas de proteção:
 - Redistribuir o codigo (html so com html, css so com css e ts so com ts)
 - Ler como ficou o texto das instruções
 - botao para registrar recebimento de mercadoria
-- Responsividade em todos os dispositivos e todas as telas
 - Remover comentários
 
 ## BUGS
-
-- Na tela de analise, temos export de CSV, trocar para XLSX, excel padrao

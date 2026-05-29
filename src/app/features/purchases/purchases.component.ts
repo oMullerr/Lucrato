@@ -17,6 +17,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { Purchase, ComputedPurchase, InventoryStatus } from '../../core/models/models';
@@ -52,12 +55,19 @@ export class PurchasesComponent {
   protected readonly data = inject(DataService);
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(MatDialog);
+  private readonly bp = inject(BreakpointObserver);
 
   protected readonly textFilter = signal('');
   protected readonly statusFilter = signal<StatusFilter>('all');
   protected readonly expandedRow = signal<string | null>(null);
   protected readonly selectedBatch = signal<ComputedPurchase | null>(null);
   protected readonly panelOpen = computed(() => this.selectedBatch() !== null);
+
+  /** Wide viewport (>=1600px) — detail drawer becomes a pinned side column instead of an overlay. */
+  protected readonly isWideViewport = toSignal(
+    this.bp.observe('(min-width: 1600px)').pipe(map(r => r.matches)),
+    { initialValue: globalThis.window ? globalThis.window.innerWidth >= 1600 : false }
+  );
 
   protected readonly purchases = this.data.computedPurchases;
 

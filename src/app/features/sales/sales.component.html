@@ -122,13 +122,13 @@
               <tr>
                 <th class="col-edge"></th>
                 <th mat-sort-header="id">ID</th>
-                <th mat-sort-header="batchId">Lote</th>
+                <th class="hide-on-mobile" mat-sort-header="batchId">Lote</th>
                 <th mat-sort-header="product">Produto</th>
-                <th mat-sort-header="saleDate">Data</th>
-                <th mat-sort-header="channel">Canal</th>
+                <th class="hide-on-mobile" mat-sort-header="saleDate">Data</th>
+                <th class="hide-on-mobile" mat-sort-header="channel">Canal</th>
                 <th class="text-center" mat-sort-header="quantitySold" arrowPosition="before">Qtd</th>
                 <th class="text-right" mat-sort-header="netProfit" arrowPosition="before">Lucro líquido</th>
-                <th class="text-center" mat-sort-header="netMargin" arrowPosition="before">Margem</th>
+                <th class="text-center hide-on-mobile" mat-sort-header="netMargin" arrowPosition="before">Margem</th>
                 <th mat-sort-header="status">Status</th>
                 <th class="text-right col-actions"></th>
               </tr>
@@ -144,10 +144,10 @@
                     <span class="row-stripe" [class.stripe-danger]="v.netProfit < 0" aria-hidden="true"></span>
                   </td>
                   <td><span class="id-tag id-sale mono">{{ v.id }}</span></td>
-                  <td><span class="id-tag mono">{{ v.batchId }}</span></td>
+                  <td class="hide-on-mobile"><span class="id-tag mono">{{ v.batchId }}</span></td>
                   <td class="product-cell" [title]="v.product">{{ v.product }}</td>
-                  <td class="mono">{{ v.saleDate | brDate }}</td>
-                  <td><span class="channel-pill">{{ v.channel }}</span></td>
+                  <td class="mono hide-on-mobile">{{ v.saleDate | brDate }}</td>
+                  <td class="hide-on-mobile"><span class="channel-pill">{{ v.channel }}</span></td>
                   <td class="text-center mono">{{ v.quantitySold }}</td>
                   <td
                     class="text-right mono"
@@ -156,7 +156,7 @@
                   >
                     <strong>{{ v.netProfit | brl }}</strong>
                   </td>
-                  <td class="text-center mono" [class]="marginClass(v.netMargin)">
+                  <td class="text-center mono hide-on-mobile" [class]="marginClass(v.netMargin)">
                     <strong>{{ (v.netMargin * 100).toFixed(1) }}%</strong>
                   </td>
                   <td><app-status-badge [status]="v.status" /></td>

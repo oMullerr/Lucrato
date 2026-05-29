@@ -1,6 +1,6 @@
 <mat-sidenav-container class="pur-container" autosize>
   <mat-sidenav
-    mode="over"
+    [mode]="isWideViewport() ? 'side' : 'over'"
     position="end"
     [opened]="panelOpen()"
     (closed)="closeDetail()"
@@ -124,9 +124,9 @@
                   <tr>
                     <th mat-sort-header="id">ID</th>
                     <th mat-sort-header="product">Produto</th>
-                    <th mat-sort-header="category">Categoria</th>
-                    <th mat-sort-header="supplier">Fornecedor</th>
-                    <th mat-sort-header="purchaseDate">Data</th>
+                    <th class="hide-on-mobile" mat-sort-header="category">Categoria</th>
+                    <th class="hide-on-mobile" mat-sort-header="supplier">Fornecedor</th>
+                    <th class="hide-on-mobile" mat-sort-header="purchaseDate">Data</th>
                     <th class="text-center" mat-sort-header="quantityPurchased" arrowPosition="before">Qtd</th>
                     <th class="text-right" mat-sort-header="totalActualCost" arrowPosition="before">Custo total</th>
                     <th mat-sort-header="status">Status</th>
@@ -142,9 +142,9 @@
                     >
                       <td><span class="id-tag mono">{{ c.id }}</span></td>
                       <td class="product-cell" [title]="c.product">{{ c.product }}</td>
-                      <td><span class="category-pill">{{ c.category }}</span></td>
-                      <td class="text-muted">{{ c.supplier }}</td>
-                      <td class="mono">{{ c.purchaseDate | brDate }}</td>
+                      <td class="hide-on-mobile"><span class="category-pill">{{ c.category }}</span></td>
+                      <td class="text-muted hide-on-mobile">{{ c.supplier }}</td>
+                      <td class="mono hide-on-mobile">{{ c.purchaseDate | brDate }}</td>
                       <td class="text-center mono">{{ c.quantityPurchased }}</td>
                       <td class="text-right mono"><strong>{{ c.totalActualCost | brl }}</strong></td>
                       <td><app-status-badge [status]="c.status" /></td>

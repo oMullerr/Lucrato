@@ -503,7 +503,7 @@ const NAV_GROUPS: NavGroup[] = [
     }
 
     /* =================================================================
-       RAIL (compact sidebar 769–1024px)
+       RAIL (compact sidebar 769–1100px)
        ================================================================= */
     .sidebar.rail {
       width: var(--sidebar-rail);
@@ -557,10 +557,10 @@ export class AppComponent {
   );
 
   protected readonly isCompactSidebar = toSignal(
-    this.bp.observe('(min-width: 769px) and (max-width: 1024px)').pipe(map(r => r.matches)),
+    this.bp.observe('(min-width: 769px) and (max-width: 1100px)').pipe(map(r => r.matches)),
     {
       initialValue: globalThis.window
-        ? globalThis.window.innerWidth >= 769 && globalThis.window.innerWidth <= 1024
+        ? globalThis.window.innerWidth >= 769 && globalThis.window.innerWidth <= 1100
         : false,
     }
   );
