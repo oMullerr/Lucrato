@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npx --no-install ng build --configuration development)",
       "Bash(npx ng *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(npm test *)",
+      "Bash(npx jest *)"
     ]
   }
 }

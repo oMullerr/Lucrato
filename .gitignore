@@ -3,6 +3,7 @@
 /tmp
 /out-tsc
 /.angular
+/coverage
 
 # Node
 /node_modules

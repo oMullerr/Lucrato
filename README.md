@@ -246,7 +246,6 @@ A aplicação implementa as seguintes camadas de proteção:
 - Revisar codigo
 - Revisar texto de instruções
 - Redistribuir o codigo (html so com html, css so com css e ts so com ts)
-- Teste unitário
 - Ler como ficou o texto das instruções
 - botao para registrar recebimento de mercadoria
 - Responsividade em todos os dispositivos e todas as telas
