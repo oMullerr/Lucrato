@@ -249,6 +249,7 @@ A aplicação implementa as seguintes camadas de proteção:
 - Ler como ficou o texto das instruções
 - botao para registrar recebimento de mercadoria
 - Responsividade em todos os dispositivos e todas as telas
+- Remover comentários
 
 ## BUGS
 

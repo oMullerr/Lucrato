@@ -6,7 +6,10 @@
       "Bash(npm run *)",
       "Bash(npm install *)",
       "Bash(npm test *)",
-      "Bash(npx jest *)"
+      "Bash(npx jest *)",
+      "PowerShell(npm run build 2>&1)",
+      "PowerShell(npx jest src/app/core/services/xlsx-export.service.spec.ts --colors=false 2>&1)",
+      "PowerShell(npx jest --colors=false 2>&1)"
     ]
   }
 }

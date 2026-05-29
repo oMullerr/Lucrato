@@ -6,6 +6,15 @@
 
 <div class="page-content analytics-body">
 
+  @if (data.loaded() && hasData()) {
+    <div class="export-all-bar">
+      <button mat-flat-button class="primary-cta" (click)="exportAll()" matTooltip="Gera um único arquivo Excel com Resumo + todas as tabelas">
+        <mat-icon>download_for_offline</mat-icon>
+        Exportar tudo (Excel)
+      </button>
+    </div>
+  }
+
   @if (!data.loaded()) {
     <section class="resume-grid">
       <app-skeleton variant="card" />
@@ -71,7 +80,7 @@
               <span class="t-caption">{{ productRanking().length }} produtos</span>
               <button mat-stroked-button class="export-btn" (click)="exportProducts()" [disabled]="productRanking().length === 0">
                 <mat-icon>file_download</mat-icon>
-                Exportar CSV
+                Exportar Excel
               </button>
             </div>
             @if (productRanking().length === 0) {
@@ -140,7 +149,7 @@
               <span class="t-caption">{{ categoryStats().length }} categorias</span>
               <button mat-stroked-button class="export-btn" (click)="exportCategories()" [disabled]="categoryStats().length === 0">
                 <mat-icon>file_download</mat-icon>
-                Exportar CSV
+                Exportar Excel
               </button>
             </div>
             <div class="table-wrapper">
@@ -199,7 +208,7 @@
               <span class="t-caption">{{ monthlyStats().length }} meses</span>
               <button mat-stroked-button class="export-btn" (click)="exportMonthly()" [disabled]="monthlyStats().length === 0">
                 <mat-icon>file_download</mat-icon>
-                Exportar CSV
+                Exportar Excel
               </button>
             </div>
             @if (monthlyStats().length === 0) {
@@ -268,7 +277,7 @@
               <span class="t-caption">{{ idleInventory().length }} lotes com estoque</span>
               <button mat-stroked-button class="export-btn" (click)="exportIdle()" [disabled]="idleInventory().length === 0">
                 <mat-icon>file_download</mat-icon>
-                Exportar CSV
+                Exportar Excel
               </button>
             </div>
             @if (idleInventory().length === 0) {

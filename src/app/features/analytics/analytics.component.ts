@@ -7,7 +7,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../core/services/data.service';
-import { CsvExportService } from '../../core/services/csv-export.service';
+import { XlsxExportService, SheetSpec, ResumoSpec, Tone } from '../../core/services/xlsx-export.service';
+import { ComputedPurchase, InventoryStatus } from '../../core/models/models';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
@@ -65,7 +66,7 @@ const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', '
 })
 export class AnalyticsComponent {
   protected readonly data = inject(DataService);
-  private readonly csv = inject(CsvExportService);
+  private readonly xlsx = inject(XlsxExportService);
 
   protected readonly kpis = this.data.kpis;
   protected readonly hasData = computed(() =>
@@ -289,55 +290,200 @@ export class AnalyticsComponent {
   }
 
   // ──────────────────────────────────────────────
-  // CSV Exports
+  // XLSX Exports
   // ──────────────────────────────────────────────
   protected exportProducts(): void {
-    this.csv.download(
-      'lucrato-produtos',
-      ['Produto', 'Qtd Vendida', 'Receita Bruta', 'Receita Líquida', 'Custo', 'Lucro Bruto', 'Lucro Líquido', 'Margem %'],
-      this.productRanking().map(p => ({
-        product: p.product, qty: p.qty, revenue: p.revenue, netRevenue: p.netRevenue,
-        cost: p.cost, grossProfit: p.grossProfit, netProfit: p.netProfit, margin: p.margin * 100,
-      })),
-      ['product', 'qty', 'revenue', 'netRevenue', 'cost', 'grossProfit', 'netProfit', 'margin'],
+    this.xlsx.download(
+      `lucrato-produtos-${this.today()}.xlsx`,
+      [this.productsSheetSpec()],
+      this.resumoSpec(),
     );
   }
 
   protected exportCategories(): void {
-    this.csv.download(
-      'lucrato-categorias',
-      ['Categoria', 'Lotes', 'Investido', 'Capital Parado', 'Receita Bruta', 'Lucro Líquido', 'Margem %'],
-      this.categoryStats().map(c => ({
-        category: c.category, batches: c.batches, invested: c.invested,
-        idleCapital: c.idleCapital, revenue: c.revenue, profit: c.profit, margin: c.margin * 100,
-      })),
-      ['category', 'batches', 'invested', 'idleCapital', 'revenue', 'profit', 'margin'],
+    this.xlsx.download(
+      `lucrato-categorias-${this.today()}.xlsx`,
+      [this.categoriesSheetSpec()],
+      this.resumoSpec(),
     );
   }
 
   protected exportMonthly(): void {
-    this.csv.download(
-      'lucrato-evolucao-mensal',
-      ['Mês', 'Vendas', 'Receita Bruta', 'Taxas ML', 'Receita Líquida', 'Custo', 'Lucro Líquido', 'Margem %'],
-      this.monthlyStats().map(m => ({
-        month: m.month, qty: m.qty, revenue: m.revenue, fees: m.fees,
-        netRevenue: m.netRevenue, cost: m.cost, profit: m.profit, margin: m.margin * 100,
-      })),
-      ['month', 'qty', 'revenue', 'fees', 'netRevenue', 'cost', 'profit', 'margin'],
+    this.xlsx.download(
+      `lucrato-evolucao-mensal-${this.today()}.xlsx`,
+      [this.monthlySheetSpec()],
+      this.resumoSpec(),
     );
   }
 
   protected exportIdle(): void {
-    this.csv.download(
-      'lucrato-estoque-parado',
-      ['ID', 'Produto', 'Estoque', 'Custo Unit.', 'Capital Parado', 'Dias Parado', 'Status'],
-      this.idleInventory().map(c => ({
-        id: c.id, product: c.product, currentStock: c.currentStock,
-        actualUnitCost: c.actualUnitCost, idleValue: c.idleValue,
-        daysInStock: c.daysInStock, status: c.status,
-      })),
-      ['id', 'product', 'currentStock', 'actualUnitCost', 'idleValue', 'daysInStock', 'status'],
+    this.xlsx.download(
+      `lucrato-estoque-parado-${this.today()}.xlsx`,
+      [this.idleSheetSpec()],
+      this.resumoSpec(),
     );
+  }
+
+  protected exportAll(): void {
+    this.xlsx.download(
+      `lucrato-analises-${this.today()}.xlsx`,
+      [
+        this.productsSheetSpec(),
+        this.categoriesSheetSpec(),
+        this.monthlySheetSpec(),
+        this.idleSheetSpec(),
+      ],
+      this.resumoSpec(),
+    );
+  }
+
+  // ──────────────────────────────────────────────
+  // Sheet spec builders
+  // ──────────────────────────────────────────────
+  private productsSheetSpec(): SheetSpec<ProductStat> {
+    const marginTone = (m: number) => this.marginTone(m);
+    return {
+      name: 'Produtos',
+      title: 'Ranking de produtos',
+      columns: [
+        { header: 'Produto',         key: 'product',     type: 'text' },
+        { header: 'Qtd Vendida',     key: 'qty',         type: 'int',     total: 'sum' },
+        { header: 'Receita Bruta',   key: 'revenue',     type: 'brl',     total: 'sum' },
+        { header: 'Receita Líquida', key: 'netRevenue',  type: 'brl',     total: 'sum' },
+        { header: 'Custo',           key: 'cost',        type: 'brl',     total: 'sum' },
+        { header: 'Lucro Bruto',     key: 'grossProfit', type: 'brl',     total: 'sum' },
+        { header: 'Lucro Líquido',   key: 'netProfit',   type: 'brl',     total: 'sum' },
+        {
+          header: 'Margem', key: 'margin', type: 'percent',
+          total: 'weightedAvg', numKey: 'netProfit', denKey: 'revenue',
+          toneFn: r => marginTone(r.margin),
+        },
+      ],
+      rows: this.productRanking(),
+    };
+  }
+
+  private categoriesSheetSpec(): SheetSpec<CategoryStat> {
+    const marginTone = (m: number) => this.marginTone(m);
+    return {
+      name: 'Categorias',
+      title: 'Estatísticas por categoria',
+      columns: [
+        { header: 'Categoria',     key: 'category',    type: 'text' },
+        { header: 'Lotes',         key: 'batches',     type: 'int',     total: 'sum' },
+        { header: 'Investido',     key: 'invested',    type: 'brl',     total: 'sum' },
+        { header: 'Capital Parado', key: 'idleCapital', type: 'brl',     total: 'sum' },
+        { header: 'Receita Bruta', key: 'revenue',     type: 'brl',     total: 'sum' },
+        { header: 'Lucro Líquido', key: 'profit',      type: 'brl',     total: 'sum' },
+        {
+          header: 'Margem', key: 'margin', type: 'percent',
+          total: 'weightedAvg', numKey: 'profit', denKey: 'revenue',
+          toneFn: r => marginTone(r.margin),
+        },
+      ],
+      rows: this.categoryStats(),
+    };
+  }
+
+  private monthlySheetSpec(): SheetSpec<MonthStat> {
+    const marginTone = (m: number) => this.marginTone(m);
+    return {
+      name: 'Mensal',
+      title: 'Evolução mensal',
+      columns: [
+        { header: 'Mês',             key: 'month',      type: 'text' },
+        { header: 'Vendas',          key: 'qty',        type: 'int',     total: 'sum' },
+        { header: 'Receita Bruta',   key: 'revenue',    type: 'brl',     total: 'sum' },
+        { header: 'Taxas ML',        key: 'fees',       type: 'brl',     total: 'sum' },
+        { header: 'Receita Líquida', key: 'netRevenue', type: 'brl',     total: 'sum' },
+        { header: 'Custo',           key: 'cost',       type: 'brl',     total: 'sum' },
+        { header: 'Lucro Líquido',   key: 'profit',     type: 'brl',     total: 'sum' },
+        {
+          header: 'Margem', key: 'margin', type: 'percent',
+          total: 'weightedAvg', numKey: 'profit', denKey: 'revenue',
+          toneFn: r => marginTone(r.margin),
+        },
+      ],
+      rows: this.monthlyStats(),
+    };
+  }
+
+  private idleSheetSpec(): SheetSpec<ComputedPurchase> {
+    return {
+      name: 'Estoque parado',
+      title: 'Capital parado em estoque',
+      columns: [
+        { header: 'ID',            key: 'id',             type: 'text' },
+        { header: 'Produto',       key: 'product',        type: 'text' },
+        { header: 'Estoque',       key: 'currentStock',   type: 'int',  total: 'sum' },
+        { header: 'Custo Unit.',   key: 'actualUnitCost', type: 'brl' },
+        { header: 'Capital Parado', key: 'idleValue',      type: 'brl',  total: 'sum' },
+        { header: 'Dias Parado',   key: 'daysInStock',    type: 'int' },
+        { header: 'Status',        key: 'status',         type: 'text', bgFn: r => this.statusBg(r.status) },
+      ],
+      rows: this.idleInventory(),
+    };
+  }
+
+  private resumoSpec(): ResumoSpec {
+    const k = this.kpis();
+    return {
+      title: 'Análises Lucrato',
+      generatedAt: new Date(),
+      blocks: [
+        {
+          title: 'Investimento',
+          rows: [
+            { label: 'Investido em compras', value: k.totalInvested,  kind: 'brl' },
+            { label: 'Capital parado',       value: k.idleCapital,    kind: 'brl' },
+            { label: 'Total de lotes',       value: k.totalBatches,   kind: 'count' },
+            { label: 'Lotes em estoque',     value: k.batchesInStock, kind: 'count' },
+          ],
+        },
+        {
+          title: 'Resultado',
+          rows: [
+            { label: 'Receita bruta',   value: k.grossRevenue, kind: 'brl' },
+            { label: 'Receita líquida', value: k.netRevenue,   kind: 'brl' },
+            { label: 'Lucro bruto',     value: k.grossProfit,  kind: 'brl' },
+            { label: 'Lucro líquido',   value: k.netProfit,    kind: 'brl' },
+          ],
+        },
+        {
+          title: 'Eficiência',
+          rows: [
+            { label: 'Taxas pagas',     value: k.totalFees,      kind: 'brl' },
+            { label: 'Total descontos', value: k.totalDiscounts, kind: 'brl' },
+            { label: 'Ticket médio',    value: k.averageTicket,  kind: 'brl' },
+            { label: 'Margem líquida',  value: k.netMargin,      kind: 'percent' },
+          ],
+        },
+      ],
+    };
+  }
+
+  private marginTone(margin: number): Tone {
+    if (margin < 0) return 'danger';
+    const cfg = this.data.settings();
+    if (cfg && margin < cfg.minimumMargin) return 'warning';
+    return 'success';
+  }
+
+  private statusBg(status: InventoryStatus): string | undefined {
+    switch (status) {
+      case 'Em Estoque':  return 'DCFCE7';
+      case 'Vendido':     return 'E5E7EB';
+      case 'Atenção':     return 'FEF3C7';
+      case 'Parado':      return 'FEE2E2';
+      case 'Em trânsito': return 'DBEAFE';
+      default:            return undefined;
+    }
+  }
+
+  private today(): string {
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   }
 
   protected marginClass(m: number): string {
