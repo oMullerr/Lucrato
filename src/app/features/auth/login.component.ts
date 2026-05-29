@@ -21,7 +21,7 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
   ],
   template: `
     <div class="login-page">
-      <!-- ============ HERO ============ -->
+      <!-- Hero -->
       <aside class="hero">
         <div class="hero-content">
           <a class="hero-wordmark" href="/" aria-label="Lucrato">
@@ -53,7 +53,7 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
         <div class="hero-decoration" aria-hidden="true"></div>
       </aside>
 
-      <!-- ============ FORM ============ -->
+      <!-- Form -->
       <main class="form-side">
         <div class="form-card">
           <a class="form-wordmark mobile-only" href="/" aria-label="Lucrato">
@@ -169,7 +169,6 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
       background: var(--bg-canvas);
     }
 
-    /* ============ Hero ============ */
     .hero {
       position: relative;
       overflow: hidden;
@@ -262,7 +261,6 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
       box-shadow: 0 0 0 3px rgba(232, 199, 123, 0.18);
     }
 
-    /* ============ Form ============ */
     .form-side {
       display: flex;
       align-items: center;

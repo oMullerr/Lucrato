@@ -82,7 +82,6 @@ export class SalesComponent {
   };
 
   constructor() {
-    // Subscribe to sortChange whenever the MatSort instance becomes available.
     effect((onCleanup) => {
       const s = this.sortRef();
       if (!s) return;
@@ -90,7 +89,6 @@ export class SalesComponent {
       onCleanup(() => sub.unsubscribe());
     });
 
-    // Subscribe to page events whenever the MatPaginator instance becomes available.
     effect((onCleanup) => {
       const p = this.paginatorRef();
       if (!p) return;

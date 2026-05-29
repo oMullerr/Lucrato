@@ -150,7 +150,6 @@ import { StatusBadgeComponent } from './status-badge.component';
       gap: 16px;
     }
 
-    /* ---- Head ---- */
     .panel-head {
       display: flex;
       align-items: center;
@@ -194,7 +193,6 @@ import { StatusBadgeComponent } from './status-badge.component';
 
     .bullet { opacity: 0.5; }
 
-    /* ---- Stats grid (3x2) ---- */
     .stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -236,7 +234,6 @@ import { StatusBadgeComponent } from './status-badge.component';
       color: var(--text-muted);
     }
 
-    /* ---- Suggestion ---- */
     .suggestion {
       display: flex;
       gap: 12px;
@@ -300,7 +297,6 @@ import { StatusBadgeComponent } from './status-badge.component';
       }
     }
 
-    /* ---- Timeline ---- */
     .timeline { display: flex; flex-direction: column; gap: 10px; }
 
     .section-head {
@@ -355,7 +351,6 @@ import { StatusBadgeComponent } from './status-badge.component';
       border: 1px dashed var(--border-default);
     }
 
-    /* ---- Foot ---- */
     .panel-foot {
       margin-top: auto;
       padding-top: 16px;

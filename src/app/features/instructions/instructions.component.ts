@@ -189,7 +189,6 @@ Revisão semanal (5 minutos):
       margin: 0 auto;
     }
 
-    /* ============ TOC ============ */
     .toc {
       position: sticky;
       top: 24px;
@@ -243,7 +242,6 @@ Revisão semanal (5 minutos):
 
     .toc-label { flex: 1; }
 
-    /* ============ Sections ============ */
     .sections {
       display: flex;
       flex-direction: column;

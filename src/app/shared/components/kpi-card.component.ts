@@ -84,7 +84,6 @@ const VARIANT_MAP: Record<string, string> = {
       border-color: var(--border-default);
     }
 
-    /* ---- Header ---- */
     .kpi-head {
       display: flex;
       align-items: center;
@@ -108,7 +107,6 @@ const VARIANT_MAP: Record<string, string> = {
       opacity: 0.8;
     }
 
-    /* ---- Body ---- */
     .kpi-row {
       display: flex;
       align-items: flex-end;
@@ -161,7 +159,6 @@ const VARIANT_MAP: Record<string, string> = {
       align-self: center;
     }
 
-    /* ---- Size: compact ---- */
     .kpi-card[data-size="compact"] {
       padding: 14px;
       gap: 8px;
@@ -171,7 +168,6 @@ const VARIANT_MAP: Record<string, string> = {
       .kpi-spark { display: none; }
     }
 
-    /* ---- Size: hero ---- */
     .kpi-card[data-size="hero"] {
       padding: 28px;
       gap: 18px;

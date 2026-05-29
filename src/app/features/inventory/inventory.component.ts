@@ -65,7 +65,6 @@ export class InventoryComponent {
     { initialValue: globalThis.window ? globalThis.window.innerWidth >= 1600 : false }
   );
 
-  /** Currently selected filter chip. */
   protected readonly filter = signal<FilterKey>('all');
 
   /** Row currently expanded inline. */
@@ -94,7 +93,6 @@ export class InventoryComponent {
   private readonly paginatorRef = viewChild(MatPaginator);
 
   constructor() {
-    // Subscribe to sortChange whenever the MatSort instance becomes available.
     effect((onCleanup) => {
       const s = this.sortRef();
       if (!s) return;
@@ -102,7 +100,6 @@ export class InventoryComponent {
       onCleanup(() => sub.unsubscribe());
     });
 
-    // Subscribe to page events whenever the MatPaginator instance becomes available.
     effect((onCleanup) => {
       const p = this.paginatorRef();
       if (!p) return;
@@ -246,7 +243,6 @@ export class InventoryComponent {
 
   /** Idle capital — current value (single bar). Tracks the absolute capital parado. */
   protected readonly idleSparkline = computed(() => {
-    // Build a simple 30-point series: capital parado computed at each day
     const purchases = this.data.computedPurchases();
     const days = 30;
     const today = new Date();

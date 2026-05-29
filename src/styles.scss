@@ -2,10 +2,7 @@
 
 @include mat.core();
 
-/* =========================================================================
-   LUCRATO · Design System
-   Premium fintech aesthetic. Phthalo deep teal + champagne.
-   ========================================================================= */
+/* LUCRATO · Design System — Premium fintech aesthetic. Phthalo deep teal + champagne. */
 
 $light-theme: mat.define-theme((
   color: (
@@ -31,9 +28,7 @@ html {
   @include mat.all-component-themes($light-theme);
 }
 
-/* =========================================================================
-   1 · LIGHT MODE TOKENS
-   ========================================================================= */
+/* Light mode tokens */
 :root {
   /* Brand — Phthalo deep teal + champagne accent */
   --brand-primary:    #0A6E5C;
@@ -154,9 +149,7 @@ html {
   color-scheme: light;
 }
 
-/* =========================================================================
-   2 · DARK MODE — Obsidiana with layers (Linear/Vercel)
-   ========================================================================= */
+/* Dark mode — Obsidiana with layers (Linear/Vercel) */
 html.dark {
   @include mat.all-component-colors($dark-theme);
 
@@ -221,9 +214,6 @@ html.dark {
   color-scheme: dark;
 }
 
-/* =========================================================================
-   3 · BASE
-   ========================================================================= */
 * { box-sizing: border-box; }
 
 html, body {
@@ -267,9 +257,6 @@ html, body {
   font-variant-ligatures: none;
 }
 
-/* =========================================================================
-   4 · TYPOGRAPHY UTILITIES
-   ========================================================================= */
 .h-display {
   font-family: 'Geist', 'Inter', sans-serif;
   font-size: var(--fs-display-lg);
@@ -308,9 +295,6 @@ html, body {
   color: var(--text-muted);
 }
 
-/* =========================================================================
-   5 · COLOR UTILITIES
-   ========================================================================= */
 .text-success { color: var(--color-success); }
 .text-danger  { color: var(--color-danger); }
 .text-warning { color: var(--color-warning); }
@@ -332,9 +316,6 @@ html, body {
   .hide-on-mobile { display: none !important; }
 }
 
-/* =========================================================================
-   6 · SCROLLBARS
-   ========================================================================= */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
@@ -344,18 +325,13 @@ html, body {
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-/* =========================================================================
-   7 · FOCUS
-   ========================================================================= */
 :focus-visible {
   outline: none;
   box-shadow: var(--ring-focus);
   border-radius: var(--radius-sm);
 }
 
-/* =========================================================================
-   8 · DELTA (KPI trend indicator)
-   ========================================================================= */
+/* Delta — KPI trend indicator */
 .delta {
   display: inline-flex;
   align-items: center;
@@ -376,9 +352,7 @@ html, body {
   }
 }
 
-/* =========================================================================
-   9 · STATUS DOT (Linear / GitHub style)
-   ========================================================================= */
+/* Status dot — Linear / GitHub style */
 .status-dot {
   display: inline-block;
   width: 6px;
@@ -394,9 +368,6 @@ html, body {
   &.brand   { background: var(--brand-primary); box-shadow: 0 0 0 3px var(--tint-brand); }
 }
 
-/* =========================================================================
-   10 · MATERIAL OVERRIDES
-   ========================================================================= */
 html .mat-mdc-card {
   background: var(--bg-surface-1);
   border: 1px solid var(--border-subtle);
@@ -523,9 +494,6 @@ html .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
   color: var(--brand-primary);
 }
 
-/* =========================================================================
-   11 · PAGE CONTAINER
-   ========================================================================= */
 .page-container {
   background: var(--bg-canvas);
   min-height: calc(100vh - var(--topbar-height));
@@ -557,17 +525,11 @@ html .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
   }
 }
 
-/* =========================================================================
-   12 · SHIMMER (for skeleton)
-   ========================================================================= */
 @keyframes shimmer {
   0%   { background-position: -1000px 0; }
   100% { background-position: 1000px 0; }
 }
 
-/* =========================================================================
-   13 · CARD HELPERS
-   ========================================================================= */
 .surface-card {
   background: var(--bg-surface-1);
   border: 1px solid var(--border-subtle);
@@ -580,11 +542,9 @@ html .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
   background: var(--bg-surface-2);
 }
 
-/* =========================================================================
-   14 · LEGACY ALIASES — keep old var names mapped so unmigrated screens
+/* Legacy aliases — keep old var names mapped so unmigrated screens
    don't break visually while we redesign them in order.
-   These will be removed at the end of Phase 5.
-   ========================================================================= */
+   These will be removed at the end of Phase 5. */
 :root,
 html.dark {
   --bg-base:        var(--bg-canvas);

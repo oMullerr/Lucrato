@@ -268,9 +268,6 @@ export class AnalyticsComponent {
     ];
   });
 
-  // ──────────────────────────────────────────────
-  // Sort handlers
-  // ──────────────────────────────────────────────
   protected sortProduct(key: keyof ProductStat): void {
     this.productSort.update(s => ({ key, dir: s.key === key && s.dir === 'desc' ? 'asc' : 'desc' }));
   }
@@ -289,9 +286,6 @@ export class AnalyticsComponent {
     return state.dir === 'desc' ? 'arrow_downward' : 'arrow_upward';
   }
 
-  // ──────────────────────────────────────────────
-  // XLSX Exports
-  // ──────────────────────────────────────────────
   protected exportProducts(): void {
     this.xlsx.download(
       `lucrato-produtos-${this.today()}.xlsx`,
@@ -337,9 +331,6 @@ export class AnalyticsComponent {
     );
   }
 
-  // ──────────────────────────────────────────────
-  // Sheet spec builders
-  // ──────────────────────────────────────────────
   private productsSheetSpec(): SheetSpec<ProductStat> {
     const marginTone = (m: number) => this.marginTone(m);
     return {

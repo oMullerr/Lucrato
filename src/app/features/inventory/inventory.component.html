@@ -61,9 +61,7 @@
         </app-empty-state>
 
       } @else {
-        <!-- =========================
-             ZONA A — PULSO
-             ========================= -->
+        <!-- ZONA A — PULSO -->
         <section class="hero" aria-label="Resumo financeiro">
           <article class="hero-card" data-tone="success">
             <header class="hero-head">
@@ -131,9 +129,7 @@
           />
         </section>
 
-        <!-- =========================
-             ZONA B — ALERTAS
-             ========================= -->
+        <!-- ZONA B — ALERTAS -->
         @if (alerts().length > 0) {
           <section class="alert-card" [attr.data-level]="alertLevel()" aria-label="Alertas">
             <div class="alert-stripe" aria-hidden="true"></div>
@@ -160,9 +156,7 @@
           </section>
         }
 
-        <!-- =========================
-             ZONA C — POSIÇÃO DETALHADA
-             ========================= -->
+        <!-- ZONA C — POSIÇÃO DETALHADA -->
         <section class="positions" id="positions-table" aria-label="Posição detalhada por lote">
           <header class="positions-head">
             <div class="ph-text">

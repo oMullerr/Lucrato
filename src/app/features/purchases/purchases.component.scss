@@ -1,7 +1,3 @@
-/* =========================================================================
-   Purchases screen
-   ========================================================================= */
-
 .pur-container {
   height: calc(100vh - var(--topbar-height));
   background: var(--bg-canvas);
@@ -35,9 +31,6 @@
   --mdc-filled-button-label-text-color: #FFFFFF;
 }
 
-/* =========================================================================
-   Filters
-   ========================================================================= */
 .filters {
   display: flex;
   gap: 12px;
@@ -105,9 +98,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* =========================================================================
-   Table
-   ========================================================================= */
 .table-card {
   background: var(--bg-surface-1);
   border: 1px solid var(--border-subtle);
@@ -210,9 +200,6 @@
   font-weight: 500;
 }
 
-/* =========================================================================
-   Row expansion
-   ========================================================================= */
 .row-expansion {
   background: var(--bg-surface-2);
 
@@ -241,9 +228,7 @@
   .expansion-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* =========================================================================
-   Sort headers (MatSort on native <th>)
-   ========================================================================= */
+/* Sort headers (MatSort on native <th>) */
 :host ::ng-deep .data-table .mat-sort-header-container {
   font: inherit;
   color: inherit;
@@ -260,9 +245,6 @@
   color: var(--text-secondary);
 }
 
-/* =========================================================================
-   Paginator
-   ========================================================================= */
 .pur-paginator {
   background: var(--bg-surface-1);
   border-top: 1px solid var(--border-subtle);

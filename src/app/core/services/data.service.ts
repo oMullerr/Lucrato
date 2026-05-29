@@ -58,8 +58,6 @@ export class DataService {
     }, { allowSignalWrites: true });
   }
 
-  // ─── Firestore sync ────────────────────────────────────
-
   private async startSync(uid: string): Promise<void> {
     this.cancelRetry();
     this._unsub?.();
@@ -183,8 +181,6 @@ export class DataService {
     }
   }
 
-  // ─── Purchases CRUD ──────────────────────────────────────
-
   nextPurchaseId(): string {
     return nextId(this.purchases().map(c => c.id), 'C');
   }
@@ -214,8 +210,6 @@ export class DataService {
       d.sales     = d.sales.filter(v => v.batchId !== purchaseId);
     });
   }
-
-  // ─── Sales CRUD ───────────────────────────────────────
 
   nextSaleId(): string {
     return nextId(this.sales().map(v => v.id), 'V');
@@ -247,8 +241,6 @@ export class DataService {
       if (sales.length) d.sales.push(...sales);
     });
   }
-
-  // ─── Internals ─────────────────────────────────────────
 
   private update(mutator: (db: Database) => void): Promise<void> {
     const current = this.db();

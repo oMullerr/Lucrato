@@ -62,14 +62,14 @@ const STATUS_MAP: Record<StatusType, StatusConfig> = {
       color: var(--text-primary);
     }
 
-    /* ---- Variants — minimal style (just colored dot + text) ---- */
+    /* Variants — minimal style (just colored dot + text) */
     .badge[data-variant="success"] { color: var(--color-success); }
     .badge[data-variant="warning"] { color: var(--color-warning); }
     .badge[data-variant="danger"]  { color: var(--color-danger); }
     .badge[data-variant="info"]    { color: var(--color-info); }
     .badge[data-variant="neutral"] { color: var(--text-muted); }
 
-    /* ---- High emphasis — colored pill background for critical states ---- */
+    /* High emphasis — colored pill background for critical states */
     .badge[data-emphasis="high"] {
       background: color-mix(in srgb, currentColor 12%, transparent);
 

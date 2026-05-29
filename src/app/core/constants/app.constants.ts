@@ -1,4 +1,3 @@
-/** Constantes de aplicação */
 export const APP = {
   name: 'Lucrato',
   version: '1.0.0',

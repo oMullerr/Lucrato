@@ -133,9 +133,6 @@ export class DashboardComponent {
     this.themeService.isDark() ? CHART_COLORS.dark : CHART_COLORS.light
   );
 
-  // ────────────────────────────────────────────────────────
-  // SPARKLINES (period-aware) for KPI cards
-  // ────────────────────────────────────────────────────────
   protected readonly profitSpark = computed(() => this.buildSparkline(s => s.netProfit));
   protected readonly revenueSpark = computed(() => this.buildSparkline(s => s.grossRevenue));
   protected readonly feesSpark = computed(() => this.buildSparkline(s => s.feeAmount));
@@ -156,10 +153,6 @@ export class DashboardComponent {
     }
     return points;
   });
-
-  // ────────────────────────────────────────────────────────
-  // CHARTS — period-aware
-  // ────────────────────────────────────────────────────────
 
   /** Hero chart — monthly evolution. */
   protected readonly monthlyChart = computed<ChartConfiguration<'line'>['data']>(() => {
@@ -304,9 +297,6 @@ export class DashboardComponent {
     ];
   });
 
-  // ────────────────────────────────────────────────────────
-  // CHART OPTIONS
-  // ────────────────────────────────────────────────────────
   protected readonly lineOptions = computed<ChartConfiguration<'line'>['options']>(() => {
     const c = this.palette();
     return {
@@ -411,9 +401,6 @@ export class DashboardComponent {
     return items.map(it => ({ ...it, pct: total > 0 ? (it.value / total) * 100 : 0 }));
   });
 
-  // ────────────────────────────────────────────────────────
-  // Actions
-  // ────────────────────────────────────────────────────────
   protected setRange(r: RangeKey): void {
     this.range.set(r);
   }
@@ -431,10 +418,6 @@ export class DashboardComponent {
     }
     return RANGE_OPTIONS.find(o => o.key === r)?.label.toUpperCase() ?? '';
   }
-
-  // ────────────────────────────────────────────────────────
-  // Helpers
-  // ────────────────────────────────────────────────────────
 
   /** Number of buckets used by sparklines. Adapts to range length. */
   private bucketCount(): number {
@@ -499,10 +482,6 @@ export class DashboardComponent {
     };
   }
 }
-
-// ──────────────────────────────────────────────────────────
-// Pure helpers
-// ──────────────────────────────────────────────────────────
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', {
