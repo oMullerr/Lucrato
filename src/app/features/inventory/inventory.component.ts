@@ -21,6 +21,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
+import { QuickActionsService } from '../../core/services/quick-actions.service';
 import { ComputedPurchase, InventoryStatus, Purchase } from '../../core/models/models';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { KpiCardComponent } from '../../shared/components/kpi-card.component';
@@ -53,6 +54,7 @@ export class InventoryComponent {
   protected readonly data = inject(DataService);
   private readonly dialog = inject(MatDialog);
   private readonly notify = inject(NotifyService);
+  private readonly quick = inject(QuickActionsService);
   private readonly bp = inject(BreakpointObserver);
 
   protected readonly kpis = this.data.kpis;
@@ -69,8 +71,15 @@ export class InventoryComponent {
   /** Row currently expanded inline. */
   protected readonly expandedRow = signal<string | null>(null);
 
-  /** Selected batch for the lateral detail panel. */
-  protected readonly selectedBatch = signal<ComputedPurchase | null>(null);
+  /** Id of the batch shown in the lateral detail panel (id, not snapshot, so it stays live). */
+  protected readonly selectedBatchId = signal<string | null>(null);
+
+  /** Resolves the selected id against the live computed list so the panel reflects updates. */
+  protected readonly selectedBatch = computed<ComputedPurchase | null>(() => {
+    const id = this.selectedBatchId();
+    if (!id) return null;
+    return this.data.computedPurchases().find(c => c.id === id) ?? null;
+  });
   protected readonly panelOpen = computed(() => this.selectedBatch() !== null);
 
   /** Current sort state from MatSort. Empty `active`/`direction` means use the default sort. */
@@ -298,11 +307,17 @@ export class InventoryComponent {
   }
 
   protected openDetail(batch: ComputedPurchase): void {
-    this.selectedBatch.set(batch);
+    this.selectedBatchId.set(batch.id);
   }
 
   protected closeDetail(): void {
-    this.selectedBatch.set(null);
+    this.selectedBatchId.set(null);
+  }
+
+  /** One-click "mark as received today" from a table row (Em trânsito only). */
+  protected markReceived(batch: ComputedPurchase, event: Event): void {
+    event.stopPropagation();
+    this.quick.markReceivedToday(batch);
   }
 
   protected scrollToAlerts(): void {

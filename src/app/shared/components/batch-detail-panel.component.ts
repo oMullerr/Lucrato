@@ -116,6 +116,12 @@ import { StatusBadgeComponent } from './status-badge.component';
             <mat-icon>edit</mat-icon>
             Editar lote
           </button>
+          @if (b.status === 'Em trânsito') {
+            <button mat-stroked-button class="receive-btn" (click)="markReceived()">
+              <mat-icon>move_to_inbox</mat-icon>
+              Marcar recebido
+            </button>
+          }
           <button
             mat-flat-button
             class="primary-cta"
@@ -256,6 +262,11 @@ import { StatusBadgeComponent } from './status-badge.component';
       border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
     }
 
+    .suggestion[data-tone="info"] {
+      background: var(--tint-info);
+      border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
+    }
+
     .sugg-icon {
       font-size: 20px;
       width: 20px;
@@ -267,6 +278,7 @@ import { StatusBadgeComponent } from './status-badge.component';
     .suggestion[data-tone="warning"] .sugg-icon { color: var(--color-warning); }
     .suggestion[data-tone="danger"] .sugg-icon  { color: var(--color-danger); }
     .suggestion[data-tone="success"] .sugg-icon { color: var(--color-success); }
+    .suggestion[data-tone="info"] .sugg-icon    { color: var(--color-info); }
 
     .sugg-body {
       flex: 1;
@@ -349,6 +361,7 @@ import { StatusBadgeComponent } from './status-badge.component';
       padding-top: 16px;
       border-top: 1px solid var(--border-subtle);
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       justify-content: flex-end;
     }
@@ -356,6 +369,11 @@ import { StatusBadgeComponent } from './status-badge.component';
     .primary-cta {
       --mdc-filled-button-container-color: var(--brand-primary);
       --mdc-filled-button-label-text-color: #FFFFFF;
+    }
+
+    .receive-btn {
+      --mdc-outlined-button-label-text-color: var(--color-success);
+      --mdc-outlined-button-outline-color: color-mix(in srgb, var(--color-success) 40%, transparent);
     }
 
     @media (max-width: 600px) {
@@ -416,6 +434,15 @@ export class BatchDetailPanelComponent {
       };
     }
 
+    if (b.status === 'Em trânsito') {
+      return {
+        tone: 'info' as const,
+        icon: 'local_shipping',
+        title: 'Lote em trânsito',
+        message: 'Marque como recebido quando ele chegar para começar a contar o tempo de estoque.',
+      };
+    }
+
     if (b.status === 'Parado') {
       const suggestedReduction = Math.round((b.daysInStock - settings.redAlertDays) / 5 + 5);
       return {
@@ -451,6 +478,12 @@ export class BatchDetailPanelComponent {
     const b = this.batch();
     if (!b || b.currentStock <= 0) return;
     this.quick.openNewSale();
+  }
+
+  protected markReceived(): void {
+    const b = this.batch();
+    if (!b || b.receiptDate) return;
+    this.quick.markReceivedToday(b);
   }
 }
 

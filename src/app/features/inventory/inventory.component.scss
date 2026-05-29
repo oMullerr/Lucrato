@@ -414,6 +414,9 @@
     &:hover { color: var(--text-primary); }
 
     &.danger:hover { color: var(--color-danger); }
+
+    &.success { color: var(--color-success); }
+    &.success:hover { color: var(--color-success); }
   }
 }
 

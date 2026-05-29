@@ -247,7 +247,6 @@ A aplicação implementa as seguintes camadas de proteção:
 - Revisar texto de instruções
 - Redistribuir o codigo (html so com html, css so com css e ts so com ts)
 - Ler como ficou o texto das instruções
-- botao para registrar recebimento de mercadoria
 - Remover comentários
 
 ## BUGS

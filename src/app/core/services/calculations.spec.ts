@@ -126,6 +126,23 @@ describe('calculatePurchase', () => {
     expect(result.status).toBe('Em trânsito');
   });
 
+  it('vira de "Em trânsito" para "Em Estoque" ao receber receiptDate de hoje', () => {
+    const settings = makeSettings({ yellowAlertDays: 30, redAlertDays: 60 });
+
+    // Sem data de recebimento → em trânsito.
+    const emTransito = calculatePurchase(
+      makePurchase({ receiptDate: undefined }), [], settings,
+    );
+    expect(emTransito.status).toBe('Em trânsito');
+
+    // Mesmo lote marcado como recebido hoje (system time = 2026-03-01).
+    const recebido = calculatePurchase(
+      makePurchase({ receiptDate: '2026-03-01' }), [], settings,
+    );
+    expect(recebido.status).toBe('Em Estoque');
+    expect(recebido.daysInStock).toBe(0);
+  });
+
   it('define status = "Parado" quando daysInStock >= redAlertDays', () => {
     // startDate = 2026-01-05, endRef = 2026-03-01 (now) → ~55 dias
     const purchase = makePurchase({ receiptDate: '2026-01-05' });

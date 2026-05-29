@@ -291,6 +291,16 @@
                         </td>
                         <td><app-status-badge [status]="c.status" /></td>
                         <td class="text-right col-actions">
+                          @if (c.status === 'Em trânsito') {
+                            <button
+                              mat-icon-button
+                              class="row-action success"
+                              (click)="markReceived(c, $event)"
+                              matTooltip="Marcar como recebido (hoje)"
+                            >
+                              <mat-icon>move_to_inbox</mat-icon>
+                            </button>
+                          }
                           <button
                             mat-icon-button
                             class="row-action"
