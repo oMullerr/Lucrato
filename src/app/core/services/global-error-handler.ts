@@ -1,6 +1,7 @@
 import { ErrorHandler, Injectable, NgZone, inject } from '@angular/core';
 import { NotifyService } from './notify.service';
 import { firestoreErrorMessage, isChunkLoadError } from './firestore-errors';
+import { logError } from './logger';
 
 @Injectable()
 export class GlobalErrorHandler implements ErrorHandler {
@@ -9,7 +10,7 @@ export class GlobalErrorHandler implements ErrorHandler {
   private chunkPromptShown = false;
 
   handleError(error: unknown): void {
-    console.error('[GlobalErrorHandler]', error);
+    logError('[GlobalErrorHandler]', error);
     const cause = this.unwrap(error);
 
     if (isChunkLoadError(cause)) {

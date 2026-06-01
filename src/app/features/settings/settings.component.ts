@@ -17,6 +17,7 @@ import { DataService } from '../../core/services/data.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ImportService } from '../../core/services/import.service';
 import { NotifyService } from '../../core/services/notify.service';
+import { logError } from '../../core/services/logger';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
 import { ImportResultDialogComponent } from './import-result-dialog.component';
@@ -132,7 +133,7 @@ export class SettingsComponent implements OnDestroy {
         this.serverSettings.set(composed);
       },
       err => {
-        console.error('[Settings] onSnapshot falhou:', err);
+        logError('[Settings] onSnapshot falhou:', err);
       }
     );
   }
@@ -220,7 +221,7 @@ export class SettingsComponent implements OnDestroy {
       await setDoc(ref, payload, { merge: true });
       this.notify.success('Configurações salvas.');
     } catch (err) {
-      console.error('[Settings] setDoc falhou:', err);
+      logError('[Settings] setDoc falhou:', err);
       this.notify.error('Erro ao salvar configurações. Verifique sua conexão.');
     } finally {
       this.saving.set(false);
@@ -292,7 +293,7 @@ export class SettingsComponent implements OnDestroy {
         width: '520px',
       });
     } catch (err) {
-      console.error('[Settings] Importação falhou:', err);
+      logError('[Settings] Importação falhou:', err);
       this.notify.error('Erro ao importar planilha. Verifique sua conexão.');
     } finally {
       this.importing.set(false);

@@ -1,0 +1,16 @@
+version: 2
+updates:
+  # Dependências npm — atualizações de segurança e versão.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+
+  # Mantém as actions do CI atualizadas.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

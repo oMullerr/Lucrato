@@ -467,7 +467,7 @@ export class LoginComponent {
       case 'auth/email-already-in-use':
         return 'Este e-mail já está cadastrado.';
       case 'auth/weak-password':
-        return 'A senha deve ter pelo menos 6 caracteres.';
+        return 'A senha deve ter pelo menos 8 caracteres, com letra e número.';
       case 'auth/invalid-email':
         return 'Endereço de e-mail inválido.';
       case 'auth/too-many-requests':

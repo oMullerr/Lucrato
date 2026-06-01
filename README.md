@@ -225,20 +225,51 @@ firebase deploy
 
 ## Segurança
 
-A aplicação implementa as seguintes camadas de proteção:
+A aplicação implementa defesa em profundidade nas seguintes camadas:
 
 | Camada | Onde |
 | --- | --- |
-| Firestore Rules restritas por UID + email_verified | [firestore.rules](firestore.rules) |
+| Firestore Rules: isolamento por UID + `email_verified` + validação de formato/tamanho + deny-all | [firestore.rules](firestore.rules) |
 | App Check (reCAPTCHA Enterprise) | [src/app/app.config.ts](src/app/app.config.ts) |
-| HTTP security headers (CSP, HSTS, X-Frame, etc.) | [vercel.json](vercel.json) |
-| Verificação de e-mail obrigatória | [src/app/core/guards/auth.guard.ts](src/app/core/guards/auth.guard.ts) |
+| HTTP security headers (CSP, HSTS, X-Frame, nosniff, Referrer, Permissions) | [vercel.json](vercel.json) |
+| Verificação de e-mail obrigatória (guard + rules) | [src/app/core/guards/auth.guard.ts](src/app/core/guards/auth.guard.ts) |
 | Política de senha forte (8+ chars, letra+número) | [src/app/core/services/password-validator.ts](src/app/core/services/password-validator.ts) |
 | Forgot password (sem enumeração de contas) | [src/app/features/auth/forgot-password.dialog.ts](src/app/features/auth/forgot-password.dialog.ts) |
-| Re-autenticação antes de operações sensíveis | [src/app/features/profile/profile.component.ts](src/app/features/profile/profile.component.ts) |
-| Limites de upload XLSX (5 MB, 5000 linhas, MIME) | [src/app/features/settings/settings.component.ts](src/app/features/settings/settings.component.ts) + [src/app/core/services/import.service.ts](src/app/core/services/import.service.ts) |
+| Re-autenticação antes de trocar senha / excluir conta | [src/app/features/profile/profile.component.ts](src/app/features/profile/profile.component.ts) |
+| Limites de upload XLSX (5 MB, 5000 linhas/aba, extensão) | [src/app/features/settings/settings.component.ts](src/app/features/settings/settings.component.ts) |
+| Leitura de planilha pela build **corrigida** do SheetJS (xlsx 0.20.x) | [src/app/core/services/import.service.ts](src/app/core/services/import.service.ts) |
+| Logs detalhados desligados em produção | [src/app/core/services/logger.ts](src/app/core/services/logger.ts) |
 
-**Ajuste de CSP**: se algum recurso bloquear em produção, abra DevTools → Console no domínio Vercel e ajuste a diretiva correspondente em [vercel.json](vercel.json). A CSP atual cobre Firebase, reCAPTCHA, App Check e Material.
+### 🛡️ Operações de segurança no console (checklist)
+
+Algumas proteções não vivem no código — precisam ser ativadas nos consoles do Firebase / Google Cloud.
+Faça este checklist no setup e revise periodicamente:
+
+- [ ] **App Check em "Enforce"** — Firebase Console → App Check → Cloud Firestore → *Enforce*.
+      Rode ~1 semana em "unenforced" primeiro para conferir métricas.
+- [ ] **Proteção contra enumeração de e-mail** — Firebase Console → Authentication → Settings →
+      *Email enumeration protection* (ativar). Impede descobrir quais e-mails têm conta pelo cadastro.
+- [ ] **Restringir a API key Web** — Google Cloud Console → APIs & Services → Credentials → a *Browser key* →
+      *Application restrictions* = HTTP referrers (`localhost` + domínio de produção) e *API restrictions* = só
+      as APIs usadas (Identity Toolkit, Cloud Firestore, App Check, Firebase Installations). A `apiKey` no
+      `environment.ts` é pública por design, mas a restrição impede reuso/abuso de cota a partir de outros domínios.
+- [ ] **Backups do Firestore** — Firebase Console → Firestore → *Point-in-time recovery* (ativar) e/ou agendar
+      exports para um bucket GCS. Recupera dados após exclusão acidental ou maliciosa.
+- [ ] **Publicar as Firestore Rules** após qualquer alteração:
+      `npx firebase-tools deploy --only firestore:rules --project lucrato-web`
+      — teste antes no *Rules Playground* / emulador para não bloquear gravações legítimas.
+
+### Notas técnicas
+
+- **CSP / `unsafe-inline` em estilos**: a diretiva `style-src` permite `'unsafe-inline'` porque o Angular
+  Material injeta estilos inline (necessário). Os **scripts** *não* permitem `unsafe-inline`/`unsafe-eval`
+  (apenas `wasm-unsafe-eval`), mantendo a proteção anti-XSS importante. Se algum recurso bloquear em produção,
+  abra DevTools → Console no domínio Vercel e ajuste a diretiva correspondente em [vercel.json](vercel.json).
+- **Parser de planilha**: a leitura de arquivos enviados usa a build oficial **corrigida** do SheetJS,
+  instalada a partir do CDN deles (o registro npm está congelado numa versão vulnerável — CVE-2023-30533 /
+  CVE-2024-22363). Para reproduzir o ambiente após um clone limpo:
+  `npm install --save https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`. O `xlsx-js-style` permanece apenas
+  para **gerar** planilhas estilizadas (a escrita não processa entrada não-confiável).
 
 ## TODO
 
@@ -247,6 +278,6 @@ A aplicação implementa as seguintes camadas de proteção:
 - Revisar texto de instruções
 - Redistribuir o codigo (html so com html, css so com css e ts so com ts)
 - Ler como ficou o texto das instruções
-- Remover comentários
+- Rever calculos da aplicação
 
 ## BUGS

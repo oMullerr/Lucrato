@@ -3,12 +3,32 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Cada usuário só pode ler/escrever no seu próprio subtree.
-    // Exige autenticação + UID conferente + e-mail verificado.
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null
-                         && request.auth.uid == userId
-                         && request.auth.token.email_verified == true;
+    // Dono autenticado: UID conferente + e-mail verificado.
+    function isVerifiedOwner(userId) {
+      return request.auth != null
+             && request.auth.uid == userId
+             && request.auth.token.email_verified == true;
+    }
+
+    // Valida formato e tamanho do documento principal de dados.
+    // Em writes com merge, request.resource.data é o documento COMPLETO já
+    // mesclado (dados existentes + alterações), então checar os campos
+    // presentes é seguro e não bloqueia gravações parciais legítimas.
+    function isValidMainDoc() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['purchases', 'sales', 'settings', 'metadata'])
+             && (!('purchases' in d) || (d.purchases is list && d.purchases.size() <= 20000))
+             && (!('sales' in d)     || (d.sales is list     && d.sales.size() <= 40000))
+             && (!('settings' in d)  || d.settings is map)
+             && (!('metadata' in d)  || d.metadata is map);
+    }
+
+    // Cada usuário só acessa o próprio documento de dados em users/{uid}/db/{doc}.
+    // O caminho fixo impede criar subcoleções/documentos arbitrários (abuso de cota).
+    match /users/{userId}/db/{docId} {
+      allow read:           if isVerifiedOwner(userId);
+      allow create, update: if isVerifiedOwner(userId) && isValidMainDoc();
+      allow delete:         if isVerifiedOwner(userId);
     }
 
     // Nega qualquer outro caminho explicitamente.

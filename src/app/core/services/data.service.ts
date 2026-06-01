@@ -10,6 +10,7 @@ import { AuthService } from './auth.service';
 import { NotifyService } from './notify.service';
 import { ConnectionService } from './connection.service';
 import { firestoreErrorMessage } from './firestore-errors';
+import { logError } from './logger';
 
 const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 16000, 30000];
 
@@ -50,7 +51,7 @@ export class DataService {
       const u = this.auth.currentUser();
       if (u) {
         this.startSync(u.uid).catch(err =>
-          console.error('[DataService] startSync falhou:', err),
+          logError('[DataService] startSync falhou:', err),
         );
       } else if (u === null) {
         this.stopSync();
@@ -87,14 +88,14 @@ export class DataService {
           const empty = this.createEmpty();
           this.db.set(empty);
           setDoc(ref, empty).catch(err => {
-            console.error('[Firestore] Falha ao criar documento inicial:', err);
+            logError('[Firestore] Falha ao criar documento inicial:', err);
             this.connection.reportSnapshotError(err);
             this.notify.warning('Não foi possível criar seu banco de dados inicial. Recarregue a página.');
           });
         }
       },
       err => {
-        console.error('[Firestore] onSnapshot falhou:', err);
+        logError('[Firestore] onSnapshot falhou:', err);
         this.connection.reportSnapshotError(err);
         this.notify.error(firestoreErrorMessage(err));
         this.scheduleRetry(uid);
@@ -108,7 +109,7 @@ export class DataService {
     this._retryAttempt += 1;
     this._retryTimer = setTimeout(() => {
       this._retryTimer = undefined;
-      this.startSync(uid).catch(err => console.error('[DataService] retry startSync falhou:', err));
+      this.startSync(uid).catch(err => logError('[DataService] retry startSync falhou:', err));
     }, delay);
   }
 
@@ -143,7 +144,7 @@ export class DataService {
     };
     return setDoc(doc(this.firestore, `users/${uid}/db/main`), payload, { merge: true })
       .catch(err => {
-        console.error('[Firestore] Falha ao salvar:', err);
+        logError('[Firestore] Falha ao salvar:', err);
         this.notify.error(firestoreErrorMessage(err));
         throw err;
       });
@@ -174,7 +175,7 @@ export class DataService {
     try {
       await setDoc(doc(this.firestore, `users/${uid}/db/main`), zeroed);
     } catch (err) {
-      console.error('[Firestore] Falha ao zerar dados:', err);
+      logError('[Firestore] Falha ao zerar dados:', err);
       this.db.set(prev);
       this.notify.error(firestoreErrorMessage(err));
       throw err;

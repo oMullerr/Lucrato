@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    name: Test · Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  audit:
+    name: Dependency audit (informativo)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      # Informativo: reporta vulnerabilidades de PRODUÇÃO sem bloquear o merge.
+      # Hoje há advisories conhecidas em deps transitivas do SDK Firebase
+      # (undici via @firebase/functions e @firebase/storage — recursos que este
+      # app não usa). Reavaliar ao atualizar o pacote `firebase`. Mantido como
+      # não-bloqueante para não travar PRs legítimos; revise a saída a cada PR.
+      - run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true

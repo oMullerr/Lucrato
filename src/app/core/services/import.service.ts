@@ -1,7 +1,19 @@
 import { Injectable } from '@angular/core';
+// ESCRITA estilizada (modelo/exportação): o fork preserva estilos de célula.
+// Não processa entrada não-confiável, então o fork congelado é aceitável aqui.
 import * as XLSX from 'xlsx-js-style';
+// LEITURA de arquivos enviados pelo usuário: build oficial CORRIGIDA do SheetJS.
+// xlsx-js-style está preso ao SheetJS 0.18 (CVE-2023-30533 prototype pollution,
+// CVE-2024-22363 ReDoS no parser); só o caminho de leitura usa este módulo.
+import {
+  read as readWorkbook,
+  utils as readUtils,
+  type WorkBook as ReadWorkBook,
+  type WorkSheet as ReadWorkSheet,
+} from 'xlsx';
 import { Purchase, Sale, Settings, SaleChannel, SaleStatus } from '../models/models';
 import { calculatePurchase } from './calculations';
+import { logError } from './logger';
 
 export interface ImportResult {
   purchases: Purchase[];
@@ -367,10 +379,10 @@ export class ImportService {
   ): Promise<ImportResult> {
     const errors: string[] = [];
 
-    let workbook: XLSX.WorkBook;
+    let workbook: ReadWorkBook;
     try {
       const buffer = await file.arrayBuffer();
-      workbook = XLSX.read(new Uint8Array(buffer), { type: 'array', cellDates: true });
+      workbook = readWorkbook(new Uint8Array(buffer), { type: 'array', cellDates: true });
     } catch {
       return { purchases: [], sales: [], errors: ['Arquivo inválido ou corrompido.'] };
     }
@@ -393,20 +405,20 @@ export class ImportService {
 
       return { purchases: newPurchases, sales: newSales, errors };
     } catch (err) {
-      console.error('[Import] parseFile crashed:', err);
+      logError('[Import] parseFile crashed:', err);
       return { purchases: [], sales: [], errors: ['Arquivo inválido ou corrompido.'] };
     }
   }
 
   private parsePurchases(
-    ws: XLSX.WorkSheet | undefined,
+    ws: ReadWorkSheet | undefined,
     existing: Purchase[],
     errors: string[],
   ): Purchase[] {
     if (!ws) return [];
 
     const MAX_ROWS = 5000;
-    const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+    const rows: any[][] = readUtils.sheet_to_json(ws, { header: 1 });
 
     if (rows.length - 3 > MAX_ROWS) {
       errors.push(`Aba "Compras" excede o limite de ${MAX_ROWS} linhas. Divida em arquivos menores.`);
@@ -468,7 +480,7 @@ export class ImportService {
   }
 
   private parseSales(
-    ws: XLSX.WorkSheet | undefined,
+    ws: ReadWorkSheet | undefined,
     existingPurchases: Purchase[],
     newPurchases: Purchase[],
     existingSales: Sale[],
@@ -478,7 +490,7 @@ export class ImportService {
     if (!ws) return [];
 
     const MAX_ROWS = 5000;
-    const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+    const rows: any[][] = readUtils.sheet_to_json(ws, { header: 1 });
 
     if (rows.length - 3 > MAX_ROWS) {
       errors.push(`Aba "Vendas" excede o limite de ${MAX_ROWS} linhas. Divida em arquivos menores.`);

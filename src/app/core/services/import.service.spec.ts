@@ -1,16 +1,23 @@
-// Mock de xlsx-js-style — só as funções que o service usa.
+// Mock de xlsx-js-style — usado só para ESCRITA (modelo/exportação).
 jest.mock('xlsx-js-style', () => ({
   utils: {
     book_new: jest.fn(() => ({})),
     book_append_sheet: jest.fn(),
     aoa_to_sheet: jest.fn(() => ({})),
-    sheet_to_json: jest.fn(() => []),
   },
   writeFile: jest.fn(),
+}));
+
+// Mock de xlsx (build corrigida do SheetJS) — usado só para LEITURA de uploads.
+jest.mock('xlsx', () => ({
   read: jest.fn(),
+  utils: {
+    sheet_to_json: jest.fn(() => []),
+  },
 }));
 
 import * as XLSX from 'xlsx-js-style';
+import * as XLSXRead from 'xlsx';
 import { ImportService } from './import.service';
 import { Purchase, Sale, Settings } from '../models/models';
 
@@ -192,7 +199,7 @@ describe('ImportService', () => {
 
   describe('parsePurchases (via cast, mockando sheet_to_json)', () => {
     function callParse(rows: any[][], existing: Purchase[] = []): { result: Purchase[]; errors: string[] } {
-      (XLSX.utils.sheet_to_json as jest.Mock).mockReturnValue(rows);
+      (XLSXRead.utils.sheet_to_json as jest.Mock).mockReturnValue(rows);
       const errors: string[] = [];
       const result = (service as any).parsePurchases({}, existing, errors) as Purchase[];
       return { result, errors };
@@ -319,7 +326,7 @@ describe('ImportService', () => {
       existingSales: Sale[] = [],
       settings: Settings = makeSettings(),
     ): { result: Sale[]; errors: string[] } {
-      (XLSX.utils.sheet_to_json as jest.Mock).mockReturnValue(rows);
+      (XLSXRead.utils.sheet_to_json as jest.Mock).mockReturnValue(rows);
       const errors: string[] = [];
       const result = (service as any).parseSales(
         {}, existingPurchases, newPurchases, existingSales, settings, errors,
@@ -455,7 +462,7 @@ describe('ImportService', () => {
     }
 
     it('retorna erro quando arquivo é inválido / XLSX.read joga exceção', async () => {
-      (XLSX.read as jest.Mock).mockImplementation(() => { throw new Error('boom'); });
+      (XLSXRead.read as jest.Mock).mockImplementation(() => { throw new Error('boom'); });
       const result = await service.parseFile(makeFakeFile(), [], [], makeSettings());
       expect(result.purchases).toEqual([]);
       expect(result.sales).toEqual([]);
@@ -463,11 +470,11 @@ describe('ImportService', () => {
     });
 
     it('retorna sucesso quando XLSX.read e parsers respondem corretamente', async () => {
-      (XLSX.read as jest.Mock).mockReturnValue({
+      (XLSXRead.read as jest.Mock).mockReturnValue({
         Sheets: { Compras: {}, Vendas: {} },
       });
       // Mock retorna [] para os dois sheets — sem dados, sem erros
-      (XLSX.utils.sheet_to_json as jest.Mock).mockReturnValue([]);
+      (XLSXRead.utils.sheet_to_json as jest.Mock).mockReturnValue([]);
       const result = await service.parseFile(makeFakeFile(), [], [], makeSettings());
       expect(result.purchases).toEqual([]);
       expect(result.sales).toEqual([]);
@@ -475,10 +482,10 @@ describe('ImportService', () => {
     });
 
     it('captura crash inesperado de parser e retorna erro genérico', async () => {
-      (XLSX.read as jest.Mock).mockReturnValue({
+      (XLSXRead.read as jest.Mock).mockReturnValue({
         Sheets: { Compras: {}, Vendas: {} },
       });
-      (XLSX.utils.sheet_to_json as jest.Mock).mockImplementation(() => { throw new Error('crash'); });
+      (XLSXRead.utils.sheet_to_json as jest.Mock).mockImplementation(() => { throw new Error('crash'); });
       const result = await service.parseFile(makeFakeFile(), [], [], makeSettings());
       expect(result.errors).toEqual(['Arquivo inválido ou corrompido.']);
     });

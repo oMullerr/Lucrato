@@ -9,6 +9,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Firestore, deleteDoc, doc } from '@angular/fire/firestore';
 import { AuthService } from '../../core/services/auth.service';
 import { NotifyService } from '../../core/services/notify.service';
+import { logError } from '../../core/services/logger';
 import { validatePasswordStrength } from '../../core/services/password-validator';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/components/confirm-dialog.component';
@@ -283,7 +284,7 @@ export class ProfileComponent {
       await this.auth.updateStoreName(next);
       this.notify.success('Nome da loja atualizado.');
     } catch (err: unknown) {
-      console.error('[Profile] updateStoreName falhou:', err);
+      logError('[Profile] updateStoreName falhou:', err);
       this.notify.error('Não foi possível atualizar o nome da loja.');
     } finally {
       this.savingStoreName.set(false);
@@ -307,7 +308,7 @@ export class ProfileComponent {
       this.newPwd.set('');
       this.confirmPwd.set('');
     } catch (err: unknown) {
-      console.error('[Profile] changePassword falhou:', err);
+      logError('[Profile] changePassword falhou:', err);
       this.notify.error(this.friendlyAuthError((err as { code?: string })?.code));
     } finally {
       this.changingPassword.set(false);
@@ -320,7 +321,7 @@ export class ProfileComponent {
       await this.auth.sendVerificationEmail();
       this.notify.success('E-mail de verificação enviado. Confira sua caixa de entrada.');
     } catch (err: unknown) {
-      console.error('[Profile] sendVerificationEmail falhou:', err);
+      logError('[Profile] sendVerificationEmail falhou:', err);
       this.notify.error(this.friendlyAuthError((err as { code?: string })?.code));
     } finally {
       this.sendingVerification.set(false);
@@ -367,7 +368,7 @@ export class ProfileComponent {
       this.notify.success('Conta excluída.');
       this.router.navigate(['/login']);
     } catch (err: unknown) {
-      console.error('[Profile] deleteAccount falhou:', err);
+      logError('[Profile] deleteAccount falhou:', err);
       this.notify.error(this.friendlyAuthError((err as { code?: string })?.code));
     } finally {
       this.deletingAccount.set(false);
@@ -380,7 +381,7 @@ export class ProfileComponent {
       case 'auth/invalid-credential':
         return 'Senha atual incorreta.';
       case 'auth/weak-password':
-        return 'A nova senha deve ter pelo menos 6 caracteres.';
+        return 'A nova senha deve ter pelo menos 8 caracteres, com letra e número.';
       case 'auth/too-many-requests':
         return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
       case 'auth/requires-recent-login':

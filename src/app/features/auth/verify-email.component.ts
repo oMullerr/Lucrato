@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../core/services/auth.service';
 import { NotifyService } from '../../core/services/notify.service';
+import { logError } from '../../core/services/logger';
 
 @Component({
   selector: 'app-verify-email',
@@ -226,7 +227,7 @@ export class VerifyEmailComponent implements OnDestroy {
       this.notify.success('E-mail de verificação reenviado.');
       this.startCooldown(45);
     } catch (err: any) {
-      console.error('[VerifyEmail] resend falhou:', err);
+      logError('[VerifyEmail] resend falhou:', err);
       if (err?.code === 'auth/too-many-requests') {
         this.notify.error('Muitas tentativas. Aguarde alguns minutos.');
         this.startCooldown(60);
