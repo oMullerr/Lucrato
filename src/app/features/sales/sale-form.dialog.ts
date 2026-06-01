@@ -32,28 +32,19 @@ export interface SaleDialogData {
   template: `
     <h2 mat-dialog-title>
       <mat-icon>{{ isEdit() ? 'edit' : 'sell' }}</mat-icon>
-      {{ isEdit() ? 'Editar Venda' : 'Nova Venda' }}
+      <span class="title-text">{{ isEdit() ? 'Editar Venda' : 'Nova Venda' }}</span>
+      <span class="id-badge" matTooltip="ID gerado automaticamente">{{ model().id }}</span>
     </h2>
 
     <mat-dialog-content>
       <form #form="ngForm" class="form-grid">
-        <mat-form-field>
-          <mat-label>ID Venda</mat-label>
-          <input
-            matInput
-            [value]="model().id"
-            name="id"
-            readonly
-          />
-          <mat-hint>Gerado automaticamente</mat-hint>
-        </mat-form-field>
-
-        <mat-form-field>
+        <mat-form-field class="full">
           <mat-label>ID Lote (da aba Compras)</mat-label>
           <mat-select
             [ngModel]="model().batchId"
             (ngModelChange)="onBatchIdChange($event)"
             name="batchId"
+            cdkFocusInitial
             required
           >
             @for (batch of availableBatches(); track batch.id) {
@@ -303,6 +294,20 @@ export interface SaleDialogData {
       letter-spacing: -0.015em;
     }
     h2 mat-icon { color: var(--brand-primary); }
+
+    .id-badge {
+      margin-left: auto;
+      font-family: 'Geist', 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--text-muted);
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-variant-numeric: tabular-nums;
+    }
 
     .form-grid {
       display: grid;

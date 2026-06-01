@@ -29,31 +29,18 @@ export interface PurchaseDialogData {
   template: `
     <h2 mat-dialog-title>
       <mat-icon>{{ isEdit() ? 'edit' : 'add_circle' }}</mat-icon>
-      {{ isEdit() ? 'Editar Compra' : 'Nova Compra' }}
+      <span class="title-text">{{ isEdit() ? 'Editar Compra' : 'Nova Compra' }}</span>
+      <span class="id-badge" matTooltip="ID gerado automaticamente">{{ model().id }}</span>
     </h2>
 
     <mat-dialog-content>
       <form #form="ngForm" class="form-grid">
-        <mat-form-field>
-          <mat-label>ID Lote</mat-label>
-          <input
-            matInput
-            [ngModel]="model().id"
-            (ngModelChange)="set('id', $event)"
-            name="id"
-            required
-            pattern="C[0-9]{3,}"
-            [readonly]="isEdit()"
-          />
-          <mat-hint>Formato: C001, C002...</mat-hint>
-        </mat-form-field>
-
         <mat-form-field class="full">
           <mat-label>Produto</mat-label>
           <input matInput
             [ngModel]="model().product"
             (ngModelChange)="set('product', $event)"
-            name="product" required />
+            name="product" cdkFocusInitial required />
         </mat-form-field>
 
         <mat-form-field>
@@ -213,6 +200,20 @@ export interface PurchaseDialogData {
       letter-spacing: -0.015em;
     }
     h2 mat-icon { color: var(--brand-primary); }
+
+    .id-badge {
+      margin-left: auto;
+      font-family: 'Geist', 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--text-muted);
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-variant-numeric: tabular-nums;
+    }
 
     .form-grid {
       display: grid;
