@@ -1,0 +1,32 @@
+:host {
+  display: inline-block;
+  line-height: 0;
+}
+
+.spark { display: block; overflow: visible; }
+
+.spark[data-tone="success"] { color: var(--color-success); }
+.spark[data-tone="danger"]  { color: var(--color-danger); }
+.spark[data-tone="warning"] { color: var(--color-warning); }
+.spark[data-tone="neutral"] { color: var(--text-muted); }
+.spark[data-tone="brand"]   { color: var(--brand-primary); }
+
+.spark-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.spark-fill {
+  fill: currentColor;
+  opacity: 0.10;
+}
+
+.spark-dot {
+  fill: currentColor;
+  stroke: var(--bg-surface-1);
+  stroke-width: 1;
+}

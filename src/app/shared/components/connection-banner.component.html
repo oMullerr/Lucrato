@@ -1,0 +1,41 @@
+@if (bannerKind(); as kind) {
+  @switch (kind) {
+    @case ('error') {
+      <div class="banner banner-error" role="status" aria-live="polite">
+        <mat-icon class="banner-icon">sync_problem</mat-icon>
+        <span class="banner-text">Falha de sincronização. Tentando reconectar&hellip;</span>
+        <span class="banner-spinner" aria-hidden="true"></span>
+      </div>
+    }
+    @case ('offline') {
+      <div class="banner banner-offline" role="status" aria-live="polite">
+        <mat-icon class="banner-icon">cloud_off</mat-icon>
+        <span class="banner-text">
+          Você está offline. Suas alterações serão salvas quando a conexão voltar.
+        </span>
+      </div>
+    }
+    @case ('persistence') {
+      <div class="banner banner-persistence" role="status" aria-live="polite">
+        <mat-icon class="banner-icon">warning</mat-icon>
+        <span class="banner-text">
+          Modo offline limitado neste navegador. Mantenha esta aba aberta para não perder alterações.
+        </span>
+        <button
+          type="button"
+          class="banner-dismiss"
+          (click)="dismissPersistence()"
+          aria-label="Fechar aviso"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    }
+    @case ('syncing') {
+      <div class="banner banner-syncing" role="status" aria-live="off">
+        <span class="banner-spinner banner-spinner-sm" aria-hidden="true"></span>
+        <span class="banner-text">Salvando&hellip;</span>
+      </div>
+    }
+  }
+}

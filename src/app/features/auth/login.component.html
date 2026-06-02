@@ -1,0 +1,138 @@
+<div class="login-page">
+  <!-- Hero -->
+  <aside class="hero">
+    <div class="hero-content">
+      <a class="hero-wordmark" href="/" aria-label="Lucrato">
+        <span class="wm-l">L</span><span class="wm-u">u</span><span>crato</span>
+        <svg class="wm-arrow" viewBox="0 0 12 8" aria-hidden="true">
+          <path d="M1 7 L6 1 L11 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+
+      <h2 class="tagline">O painel financeiro do vendedor de Mercado Livre.</h2>
+      <p class="hero-sub">Sério como um extrato bancário. Vivo como um app de investimento. Honesto como uma planilha bem feita.</p>
+
+      <ul class="bullets">
+        <li>
+          <span class="bullet-dot" aria-hidden="true"></span>
+          <span>Lucro líquido, capital parado e margens em tempo real</span>
+        </li>
+        <li>
+          <span class="bullet-dot" aria-hidden="true"></span>
+          <span>Alertas de estoque parado antes que vire prejuízo</span>
+        </li>
+        <li>
+          <span class="bullet-dot" aria-hidden="true"></span>
+          <span>Importação Excel e exportação CSV para o contador</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="hero-decoration" aria-hidden="true"></div>
+  </aside>
+
+  <!-- Form -->
+  <main class="form-side">
+    <div class="form-card">
+      <a class="form-wordmark mobile-only" href="/" aria-label="Lucrato">
+        <span class="wm-l">L</span><span class="wm-u">u</span><span>crato</span>
+      </a>
+
+      <div class="seg-toggle" role="tablist">
+        <button
+          type="button"
+          class="seg"
+          [class.active]="mode() === 'login'"
+          (click)="setMode('login')"
+          role="tab"
+          [attr.aria-selected]="mode() === 'login'"
+        >Entrar</button>
+        <button
+          type="button"
+          class="seg"
+          [class.active]="mode() === 'register'"
+          (click)="setMode('register')"
+          role="tab"
+          [attr.aria-selected]="mode() === 'register'"
+        >Criar conta</button>
+      </div>
+
+      @if (mode() === 'login') {
+        <form class="form" (ngSubmit)="login()" #loginForm="ngForm">
+          <mat-form-field>
+            <mat-label>E-mail</mat-label>
+            <input matInput type="email" name="email" [(ngModel)]="loginEmail" required autocomplete="email" />
+            <mat-icon matSuffix>email</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Senha</mat-label>
+            <input matInput [type]="showLoginPwd() ? 'text' : 'password'" name="password"
+              [(ngModel)]="loginPassword" required autocomplete="current-password" minlength="6" />
+            <button type="button" mat-icon-button matSuffix (click)="showLoginPwd.set(!showLoginPwd())">
+              <mat-icon>{{ showLoginPwd() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </mat-form-field>
+
+          @if (loginError()) {
+            <div class="error-msg">
+              <mat-icon>error_outline</mat-icon>
+              <span>{{ loginError() }}</span>
+            </div>
+          }
+
+          <button mat-flat-button class="submit-btn" type="submit" [disabled]="loginLoading() || loginForm.invalid">
+            @if (loginLoading()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              Entrar
+            }
+          </button>
+
+          <button type="button" mat-button class="forgot-link" (click)="openForgotPassword()">
+            Esqueci minha senha
+          </button>
+        </form>
+      } @else {
+        <form class="form" (ngSubmit)="register()" #regForm="ngForm">
+          <mat-form-field>
+            <mat-label>Nome da loja</mat-label>
+            <input matInput type="text" name="storeName" [(ngModel)]="regStoreName" required />
+            <mat-icon matSuffix>store</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>E-mail</mat-label>
+            <input matInput type="email" name="email" [(ngModel)]="regEmail" required autocomplete="email" />
+            <mat-icon matSuffix>email</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Senha</mat-label>
+            <input matInput [type]="showRegPwd() ? 'text' : 'password'" name="password"
+              [(ngModel)]="regPassword" required autocomplete="new-password" minlength="8" />
+            <button type="button" mat-icon-button matSuffix (click)="showRegPwd.set(!showRegPwd())">
+              <mat-icon>{{ showRegPwd() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-hint>Mínimo 8 caracteres, com letra e número</mat-hint>
+          </mat-form-field>
+
+          @if (regError()) {
+            <div class="error-msg">
+              <mat-icon>error_outline</mat-icon>
+              <span>{{ regError() }}</span>
+            </div>
+          }
+
+          <button mat-flat-button class="submit-btn" type="submit" [disabled]="regLoading() || regForm.invalid">
+            @if (regLoading()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              Criar conta
+            }
+          </button>
+        </form>
+      }
+    </div>
+  </main>
+</div>

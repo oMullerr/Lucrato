@@ -10,61 +10,8 @@ export type SparklineTone = 'auto' | 'success' | 'danger' | 'warning' | 'neutral
   selector: 'app-sparkline',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    @if (path()) {
-      <svg
-        class="spark"
-        [attr.viewBox]="viewBox()"
-        [attr.width]="width()"
-        [attr.height]="height()"
-        [attr.data-tone]="resolvedTone()"
-        aria-hidden="true"
-        preserveAspectRatio="none"
-      >
-        @if (fill()) {
-          <path class="spark-fill" [attr.d]="areaPath()" />
-        }
-        <path class="spark-line" [attr.d]="path()" />
-        @if (showDot()) {
-          <circle class="spark-dot" [attr.cx]="lastX()" [attr.cy]="lastY()" r="2.5" />
-        }
-      </svg>
-    }
-  `,
-  styles: [`
-    :host {
-      display: inline-block;
-      line-height: 0;
-    }
-
-    .spark { display: block; overflow: visible; }
-
-    .spark[data-tone="success"] { color: var(--color-success); }
-    .spark[data-tone="danger"]  { color: var(--color-danger); }
-    .spark[data-tone="warning"] { color: var(--color-warning); }
-    .spark[data-tone="neutral"] { color: var(--text-muted); }
-    .spark[data-tone="brand"]   { color: var(--brand-primary); }
-
-    .spark-line {
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 1.5;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      vector-effect: non-scaling-stroke;
-    }
-
-    .spark-fill {
-      fill: currentColor;
-      opacity: 0.10;
-    }
-
-    .spark-dot {
-      fill: currentColor;
-      stroke: var(--bg-surface-1);
-      stroke-width: 1;
-    }
-  `]
+  templateUrl: './sparkline.component.html',
+  styleUrl: './sparkline.component.scss',
 })
 export class SparklineComponent {
   readonly points = input.required<number[]>();

@@ -1,0 +1,42 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.label {
+  color: var(--text-primary);
+}
+
+/* Variants — minimal style (just colored dot + text) */
+.badge[data-variant="success"] { color: var(--color-success); }
+.badge[data-variant="warning"] { color: var(--color-warning); }
+.badge[data-variant="danger"]  { color: var(--color-danger); }
+.badge[data-variant="info"]    { color: var(--color-info); }
+.badge[data-variant="neutral"] { color: var(--text-muted); }
+
+/* High emphasis — colored pill background for critical states */
+.badge[data-emphasis="high"] {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+
+  .label { color: currentColor; }
+  .dot { box-shadow: none; }
+}

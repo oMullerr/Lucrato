@@ -1,0 +1,34 @@
+<article class="kpi-card" [attr.data-variant]="resolvedVariant()" [attr.data-size]="size()">
+  <header class="kpi-head">
+    <span class="kpi-title">{{ title() }}</span>
+    @if (icon(); as ic) {
+      <mat-icon class="kpi-icon" aria-hidden="true">{{ ic }}</mat-icon>
+    }
+  </header>
+
+  <div class="kpi-row">
+    <div class="kpi-value-wrap">
+      <div class="kpi-value">{{ value() }}</div>
+      @if (delta() !== null) {
+        <div class="kpi-delta" [class.up]="deltaDir() === 'up'" [class.down]="deltaDir() === 'down'" [class.flat]="deltaDir() === 'flat'">
+          <mat-icon class="delta-icon">{{ deltaIcon() }}</mat-icon>
+          <span>{{ deltaLabel() || formattedDelta() }}</span>
+        </div>
+      } @else if (note()) {
+        <div class="kpi-note">{{ note() }}</div>
+      }
+    </div>
+
+    @if (sparkline() && sparkline()!.length > 1) {
+      <div class="kpi-spark">
+        <app-sparkline
+          [points]="sparkline()!"
+          [width]="size() === 'hero' ? 96 : 64"
+          [height]="size() === 'hero' ? 32 : 22"
+          [tone]="sparklineTone()"
+          [fill]="size() === 'hero'"
+        />
+      </div>
+    }
+  </div>
+</article>

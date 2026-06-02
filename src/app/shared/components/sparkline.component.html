@@ -1,0 +1,19 @@
+@if (path()) {
+  <svg
+    class="spark"
+    [attr.viewBox]="viewBox()"
+    [attr.width]="width()"
+    [attr.height]="height()"
+    [attr.data-tone]="resolvedTone()"
+    aria-hidden="true"
+    preserveAspectRatio="none"
+  >
+    @if (fill()) {
+      <path class="spark-fill" [attr.d]="areaPath()" />
+    }
+    <path class="spark-line" [attr.d]="path()" />
+    @if (showDot()) {
+      <circle class="spark-dot" [attr.cx]="lastX()" [attr.cy]="lastY()" r="2.5" />
+    }
+  </svg>
+}

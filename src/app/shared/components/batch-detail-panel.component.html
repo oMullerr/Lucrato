@@ -1,0 +1,116 @@
+@if (batch(); as b) {
+  <aside class="panel" role="dialog" aria-labelledby="bdp-title">
+    <header class="panel-head">
+      <div class="head-meta">
+        <span class="batch-id mono">{{ b.id }}</span>
+        <app-status-badge [status]="b.status" />
+      </div>
+      <button mat-icon-button class="close-btn" (click)="closed.emit()" aria-label="Fechar painel">
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+
+    <h2 id="bdp-title" class="batch-title">{{ b.product }}</h2>
+    <div class="batch-sub">
+      <span>{{ b.category }}</span>
+      <span class="bullet">·</span>
+      <span>{{ b.supplier }}</span>
+    </div>
+
+    <section class="stats" aria-label="Estatísticas do lote">
+      <div class="stat">
+        <span class="stat-label">Estoque atual</span>
+        <span class="stat-value mono" [class.text-success]="b.currentStock > 0" [class.text-muted]="b.currentStock <= 0">
+          {{ b.currentStock }}
+        </span>
+        <span class="stat-hint">de {{ b.quantityPurchased }}</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Vendido</span>
+        <span class="stat-value mono">{{ b.quantitySold }}</span>
+        <span class="stat-hint">{{ percentSold() }}%</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Capital parado</span>
+        <span class="stat-value mono" [class.text-warning]="b.idleValue > 0">{{ b.idleValue | brl }}</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Dias em estoque</span>
+        <span class="stat-value mono">{{ b.daysInStock }}</span>
+        <span class="stat-hint">dias</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Margem média</span>
+        <span class="stat-value mono" [attr.data-tone]="marginTone()">
+          @if (b.averageMargin != null) { {{ (b.averageMargin * 100).toFixed(1) }}% } @else { — }
+        </span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Custo unitário real</span>
+        <span class="stat-value mono">{{ b.actualUnitCost | brl }}</span>
+      </div>
+    </section>
+
+    @if (suggestion(); as s) {
+      <section class="suggestion" [attr.data-tone]="s.tone" aria-live="polite">
+        <mat-icon class="sugg-icon">{{ s.icon }}</mat-icon>
+        <div class="sugg-body">
+          <strong>{{ s.title }}</strong>
+          <p>{{ s.message }}</p>
+        </div>
+      </section>
+    }
+
+    @if (batchSales().length > 0) {
+      <section class="timeline">
+        <div class="section-head">
+          <span class="t-caption">Últimas vendas</span>
+          <span class="count">{{ batchSales().length }}</span>
+        </div>
+        <ol class="sales-list">
+          @for (s of recentSales(); track s.id) {
+            <li class="sale-item">
+              <div class="sale-meta">
+                <span class="sale-id mono">{{ s.id }}</span>
+                <span class="sale-date">{{ s.saleDate | brDate }}</span>
+              </div>
+              <div class="sale-numbers">
+                <span class="sale-qty mono">{{ s.quantitySold }}× {{ s.unitPrice | brl }}</span>
+                <span class="sale-profit mono" [class.text-success]="s.netProfit >= 0" [class.text-danger]="s.netProfit < 0">
+                  {{ s.netProfit | brl }}
+                </span>
+              </div>
+            </li>
+          }
+        </ol>
+      </section>
+    } @else {
+      <section class="empty-sales">
+        <span class="t-caption">Nenhuma venda registrada para este lote ainda.</span>
+      </section>
+    }
+
+    <footer class="panel-foot">
+      <button mat-stroked-button (click)="editRequested.emit(b)">
+        <mat-icon>edit</mat-icon>
+        Editar lote
+      </button>
+      @if (b.status === 'Em trânsito') {
+        <button mat-stroked-button class="receive-btn" (click)="markReceived()">
+          <mat-icon>move_to_inbox</mat-icon>
+          Marcar recebido
+        </button>
+      }
+      <button
+        mat-flat-button
+        class="primary-cta"
+        (click)="openNewSale()"
+        [disabled]="b.currentStock <= 0"
+        [matTooltip]="b.currentStock <= 0 ? 'Sem estoque disponível' : ''"
+      >
+        <mat-icon>sell</mat-icon>
+        Nova venda
+      </button>
+    </footer>
+  </aside>
+}

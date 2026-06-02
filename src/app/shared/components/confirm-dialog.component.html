@@ -1,0 +1,50 @@
+<div class="confirm-dialog" [class.danger]="data.danger">
+  <div class="accent" aria-hidden="true"></div>
+  <div class="content-wrap">
+    <h2 mat-dialog-title>{{ data.title }}</h2>
+    <mat-dialog-content>
+      <p class="message">{{ data.message }}</p>
+
+      @if (data.requireTextMatch) {
+        <mat-form-field class="match-field" appearance="outline">
+          <mat-label>{{ data.requireTextLabel ?? 'Digite para confirmar' }}</mat-label>
+          <input
+            matInput
+            [ngModel]="typedText()"
+            (ngModelChange)="typedText.set($event)"
+            autocomplete="off"
+          />
+          <mat-hint>Digite exatamente: <strong>{{ data.requireTextMatch }}</strong></mat-hint>
+        </mat-form-field>
+      }
+
+      @if (data.requirePassword) {
+        <mat-form-field class="match-field" appearance="outline">
+          <mat-label>{{ data.requirePasswordLabel ?? 'Senha atual' }}</mat-label>
+          <input
+            matInput
+            type="password"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+            autocomplete="current-password"
+          />
+        </mat-form-field>
+      }
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button (click)="cancel()">
+        {{ data.cancelText ?? 'Cancelar' }}
+      </button>
+      <button
+        mat-flat-button
+        class="confirm-btn"
+        [class.danger]="data.danger"
+        [disabled]="!canConfirm()"
+        (click)="confirm()"
+        cdkFocusInitial
+      >
+        {{ data.confirmText ?? 'Confirmar' }}
+      </button>
+    </mat-dialog-actions>
+  </div>
+</div>

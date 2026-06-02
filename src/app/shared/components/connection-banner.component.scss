@@ -1,0 +1,101 @@
+:host { display: block; }
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  border-bottom: 1px solid transparent;
+}
+
+.banner-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.banner-error {
+  background: var(--tint-danger);
+  color: var(--color-danger);
+  border-bottom-color: var(--color-danger);
+}
+
+.banner-offline {
+  background: var(--tint-warning);
+  color: var(--color-warning);
+  border-bottom-color: var(--color-warning);
+}
+
+.banner-persistence {
+  background: var(--tint-info);
+  color: var(--color-info);
+  border-bottom-color: var(--color-info);
+}
+
+.banner-syncing {
+  background: var(--bg-surface-1);
+  color: var(--text-secondary);
+  border-bottom-color: var(--border-subtle);
+  font-size: 12px;
+  padding: 6px 16px;
+}
+
+.banner-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.banner-spinner-sm {
+  width: 12px;
+  height: 12px;
+  border-width: 1.5px;
+}
+
+.banner-dismiss {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm, 4px);
+  opacity: 0.7;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.banner-dismiss:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.banner-dismiss mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 480px) {
+  .banner { padding: 8px 12px; font-size: 12px; }
+}

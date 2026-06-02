@@ -1,0 +1,163 @@
+<app-page-header
+  title="Perfil"
+  eyebrow="CONTA"
+  subtitle="Dados da loja, segurança e zona de perigo"
+/>
+
+<div class="page-content profile-body">
+
+  <!-- Hero -->
+  <section class="profile-hero">
+    <div class="avatar-lg" aria-hidden="true">{{ initials() }}</div>
+    <div class="hero-info">
+      <h1 class="hero-name">{{ storeNameInput() || 'Sua loja' }}</h1>
+      <span class="hero-email">{{ email() || '—' }}</span>
+      <div class="hero-meta">
+        <span>Conta criada<strong>{{ formatDate(createdAt()) }}</strong></span>
+        <span>Último acesso<strong>{{ formatDate(lastLogin()) }}</strong></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Email verification banner (when not verified) -->
+  @if (!emailVerified()) {
+    <section class="verify-banner" aria-live="polite">
+      <mat-icon class="vb-icon">mark_email_unread</mat-icon>
+      <div class="vb-text">
+        <strong>Confirme seu e-mail para liberar todos os recursos</strong>
+        <p>Enviamos um link de verificação. Confira sua caixa de entrada e spam.</p>
+      </div>
+      <button
+        mat-stroked-button
+        (click)="resendVerification()"
+        [disabled]="sendingVerification()"
+      >
+        <mat-icon>send</mat-icon>
+        {{ sendingVerification() ? 'Enviando…' : 'Reenviar' }}
+      </button>
+    </section>
+  }
+
+  <!-- Conta section -->
+  <section class="profile-section">
+    <header class="section-head">
+      <h2>Identidade da loja</h2>
+      <p>O nome aparece no topo do sistema e nos relatórios exportados.</p>
+    </header>
+    <div class="section-body form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Nome da loja</mat-label>
+        <input
+          matInput
+          type="text"
+          [ngModel]="storeNameInput()"
+          (ngModelChange)="storeNameInput.set($event)"
+          autocomplete="organization"
+        />
+      </mat-form-field>
+
+      <div class="actions-row">
+        <button
+          mat-flat-button
+          class="primary-cta"
+          (click)="saveStoreName()"
+          [disabled]="!canSaveStoreName() || savingStoreName()"
+        >
+          <mat-icon>save</mat-icon>
+          {{ savingStoreName() ? 'Salvando…' : 'Salvar nome' }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Senha section -->
+  <section class="profile-section">
+    <header class="section-head">
+      <h2>Senha de acesso</h2>
+      <p>Informe a senha atual antes de definir uma nova.</p>
+    </header>
+    <div class="section-body form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Senha atual</mat-label>
+        <input
+          matInput
+          [type]="showCurrentPwd() ? 'text' : 'password'"
+          [ngModel]="currentPwd()"
+          (ngModelChange)="currentPwd.set($event)"
+          autocomplete="current-password"
+        />
+        <button type="button" mat-icon-button matSuffix (click)="showCurrentPwd.set(!showCurrentPwd())">
+          <mat-icon>{{ showCurrentPwd() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Nova senha</mat-label>
+        <input
+          matInput
+          [type]="showNewPwd() ? 'text' : 'password'"
+          [ngModel]="newPwd()"
+          (ngModelChange)="newPwd.set($event)"
+          autocomplete="new-password"
+          minlength="8"
+        />
+        <button type="button" mat-icon-button matSuffix (click)="showNewPwd.set(!showNewPwd())">
+          <mat-icon>{{ showNewPwd() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+      </mat-form-field>
+
+      @if (newPwd().length > 0) {
+        <div class="strength-meter" aria-live="polite">
+          <div class="strength-bars">
+            <span class="strength-bar" [class.active-weak]="strength() >= 1" [class.active-medium]="strength() >= 2 && strength() < 4" [class.active-strong]="strength() >= 4"></span>
+            <span class="strength-bar" [class.active-weak]="strength() >= 2" [class.active-medium]="strength() >= 2 && strength() < 4" [class.active-strong]="strength() >= 4"></span>
+            <span class="strength-bar" [class.active-medium]="strength() >= 3 && strength() < 4" [class.active-strong]="strength() >= 4"></span>
+            <span class="strength-bar" [class.active-strong]="strength() >= 4"></span>
+          </div>
+          <span class="strength-label" [class]="strengthClass()">{{ strengthLabel() }}</span>
+        </div>
+      }
+
+      <mat-form-field appearance="outline">
+        <mat-label>Confirmar nova senha</mat-label>
+        <input
+          matInput
+          [type]="showNewPwd() ? 'text' : 'password'"
+          [ngModel]="confirmPwd()"
+          (ngModelChange)="confirmPwd.set($event)"
+          autocomplete="new-password"
+        />
+        @if (confirmPwd() && confirmPwd() !== newPwd()) {
+          <mat-error>As senhas não coincidem.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="actions-row">
+        <button
+          mat-flat-button
+          class="primary-cta"
+          (click)="changePassword()"
+          [disabled]="!canChangePassword() || changingPassword()"
+        >
+          <mat-icon>key</mat-icon>
+          {{ changingPassword() ? 'Atualizando…' : 'Atualizar senha' }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Danger -->
+  <section class="danger-section">
+    <header class="section-head">
+      <h2>Zona de perigo</h2>
+    </header>
+    <p>
+      Excluir a conta apaga permanentemente todos os seus dados no Lucrato (compras, vendas, configurações)
+      e remove o acesso. Esta ação não pode ser desfeita.
+    </p>
+    <button mat-stroked-button class="danger-btn" (click)="deleteAccount()" [disabled]="deletingAccount()">
+      <mat-icon>delete_forever</mat-icon>
+      {{ deletingAccount() ? 'Excluindo…' : 'Excluir conta' }}
+    </button>
+  </section>
+</div>

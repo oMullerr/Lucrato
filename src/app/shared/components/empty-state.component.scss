@@ -1,0 +1,68 @@
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 56px 24px;
+  background: var(--bg-surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  gap: 14px;
+}
+
+.illustration {
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+}
+
+.dot {
+  fill: var(--text-muted);
+  opacity: 0.18;
+}
+
+.dot.center {
+  fill: var(--brand-primary);
+  opacity: 0.9;
+}
+
+.icon-wrap {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: var(--brand-primary);
+}
+
+.icon-wrap mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.title {
+  font-family: 'Geist', 'Inter', sans-serif;
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 4px 0 0;
+  letter-spacing: -0.015em;
+}
+
+.description {
+  font-size: var(--fs-body);
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 440px;
+  line-height: 1.55;
+}
+
+.actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}

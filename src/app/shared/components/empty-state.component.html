@@ -1,0 +1,31 @@
+<div class="empty-state">
+  <div class="illustration" aria-hidden="true">
+    <svg viewBox="0 0 96 96" width="96" height="96">
+      <!-- 7×7 dot grid with center highlighted -->
+      @for (row of grid; track $index; let r = $index) {
+        @for (col of grid; track $index; let c = $index) {
+          <circle
+            [attr.cx]="8 + c * 13"
+            [attr.cy]="8 + r * 13"
+            [attr.r]="r === 3 && c === 3 ? 4 : 1.5"
+            [attr.class]="r === 3 && c === 3 ? 'dot center' : 'dot'"
+          />
+        }
+      }
+      @if (icon()) {
+        <foreignObject x="32" y="32" width="32" height="32">
+          <div class="icon-wrap">
+            <mat-icon>{{ icon() }}</mat-icon>
+          </div>
+        </foreignObject>
+      }
+    </svg>
+  </div>
+  <h3 class="title">{{ title() }}</h3>
+  @if (description()) {
+    <p class="description">{{ description() }}</p>
+  }
+  <div class="actions">
+    <ng-content></ng-content>
+  </div>
+</div>

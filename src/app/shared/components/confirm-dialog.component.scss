@@ -1,0 +1,52 @@
+.confirm-dialog {
+  position: relative;
+  display: flex;
+}
+
+.accent {
+  width: 4px;
+  background: var(--brand-primary);
+  flex-shrink: 0;
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+  margin: 24px 0;
+}
+
+.confirm-dialog.danger .accent {
+  background: var(--color-danger);
+}
+
+.content-wrap {
+  flex: 1;
+  padding-left: 16px;
+}
+
+h2 {
+  font-family: 'Geist', 'Inter', sans-serif;
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.message {
+  color: var(--text-secondary);
+  line-height: 1.55;
+  font-size: var(--fs-body);
+  margin: 0;
+}
+
+.match-field {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.confirm-btn {
+  --mdc-filled-button-container-color: var(--brand-primary);
+  --mdc-filled-button-label-text-color: #FFFFFF;
+}
+
+.confirm-btn.danger {
+  --mdc-filled-button-container-color: var(--color-danger);
+  --mdc-filled-button-label-text-color: #FFFFFF;
+}
