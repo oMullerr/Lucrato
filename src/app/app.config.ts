@@ -1,4 +1,5 @@
 import { ApplicationConfig, ErrorHandler, LOCALE_ID, provideZoneChangeDetection } from '@angular/core';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
@@ -24,6 +25,7 @@ import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { GlobalErrorHandler } from './core/services/global-error-handler';
 import { PaginatorIntlPtBr } from './shared/i18n/paginator-intl-pt-br';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 registerLocaleData(localePt);
 
@@ -52,6 +54,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding()),
+    provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimations(),
     provideCharts(withDefaultRegisterables()),
     provideNativeDateAdapter(),

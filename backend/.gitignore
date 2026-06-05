@@ -1,0 +1,7 @@
+bin/
+obj/
+*.user
+.vs/
+# Local service-account keys must never be committed.
+*.serviceaccount.json
+appsettings.Local.json

@@ -10,25 +10,13 @@ service cloud.firestore {
              && request.auth.token.email_verified == true;
     }
 
-    // Valida formato e tamanho do documento principal de dados.
-    // Em writes com merge, request.resource.data é o documento COMPLETO já
-    // mesclado (dados existentes + alterações), então checar os campos
-    // presentes é seguro e não bloqueia gravações parciais legítimas.
-    function isValidMainDoc() {
-      let d = request.resource.data;
-      return d.keys().hasOnly(['purchases', 'sales', 'settings', 'metadata'])
-             && (!('purchases' in d) || (d.purchases is list && d.purchases.size() <= 20000))
-             && (!('sales' in d)     || (d.sales is list     && d.sales.size() <= 40000))
-             && (!('settings' in d)  || d.settings is map)
-             && (!('metadata' in d)  || d.metadata is map);
-    }
-
-    // Cada usuário só acessa o próprio documento de dados em users/{uid}/db/{doc}.
-    // O caminho fixo impede criar subcoleções/documentos arbitrários (abuso de cota).
+    // Cada usuário só LÊ o próprio documento de dados em users/{uid}/db/{doc}.
+    // A ESCRITA é feita exclusivamente pelo backend (.NET API via Firebase Admin SDK,
+    // que ignora estas regras). O cliente não grava mais diretamente — por isso
+    // negamos qualquer write aqui. A validação de formato/limites vive na API.
     match /users/{userId}/db/{docId} {
-      allow read:           if isVerifiedOwner(userId);
-      allow create, update: if isVerifiedOwner(userId) && isValidMainDoc();
-      allow delete:         if isVerifiedOwner(userId);
+      allow read:  if isVerifiedOwner(userId);
+      allow write: if false;
     }
 
     // Nega qualquer outro caminho explicitamente.

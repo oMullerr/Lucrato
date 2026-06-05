@@ -1,15 +1,15 @@
-// Mock do @angular/fire/firestore
+// Mock do @angular/fire/firestore (apenas leitura: onSnapshot/doc permanecem no DataService).
 jest.mock('@angular/fire/firestore', () => ({
   Firestore: class Firestore {},
   doc: jest.fn((..._args: unknown[]) => ({ __doc: true, path: _args.slice(1).join('/') })),
-  setDoc: jest.fn(),
   onSnapshot: jest.fn(),
 }));
 
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { Firestore, doc, setDoc, onSnapshot } from '@angular/fire/firestore';
+import { Firestore, doc, onSnapshot } from '@angular/fire/firestore';
 import { DataService } from './data.service';
+import { ApiClient } from './api-client.service';
 import { AuthService } from './auth.service';
 import { NotifyService } from './notify.service';
 import { ConnectionService } from './connection.service';
@@ -53,6 +53,7 @@ function makeSale(overrides: Partial<Sale> = {}): Sale {
 
 interface TestHarness {
   service: DataService;
+  fakeApi: { putDb: jest.Mock };
   fakeAuth: {
     currentUser: ReturnType<typeof signal<ReturnType<typeof makeFakeUser> | null | undefined>>;
     refreshIdToken: jest.Mock;
@@ -69,6 +70,7 @@ interface TestHarness {
 function setupHarness(initialUser: ReturnType<typeof makeFakeUser> | null | undefined = undefined): TestHarness {
   const currentUserSig = signal<ReturnType<typeof makeFakeUser> | null | undefined>(initialUser);
   const syncErrorSig = signal<unknown>(null);
+  const fakeApi = { putDb: jest.fn().mockResolvedValue(undefined) };
   const fakeAuth = {
     currentUser: currentUserSig,
     refreshIdToken: jest.fn().mockResolvedValue(undefined),
@@ -90,6 +92,7 @@ function setupHarness(initialUser: ReturnType<typeof makeFakeUser> | null | unde
     providers: [
       DataService,
       { provide: Firestore, useValue: {} },
+      { provide: ApiClient, useValue: fakeApi },
       { provide: AuthService, useValue: fakeAuth },
       { provide: NotifyService, useValue: fakeNotify },
       { provide: ConnectionService, useValue: fakeConnection },
@@ -97,7 +100,7 @@ function setupHarness(initialUser: ReturnType<typeof makeFakeUser> | null | unde
   });
 
   const service = TestBed.inject(DataService);
-  return { service, fakeAuth, fakeNotify, fakeConnection };
+  return { service, fakeApi, fakeAuth, fakeNotify, fakeConnection };
 }
 
 function loadDb(service: DataService, db: Database = makeFakeDatabase()): void {
@@ -107,7 +110,6 @@ function loadDb(service: DataService, db: Database = makeFakeDatabase()): void {
 describe('DataService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (setDoc as jest.Mock).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -205,9 +207,8 @@ describe('DataService', () => {
   // ─── CRUD Purchases ────────────────────────────────
 
   describe('CRUD Purchases', () => {
-    it('addPurchase adiciona ao array e chama setDoc (persist)', () => {
-      const fakeUser = makeFakeUser();
-      const harness = setupHarness(fakeUser);
+    it('addPurchase adiciona ao array e chama a API (persist)', () => {
+      const harness = setupHarness(makeFakeUser());
       loadDb(harness.service);
 
       const newPurchase = makePurchase({ id: 'C100' });
@@ -215,7 +216,7 @@ describe('DataService', () => {
 
       expect(harness.service.purchases()).toHaveLength(1);
       expect(harness.service.purchases()[0].id).toBe('C100');
-      expect(setDoc).toHaveBeenCalled();
+      expect(harness.fakeApi.putDb).toHaveBeenCalled();
     });
 
     it('updatePurchase faz merge parcial', () => {
@@ -270,7 +271,7 @@ describe('DataService', () => {
       loadDb(harness.service);
       harness.service.addSale(makeSale({ id: 'V001' }));
       expect(harness.service.sales()).toHaveLength(1);
-      expect(setDoc).toHaveBeenCalled();
+      expect(harness.fakeApi.putDb).toHaveBeenCalled();
     });
 
     it('updateSale faz merge parcial', () => {
@@ -292,6 +293,19 @@ describe('DataService', () => {
     });
   });
 
+  // ─── updateSettings ─────────────────────────────────
+
+  describe('updateSettings', () => {
+    it('substitui as settings e persiste', async () => {
+      const harness = setupHarness(makeFakeUser());
+      loadDb(harness.service);
+      const next = { ...harness.service.settings()!, defaultMlFee: 0.2 };
+      await harness.service.updateSettings(next);
+      expect(harness.service.settings()?.defaultMlFee).toBe(0.2);
+      expect(harness.fakeApi.putDb).toHaveBeenCalled();
+    });
+  });
+
   // ─── bulkImport ─────────────────────────────────────
 
   describe('bulkImport', () => {
@@ -299,7 +313,7 @@ describe('DataService', () => {
       const harness = setupHarness(makeFakeUser());
       loadDb(harness.service);
       await harness.service.bulkImport([], []);
-      expect(setDoc).not.toHaveBeenCalled();
+      expect(harness.fakeApi.putDb).not.toHaveBeenCalled();
     });
 
     it('faz push dos dois arrays em uma única persist', async () => {
@@ -311,7 +325,7 @@ describe('DataService', () => {
       );
       expect(harness.service.purchases()).toHaveLength(1);
       expect(harness.service.sales()).toHaveLength(1);
-      expect(setDoc).toHaveBeenCalledTimes(1);
+      expect(harness.fakeApi.putDb).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -325,25 +339,24 @@ describe('DataService', () => {
       });
       loadDb(harness.service, original);
 
-      (setDoc as jest.Mock).mockRejectedValueOnce(new Error('falha'));
+      harness.fakeApi.putDb.mockRejectedValueOnce(new Error('falha'));
 
-      // Captura a promise interna chamando update (sale add → persist falha)
+      // O update otimisticamente aplica antes da promise rejeitar.
       harness.service.updatePurchase('C001', { product: 'Modificado' });
-      // O update otimisticamente aplica antes da promise rejeitar
       expect(harness.service.purchases()[0].product).toBe('Modificado');
 
-      // Aguarda microtasks
+      // Aguarda microtasks.
       await new Promise(r => setTimeout(r, 0));
 
-      // Rollback aconteceu
+      // Rollback aconteceu.
       expect(harness.service.purchases()[0].product).toBe('Original');
     });
 
     it('é no-op quando db() é null', () => {
-      const { service } = setupHarness();
-      // db ainda é null (não chamamos loadDb)
-      service.addPurchase(makePurchase());
-      expect(setDoc).not.toHaveBeenCalled();
+      const harness = setupHarness();
+      // db ainda é null (não chamamos loadDb).
+      harness.service.addPurchase(makePurchase());
+      expect(harness.fakeApi.putDb).not.toHaveBeenCalled();
     });
   });
 
@@ -385,7 +398,7 @@ describe('DataService', () => {
         purchases: [makePurchase()],
       });
       expect(migrated.settings.defaultMlFee).toBe(0.20);
-      // Outros campos vêm dos defaults
+      // Outros campos vêm dos defaults.
       expect(migrated.settings.yellowAlertDays).toBe(25);
       expect(migrated.purchases).toHaveLength(1);
     });
@@ -402,7 +415,7 @@ describe('DataService', () => {
   // ─── reset() ────────────────────────────────────────
 
   describe('reset', () => {
-    it('zera todos os dados e chama setDoc', async () => {
+    it('zera todos os dados e chama a API', async () => {
       const harness = setupHarness(makeFakeUser());
       loadDb(harness.service, makeFakeDatabase({
         purchases: [makePurchase()],
@@ -413,17 +426,17 @@ describe('DataService', () => {
 
       expect(harness.service.purchases()).toEqual([]);
       expect(harness.service.sales()).toEqual([]);
-      expect(setDoc).toHaveBeenCalled();
+      expect(harness.fakeApi.putDb).toHaveBeenCalled();
     });
 
-    it('faz rollback e relança quando setDoc falha', async () => {
+    it('faz rollback e relança quando a API falha', async () => {
       const harness = setupHarness(makeFakeUser());
       const original = makeFakeDatabase({
         purchases: [makePurchase({ id: 'C001' })],
       });
       loadDb(harness.service, original);
 
-      (setDoc as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+      harness.fakeApi.putDb.mockRejectedValueOnce(new Error('boom'));
 
       await expect(harness.service.reset()).rejects.toThrow();
       expect(harness.service.purchases()).toHaveLength(1);
@@ -431,9 +444,9 @@ describe('DataService', () => {
     });
 
     it('é no-op quando deslogado', async () => {
-      const { service } = setupHarness(null);
-      await service.reset();
-      expect(setDoc).not.toHaveBeenCalled();
+      const harness = setupHarness(null);
+      await harness.service.reset();
+      expect(harness.fakeApi.putDb).not.toHaveBeenCalled();
     });
   });
 
@@ -473,7 +486,7 @@ describe('DataService', () => {
       expect(harness.service.settings()?.defaultMlFee).toBe(0.15);
     });
 
-    it('quando snapshot não existe (não-cache), cria empty + setDoc', async () => {
+    it('quando snapshot não existe (não-cache), cria empty + chama API', async () => {
       const harness = setupHarness(makeFakeUser());
       let onNext: (snap: any) => void = () => undefined;
       (onSnapshot as jest.Mock).mockImplementation((_ref, next) => {
@@ -487,7 +500,7 @@ describe('DataService', () => {
       onNext(snap);
 
       expect(harness.service.loaded()).toBe(true);
-      expect(setDoc).toHaveBeenCalled();
+      expect(harness.fakeApi.putDb).toHaveBeenCalled();
     });
 
     it('quando fromCache=true e db=null, seta empty e mostra warning', async () => {
@@ -521,7 +534,7 @@ describe('DataService', () => {
 
       expect(harness.fakeConnection.reportSnapshotError).toHaveBeenCalled();
       expect(harness.fakeNotify.error).toHaveBeenCalled();
-      // Retry deve estar agendado
+      // Retry deve estar agendado.
       expect((harness.service as any)._retryTimer).toBeDefined();
       jest.useRealTimers();
     });

@@ -77,6 +77,13 @@ export class AuthService {
     await u.getIdToken(true);
   }
 
+  /** Current Firebase ID token (cached, auto-refreshed by the SDK), or null when logged out. */
+  async getIdToken(): Promise<string | null> {
+    const u = this._auth.currentUser;
+    if (!u) return null;
+    return u.getIdToken();
+  }
+
   async reauthenticate(currentPassword: string): Promise<void> {
     const u = this._auth.currentUser;
     if (!u || !u.email) throw new Error('not-logged-in');

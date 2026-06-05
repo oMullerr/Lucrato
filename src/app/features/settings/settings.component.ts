@@ -11,7 +11,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatDialog } from '@angular/material/dialog';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Firestore, doc, onSnapshot, setDoc, Unsubscribe } from '@angular/fire/firestore';
+import { Firestore, doc, onSnapshot, Unsubscribe } from '@angular/fire/firestore';
 import { Settings } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -204,24 +204,13 @@ export class SettingsComponent implements OnDestroy {
       return;
     }
 
-    const ref = this.settingsDocRef();
-    if (!ref) {
-      this.notify.error('Sessão expirada. Faça login novamente.');
-      return;
-    }
-
-    const payload: { settings: Partial<Settings> } = { settings: {} };
-    for (const [key, value] of Object.entries(diff)) {
-      const field = key.split('.')[1] as keyof Settings;
-      (payload.settings as Record<string, unknown>)[field] = value;
-    }
-
     this.saving.set(true);
     try {
-      await setDoc(ref, payload, { merge: true });
+      // Escrita via API .NET (backend é o único gravador no Firestore).
+      await this.dataService.updateSettings(next);
       this.notify.success('Configurações salvas.');
     } catch (err) {
-      logError('[Settings] setDoc falhou:', err);
+      logError('[Settings] updateSettings falhou:', err);
       this.notify.error('Erro ao salvar configurações. Verifique sua conexão.');
     } finally {
       this.saving.set(false);
@@ -322,12 +311,6 @@ export class SettingsComponent implements OnDestroy {
           this.notify.success('Sistema resetado para o estado inicial.');
         }
       });
-  }
-
-  private settingsDocRef() {
-    const uid = this.auth.currentUser()?.uid;
-    if (!uid) return null;
-    return doc(this.firestore, `users/${uid}/db/main`);
   }
 
   private buildDiff(base: Settings | null, next: Settings): { [field: string]: unknown } {

@@ -1,11 +1,12 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
-import { Firestore, doc, onSnapshot, setDoc } from '@angular/fire/firestore';
+import { Firestore, doc, onSnapshot } from '@angular/fire/firestore';
 import type { Unsubscribe } from '@angular/fire/firestore';
 import { APP } from '../constants/app.constants';
 import {
   Purchase, Sale, Settings, Database, SaleChannel
 } from '../models/models';
 import { calculatePurchase, calculateKpis, calculateSale, nextId } from './calculations';
+import { ApiClient } from './api-client.service';
 import { AuthService } from './auth.service';
 import { NotifyService } from './notify.service';
 import { ConnectionService } from './connection.service';
@@ -17,6 +18,7 @@ const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 16000, 30000];
 @Injectable({ providedIn: 'root' })
 export class DataService {
   private readonly firestore = inject(Firestore);
+  private readonly api = inject(ApiClient);
   private readonly auth = inject(AuthService);
   private readonly notify = inject(NotifyService);
   private readonly connection = inject(ConnectionService);
@@ -87,8 +89,8 @@ export class DataService {
         } else {
           const empty = this.createEmpty();
           this.db.set(empty);
-          setDoc(ref, empty).catch(err => {
-            logError('[Firestore] Falha ao criar documento inicial:', err);
+          this.api.putDb(this.toPayload(empty)).catch(err => {
+            logError('[API] Falha ao criar documento inicial:', err);
             this.connection.reportSnapshotError(err);
             this.notify.warning('Não foi possível criar seu banco de dados inicial. Recarregue a página.');
           });
@@ -129,22 +131,27 @@ export class DataService {
     this.db.set(null);
   }
 
+  /** Builds the full-document payload sent to the API (backend overwrites the whole doc). */
+  private toPayload(db: Database) {
+    return {
+      purchases: JSON.parse(JSON.stringify(db.purchases)) as Purchase[],
+      sales: JSON.parse(JSON.stringify(db.sales)) as Sale[],
+      settings: JSON.parse(JSON.stringify(db.settings)) as Settings,
+      metadata: {
+        versao: db.metadata.versao,
+        ultimaAtualizacao: new Date().toISOString(),
+      },
+    };
+  }
+
   private persist(): Promise<void> {
     const uid = this.auth.currentUser()?.uid;
     if (!uid) return Promise.resolve();
     const current = this.db();
     if (!current) return Promise.resolve();
-    const payload = {
-      purchases: JSON.parse(JSON.stringify(current.purchases)),
-      sales: JSON.parse(JSON.stringify(current.sales)),
-      metadata: {
-        versao: current.metadata.versao,
-        ultimaAtualizacao: new Date().toISOString(),
-      },
-    };
-    return setDoc(doc(this.firestore, `users/${uid}/db/main`), payload, { merge: true })
+    return this.api.putDb(this.toPayload(current))
       .catch(err => {
-        logError('[Firestore] Falha ao salvar:', err);
+        logError('[API] Falha ao salvar:', err);
         this.notify.error(firestoreErrorMessage(err));
         throw err;
       });
@@ -173,9 +180,9 @@ export class DataService {
     };
     this.db.set(zeroed);
     try {
-      await setDoc(doc(this.firestore, `users/${uid}/db/main`), zeroed);
+      await this.api.putDb(this.toPayload(zeroed));
     } catch (err) {
-      logError('[Firestore] Falha ao zerar dados:', err);
+      logError('[API] Falha ao zerar dados:', err);
       this.db.set(prev);
       this.notify.error(firestoreErrorMessage(err));
       throw err;
@@ -241,6 +248,11 @@ export class DataService {
       if (purchases.length) d.purchases.push(...purchases);
       if (sales.length) d.sales.push(...sales);
     });
+  }
+
+  /** Replaces the full settings object (optimistic + rollback via update()). */
+  updateSettings(settings: Settings): Promise<void> {
+    return this.update(d => { d.settings = { ...settings }; });
   }
 
   private update(mutator: (db: Database) => void): Promise<void> {

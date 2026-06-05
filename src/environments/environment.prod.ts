@@ -1,5 +1,7 @@
 export const environment = {
   production: true,
+  // Base URL da API .NET no Cloud Run. Substitua pela URL do serviço após o deploy.
+  apiBaseUrl: "https://lucrato-api-REPLACE_ME.run.app",
   firebase: {
     apiKey: "AIzaSyAhax_nL7xFNPmAFDOWLNAg3fwTfwMPA48",
     authDomain: "lucrato-web.firebaseapp.com",

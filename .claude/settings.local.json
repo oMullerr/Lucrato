@@ -10,7 +10,11 @@
       "PowerShell(npm run build 2>&1)",
       "PowerShell(npx jest src/app/core/services/xlsx-export.service.spec.ts --colors=false 2>&1)",
       "PowerShell(npx jest --colors=false 2>&1)",
-      "PowerShell(npm test -- --silent 2>&1)"
+      "PowerShell(npm test -- --silent 2>&1)",
+      "Bash(dotnet --version)",
+      "Bash(dotnet --list-sdks)",
+      "PowerShell(& \"C:\\\\Program Files\\\\dotnet\\\\dotnet.exe\" --list-sdks)",
+      "PowerShell(dotnet --version)"
     ]
   }
 }

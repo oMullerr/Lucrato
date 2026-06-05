@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Lucrato.Api/Lucrato.Api.csproj" />
+    <Project Path="src/Lucrato.Application/Lucrato.Application.csproj" />
+    <Project Path="src/Lucrato.Domain/Lucrato.Domain.csproj" />
+    <Project Path="src/Lucrato.Infrastructure/Lucrato.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lucrato.Tests/Lucrato.Tests.csproj" />
+  </Folder>
+</Solution>

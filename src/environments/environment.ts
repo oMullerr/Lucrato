@@ -1,5 +1,7 @@
 export const environment = {
   production: false,
+  // Base URL da API .NET (Cloud Run em prod). Em dev aponta para o backend local.
+  apiBaseUrl: "http://localhost:8080",
   firebase: {
     apiKey: "AIzaSyAhax_nL7xFNPmAFDOWLNAg3fwTfwMPA48",
     authDomain: "lucrato-web.firebaseapp.com",
