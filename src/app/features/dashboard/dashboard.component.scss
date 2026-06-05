@@ -149,6 +149,29 @@
   /* height set inline via [style.height.px] from productChartHeight() */
 }
 
+/* Hero chart — scroll horizontal interno quando há muitos meses. */
+.month-chart-scroll {
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+
+  &::-webkit-scrollbar { height: 6px; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-track { background: transparent; }
+}
+
+.month-chart-canvas {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  /* min-width definido inline via [style.minWidth.px] a partir de monthlyChartWidth() */
+}
+
 .no-data {
   height: 100%;
   display: grid;

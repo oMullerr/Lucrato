@@ -31,8 +31,11 @@ function makeSettings(overrides: Partial<Settings> = {}): Settings {
     defaultShipping: 0,
     defaultChannel: 'Mercado Livre',
     categories: ['Eletrônicos'],
+    categoryColors: {},
     suppliers: ['Amazon BR'],
+    supplierColors: {},
     channels: ['Mercado Livre'],
+    channelColors: {},
     ...overrides,
   };
 }

@@ -64,6 +64,33 @@ export class SaleFormDialogComponent {
     });
   });
 
+  /** Free-text filter for the batch select, matched against the product name. */
+  protected readonly batchFilter = signal('');
+
+  /** availableBatches() narrowed by the search term (product name, case-insensitive). */
+  protected readonly filteredBatches = computed(() => {
+    const term = this.batchFilter().trim().toLowerCase();
+    const batches = this.availableBatches();
+    if (!term) return batches;
+    return batches.filter(b => b.product.toLowerCase().includes(term));
+  });
+
+  protected onBatchSearch(event: Event): void {
+    this.batchFilter.set((event.target as HTMLInputElement).value);
+  }
+
+  /** Deixa as teclas de navegação/seleção chegarem ao mat-select; bloqueia as demais
+   *  para a digitação não disparar o type-ahead do painel. */
+  protected onBatchSearchKeydown(event: KeyboardEvent): void {
+    const passthrough = ['ArrowDown', 'ArrowUp', 'Enter', 'Escape', 'Tab'];
+    if (!passthrough.includes(event.key)) event.stopPropagation();
+  }
+
+  /** Limpa a busca ao fechar o painel para reabrir mostrando todos os lotes. */
+  protected onBatchPanelToggle(opened: boolean): void {
+    if (!opened) this.batchFilter.set('');
+  }
+
   protected readonly maxAvailable = computed(() => {
     const m = this.model();
     if (!m.batchId) return null;

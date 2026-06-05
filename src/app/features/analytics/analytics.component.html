@@ -168,7 +168,7 @@
                 <tbody>
                   @for (c of pagedCategoryStats(); track c.category) {
                     <tr>
-                      <td><span class="category-pill">{{ c.category }}</span></td>
+                      <td><app-color-pill [name]="c.category" /></td>
                       <td class="text-center mono">{{ c.batches }}</td>
                       <td class="text-right mono">{{ c.invested | brl }}</td>
                       <td class="text-right mono text-warning">{{ c.idleCapital | brl }}</td>

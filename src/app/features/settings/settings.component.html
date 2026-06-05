@@ -139,7 +139,10 @@
             <app-editable-list
               addLabel="Adicionar categoria"
               [items]="s.categories"
+              [withColor]="true"
+              [colors]="s.categoryColors"
               (itemsChange)="updateField('categories', $event)"
+              (colorsChange)="updateField('categoryColors', $event)"
             />
           </div>
 
@@ -151,7 +154,10 @@
             <app-editable-list
               addLabel="Adicionar fornecedor"
               [items]="s.suppliers"
+              [withColor]="true"
+              [colors]="s.supplierColors"
               (itemsChange)="updateField('suppliers', $event)"
+              (colorsChange)="updateField('supplierColors', $event)"
             />
           </div>
 
@@ -163,7 +169,10 @@
             <app-editable-list
               addLabel="Adicionar canal"
               [items]="s.channels"
+              [withColor]="true"
+              [colors]="s.channelColors"
               (itemsChange)="updateField('channels', $event)"
+              (colorsChange)="updateField('channelColors', $event)"
             />
           </div>
         </div>

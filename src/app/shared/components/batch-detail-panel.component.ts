@@ -8,6 +8,7 @@ import { ComputedPurchase, ComputedSale } from '../../core/models/models';
 import { BrlPipe } from '../pipes/brl.pipe';
 import { BrDatePipe } from '../pipes/br-date.pipe';
 import { StatusBadgeComponent } from './status-badge.component';
+import { ColorPillComponent } from './color-pill.component';
 
 /**
  * Lateral detail sheet for a single purchase batch.
@@ -17,7 +18,7 @@ import { StatusBadgeComponent } from './status-badge.component';
   selector: 'app-batch-detail-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, MatButtonModule, MatTooltipModule, BrlPipe, BrDatePipe, StatusBadgeComponent],
+  imports: [MatIconModule, MatButtonModule, MatTooltipModule, BrlPipe, BrDatePipe, StatusBadgeComponent, ColorPillComponent],
   templateUrl: './batch-detail-panel.component.html',
   styleUrl: './batch-detail-panel.component.scss',
 })

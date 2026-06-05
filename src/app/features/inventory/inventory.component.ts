@@ -29,6 +29,7 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { BatchDetailPanelComponent } from '../../shared/components/batch-detail-panel.component';
+import { ColorPillComponent } from '../../shared/components/color-pill.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 import { PurchaseFormDialogComponent } from '../purchases/purchase-form.dialog';
@@ -44,7 +45,7 @@ type FilterKey = 'all' | InventoryStatus;
     RouterLink, MatButtonModule, MatIconModule, MatSidenavModule, MatTooltipModule,
     MatSortModule, MatPaginatorModule,
     PageHeaderComponent, KpiCardComponent, StatusBadgeComponent,
-    EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent,
+    EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent,
     BrlPipe, BrDatePipe, DatePipe,
   ],
   templateUrl: './inventory.component.html',

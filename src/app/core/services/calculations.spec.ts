@@ -57,8 +57,11 @@ function makeSettings(overrides: Partial<Settings> = {}): Settings {
     defaultShipping: 0,
     defaultChannel: 'Mercado Livre',
     categories: [],
+    categoryColors: {},
     suppliers: [],
+    supplierColors: {},
     channels: [],
+    channelColors: {},
     ...overrides,
   };
 }

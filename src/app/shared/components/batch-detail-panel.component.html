@@ -12,9 +12,9 @@
 
     <h2 id="bdp-title" class="batch-title">{{ b.product }}</h2>
     <div class="batch-sub">
-      <span>{{ b.category }}</span>
+      <app-color-pill [name]="b.category" />
       <span class="bullet">·</span>
-      <span>{{ b.supplier }}</span>
+      <app-color-pill [name]="b.supplier" kind="supplier" />
     </div>
 
     <section class="stats" aria-label="Estatísticas do lote">

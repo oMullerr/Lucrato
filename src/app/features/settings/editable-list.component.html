@@ -2,6 +2,15 @@
   <ul class="item-list">
     @for (item of items(); track item; let i = $index, first = $first, last = $last) {
       <li class="item-row">
+        @if (withColor()) {
+          <input
+            type="color"
+            class="color-swatch"
+            [value]="colorOf(item)"
+            (input)="setColor(item, $any($event.target).value)"
+            [attr.aria-label]="'Cor de ' + item"
+          />
+        }
         <span class="item-name">{{ item }}</span>
         <div class="item-actions">
           <button
@@ -41,15 +50,25 @@
   <p class="empty-hint">Nenhum item ainda.</p>
 }
 
-<mat-form-field appearance="outline" class="add-field">
-  <mat-label>{{ addLabel() }}</mat-label>
-  <input
-    matInput
-    [(ngModel)]="draft"
-    [placeholder]="placeholder()"
-    (keydown.enter)="$event.preventDefault(); add()"
-  />
-  <button matSuffix mat-icon-button type="button" (click)="add()" aria-label="Adicionar">
-    <mat-icon>add</mat-icon>
-  </button>
-</mat-form-field>
+<div class="add-row">
+  @if (withColor()) {
+    <input
+      type="color"
+      class="color-swatch add-swatch"
+      [(ngModel)]="draftColor"
+      aria-label="Cor da nova categoria"
+    />
+  }
+  <mat-form-field appearance="outline" class="add-field">
+    <mat-label>{{ addLabel() }}</mat-label>
+    <input
+      matInput
+      [(ngModel)]="draft"
+      [placeholder]="placeholder()"
+      (keydown.enter)="$event.preventDefault(); add()"
+    />
+    <button matSuffix mat-icon-button type="button" (click)="add()" aria-label="Adicionar">
+      <mat-icon>add</mat-icon>
+    </button>
+  </mat-form-field>
+</div>

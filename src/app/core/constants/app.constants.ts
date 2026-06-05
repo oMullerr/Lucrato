@@ -4,6 +4,9 @@ export const APP = {
   themeKey: 'ml-gestao-theme',
 } as const;
 
+/** Cor padrão de uma categoria sem cor cadastrada (cor da marca). */
+export const DEFAULT_CATEGORY_COLOR = '#0A6E5C';
+
 /**
  * Paleta de cores para gráficos — espelha os tokens semânticos do design system.
  * Inclui aliases legados (green/red/amber/blue/teal/purple/orange) durante a

@@ -268,7 +268,7 @@
                         </td>
                         <td><span class="id-tag mono">{{ c.id }}</span></td>
                         <td class="product-cell" [title]="c.product">{{ c.product }}</td>
-                        <td class="hide-on-mobile"><span class="category-pill">{{ c.category }}</span></td>
+                        <td class="hide-on-mobile"><app-color-pill [name]="c.category" /></td>
                         <td
                           class="text-center"
                           [class.text-muted]="c.currentStock === 0"

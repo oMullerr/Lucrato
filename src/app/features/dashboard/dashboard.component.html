@@ -118,7 +118,11 @@
       </header>
       <div class="cc-body cc-tall">
         @if (monthlyChart().labels?.length) {
-          <canvas baseChart [data]="monthlyChart()" [options]="lineOptions()" type="line"></canvas>
+          <div class="month-chart-scroll">
+            <div class="month-chart-canvas" [style.minWidth.px]="monthlyChartWidth()">
+              <canvas baseChart [data]="monthlyChart()" [options]="lineOptions()" type="line"></canvas>
+            </div>
+          </div>
         } @else {
           <div class="no-data">Sem vendas no período selecionado.</div>
         }

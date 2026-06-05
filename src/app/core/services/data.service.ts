@@ -1,7 +1,7 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { Firestore, doc, onSnapshot, setDoc } from '@angular/fire/firestore';
 import type { Unsubscribe } from '@angular/fire/firestore';
-import { APP } from '../constants/app.constants';
+import { APP, DEFAULT_CATEGORY_COLOR } from '../constants/app.constants';
 import {
   Purchase, Sale, Settings, Database, SaleChannel
 } from '../models/models';
@@ -167,8 +167,11 @@ export class DataService {
         defaultShipping: 0,
         defaultChannel: '' as SaleChannel,
         categories: [],
+        categoryColors: {},
         suppliers: [],
+        supplierColors: {},
         channels: [],
+        channelColors: {},
       },
       metadata: { versao: APP.version, ultimaAtualizacao: new Date().toISOString() },
     };
@@ -189,6 +192,15 @@ export class DataService {
 
   findPurchase(id: string): Purchase | undefined {
     return this.purchases().find(c => c.id === id);
+  }
+
+  /** Cor (hex) de uma categoria/fornecedor/canal pelo nome; cai na cor padrão quando não há cor cadastrada. */
+  entityColor(kind: 'category' | 'supplier' | 'channel', name: string): string {
+    const s = this.settings();
+    const map = kind === 'supplier' ? s?.supplierColors
+              : kind === 'channel'  ? s?.channelColors
+              :                       s?.categoryColors;
+    return map?.[name] ?? DEFAULT_CATEGORY_COLOR;
   }
 
   addPurchase(purchase: Purchase): void {
@@ -269,8 +281,11 @@ export class DataService {
       defaultShipping: cfg.defaultShipping ?? defaults.defaultShipping,
       defaultChannel: cfg.defaultChannel ?? defaults.defaultChannel,
       categories: cfg.categories ?? defaults.categories,
+      categoryColors: cfg.categoryColors ?? defaults.categoryColors,
       suppliers: cfg.suppliers ?? defaults.suppliers,
+      supplierColors: cfg.supplierColors ?? defaults.supplierColors,
       channels: cfg.channels ?? defaults.channels,
+      channelColors: cfg.channelColors ?? defaults.channelColors,
     };
 
     return {
@@ -291,8 +306,11 @@ export class DataService {
       defaultShipping: 0,
       defaultChannel: 'Mercado Livre',
       categories: ['Eletrônicos', 'Outros'],
+      categoryColors: {},
       suppliers: ['Amazon BR', 'Outro'],
+      supplierColors: {},
       channels: ['Mercado Livre', 'Outro'],
+      channelColors: {},
     };
   }
 

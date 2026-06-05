@@ -147,7 +147,7 @@
                   <td class="hide-on-mobile"><span class="id-tag mono">{{ v.batchId }}</span></td>
                   <td class="product-cell" [title]="v.product">{{ v.product }}</td>
                   <td class="mono hide-on-mobile">{{ v.saleDate | brDate }}</td>
-                  <td class="hide-on-mobile"><span class="channel-pill">{{ v.channel }}</span></td>
+                  <td class="hide-on-mobile"><app-color-pill [name]="v.channel" kind="channel" /></td>
                   <td class="text-center mono">{{ v.quantitySold }}</td>
                   <td
                     class="text-right mono"

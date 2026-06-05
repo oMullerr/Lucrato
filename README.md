@@ -284,21 +284,3 @@ Faça este checklist no setup e revise periodicamente:
 
 
 - mais idiomas (i18n)
-- dashboard de evolução mensal sem scroll
-
-COMPRAS
-
-na modal de nova compra, a categoria e o fornecedor devem vir vazios
-	data de compra não pode ser maior de que hoje
-
-cor nas categorias
-
-listagem de compras mostrando das mais novas para as mais antigas
-
--------------------------------------------------------------------------------
-
-VENDAS
-
-adicionar campo de busca no id do lote (nome produto)
-
-lista de vendas das mais novas para as mais antigas

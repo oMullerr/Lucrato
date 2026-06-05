@@ -13,6 +13,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header.compone
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
+import { ColorPillComponent } from '../../shared/components/color-pill.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 
 interface ProductStat {
@@ -59,7 +60,7 @@ const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', '
   imports: [
     RouterLink, CommonModule, MatIconModule, MatButtonModule, MatTabsModule, MatTooltipModule,
     MatPaginatorModule,
-    PageHeaderComponent, StatusBadgeComponent, EmptyStateComponent, SkeletonComponent, BrlPipe,
+    PageHeaderComponent, StatusBadgeComponent, EmptyStateComponent, SkeletonComponent, ColorPillComponent, BrlPipe,
   ],
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.scss',

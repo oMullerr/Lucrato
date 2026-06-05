@@ -29,6 +29,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.c
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { BatchDetailPanelComponent } from '../../shared/components/batch-detail-panel.component';
+import { ColorPillComponent } from '../../shared/components/color-pill.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 import { PurchaseFormDialogComponent } from './purchase-form.dialog';
@@ -45,7 +46,7 @@ type StatusFilter = 'all' | InventoryStatus;
     MatFormFieldModule, MatInputModule, MatTooltipModule,
     MatSortModule, MatPaginatorModule,
     PageHeaderComponent, StatusBadgeComponent,
-    EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent,
+    EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent,
     BrlPipe, BrDatePipe,
   ],
   templateUrl: './purchases.component.html',
@@ -137,7 +138,7 @@ export class PurchasesComponent {
     };
   });
 
-  /** Status + text filtered list, sorted by id ASC (default order). */
+  /** Status + text filtered list, sorted by purchase date DESC — newest first (default order). */
   private readonly filteredBase = computed(() => {
     let cs = this.purchases();
     const status = this.statusFilter();
@@ -153,7 +154,11 @@ export class PurchasesComponent {
         c.supplier.toLowerCase().includes(text)
       );
     }
-    return [...cs].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+    return [...cs].sort((a, b) => {
+      const byDate = b.purchaseDate.localeCompare(a.purchaseDate);
+      if (byDate !== 0) return byDate;
+      return b.id.localeCompare(a.id, undefined, { numeric: true });
+    });
   });
 
   /** Applies user-driven column sort on top of the filtered list, or returns the default order. */

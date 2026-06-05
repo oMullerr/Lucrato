@@ -18,6 +18,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.c
 import { KpiCardComponent } from '../../shared/components/kpi-card.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
+import { ColorPillComponent } from '../../shared/components/color-pill.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 import { SaleFormDialogComponent } from './sale-form.dialog';
@@ -34,7 +35,7 @@ type SaleFilter = 'all' | 'profit' | 'loss' | 'low-margin';
     MatFormFieldModule, MatInputModule, MatSelectModule, MatTooltipModule,
     MatSortModule, MatPaginatorModule,
     PageHeaderComponent, StatusBadgeComponent, KpiCardComponent,
-    EmptyStateComponent, SkeletonComponent,
+    EmptyStateComponent, SkeletonComponent, ColorPillComponent,
     BrlPipe, BrDatePipe,
   ],
   templateUrl: './sales.component.html',
@@ -105,7 +106,7 @@ export class SalesComponent {
     });
   }
 
-  /** Filtered list (channel + text + quick) sorted by id ASC — the default order. */
+  /** Filtered list (channel + text + quick) sorted by sale date DESC — newest first (default order). */
   private readonly filteredBase = computed(() => {
     let vs = this.sales();
     if (this.channelFilter() !== 'all') {
@@ -123,7 +124,11 @@ export class SalesComponent {
     if (qf === 'loss') vs = vs.filter(v => v.netProfit < 0);
     else if (qf === 'profit') vs = vs.filter(v => v.netProfit > 0);
     else if (qf === 'low-margin') vs = vs.filter(v => v.netMargin < this.minimumMargin() && v.status === 'Concluída');
-    return [...vs].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+    return [...vs].sort((a, b) => {
+      const byDate = b.saleDate.localeCompare(a.saleDate);
+      if (byDate !== 0) return byDate;
+      return b.id.localeCompare(a.id, undefined, { numeric: true });
+    });
   });
 
   /** Applies user-driven column sort on top of the filtered list, or returns the default order. */

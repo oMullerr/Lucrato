@@ -256,6 +256,14 @@ export class DashboardComponent {
     return Math.max(280, n * 36 + 50);
   });
 
+  /** Número de meses no gráfico hero — dirige a largura do scroll horizontal. */
+  protected readonly monthCount = computed(() =>
+    this.monthlyChart().labels?.length ?? 0
+  );
+
+  /** Largura dinâmica do canvas: ~90px por mês para os rótulos não se sobreporem; rola quando há muitos meses. */
+  protected readonly monthlyChartWidth = computed(() => this.monthCount() * 90);
+
   /** Doughnut — revenue composition. */
   protected readonly compositionChart = computed<ChartConfiguration<'doughnut'>['data']>(() => {
     const k = this.periodKpis();

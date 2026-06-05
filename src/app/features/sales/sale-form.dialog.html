@@ -14,8 +14,20 @@
         name="batchId"
         cdkFocusInitial
         required
+        (openedChange)="onBatchPanelToggle($event)"
       >
-        @for (batch of availableBatches(); track batch.id) {
+        <div class="batch-search">
+          <mat-icon>search</mat-icon>
+          <input
+            type="text"
+            [value]="batchFilter()"
+            (input)="onBatchSearch($event)"
+            (keydown)="onBatchSearchKeydown($event)"
+            placeholder="Buscar por produto..."
+            aria-label="Buscar lote por produto"
+          />
+        </div>
+        @for (batch of filteredBatches(); track batch.id) {
           <mat-option [value]="batch.id">
             {{ batch.id }} — {{ batch.product }}
             @if (batch.currentStock <= 0) {
@@ -29,6 +41,8 @@
           <mat-option disabled>
             Nenhum lote disponível. Cadastre uma compra com Data de Recebimento preenchida.
           </mat-option>
+        } @else if (filteredBatches().length === 0) {
+          <mat-option disabled>Nenhum lote encontrado para "{{ batchFilter() }}".</mat-option>
         }
       </mat-select>
       @if (!hasBatch()) {

@@ -46,8 +46,14 @@ export interface Settings {
   defaultShipping: number;
   defaultChannel: SaleChannel;
   categories: string[];
+  /** Cor (hex) por categoria, indexada pelo nome. Ausência = cor padrão. */
+  categoryColors: Record<string, string>;
   suppliers: string[];
+  /** Cor (hex) por fornecedor, indexada pelo nome. Ausência = cor padrão. */
+  supplierColors: Record<string, string>;
   channels: string[];
+  /** Cor (hex) por canal, indexada pelo nome. Ausência = cor padrão. */
+  channelColors: Record<string, string>;
 }
 
 /** Purchase with derived computed fields */

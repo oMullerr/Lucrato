@@ -29,8 +29,11 @@ const DEFAULT_SETTINGS: Settings = {
   defaultShipping: 0,
   defaultChannel: 'Mercado Livre',
   categories: [],
+  categoryColors: {},
   suppliers: [],
+  supplierColors: {},
   channels: [],
+  channelColors: {},
 };
 
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
@@ -121,8 +124,11 @@ export class SettingsComponent implements OnDestroy {
           defaultShipping: raw?.defaultShipping ?? DEFAULT_SETTINGS.defaultShipping,
           defaultChannel: raw?.defaultChannel ?? DEFAULT_SETTINGS.defaultChannel,
           categories: raw?.categories ?? DEFAULT_SETTINGS.categories,
+          categoryColors: raw?.categoryColors ?? DEFAULT_SETTINGS.categoryColors,
           suppliers: raw?.suppliers ?? DEFAULT_SETTINGS.suppliers,
+          supplierColors: raw?.supplierColors ?? DEFAULT_SETTINGS.supplierColors,
           channels: raw?.channels ?? DEFAULT_SETTINGS.channels,
+          channelColors: raw?.channelColors ?? DEFAULT_SETTINGS.channelColors,
         };
         this.serverSettings.set(composed);
       },

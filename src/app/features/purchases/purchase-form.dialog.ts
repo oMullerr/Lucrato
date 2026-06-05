@@ -79,6 +79,13 @@ export class PurchaseFormDialogComponent {
     return r > this.dateAsString(new Date());
   });
 
+  /** True when the current purchaseDate is strictly in the future. */
+  protected readonly purchaseDateInFuture = computed(() => {
+    const p = this.model().purchaseDate;
+    if (!p) return false;
+    return p > this.dateAsString(new Date());
+  });
+
   protected set(field: string, value: unknown): void {
     this.model.update(m => ({ ...m, [field]: value }));
   }
@@ -122,6 +129,7 @@ export class PurchaseFormDialogComponent {
     if (!m.category || !m.supplier || !m.purchaseDate) return false;
     if (m.quantityPurchased < 1 || !Number.isInteger(m.quantityPurchased)) return false;
     if (m.unitCost <= 0) return false;
+    if (m.purchaseDate > this.dateAsString(new Date())) return false;
     if (m.receiptDate && m.receiptDate < m.purchaseDate) return false;
     if (m.receiptDate && m.receiptDate > this.dateAsString(new Date())) return false;
     return true;
@@ -138,8 +146,8 @@ export class PurchaseFormDialogComponent {
     return {
       id: this.dataService.nextPurchaseId(),
       product: '',
-      category: cfg?.categories[0] ?? 'Eletrônicos',
-      supplier: cfg?.suppliers[0] ?? 'Amazon BR',
+      category: '',
+      supplier: '',
       link: '',
       purchaseDate: new Date().toISOString().split('T')[0]!,
       receiptDate: '',
