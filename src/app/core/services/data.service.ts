@@ -66,6 +66,7 @@ export class DataService {
     const ref = doc(this.firestore, `users/${uid}/db/main`);
     this._unsub = onSnapshot(
       ref,
+      { includeMetadataChanges: true },
       snap => {
         this.connection.reportSnapshot(snap.metadata);
         if (this.connection.syncError()) {

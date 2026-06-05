@@ -1,0 +1,55 @@
+@if (items().length) {
+  <ul class="item-list">
+    @for (item of items(); track item; let i = $index, first = $first, last = $last) {
+      <li class="item-row">
+        <span class="item-name">{{ item }}</span>
+        <div class="item-actions">
+          <button
+            mat-icon-button
+            type="button"
+            class="reorder-btn"
+            (click)="move(i, -1)"
+            [disabled]="first"
+            aria-label="Mover para cima"
+          >
+            <mat-icon>keyboard_arrow_up</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            type="button"
+            class="reorder-btn"
+            (click)="move(i, 1)"
+            [disabled]="last"
+            aria-label="Mover para baixo"
+          >
+            <mat-icon>keyboard_arrow_down</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            type="button"
+            class="remove-btn"
+            (click)="remove(i)"
+            aria-label="Remover"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </li>
+    }
+  </ul>
+} @else {
+  <p class="empty-hint">Nenhum item ainda.</p>
+}
+
+<mat-form-field appearance="outline" class="add-field">
+  <mat-label>{{ addLabel() }}</mat-label>
+  <input
+    matInput
+    [(ngModel)]="draft"
+    [placeholder]="placeholder()"
+    (keydown.enter)="$event.preventDefault(); add()"
+  />
+  <button matSuffix mat-icon-button type="button" (click)="add()" aria-label="Adicionar">
+    <mat-icon>add</mat-icon>
+  </button>
+</mat-form-field>

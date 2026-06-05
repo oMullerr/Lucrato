@@ -136,26 +136,11 @@
               <mat-icon>category</mat-icon>
               Categorias
             </h3>
-            <mat-form-field appearance="outline" class="chip-field">
-              <mat-label>Adicionar categoria</mat-label>
-              <mat-chip-grid #chipsCategories cdkDropList (cdkDropListDropped)="drop($event, 'categories')">
-                @for (cat of s.categories; track cat) {
-                  <mat-chip-row cdkDrag (removed)="removeItem('categories', cat)">
-                    <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
-                    {{ cat }}
-                    <button matChipRemove>
-                      <mat-icon>cancel</mat-icon>
-                    </button>
-                  </mat-chip-row>
-                }
-              </mat-chip-grid>
-              <input
-                placeholder="Digite e pressione Enter"
-                [matChipInputFor]="chipsCategories"
-                [matChipInputSeparatorKeyCodes]="separators"
-                (matChipInputTokenEnd)="addItem('categories', $event.value); $event.chipInput!.clear()"
-              />
-            </mat-form-field>
+            <app-editable-list
+              addLabel="Adicionar categoria"
+              [items]="s.categories"
+              (itemsChange)="updateField('categories', $event)"
+            />
           </div>
 
           <div class="config-card">
@@ -163,26 +148,11 @@
               <mat-icon>store</mat-icon>
               Fornecedores
             </h3>
-            <mat-form-field appearance="outline" class="chip-field">
-              <mat-label>Adicionar fornecedor</mat-label>
-              <mat-chip-grid #chipsSuppliers cdkDropList (cdkDropListDropped)="drop($event, 'suppliers')">
-                @for (sup of s.suppliers; track sup) {
-                  <mat-chip-row cdkDrag (removed)="removeItem('suppliers', sup)">
-                    <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
-                    {{ sup }}
-                    <button matChipRemove>
-                      <mat-icon>cancel</mat-icon>
-                    </button>
-                  </mat-chip-row>
-                }
-              </mat-chip-grid>
-              <input
-                placeholder="Digite e pressione Enter"
-                [matChipInputFor]="chipsSuppliers"
-                [matChipInputSeparatorKeyCodes]="separators"
-                (matChipInputTokenEnd)="addItem('suppliers', $event.value); $event.chipInput!.clear()"
-              />
-            </mat-form-field>
+            <app-editable-list
+              addLabel="Adicionar fornecedor"
+              [items]="s.suppliers"
+              (itemsChange)="updateField('suppliers', $event)"
+            />
           </div>
 
           <div class="config-card">
@@ -190,26 +160,11 @@
               <mat-icon>storefront</mat-icon>
               Canais de Venda
             </h3>
-            <mat-form-field appearance="outline" class="chip-field">
-              <mat-label>Adicionar canal</mat-label>
-              <mat-chip-grid #chipsChannels cdkDropList (cdkDropListDropped)="drop($event, 'channels')">
-                @for (ch of s.channels; track ch) {
-                  <mat-chip-row cdkDrag (removed)="removeItem('channels', ch)">
-                    <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
-                    {{ ch }}
-                    <button matChipRemove>
-                      <mat-icon>cancel</mat-icon>
-                    </button>
-                  </mat-chip-row>
-                }
-              </mat-chip-grid>
-              <input
-                placeholder="Digite e pressione Enter"
-                [matChipInputFor]="chipsChannels"
-                [matChipInputSeparatorKeyCodes]="separators"
-                (matChipInputTokenEnd)="addItem('channels', $event.value); $event.chipInput!.clear()"
-              />
-            </mat-form-field>
+            <app-editable-list
+              addLabel="Adicionar canal"
+              [items]="s.channels"
+              (itemsChange)="updateField('channels', $event)"
+            />
           </div>
         </div>
       </div>

@@ -6,11 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDialog } from '@angular/material/dialog';
-import { COMMA, ENTER } from '@angular/cdk/keycodes';
-import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Firestore, doc, onSnapshot, setDoc, Unsubscribe } from '@angular/fire/firestore';
 import { Settings } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
@@ -21,8 +18,7 @@ import { logError } from '../../core/services/logger';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
 import { ImportResultDialogComponent } from './import-result-dialog.component';
-
-type ListKey = 'categories' | 'suppliers' | 'channels';
+import { EditableListComponent } from './editable-list.component';
 
 const DEFAULT_SETTINGS: Settings = {
   defaultMlFee: 0.12,
@@ -44,10 +40,10 @@ const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule, DragDropModule,
+    FormsModule,
     MatCardModule, MatIconModule, MatButtonModule,
-    MatFormFieldModule, MatInputModule, MatSelectModule, MatChipsModule, MatTabsModule,
-    PageHeaderComponent,
+    MatFormFieldModule, MatInputModule, MatSelectModule, MatTabsModule,
+    PageHeaderComponent, EditableListComponent,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
@@ -61,8 +57,6 @@ export class SettingsComponent implements OnDestroy {
   private readonly dialog = inject(MatDialog);
 
   private readonly fileInputEl = viewChild<ElementRef<HTMLInputElement>>('fileInputRef');
-
-  protected readonly separators = [ENTER, COMMA];
 
   private readonly serverSettings = signal<Settings | null>(null);
   protected readonly form = signal<Settings>(clone(DEFAULT_SETTINGS));
@@ -165,28 +159,6 @@ export class SettingsComponent implements OnDestroy {
   }
   protected set minMarginPct(v: number) {
     this.updateField('minimumMargin', this.clamp0(v) / 100);
-  }
-
-  protected addItem(list: ListKey, value: string): void {
-    const v = (value ?? '').trim();
-    if (!v) return;
-    const cur = this.form()[list];
-    if (cur.includes(v)) {
-      this.notify.warning(`"${v}" já existe na lista.`);
-      return;
-    }
-    this.updateField(list, [...cur, v] as Settings[typeof list]);
-  }
-
-  protected drop(event: CdkDragDrop<string[]>, list: ListKey): void {
-    const arr = [...this.form()[list]];
-    moveItemInArray(arr, event.previousIndex, event.currentIndex);
-    this.updateField(list, arr as Settings[typeof list]);
-  }
-
-  protected removeItem(list: ListKey, item: string): void {
-    const cur = this.form()[list];
-    this.updateField(list, cur.filter(x => x !== item) as Settings[typeof list]);
   }
 
   protected async save(): Promise<void> {

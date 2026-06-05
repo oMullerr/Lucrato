@@ -135,39 +135,6 @@
   @media (max-width: 700px)  { grid-template-columns: 1fr; }
 }
 
-.chip-field { width: 100%; }
-
-.drag-handle {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
-  color: var(--text-muted);
-  cursor: grab;
-  margin-right: 4px;
-  opacity: 0.45;
-  transition: opacity var(--dur-fast) var(--ease-out);
-
-  &:hover { opacity: 1; }
-}
-
-::ng-deep .cdk-drag-preview {
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  background: var(--bg-surface-1);
-  padding: 4px 12px;
-  display: flex;
-  align-items: center;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-::ng-deep .cdk-drag-placeholder { opacity: 0.3; }
-
-::ng-deep .cdk-drag-animating {
-  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
-}
-
 /* Import / Danger */
 .import-description {
   color: var(--text-secondary);

@@ -416,6 +416,12 @@ html .mat-mdc-form-field {
   --mdc-outlined-text-field-container-shape: 10px;
 }
 
+/* O field já desenha a própria borda de foco (outline). Remove o anel de foco
+   global interno para não duplicar a borda verde dentro do campo. */
+html .mat-mdc-form-field :focus-visible {
+  box-shadow: none;
+}
+
 html .mat-mdc-text-field-wrapper {
   background: var(--bg-surface-1);
   border-radius: var(--radius-md);

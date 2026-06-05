@@ -448,13 +448,18 @@ describe('DataService', () => {
 
       expect(fakeAuth.refreshIdToken).toHaveBeenCalled();
       expect(doc).toHaveBeenCalledWith(expect.anything(), 'users/user-123/db/main');
-      expect(onSnapshot).toHaveBeenCalled();
+      expect(onSnapshot).toHaveBeenCalledWith(
+        expect.anything(),
+        { includeMetadataChanges: true },
+        expect.any(Function),
+        expect.any(Function),
+      );
     });
 
     it('quando snapshot existe, seta db via migrateDatabase', async () => {
       const harness = setupHarness(makeFakeUser());
       let onNext: (snap: any) => void = () => undefined;
-      (onSnapshot as jest.Mock).mockImplementation((_ref, next) => {
+      (onSnapshot as jest.Mock).mockImplementation((_ref, _opts, next) => {
         onNext = next;
         return jest.fn();
       });
@@ -476,7 +481,7 @@ describe('DataService', () => {
     it('quando snapshot não existe (não-cache), cria empty + setDoc', async () => {
       const harness = setupHarness(makeFakeUser());
       let onNext: (snap: any) => void = () => undefined;
-      (onSnapshot as jest.Mock).mockImplementation((_ref, next) => {
+      (onSnapshot as jest.Mock).mockImplementation((_ref, _opts, next) => {
         onNext = next;
         return jest.fn();
       });
@@ -493,7 +498,7 @@ describe('DataService', () => {
     it('quando fromCache=true e db=null, seta empty e mostra warning', async () => {
       const harness = setupHarness(makeFakeUser());
       let onNext: (snap: any) => void = () => undefined;
-      (onSnapshot as jest.Mock).mockImplementation((_ref, next) => {
+      (onSnapshot as jest.Mock).mockImplementation((_ref, _opts, next) => {
         onNext = next;
         return jest.fn();
       });
@@ -511,7 +516,7 @@ describe('DataService', () => {
       jest.useFakeTimers();
       const harness = setupHarness(makeFakeUser());
       let onError: (err: any) => void = () => undefined;
-      (onSnapshot as jest.Mock).mockImplementation((_ref, _next, errorCb) => {
+      (onSnapshot as jest.Mock).mockImplementation((_ref, _opts, _next, errorCb) => {
         onError = errorCb;
         return jest.fn();
       });
