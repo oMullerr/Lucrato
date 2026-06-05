@@ -45,7 +45,9 @@ export class SaleFormDialogComponent {
   protected readonly hasBatch = computed(() => !!this.model().batchId);
 
   protected setShippingType(isFlex: boolean): void {
-    this.model.update(m => ({ ...m, shippingType: isFlex ? 'flex' : 'correios' }));
+    this.model.update(m => isFlex
+      ? ({ ...m, shippingType: 'flex', sellerShipping: 0 })
+      : ({ ...m, shippingType: 'correios', flexRefund: 0 }));
   }
 
   protected readonly channels = computed(() => this.dataService.settings()?.channels ?? []);

@@ -25,6 +25,13 @@ type RangeKey = '7d' | '30d' | '90d' | '12m' | 'all' | 'custom';
 
 interface RangeOption { key: RangeKey; label: string; }
 
+interface WaterfallStep {
+  label: string;
+  value: number;
+  tone: 'neutral' | 'success' | 'warning' | 'brand' | 'danger';
+  kind: 'cost' | 'gain' | 'subtotal' | 'total';
+}
+
 const RANGE_OPTIONS: RangeOption[] = [
   { key: '7d',  label: '7 dias' },
   { key: '30d', label: '30 dias' },
@@ -116,14 +123,17 @@ export class DashboardComponent {
     const netProfit = sales.reduce((s, v) => s + v.netProfit, 0);
     const grossProfit = sales.reduce((s, v) => s + v.grossProfit, 0);
     const proportionalCost = sales.reduce((s, v) => s + v.proportionalCost, 0);
-    const totalShipping = sales.reduce((s, v) => s + v.sellerShipping, 0);
+    const totalShipping = sales.reduce((s, v) => s + (v.shippingType === 'flex' ? 0 : v.sellerShipping), 0);
+    const totalFlexRefund = sales.reduce((s, v) => s + (v.shippingType === 'flex' ? (v.flexRefund ?? 0) : 0), 0);
     const totalDiscounts = sales.reduce((s, v) => s + v.discount, 0);
+    const totalOtherCosts = sales.reduce((s, v) => s + v.otherCosts, 0);
     const totalSold = sales.reduce((s, v) => s + v.quantitySold, 0);
     const netMargin = grossRevenue > 0 ? netProfit / grossRevenue : 0;
     const averageTicket = sales.length > 0 ? grossRevenue / sales.length : 0;
     return {
       grossRevenue, netRevenue, totalFees, netProfit, grossProfit,
-      proportionalCost, totalShipping, totalDiscounts, totalSold, netMargin, averageTicket,
+      proportionalCost, totalShipping, totalFlexRefund, totalDiscounts, totalOtherCosts,
+      totalSold, netMargin, averageTicket,
       salesCount: sales.length,
     };
   });
@@ -251,16 +261,17 @@ export class DashboardComponent {
     const k = this.periodKpis();
     const c = this.palette();
     return {
-      labels: ['Lucro Líq.', 'Taxas ML', 'Frete', 'Descontos', 'Custo Produtos'],
+      labels: ['Lucro Líq.', 'Taxas ML', 'Frete', 'Descontos', 'Outros Custos', 'Custo Produtos'],
       datasets: [{
         data: [
           Math.max(0, k.netProfit),
           k.totalFees,
           k.totalShipping,
           k.totalDiscounts,
+          k.totalOtherCosts,
           Math.max(0, k.proportionalCost),
         ],
-        backgroundColor: [c.success, c.warning, c.info, c.danger, c.brand],
+        backgroundColor: [c.success, c.warning, c.info, c.danger, c.neutral, c.brand],
         borderColor: c.surface,
         borderWidth: 3,
         spacing: 2,
@@ -282,19 +293,28 @@ export class DashboardComponent {
   });
 
   /** Waterfall steps. Used in HTML for horizontal cascade. */
-  protected readonly waterfall = computed(() => {
+  protected readonly waterfall = computed<WaterfallStep[]>(() => {
     const k = this.periodKpis();
     const totalInvested = this.dataService.kpis().totalInvested;
-    return [
-      { label: 'Investido',      value: totalInvested,       tone: 'neutral' as const, kind: 'cost' as const },
-      { label: 'Receita bruta',  value: k.grossRevenue,      tone: 'success' as const, kind: 'gain' as const },
-      { label: 'Taxas ML',       value: -k.totalFees,        tone: 'warning' as const, kind: 'cost' as const },
-      { label: 'Frete',          value: -k.totalShipping,    tone: 'warning' as const, kind: 'cost' as const },
-      { label: 'Descontos',      value: -k.totalDiscounts,   tone: 'warning' as const, kind: 'cost' as const },
-      { label: 'Receita líq.',   value: k.netRevenue,        tone: 'brand' as const,   kind: 'subtotal' as const },
-      { label: 'Custo produtos', value: -k.proportionalCost, tone: 'danger' as const,  kind: 'cost' as const },
-      { label: 'Lucro líq.',     value: k.netProfit,         tone: k.netProfit >= 0 ? 'success' as const : 'danger' as const, kind: 'total' as const },
+    const steps: WaterfallStep[] = [
+      { label: 'Investido',     value: totalInvested,    tone: 'neutral', kind: 'cost' },
+      { label: 'Receita bruta', value: k.grossRevenue,   tone: 'success', kind: 'gain' },
+      { label: 'Taxas ML',      value: -k.totalFees,     tone: 'warning', kind: 'cost' },
+      { label: 'Frete',         value: -k.totalShipping, tone: 'warning', kind: 'cost' },
     ];
+    if (k.totalFlexRefund > 0) {
+      steps.push({ label: 'Estorno Flex', value: k.totalFlexRefund, tone: 'success', kind: 'gain' });
+    }
+    steps.push({ label: 'Descontos', value: -k.totalDiscounts, tone: 'warning', kind: 'cost' });
+    if (k.totalOtherCosts > 0) {
+      steps.push({ label: 'Outros custos', value: -k.totalOtherCosts, tone: 'warning', kind: 'cost' });
+    }
+    steps.push(
+      { label: 'Receita líq.',   value: k.netRevenue,        tone: 'brand',  kind: 'subtotal' },
+      { label: 'Custo produtos', value: -k.proportionalCost, tone: 'danger', kind: 'cost' },
+      { label: 'Lucro líq.',     value: k.netProfit,         tone: k.netProfit >= 0 ? 'success' : 'danger', kind: 'total' },
+    );
+    return steps;
   });
 
   protected readonly lineOptions = computed<ChartConfiguration<'line'>['options']>(() => {
@@ -390,12 +410,13 @@ export class DashboardComponent {
   protected readonly compositionLegend = computed(() => {
     const k = this.periodKpis();
     const c = this.palette();
-    const total = Math.max(0, k.netProfit) + k.totalFees + k.totalShipping + k.totalDiscounts + Math.max(0, k.proportionalCost);
+    const total = Math.max(0, k.netProfit) + k.totalFees + k.totalShipping + k.totalDiscounts + k.totalOtherCosts + Math.max(0, k.proportionalCost);
     const items = [
       { label: 'Lucro líq.',     value: Math.max(0, k.netProfit),       color: c.success },
       { label: 'Taxas ML',       value: k.totalFees,                    color: c.warning },
       { label: 'Frete',          value: k.totalShipping,                color: c.info },
       { label: 'Descontos',      value: k.totalDiscounts,               color: c.danger },
+      { label: 'Outros custos',  value: k.totalOtherCosts,              color: c.neutral },
       { label: 'Custo produtos', value: Math.max(0, k.proportionalCost), color: c.brand },
     ];
     return items.map(it => ({ ...it, pct: total > 0 ? (it.value / total) * 100 : 0 }));

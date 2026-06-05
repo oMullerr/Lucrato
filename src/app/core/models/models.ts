@@ -85,7 +85,9 @@ export interface KpiSummary {
   netRevenue: number;
   totalFees: number;
   totalShipping: number;
+  totalFlexRefund: number;
   totalDiscounts: number;
+  totalOtherCosts: number;
   grossProfit: number;
   netProfit: number;
   netMargin: number;

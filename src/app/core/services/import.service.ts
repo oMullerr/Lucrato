@@ -322,7 +322,7 @@ export class ImportService {
       settings.defaultChannel || 'Mercado Livre',
       2,
       45.00,
-      +(settings.defaultMlFee * 100).toFixed(2) || 12,
+      Number.isFinite(settings.defaultMlFee) ? +(settings.defaultMlFee * 100).toFixed(2) : 12,
       0,
       0,
       0,

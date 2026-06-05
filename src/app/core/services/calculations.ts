@@ -5,6 +5,23 @@ import {
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
+/** Real unit cost of a batch: (units*unitCost + shipping + otherCosts) / units. */
+function actualUnitCostOf(p: Purchase): number {
+  const total = p.quantityPurchased * p.unitCost + p.purchaseShipping + p.otherCosts;
+  return p.quantityPurchased > 0 ? total / p.quantityPurchased : 0;
+}
+
+/** Shipping impact of a sale on net revenue: +flexRefund (Flex) or -sellerShipping (Correios). */
+function saleShippingImpact(s: Sale): number {
+  return s.shippingType === 'flex' ? (s.flexRefund ?? 0) : -s.sellerShipping;
+}
+
+/** Net revenue of a single sale (channel fees, shipping/flex, discount, other costs). */
+function saleNetRevenue(s: Sale): number {
+  const grossRevenue = s.quantitySold * s.unitPrice;
+  return grossRevenue - grossRevenue * s.feePercentage + saleShippingImpact(s) - s.discount - s.otherCosts;
+}
+
 /** Calculates derived fields for a purchase batch. */
 export function calculatePurchase(
   purchase: Purchase,
@@ -13,7 +30,7 @@ export function calculatePurchase(
 ): ComputedPurchase {
   const totalPurchaseCost = purchase.quantityPurchased * purchase.unitCost;
   const totalActualCost = totalPurchaseCost + purchase.purchaseShipping + purchase.otherCosts;
-  const actualUnitCost = purchase.quantityPurchased > 0 ? totalActualCost / purchase.quantityPurchased : 0;
+  const actualUnitCost = actualUnitCostOf(purchase);
 
   const batchSales = sales.filter(v => v.batchId === purchase.id && v.status === 'Concluída');
   const quantitySold = batchSales.reduce((s, v) => s + v.quantitySold, 0);
@@ -27,7 +44,9 @@ export function calculatePurchase(
   const startDate = purchase.receiptDate
     ? new Date(purchase.receiptDate)
     : new Date(purchase.purchaseDate);
-  const endRef = (currentStock <= 0 && lastSale) ? new Date(lastSale) : new Date();
+  const now = new Date();
+  const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const endRef = (currentStock <= 0 && lastSale) ? new Date(lastSale) : todayUtc;
   const daysInStock = Math.floor((endRef.getTime() - startDate.getTime()) / MS_PER_DAY);
 
   let status: InventoryStatus;
@@ -38,11 +57,10 @@ export function calculatePurchase(
   else status = 'Em Estoque';
 
   const totalRevenue = batchSales.reduce((s, v) => s + v.quantitySold * v.unitPrice, 0);
-  const totalProfit = batchSales.reduce((s, v) => {
-    const grossRev = v.quantitySold * v.unitPrice;
-    const netRev = grossRev - grossRev * v.feePercentage - v.sellerShipping - v.discount - v.otherCosts;
-    return s + (netRev - v.quantitySold * actualUnitCost);
-  }, 0);
+  const totalProfit = batchSales.reduce(
+    (s, v) => s + (saleNetRevenue(v) - v.quantitySold * actualUnitCost),
+    0,
+  );
   const averageMargin = totalRevenue > 0 ? totalProfit / totalRevenue : undefined;
 
   return {
@@ -64,17 +82,11 @@ export function calculatePurchase(
 /** Calculates derived fields for a sale. */
 export function calculateSale(sale: Sale, purchases: Purchase[]): ComputedSale {
   const batch = purchases.find(c => c.id === sale.batchId);
-  const actualUnitCost = batch
-    ? (batch.quantityPurchased * batch.unitCost + batch.purchaseShipping + batch.otherCosts)
-        / Math.max(batch.quantityPurchased, 1)
-    : 0;
+  const actualUnitCost = batch ? actualUnitCostOf(batch) : 0;
 
   const grossRevenue = sale.quantitySold * sale.unitPrice;
   const feeAmount = grossRevenue * sale.feePercentage;
-  const shippingImpact = sale.shippingType === 'flex'
-    ? (sale.flexRefund ?? 0)
-    : -sale.sellerShipping;
-  const netRevenue = grossRevenue - feeAmount + shippingImpact - sale.discount - sale.otherCosts;
+  const netRevenue = saleNetRevenue(sale);
   const proportionalCost = sale.quantitySold * actualUnitCost;
   const grossProfit = grossRevenue - proportionalCost;
   const netProfit = netRevenue - proportionalCost;
@@ -104,8 +116,10 @@ export function calculateKpis(
   const idleCapital = computedPurchases.reduce((s, c) => s + c.idleValue, 0);
   const grossRevenue = completed.reduce((s, v) => s + v.grossRevenue, 0);
   const totalFees = completed.reduce((s, v) => s + v.feeAmount, 0);
-  const totalShipping = completed.reduce((s, v) => s + v.sellerShipping, 0);
+  const totalShipping = completed.reduce((s, v) => s + (v.shippingType === 'flex' ? 0 : v.sellerShipping), 0);
+  const totalFlexRefund = completed.reduce((s, v) => s + (v.shippingType === 'flex' ? (v.flexRefund ?? 0) : 0), 0);
   const totalDiscounts = completed.reduce((s, v) => s + v.discount, 0);
+  const totalOtherCosts = completed.reduce((s, v) => s + v.otherCosts, 0);
   const netRevenue = completed.reduce((s, v) => s + v.netRevenue, 0);
   const grossProfit = completed.reduce((s, v) => s + v.grossProfit, 0);
   const netProfit = completed.reduce((s, v) => s + v.netProfit, 0);
@@ -118,7 +132,9 @@ export function calculateKpis(
     netRevenue,
     totalFees,
     totalShipping,
+    totalFlexRefund,
     totalDiscounts,
+    totalOtherCosts,
     grossProfit,
     netProfit,
     netMargin,

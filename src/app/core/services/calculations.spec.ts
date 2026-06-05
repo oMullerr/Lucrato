@@ -235,6 +235,37 @@ describe('calculatePurchase', () => {
     // actualUnitCost = 100, currentStock = 6 → idleValue = 600
     expect(result.idleValue).toBe(600);
   });
+
+  it('averageMargin do lote bate com a soma dos netProfit das vendas (Flex + Outros custos)', () => {
+    const purchase = makePurchase({
+      quantityPurchased: 10,
+      unitCost: 100,
+      purchaseShipping: 50, // actualUnitCost = (1000 + 50) / 10 = 105
+      otherCosts: 0,
+    });
+    const sales: Sale[] = [
+      makeSale({
+        id: 'V001', shippingType: 'correios', quantitySold: 2, unitPrice: 200,
+        feePercentage: 0.1, sellerShipping: 20, discount: 0, otherCosts: 25, status: 'Concluída',
+      }),
+      makeSale({
+        id: 'V002', shippingType: 'flex', quantitySold: 1, unitPrice: 300,
+        feePercentage: 0.1, flexRefund: 30, sellerShipping: 99 /* obsoleto, deve ser ignorado */,
+        discount: 10, otherCosts: 0, status: 'Concluída',
+      }),
+    ];
+
+    const computed = calculatePurchase(purchase, sales, makeSettings());
+
+    // Invariante: a margem média do lote == (Σ netProfit) / (Σ grossRevenue) das vendas.
+    const computedSales = sales.map(s => calculateSale(s, [purchase]));
+    const sumProfit = computedSales.reduce((a, s) => a + s.netProfit, 0);
+    const sumGross = computedSales.reduce((a, s) => a + s.grossRevenue, 0);
+
+    expect(computed.averageMargin).toBeCloseTo(sumProfit / sumGross, 10);
+    // Sanidade: 290 / 700 ≈ 0.4143 — não o valor antigo (Flex ignorado) ≈ 0.16.
+    expect(computed.averageMargin).toBeCloseTo(290 / 700, 10);
+  });
 });
 
 describe('calculateSale', () => {
@@ -440,6 +471,24 @@ describe('calculateKpis', () => {
     expect(result.totalInvested).toBe(300);
     expect(result.idleCapital).toBe(150);
     expect(result.averageTicket).toBe(200);
+  });
+
+  it('totalShipping ignora frete de Flex; agrega totalFlexRefund e totalOtherCosts', () => {
+    const sales: ComputedSale[] = [
+      makeComputedSale({
+        id: 'V001', status: 'Concluída',
+        shippingType: 'correios', sellerShipping: 20, otherCosts: 5,
+      }),
+      makeComputedSale({
+        id: 'V002', status: 'Concluída',
+        shippingType: 'flex', sellerShipping: 99, flexRefund: 15, otherCosts: 0,
+      }),
+    ];
+    const result = calculateKpis([], sales);
+
+    expect(result.totalShipping).toBe(20);    // só Correios; o 99 da venda Flex é ignorado
+    expect(result.totalFlexRefund).toBe(15);
+    expect(result.totalOtherCosts).toBe(5);
   });
 });
 
