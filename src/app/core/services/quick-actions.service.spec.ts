@@ -1,10 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
+import { TranslateService } from '@ngx-translate/core';
 import { QuickActionsService } from './quick-actions.service';
 import { DataService } from './data.service';
 import { NotifyService } from './notify.service';
 import { Purchase } from '../models/models';
+
+/** Minimal TranslateService stub: returns the key so assertions stay text-agnostic. */
+const fakeTranslate = { instant: (key: string) => key } as unknown as TranslateService;
 
 function makePurchase(overrides: Partial<Purchase> = {}): Purchase {
   return {
@@ -39,6 +43,7 @@ describe('QuickActionsService.markReceivedToday', () => {
         { provide: MatDialog, useValue: { open: dialogOpen } },
         { provide: DataService, useValue: { updatePurchase } },
         { provide: NotifyService, useValue: { success: notifySuccess } },
+        { provide: TranslateService, useValue: fakeTranslate },
       ],
     });
     service = TestBed.inject(QuickActionsService);

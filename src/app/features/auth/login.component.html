@@ -9,21 +9,21 @@
         </svg>
       </a>
 
-      <h2 class="tagline">O painel financeiro do vendedor de Mercado Livre.</h2>
-      <p class="hero-sub">Sério como um extrato bancário. Vivo como um app de investimento. Honesto como uma planilha bem feita.</p>
+      <h2 class="tagline">{{ 'auth.heroTagline' | translate }}</h2>
+      <p class="hero-sub">{{ 'auth.heroSub' | translate }}</p>
 
       <ul class="bullets">
         <li>
           <span class="bullet-dot" aria-hidden="true"></span>
-          <span>Lucro líquido, capital parado e margens em tempo real</span>
+          <span>{{ 'auth.heroBullet1' | translate }}</span>
         </li>
         <li>
           <span class="bullet-dot" aria-hidden="true"></span>
-          <span>Alertas de estoque parado antes que vire prejuízo</span>
+          <span>{{ 'auth.heroBullet2' | translate }}</span>
         </li>
         <li>
           <span class="bullet-dot" aria-hidden="true"></span>
-          <span>Importação Excel e exportação CSV para o contador</span>
+          <span>{{ 'auth.heroBullet3' | translate }}</span>
         </li>
       </ul>
     </div>
@@ -46,7 +46,7 @@
           (click)="setMode('login')"
           role="tab"
           [attr.aria-selected]="mode() === 'login'"
-        >Entrar</button>
+        >{{ 'auth.tabLogin' | translate }}</button>
         <button
           type="button"
           class="seg"
@@ -54,19 +54,19 @@
           (click)="setMode('register')"
           role="tab"
           [attr.aria-selected]="mode() === 'register'"
-        >Criar conta</button>
+        >{{ 'auth.tabRegister' | translate }}</button>
       </div>
 
       @if (mode() === 'login') {
         <form class="form" (ngSubmit)="login()" #loginForm="ngForm">
           <mat-form-field>
-            <mat-label>E-mail</mat-label>
+            <mat-label>{{ 'auth.email' | translate }}</mat-label>
             <input matInput type="email" name="email" [(ngModel)]="loginEmail" required autocomplete="email" />
             <mat-icon matSuffix>email</mat-icon>
           </mat-form-field>
 
           <mat-form-field>
-            <mat-label>Senha</mat-label>
+            <mat-label>{{ 'auth.password' | translate }}</mat-label>
             <input matInput [type]="showLoginPwd() ? 'text' : 'password'" name="password"
               [(ngModel)]="loginPassword" required autocomplete="current-password" minlength="6" />
             <button type="button" mat-icon-button matSuffix (click)="showLoginPwd.set(!showLoginPwd())">
@@ -85,36 +85,36 @@
             @if (loginLoading()) {
               <mat-spinner diameter="20" />
             } @else {
-              Entrar
+              {{ 'auth.tabLogin' | translate }}
             }
           </button>
 
           <button type="button" mat-button class="forgot-link" (click)="openForgotPassword()">
-            Esqueci minha senha
+            {{ 'auth.forgotLink' | translate }}
           </button>
         </form>
       } @else {
         <form class="form" (ngSubmit)="register()" #regForm="ngForm">
           <mat-form-field>
-            <mat-label>Nome da loja</mat-label>
+            <mat-label>{{ 'auth.storeName' | translate }}</mat-label>
             <input matInput type="text" name="storeName" [(ngModel)]="regStoreName" required />
             <mat-icon matSuffix>store</mat-icon>
           </mat-form-field>
 
           <mat-form-field>
-            <mat-label>E-mail</mat-label>
+            <mat-label>{{ 'auth.email' | translate }}</mat-label>
             <input matInput type="email" name="email" [(ngModel)]="regEmail" required autocomplete="email" />
             <mat-icon matSuffix>email</mat-icon>
           </mat-form-field>
 
           <mat-form-field>
-            <mat-label>Senha</mat-label>
+            <mat-label>{{ 'auth.password' | translate }}</mat-label>
             <input matInput [type]="showRegPwd() ? 'text' : 'password'" name="password"
               [(ngModel)]="regPassword" required autocomplete="new-password" minlength="8" />
             <button type="button" mat-icon-button matSuffix (click)="showRegPwd.set(!showRegPwd())">
               <mat-icon>{{ showRegPwd() ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
-            <mat-hint>Mínimo 8 caracteres, com letra e número</mat-hint>
+            <mat-hint>{{ 'auth.pwdHint' | translate }}</mat-hint>
           </mat-form-field>
 
           @if (regError()) {
@@ -128,7 +128,7 @@
             @if (regLoading()) {
               <mat-spinner diameter="20" />
             } @else {
-              Criar conta
+              {{ 'auth.tabRegister' | translate }}
             }
           </button>
         </form>

@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDialog } from '@angular/material/dialog';
 import { Firestore, doc, onSnapshot, setDoc, Unsubscribe } from '@angular/fire/firestore';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Settings } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -47,6 +48,7 @@ const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
     MatCardModule, MatIconModule, MatButtonModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatTabsModule,
     PageHeaderComponent, EditableListComponent,
+    TranslateModule,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
@@ -58,6 +60,7 @@ export class SettingsComponent implements OnDestroy {
   private readonly importService = inject(ImportService);
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(MatDialog);
+  private readonly t = inject(TranslateService);
 
   private readonly fileInputEl = viewChild<ElementRef<HTMLInputElement>>('fileInputRef');
 
@@ -178,13 +181,13 @@ export class SettingsComponent implements OnDestroy {
 
     const diff = this.buildDiff(this.serverSettings(), next);
     if (Object.keys(diff).length === 0) {
-      this.notify.info('Nada para salvar.');
+      this.notify.info(this.t.instant('settings.nothingToSave'));
       return;
     }
 
     const ref = this.settingsDocRef();
     if (!ref) {
-      this.notify.error('Sessão expirada. Faça login novamente.');
+      this.notify.error(this.t.instant('profile.sessionExpired'));
       return;
     }
 
@@ -197,10 +200,10 @@ export class SettingsComponent implements OnDestroy {
     this.saving.set(true);
     try {
       await setDoc(ref, payload, { merge: true });
-      this.notify.success('Configurações salvas.');
+      this.notify.success(this.t.instant('settings.saved'));
     } catch (err) {
       logError('[Settings] setDoc falhou:', err);
-      this.notify.error('Erro ao salvar configurações. Verifique sua conexão.');
+      this.notify.error(this.t.instant('settings.saveError'));
     } finally {
       this.saving.set(false);
     }
@@ -210,7 +213,7 @@ export class SettingsComponent implements OnDestroy {
     const b = this.serverSettings() ?? DEFAULT_SETTINGS;
     this.form.set(clone(b));
     this.appliedBaseline.set(clone(b));
-    this.notify.info('Alterações descartadas.');
+    this.notify.info(this.t.instant('settings.discarded'));
   }
 
   protected downloadTemplate(): void {
@@ -232,12 +235,12 @@ export class SettingsComponent implements OnDestroy {
     const ext = fileName.slice(fileName.lastIndexOf('.'));
 
     if (!ALLOWED_EXT.includes(ext)) {
-      this.notify.error('Apenas arquivos Excel (.xlsx, .xls) são aceitos.');
+      this.notify.error(this.t.instant('settings.onlyExcel'));
       input.value = '';
       return;
     }
     if (file.size > MAX_BYTES) {
-      this.notify.error('Arquivo muito grande. Máximo 5 MB.');
+      this.notify.error(this.t.instant('settings.fileTooLarge'));
       input.value = '';
       return;
     }
@@ -258,7 +261,7 @@ export class SettingsComponent implements OnDestroy {
       (event.target as HTMLInputElement).value = '';
 
       if (result.errors.length === 0 && result.purchases.length === 0 && result.sales.length === 0) {
-        this.notify.warning('Nenhum dado encontrado na planilha.');
+        this.notify.warning(this.t.instant('settings.noDataInSheet'));
         return;
       }
 
@@ -272,7 +275,7 @@ export class SettingsComponent implements OnDestroy {
       });
     } catch (err) {
       logError('[Settings] Importação falhou:', err);
-      this.notify.error('Erro ao importar planilha. Verifique sua conexão.');
+      this.notify.error(this.t.instant('settings.importError'));
     } finally {
       this.importing.set(false);
     }
@@ -283,12 +286,12 @@ export class SettingsComponent implements OnDestroy {
     this.dialog
       .open(ConfirmDialogComponent, {
         data: {
-          title: 'Resetar dados',
-          message: 'Isso vai apagar PERMANENTEMENTE todos os dados (compras, vendas, configurações). Os parâmetros do sistema voltarão a zero e as listas ficarão vazias. Não há como desfazer.',
+          title: this.t.instant('settings.resetTitle'),
+          message: this.t.instant('settings.resetMessage'),
           danger: true,
-          confirmText: 'Sim, resetar tudo',
+          confirmText: this.t.instant('settings.resetConfirm'),
           requireTextMatch: storeName,
-          requireTextLabel: 'Digite o nome da loja para confirmar',
+          requireTextLabel: this.t.instant('profile.deleteTypeStore'),
         },
         width: '460px',
         maxWidth: '95vw',
@@ -297,7 +300,7 @@ export class SettingsComponent implements OnDestroy {
       .subscribe(async confirmed => {
         if (confirmed) {
           await this.dataService.reset();
-          this.notify.success('Sistema resetado para o estado inicial.');
+          this.notify.success(this.t.instant('settings.resetDone'));
         }
       });
   }
@@ -320,19 +323,19 @@ export class SettingsComponent implements OnDestroy {
 
   private validate(s: Settings): string | null {
     if (!Number.isFinite(s.defaultMlFee) || s.defaultMlFee < 0 || s.defaultMlFee > 1)
-      return 'Taxa do Mercado Livre deve estar entre 0% e 100%.';
+      return this.t.instant('settings.valFee');
     if (!Number.isFinite(s.minimumMargin) || s.minimumMargin < 0 || s.minimumMargin > 1)
-      return 'Margem mínima deve estar entre 0% e 100%.';
+      return this.t.instant('settings.valMargin');
     if (!Number.isInteger(s.yellowAlertDays) || s.yellowAlertDays <= 0)
-      return 'Dias para alerta amarelo deve ser inteiro maior que zero.';
+      return this.t.instant('settings.valYellow');
     if (!Number.isInteger(s.redAlertDays) || s.redAlertDays <= 0)
-      return 'Dias para alerta vermelho deve ser inteiro maior que zero.';
+      return this.t.instant('settings.valRed');
     if (s.redAlertDays < s.yellowAlertDays)
-      return 'Dias para alerta vermelho deve ser maior ou igual ao amarelo.';
+      return this.t.instant('settings.valRedGteYellow');
     if (!Number.isInteger(s.lowStockAlert) || s.lowStockAlert < 0)
-      return 'Alerta de estoque baixo deve ser inteiro não-negativo.';
+      return this.t.instant('settings.valLowStock');
     if (!Number.isFinite(s.defaultShipping) || s.defaultShipping < 0)
-      return 'Frete padrão não pode ser negativo.';
+      return this.t.instant('settings.valShipping');
     return null;
   }
 }

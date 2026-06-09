@@ -1,16 +1,16 @@
 <app-page-header
-  title="Análises detalhadas"
-  eyebrow="RELATÓRIOS"
-  subtitle="Rankings por produto, categoria, evolução mensal e estoque parado. Ordenação e exportação por tabela."
+  [title]="'analytics.title' | translate"
+  [eyebrow]="'analytics.eyebrow' | translate"
+  [subtitle]="'analytics.subtitle' | translate"
 />
 
 <div class="page-content analytics-body">
 
   @if (data.loaded() && hasData()) {
     <div class="export-all-bar">
-      <button mat-flat-button class="primary-cta" (click)="exportAll()" matTooltip="Gera um único arquivo Excel com Resumo + todas as tabelas">
+      <button mat-flat-button class="primary-cta" (click)="exportAll()" [matTooltip]="'analytics.exportAllTooltip' | translate">
         <mat-icon>download_for_offline</mat-icon>
-        Exportar tudo (Excel)
+        {{ 'analytics.exportAll' | translate }}
       </button>
     </div>
   }
@@ -26,19 +26,19 @@
   } @else if (!hasData()) {
     <app-empty-state
       icon="insights"
-      title="Análises ganham vida com vendas"
-      description="Registre algumas vendas para visualizar rankings, comparativo por categoria, evolução mensal e capital travado."
+      [title]="'analytics.emptyTitle' | translate"
+      [description]="'analytics.emptyDesc' | translate"
     >
       <a mat-flat-button class="primary-cta" routerLink="/sales">
         <mat-icon>sell</mat-icon>
-        Registrar venda
+        {{ 'sales.registerSale' | translate }}
       </a>
     </app-empty-state>
 
   } @else {
 
     <!-- Resume — 3 cards (Investimento / Resultado / Eficiência) -->
-    <section class="resume-grid" aria-label="Resumo financeiro">
+    <section class="resume-grid" [attr.aria-label]="'inventory.financialSummary' | translate">
       @for (block of resumeBlocks(); track block.title) {
         <article class="resume-card">
           <header class="rc-head">
@@ -73,21 +73,21 @@
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon>emoji_events</mat-icon>
-            Produto
+            {{ 'analytics.tabProduct' | translate }}
           </ng-template>
           <div class="tab-body">
             <div class="tab-head">
-              <span class="t-caption">{{ productRanking().length }} produtos</span>
+              <span class="t-caption">{{ 'analytics.countProducts' | translate:{ count: productRanking().length } }}</span>
               <button mat-stroked-button class="export-btn" (click)="exportProducts()" [disabled]="productRanking().length === 0">
                 <mat-icon>file_download</mat-icon>
-                Exportar Excel
+                {{ 'analytics.exportExcel' | translate }}
               </button>
             </div>
             @if (productRanking().length === 0) {
               <app-empty-state
                 icon="sell"
-                title="Sem vendas registradas ainda"
-                description="O ranking aparece automaticamente assim que você registrar a primeira venda concluída."
+                [title]="'analytics.noSalesTitle' | translate"
+                [description]="'analytics.noSalesDesc' | translate"
               />
             } @else {
               <div class="table-wrapper">
@@ -95,13 +95,13 @@
                   <thead>
                     <tr>
                       <th class="text-center">#</th>
-                      <th><button class="sort-btn" (click)="sortProduct('product')">Produto <mat-icon>{{ sortIcon(productSort(), 'product') }}</mat-icon></button></th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortProduct('qty')">Qtd <mat-icon>{{ sortIcon(productSort(), 'qty') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('revenue')">Receita bruta <mat-icon>{{ sortIcon(productSort(), 'revenue') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('netRevenue')">Receita líq. <mat-icon>{{ sortIcon(productSort(), 'netRevenue') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('cost')">Custo <mat-icon>{{ sortIcon(productSort(), 'cost') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('netProfit')">Lucro líq. <mat-icon>{{ sortIcon(productSort(), 'netProfit') }}</mat-icon></button></th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortProduct('margin')">Margem <mat-icon>{{ sortIcon(productSort(), 'margin') }}</mat-icon></button></th>
+                      <th><button class="sort-btn" (click)="sortProduct('product')">{{ 'analytics.colProduct' | translate }} <mat-icon>{{ sortIcon(productSort(), 'product') }}</mat-icon></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortProduct('qty')">{{ 'purchases.colQty' | translate }} <mat-icon>{{ sortIcon(productSort(), 'qty') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('revenue')">{{ 'analytics.hGrossRevenue' | translate }} <mat-icon>{{ sortIcon(productSort(), 'revenue') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('netRevenue')">{{ 'analytics.hNetRevenue' | translate }} <mat-icon>{{ sortIcon(productSort(), 'netRevenue') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('cost')">{{ 'analytics.hCost' | translate }} <mat-icon>{{ sortIcon(productSort(), 'cost') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('netProfit')">{{ 'analytics.hNetProfit' | translate }} <mat-icon>{{ sortIcon(productSort(), 'netProfit') }}</mat-icon></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortProduct('margin')">{{ 'sales.colMargin' | translate }} <mat-icon>{{ sortIcon(productSort(), 'margin') }}</mat-icon></button></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -142,27 +142,27 @@
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon>category</mat-icon>
-            Categoria
+            {{ 'analytics.tabCategory' | translate }}
           </ng-template>
           <div class="tab-body">
             <div class="tab-head">
-              <span class="t-caption">{{ categoryStats().length }} categorias</span>
+              <span class="t-caption">{{ 'analytics.countCategories' | translate:{ count: categoryStats().length } }}</span>
               <button mat-stroked-button class="export-btn" (click)="exportCategories()" [disabled]="categoryStats().length === 0">
                 <mat-icon>file_download</mat-icon>
-                Exportar Excel
+                {{ 'analytics.exportExcel' | translate }}
               </button>
             </div>
             <div class="table-wrapper">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th><button class="sort-btn" (click)="sortCategory('category')">Categoria <mat-icon>{{ sortIcon(categorySort(), 'category') }}</mat-icon></button></th>
-                    <th class="text-center"><button class="sort-btn" (click)="sortCategory('batches')">Lotes <mat-icon>{{ sortIcon(categorySort(), 'batches') }}</mat-icon></button></th>
-                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('invested')">Investido <mat-icon>{{ sortIcon(categorySort(), 'invested') }}</mat-icon></button></th>
-                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('idleCapital')">Cap. parado <mat-icon>{{ sortIcon(categorySort(), 'idleCapital') }}</mat-icon></button></th>
-                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('revenue')">Receita <mat-icon>{{ sortIcon(categorySort(), 'revenue') }}</mat-icon></button></th>
-                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('profit')">Lucro líq. <mat-icon>{{ sortIcon(categorySort(), 'profit') }}</mat-icon></button></th>
-                    <th class="text-center"><button class="sort-btn" (click)="sortCategory('margin')">Margem <mat-icon>{{ sortIcon(categorySort(), 'margin') }}</mat-icon></button></th>
+                    <th><button class="sort-btn" (click)="sortCategory('category')">{{ 'analytics.colCategory' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'category') }}</mat-icon></button></th>
+                    <th class="text-center"><button class="sort-btn" (click)="sortCategory('batches')">{{ 'analytics.hBatches' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'batches') }}</mat-icon></button></th>
+                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('invested')">{{ 'analytics.hInvested' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'invested') }}</mat-icon></button></th>
+                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('idleCapital')">{{ 'analytics.hIdleShort' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'idleCapital') }}</mat-icon></button></th>
+                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('revenue')">{{ 'analytics.hRevenue' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'revenue') }}</mat-icon></button></th>
+                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('profit')">{{ 'analytics.hNetProfit' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'profit') }}</mat-icon></button></th>
+                    <th class="text-center"><button class="sort-btn" (click)="sortCategory('margin')">{{ 'sales.colMargin' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'margin') }}</mat-icon></button></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -201,35 +201,35 @@
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon>calendar_month</mat-icon>
-            Mensal
+            {{ 'analytics.tabMonthly' | translate }}
           </ng-template>
           <div class="tab-body">
             <div class="tab-head">
-              <span class="t-caption">{{ monthlyStats().length }} meses</span>
+              <span class="t-caption">{{ 'analytics.countMonths' | translate:{ count: monthlyStats().length } }}</span>
               <button mat-stroked-button class="export-btn" (click)="exportMonthly()" [disabled]="monthlyStats().length === 0">
                 <mat-icon>file_download</mat-icon>
-                Exportar Excel
+                {{ 'analytics.exportExcel' | translate }}
               </button>
             </div>
             @if (monthlyStats().length === 0) {
               <app-empty-state
                 icon="calendar_month"
-                title="Sem dados mensais ainda"
-                description="A evolução mensal aparece conforme as vendas são registradas em meses diferentes."
+                [title]="'analytics.noMonthlyTitle' | translate"
+                [description]="'analytics.noMonthlyDesc' | translate"
               />
             } @else {
               <div class="table-wrapper">
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th><button class="sort-btn" (click)="sortMonth('sortKey')">Mês <mat-icon>{{ sortIcon(monthSort(), 'sortKey') }}</mat-icon></button></th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortMonth('qty')">Vendas <mat-icon>{{ sortIcon(monthSort(), 'qty') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('revenue')">Receita <mat-icon>{{ sortIcon(monthSort(), 'revenue') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('fees')">Taxas <mat-icon>{{ sortIcon(monthSort(), 'fees') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('netRevenue')">Receita líq. <mat-icon>{{ sortIcon(monthSort(), 'netRevenue') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('cost')">Custo <mat-icon>{{ sortIcon(monthSort(), 'cost') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('profit')">Lucro <mat-icon>{{ sortIcon(monthSort(), 'profit') }}</mat-icon></button></th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortMonth('margin')">Margem <mat-icon>{{ sortIcon(monthSort(), 'margin') }}</mat-icon></button></th>
+                      <th><button class="sort-btn" (click)="sortMonth('sortKey')">{{ 'analytics.hMonth' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'sortKey') }}</mat-icon></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortMonth('qty')">{{ 'analytics.hSales' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'qty') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('revenue')">{{ 'analytics.hRevenue' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'revenue') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('fees')">{{ 'analytics.hFees' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'fees') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('netRevenue')">{{ 'analytics.hNetRevenue' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'netRevenue') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('cost')">{{ 'analytics.hCost' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'cost') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('profit')">{{ 'analytics.hProfit' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'profit') }}</mat-icon></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortMonth('margin')">{{ 'sales.colMargin' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'margin') }}</mat-icon></button></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -270,34 +270,34 @@
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon>warning</mat-icon>
-            Estoque parado
+            {{ 'analytics.tabIdle' | translate }}
           </ng-template>
           <div class="tab-body">
             <div class="tab-head">
-              <span class="t-caption">{{ idleInventory().length }} lotes com estoque</span>
+              <span class="t-caption">{{ 'analytics.countBatchesWithStock' | translate:{ count: idleInventory().length } }}</span>
               <button mat-stroked-button class="export-btn" (click)="exportIdle()" [disabled]="idleInventory().length === 0">
                 <mat-icon>file_download</mat-icon>
-                Exportar Excel
+                {{ 'analytics.exportExcel' | translate }}
               </button>
             </div>
             @if (idleInventory().length === 0) {
               <app-empty-state
                 icon="celebration"
-                title="Nenhum lote com estoque!"
-                description="Todos os lotes foram totalmente vendidos. Excelente giro."
+                [title]="'analytics.noIdleTitle' | translate"
+                [description]="'analytics.noIdleDesc' | translate"
               />
             } @else {
               <div class="table-wrapper">
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>ID</th>
-                      <th>Produto</th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortIdle('currentStock')">Estoque <mat-icon>{{ sortIcon(idleSort(), 'currentStock') }}</mat-icon></button></th>
-                      <th class="text-right">Custo unit.</th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortIdle('idleValue')">Cap. parado <mat-icon>{{ sortIcon(idleSort(), 'idleValue') }}</mat-icon></button></th>
-                      <th class="text-left col-days"><button class="sort-btn" (click)="sortIdle('daysInStock')">Dias parado <mat-icon>{{ sortIcon(idleSort(), 'daysInStock') }}</mat-icon></button></th>
-                      <th>Status</th>
+                      <th>{{ 'analytics.colId' | translate }}</th>
+                      <th>{{ 'analytics.colProduct' | translate }}</th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortIdle('currentStock')">{{ 'inventory.colStock' | translate }} <mat-icon>{{ sortIcon(idleSort(), 'currentStock') }}</mat-icon></button></th>
+                      <th class="text-right">{{ 'analytics.hUnitCost' | translate }}</th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortIdle('idleValue')">{{ 'analytics.hIdleShort' | translate }} <mat-icon>{{ sortIcon(idleSort(), 'idleValue') }}</mat-icon></button></th>
+                      <th class="text-left col-days"><button class="sort-btn" (click)="sortIdle('daysInStock')">{{ 'analytics.hDaysIdle' | translate }} <mat-icon>{{ sortIcon(idleSort(), 'daysInStock') }}</mat-icon></button></th>
+                      <th>{{ 'purchases.colStatus' | translate }}</th>
                     </tr>
                   </thead>
                   <tbody>

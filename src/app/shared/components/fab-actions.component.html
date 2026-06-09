@@ -2,17 +2,17 @@
   mat-fab
   class="fab"
   [matMenuTriggerFor]="quickMenu"
-  aria-label="Ações rápidas"
+  [attr.aria-label]="'quick.quickActions' | translate"
 >
   <mat-icon>add</mat-icon>
 </button>
 <mat-menu #quickMenu="matMenu" xPosition="before" yPosition="above" class="fab-menu">
   <button mat-menu-item (click)="quick.openNewSale()">
     <mat-icon class="menu-icon success">sell</mat-icon>
-    <span>Nova venda</span>
+    <span>{{ 'quick.newSale' | translate }}</span>
   </button>
   <button mat-menu-item (click)="quick.openNewPurchase()">
     <mat-icon class="menu-icon brand">shopping_cart</mat-icon>
-    <span>Nova compra</span>
+    <span>{{ 'quick.newPurchase' | translate }}</span>
   </button>
 </mat-menu>

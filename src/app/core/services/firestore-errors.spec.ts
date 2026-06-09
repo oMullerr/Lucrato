@@ -2,39 +2,35 @@ import { firestoreErrorMessage, isChunkLoadError } from './firestore-errors';
 
 describe('firestoreErrorMessage', () => {
   it.each([
-    ['permission-denied', 'Você não tem permissão para acessar estes dados. Faça login novamente.'],
-    ['unauthenticated', 'Sua sessão expirou. Faça login novamente.'],
-    ['unavailable', 'Servidor temporariamente indisponível. Tentando reconectar…'],
-    ['resource-exhausted', 'Limite de uso atingido. Aguarde alguns instantes e tente novamente.'],
-    ['failed-precondition', 'Cache local indisponível. Recarregue a página.'],
-    ['deadline-exceeded', 'A conexão está lenta. Tentando novamente…'],
-    ['cancelled', 'Operação cancelada.'],
-    ['not-found', 'Registro não encontrado no servidor.'],
-    ['aborted', 'Erro interno do servidor. Tente novamente em instantes.'],
-    ['internal', 'Erro interno do servidor. Tente novamente em instantes.'],
-    ['data-loss', 'Erro interno do servidor. Tente novamente em instantes.'],
-  ])('mapeia code "%s" para a mensagem correta', (code, expected) => {
+    ['permission-denied', 'errors.permissionDenied'],
+    ['unauthenticated', 'errors.unauthenticated'],
+    ['unavailable', 'errors.unavailable'],
+    ['resource-exhausted', 'errors.resourceExhausted'],
+    ['failed-precondition', 'errors.failedPrecondition'],
+    ['deadline-exceeded', 'errors.deadlineExceeded'],
+    ['cancelled', 'errors.cancelled'],
+    ['not-found', 'errors.notFound'],
+    ['aborted', 'errors.internal'],
+    ['internal', 'errors.internal'],
+    ['data-loss', 'errors.internal'],
+  ])('mapeia code "%s" para a chave i18n correta', (code, expected) => {
     expect(firestoreErrorMessage({ code })).toBe(expected);
   });
 
-  it('retorna mensagem padrão para code desconhecido', () => {
-    expect(firestoreErrorMessage({ code: 'algum-codigo-novo' }))
-      .toBe('Erro ao sincronizar dados. Verifique sua conexão.');
+  it('retorna chave padrão para code desconhecido', () => {
+    expect(firestoreErrorMessage({ code: 'algum-codigo-novo' })).toBe('errors.sync');
   });
 
-  it('retorna mensagem padrão para undefined', () => {
-    expect(firestoreErrorMessage(undefined))
-      .toBe('Erro ao sincronizar dados. Verifique sua conexão.');
+  it('retorna chave padrão para undefined', () => {
+    expect(firestoreErrorMessage(undefined)).toBe('errors.sync');
   });
 
-  it('retorna mensagem padrão para null', () => {
-    expect(firestoreErrorMessage(null))
-      .toBe('Erro ao sincronizar dados. Verifique sua conexão.');
+  it('retorna chave padrão para null', () => {
+    expect(firestoreErrorMessage(null)).toBe('errors.sync');
   });
 
-  it('retorna mensagem padrão para objeto sem .code', () => {
-    expect(firestoreErrorMessage({ message: 'algo deu errado' }))
-      .toBe('Erro ao sincronizar dados. Verifique sua conexão.');
+  it('retorna chave padrão para objeto sem .code', () => {
+    expect(firestoreErrorMessage({ message: 'algo deu errado' })).toBe('errors.sync');
   });
 });
 

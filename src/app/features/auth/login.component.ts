@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 import { validatePasswordStrength } from '../../core/services/password-validator';
 import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
@@ -18,6 +19,7 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
     FormsModule,
     MatFormFieldModule, MatInputModule, MatButtonModule,
     MatIconModule, MatProgressSpinnerModule,
+    TranslateModule,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
@@ -25,6 +27,7 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
 export class LoginComponent {
   private readonly authService = inject(AuthService);
   private readonly dialog = inject(MatDialog);
+  private readonly t = inject(TranslateService);
 
   protected readonly mode = signal<'login' | 'register'>('login');
 
@@ -64,13 +67,13 @@ export class LoginComponent {
 
     const pwdError = validatePasswordStrength(this.regPassword);
     if (pwdError) {
-      this.regError.set(pwdError);
+      this.regError.set(this.t.instant(pwdError));
       return;
     }
 
     const storeName = this.regStoreName.trim();
     if (!storeName) {
-      this.regError.set('Informe o nome da loja.');
+      this.regError.set(this.t.instant('validation.storeNameRequired'));
       return;
     }
 
@@ -102,17 +105,17 @@ export class LoginComponent {
       case 'auth/invalid-credential':
       case 'auth/wrong-password':
       case 'auth/user-not-found':
-        return 'E-mail ou senha incorretos.';
+        return this.t.instant('auth.errInvalidCredentials');
       case 'auth/email-already-in-use':
-        return 'Este e-mail já está cadastrado.';
+        return this.t.instant('auth.errEmailInUse');
       case 'auth/weak-password':
-        return 'A senha deve ter pelo menos 8 caracteres, com letra e número.';
+        return this.t.instant('auth.errWeakPassword');
       case 'auth/invalid-email':
-        return 'Endereço de e-mail inválido.';
+        return this.t.instant('auth.errInvalidEmail');
       case 'auth/too-many-requests':
-        return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+        return this.t.instant('auth.errTooManyRequests');
       default:
-        return 'Ocorreu um erro. Tente novamente.';
+        return this.t.instant('auth.errGeneric');
     }
   }
 }

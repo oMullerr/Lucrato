@@ -19,6 +19,7 @@ import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/p
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { QuickActionsService } from '../../core/services/quick-actions.service';
@@ -47,6 +48,7 @@ type FilterKey = 'all' | InventoryStatus;
     PageHeaderComponent, KpiCardComponent, StatusBadgeComponent,
     EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent,
     BrlPipe, BrDatePipe, DatePipe,
+    TranslateModule,
   ],
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss',
@@ -57,6 +59,7 @@ export class InventoryComponent {
   private readonly notify = inject(NotifyService);
   private readonly quick = inject(QuickActionsService);
   private readonly bp = inject(BreakpointObserver);
+  private readonly t = inject(TranslateService);
 
   protected readonly kpis = this.data.kpis;
 
@@ -352,23 +355,23 @@ export class InventoryComponent {
       .subscribe(result => {
         if (!result) return;
         this.data.updatePurchase(result.id, result);
-        this.notify.success(`Lote ${result.id} atualizado.`);
+        this.notify.success(this.t.instant('purchases.updated', { id: result.id }));
       });
   }
 
   protected confirmDelete(batch: ComputedPurchase, event: Event): void {
     event.stopPropagation();
     if (batch.quantitySold > 0) {
-      this.notify.warning('Lote possui vendas vinculadas. Remova as vendas antes de excluir.');
+      this.notify.warning(this.t.instant('inventory.hasLinkedSales'));
       return;
     }
     this.dialog
       .open<ConfirmDialogComponent, unknown, ConfirmDialogResult>(ConfirmDialogComponent, {
         width: '420px',
         data: {
-          title: 'Excluir este lote?',
-          message: `O lote ${batch.id} (${batch.product}) será removido permanentemente.`,
-          confirmText: 'Excluir',
+          title: this.t.instant('inventory.deleteTitle'),
+          message: this.t.instant('inventory.deleteMsg', { id: batch.id, product: batch.product }),
+          confirmText: this.t.instant('common.delete'),
           danger: true,
         },
       })
@@ -376,7 +379,7 @@ export class InventoryComponent {
       .subscribe(result => {
         if (!result || !result.confirmed) return;
         this.data.removePurchase(batch.id);
-        this.notify.success(`Lote ${batch.id} excluído.`);
+        this.notify.success(this.t.instant('inventory.deleted', { id: batch.id }));
       });
   }
 }

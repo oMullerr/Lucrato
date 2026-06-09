@@ -6,7 +6,9 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { CommonModule } from '@angular/common';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
+import { LanguageService } from '../../core/services/language.service';
 import { XlsxExportService, SheetSpec, ResumoSpec, Tone } from '../../core/services/xlsx-export.service';
 import { ComputedPurchase, InventoryStatus } from '../../core/models/models';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
@@ -51,8 +53,6 @@ interface MonthStat {
 
 type SortDir = 'asc' | 'desc';
 
-const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-
 @Component({
   selector: 'app-analytics',
   standalone: true,
@@ -61,6 +61,7 @@ const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', '
     RouterLink, CommonModule, MatIconModule, MatButtonModule, MatTabsModule, MatTooltipModule,
     MatPaginatorModule,
     PageHeaderComponent, StatusBadgeComponent, EmptyStateComponent, SkeletonComponent, ColorPillComponent, BrlPipe,
+    TranslateModule,
   ],
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.scss',
@@ -68,6 +69,8 @@ const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', '
 export class AnalyticsComponent {
   protected readonly data = inject(DataService);
   private readonly xlsx = inject(XlsxExportService);
+  private readonly t = inject(TranslateService);
+  private readonly lang = inject(LanguageService);
 
   protected readonly kpis = this.data.kpis;
   protected readonly hasData = computed(() =>
@@ -179,6 +182,7 @@ export class AnalyticsComponent {
   });
 
   private readonly monthlyStatsRaw = computed<MonthStat[]>(() => {
+    this.lang.lang(); // re-evaluate month labels when the language changes
     const completed = this.data.computedSales().filter(v => v.status === 'Concluída');
     const map = new Map<string, MonthStat>();
 
@@ -187,7 +191,8 @@ export class AnalyticsComponent {
       const year = d.getUTCFullYear();
       const month = d.getUTCMonth();
       const sortKey = `${year}${String(month).padStart(2, '0')}`;
-      const displayMonth = `${MONTHS[month]}/${year}`;
+      const months = this.t.instant('dashboard.months') as string[];
+      const displayMonth = `${months[month]}/${year}`;
       const e = map.get(sortKey) ?? {
         month: displayMonth, sortKey, qty: 0, revenue: 0, fees: 0,
         netRevenue: 0, cost: 0, profit: 0, margin: 0,
@@ -234,36 +239,38 @@ export class AnalyticsComponent {
 
   /** Resume cards (3 columns: Investment / Result / Efficiency). */
   protected readonly resumeBlocks = computed(() => {
+    this.lang.lang(); // re-evaluate labels when the language changes
     const k = this.kpis();
+    const tr = (key: string) => this.t.instant(key);
     return [
       {
-        title: 'Investimento',
+        title: tr('analytics.resInvestment'),
         icon: 'savings',
         rows: [
-          { label: 'Investido em compras', value: k.totalInvested, tone: 'neutral' as const, prefix: '' },
-          { label: 'Capital parado',       value: k.idleCapital,   tone: 'warning' as const, prefix: '' },
-          { label: 'Total de lotes',       value: k.totalBatches,  tone: 'neutral' as const, kind: 'count' as const },
-          { label: 'Lotes em estoque',     value: k.batchesInStock, tone: 'neutral' as const, kind: 'count' as const },
+          { label: tr('analytics.investedInPurchases'), value: k.totalInvested, tone: 'neutral' as const, prefix: '' },
+          { label: tr('analytics.idleCapital'),         value: k.idleCapital,   tone: 'warning' as const, prefix: '' },
+          { label: tr('analytics.totalBatches'),        value: k.totalBatches,  tone: 'neutral' as const, kind: 'count' as const },
+          { label: tr('analytics.batchesInStock'),      value: k.batchesInStock, tone: 'neutral' as const, kind: 'count' as const },
         ],
       },
       {
-        title: 'Resultado',
+        title: tr('analytics.resResult'),
         icon: 'trending_up',
         rows: [
-          { label: 'Receita bruta',  value: k.grossRevenue, tone: 'neutral' as const, prefix: '' },
-          { label: 'Receita líquida', value: k.netRevenue,   tone: 'neutral' as const, prefix: '' },
-          { label: 'Lucro bruto',     value: k.grossProfit,  tone: 'success' as const, prefix: '' },
-          { label: 'Lucro líquido',   value: k.netProfit,    tone: 'success' as const, prefix: '', emphasis: true },
+          { label: tr('analytics.grossRevenue'), value: k.grossRevenue, tone: 'neutral' as const, prefix: '' },
+          { label: tr('analytics.netRevenue'),   value: k.netRevenue,   tone: 'neutral' as const, prefix: '' },
+          { label: tr('analytics.grossProfit'),  value: k.grossProfit,  tone: 'success' as const, prefix: '' },
+          { label: tr('analytics.netProfit'),    value: k.netProfit,    tone: 'success' as const, prefix: '', emphasis: true },
         ],
       },
       {
-        title: 'Eficiência',
+        title: tr('analytics.resEfficiency'),
         icon: 'auto_graph',
         rows: [
-          { label: 'Taxas pagas',     value: k.totalFees,      tone: 'warning' as const, prefix: '' },
-          { label: 'Total descontos', value: k.totalDiscounts, tone: 'neutral' as const, prefix: '' },
-          { label: 'Ticket médio',    value: k.averageTicket,  tone: 'neutral' as const, prefix: '' },
-          { label: 'Margem líquida',  value: k.netMargin,      tone: 'success' as const, kind: 'percent' as const, emphasis: true },
+          { label: tr('analytics.feesPaid'),       value: k.totalFees,      tone: 'warning' as const, prefix: '' },
+          { label: tr('analytics.totalDiscounts'), value: k.totalDiscounts, tone: 'neutral' as const, prefix: '' },
+          { label: tr('analytics.avgTicket'),      value: k.averageTicket,  tone: 'neutral' as const, prefix: '' },
+          { label: tr('analytics.netMargin'),      value: k.netMargin,      tone: 'success' as const, kind: 'percent' as const, emphasis: true },
         ],
       },
     ];
@@ -334,19 +341,20 @@ export class AnalyticsComponent {
 
   private productsSheetSpec(): SheetSpec<ProductStat> {
     const marginTone = (m: number) => this.marginTone(m);
+    const tr = (key: string) => this.t.instant(key);
     return {
-      name: 'Produtos',
-      title: 'Ranking de produtos',
+      name: tr('analytics.tabProduct'),
+      title: tr('analytics.productRankingTitle'),
       columns: [
-        { header: 'Produto',         key: 'product',     type: 'text' },
-        { header: 'Qtd Vendida',     key: 'qty',         type: 'int',     total: 'sum' },
-        { header: 'Receita Bruta',   key: 'revenue',     type: 'brl',     total: 'sum' },
-        { header: 'Receita Líquida', key: 'netRevenue',  type: 'brl',     total: 'sum' },
-        { header: 'Custo',           key: 'cost',        type: 'brl',     total: 'sum' },
-        { header: 'Lucro Bruto',     key: 'grossProfit', type: 'brl',     total: 'sum' },
-        { header: 'Lucro Líquido',   key: 'netProfit',   type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colProduct'),     key: 'product',     type: 'text' },
+        { header: tr('analytics.colQtySold'),     key: 'qty',         type: 'int',     total: 'sum' },
+        { header: tr('analytics.colGrossRevenue'), key: 'revenue',    type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colNetRevenue'),  key: 'netRevenue',  type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colCost'),        key: 'cost',        type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colGrossProfit'), key: 'grossProfit', type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colNetProfit'),   key: 'netProfit',   type: 'brl',     total: 'sum' },
         {
-          header: 'Margem', key: 'margin', type: 'percent',
+          header: tr('analytics.colMargin'), key: 'margin', type: 'percent',
           total: 'weightedAvg', numKey: 'netProfit', denKey: 'revenue',
           toneFn: r => marginTone(r.margin),
         },
@@ -357,18 +365,19 @@ export class AnalyticsComponent {
 
   private categoriesSheetSpec(): SheetSpec<CategoryStat> {
     const marginTone = (m: number) => this.marginTone(m);
+    const tr = (key: string) => this.t.instant(key);
     return {
-      name: 'Categorias',
-      title: 'Estatísticas por categoria',
+      name: tr('analytics.tabCategory'),
+      title: tr('analytics.categoryStatsTitle'),
       columns: [
-        { header: 'Categoria',     key: 'category',    type: 'text' },
-        { header: 'Lotes',         key: 'batches',     type: 'int',     total: 'sum' },
-        { header: 'Investido',     key: 'invested',    type: 'brl',     total: 'sum' },
-        { header: 'Capital Parado', key: 'idleCapital', type: 'brl',     total: 'sum' },
-        { header: 'Receita Bruta', key: 'revenue',     type: 'brl',     total: 'sum' },
-        { header: 'Lucro Líquido', key: 'profit',      type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colCategory'),     key: 'category',    type: 'text' },
+        { header: tr('analytics.colBatches'),      key: 'batches',     type: 'int',     total: 'sum' },
+        { header: tr('analytics.colInvested'),     key: 'invested',    type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colIdleCapital'),  key: 'idleCapital', type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colGrossRevenue'), key: 'revenue',     type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colNetProfit'),    key: 'profit',      type: 'brl',     total: 'sum' },
         {
-          header: 'Margem', key: 'margin', type: 'percent',
+          header: tr('analytics.colMargin'), key: 'margin', type: 'percent',
           total: 'weightedAvg', numKey: 'profit', denKey: 'revenue',
           toneFn: r => marginTone(r.margin),
         },
@@ -379,19 +388,20 @@ export class AnalyticsComponent {
 
   private monthlySheetSpec(): SheetSpec<MonthStat> {
     const marginTone = (m: number) => this.marginTone(m);
+    const tr = (key: string) => this.t.instant(key);
     return {
-      name: 'Mensal',
-      title: 'Evolução mensal',
+      name: tr('analytics.tabMonthly'),
+      title: tr('analytics.monthlyTitle'),
       columns: [
-        { header: 'Mês',             key: 'month',      type: 'text' },
-        { header: 'Vendas',          key: 'qty',        type: 'int',     total: 'sum' },
-        { header: 'Receita Bruta',   key: 'revenue',    type: 'brl',     total: 'sum' },
-        { header: 'Taxas ML',        key: 'fees',       type: 'brl',     total: 'sum' },
-        { header: 'Receita Líquida', key: 'netRevenue', type: 'brl',     total: 'sum' },
-        { header: 'Custo',           key: 'cost',       type: 'brl',     total: 'sum' },
-        { header: 'Lucro Líquido',   key: 'profit',     type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colMonth'),       key: 'month',      type: 'text' },
+        { header: tr('analytics.colSales'),       key: 'qty',        type: 'int',     total: 'sum' },
+        { header: tr('analytics.colGrossRevenue'), key: 'revenue',   type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colFees'),        key: 'fees',       type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colNetRevenue'),  key: 'netRevenue', type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colCost'),        key: 'cost',       type: 'brl',     total: 'sum' },
+        { header: tr('analytics.colNetProfit'),   key: 'profit',     type: 'brl',     total: 'sum' },
         {
-          header: 'Margem', key: 'margin', type: 'percent',
+          header: tr('analytics.colMargin'), key: 'margin', type: 'percent',
           total: 'weightedAvg', numKey: 'profit', denKey: 'revenue',
           toneFn: r => marginTone(r.margin),
         },
@@ -401,17 +411,18 @@ export class AnalyticsComponent {
   }
 
   private idleSheetSpec(): SheetSpec<ComputedPurchase> {
+    const tr = (key: string) => this.t.instant(key);
     return {
-      name: 'Estoque parado',
-      title: 'Capital parado em estoque',
+      name: tr('analytics.tabIdle'),
+      title: tr('analytics.idleTitle'),
       columns: [
-        { header: 'ID',            key: 'id',             type: 'text' },
-        { header: 'Produto',       key: 'product',        type: 'text' },
-        { header: 'Estoque',       key: 'currentStock',   type: 'int',  total: 'sum' },
-        { header: 'Custo Unit.',   key: 'actualUnitCost', type: 'brl' },
-        { header: 'Capital Parado', key: 'idleValue',      type: 'brl',  total: 'sum' },
-        { header: 'Dias Parado',   key: 'daysInStock',    type: 'int' },
-        { header: 'Status',        key: 'status',         type: 'text', bgFn: r => this.statusBg(r.status) },
+        { header: tr('analytics.colId'),          key: 'id',             type: 'text' },
+        { header: tr('analytics.colProduct'),     key: 'product',        type: 'text' },
+        { header: tr('analytics.colStock'),       key: 'currentStock',   type: 'int',  total: 'sum' },
+        { header: tr('analytics.colUnitCost'),    key: 'actualUnitCost', type: 'brl' },
+        { header: tr('analytics.colIdleCapital'), key: 'idleValue',      type: 'brl',  total: 'sum' },
+        { header: tr('analytics.colDaysIdle'),    key: 'daysInStock',    type: 'int' },
+        { header: tr('analytics.colStatus'),      key: 'status',         type: 'text', bgFn: r => this.statusBg(r.status) },
       ],
       rows: this.idleInventory(),
     };
@@ -419,35 +430,36 @@ export class AnalyticsComponent {
 
   private resumoSpec(): ResumoSpec {
     const k = this.kpis();
+    const tr = (key: string) => this.t.instant(key);
     return {
-      title: 'Análises Lucrato',
+      title: tr('analytics.exportTitle'),
       generatedAt: new Date(),
       blocks: [
         {
-          title: 'Investimento',
+          title: tr('analytics.resInvestment'),
           rows: [
-            { label: 'Investido em compras', value: k.totalInvested,  kind: 'brl' },
-            { label: 'Capital parado',       value: k.idleCapital,    kind: 'brl' },
-            { label: 'Total de lotes',       value: k.totalBatches,   kind: 'count' },
-            { label: 'Lotes em estoque',     value: k.batchesInStock, kind: 'count' },
+            { label: tr('analytics.investedInPurchases'), value: k.totalInvested,  kind: 'brl' },
+            { label: tr('analytics.idleCapital'),         value: k.idleCapital,    kind: 'brl' },
+            { label: tr('analytics.totalBatches'),        value: k.totalBatches,   kind: 'count' },
+            { label: tr('analytics.batchesInStock'),      value: k.batchesInStock, kind: 'count' },
           ],
         },
         {
-          title: 'Resultado',
+          title: tr('analytics.resResult'),
           rows: [
-            { label: 'Receita bruta',   value: k.grossRevenue, kind: 'brl' },
-            { label: 'Receita líquida', value: k.netRevenue,   kind: 'brl' },
-            { label: 'Lucro bruto',     value: k.grossProfit,  kind: 'brl' },
-            { label: 'Lucro líquido',   value: k.netProfit,    kind: 'brl' },
+            { label: tr('analytics.grossRevenue'), value: k.grossRevenue, kind: 'brl' },
+            { label: tr('analytics.netRevenue'),   value: k.netRevenue,   kind: 'brl' },
+            { label: tr('analytics.grossProfit'),  value: k.grossProfit,  kind: 'brl' },
+            { label: tr('analytics.netProfit'),    value: k.netProfit,    kind: 'brl' },
           ],
         },
         {
-          title: 'Eficiência',
+          title: tr('analytics.resEfficiency'),
           rows: [
-            { label: 'Taxas pagas',     value: k.totalFees,      kind: 'brl' },
-            { label: 'Total descontos', value: k.totalDiscounts, kind: 'brl' },
-            { label: 'Ticket médio',    value: k.averageTicket,  kind: 'brl' },
-            { label: 'Margem líquida',  value: k.netMargin,      kind: 'percent' },
+            { label: tr('analytics.feesPaid'),       value: k.totalFees,      kind: 'brl' },
+            { label: tr('analytics.totalDiscounts'), value: k.totalDiscounts, kind: 'brl' },
+            { label: tr('analytics.avgTicket'),      value: k.averageTicket,  kind: 'brl' },
+            { label: tr('analytics.netMargin'),      value: k.netMargin,      kind: 'percent' },
           ],
         },
       ],

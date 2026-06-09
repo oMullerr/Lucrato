@@ -7,8 +7,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
 import { Firestore, deleteDoc, doc } from '@angular/fire/firestore';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 import { NotifyService } from '../../core/services/notify.service';
+import { LanguageService } from '../../core/services/language.service';
 import { logError } from '../../core/services/logger';
 import { validatePasswordStrength } from '../../core/services/password-validator';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
@@ -25,6 +27,7 @@ type StrengthLevel = 0 | 1 | 2 | 3 | 4;
     MatIconModule, MatButtonModule,
     MatFormFieldModule, MatInputModule,
     PageHeaderComponent,
+    TranslateModule,
   ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
@@ -35,6 +38,8 @@ export class ProfileComponent {
   private readonly dialog = inject(MatDialog);
   private readonly firestore = inject(Firestore);
   private readonly router = inject(Router);
+  private readonly t = inject(TranslateService);
+  private readonly lang = inject(LanguageService);
 
   protected readonly email = computed(() => this.auth.currentUser()?.email ?? '');
   protected readonly emailVerified = computed(() => this.auth.currentUser()?.emailVerified ?? false);
@@ -74,11 +79,12 @@ export class ProfileComponent {
   });
 
   protected readonly strengthLabel = computed(() => {
+    this.lang.lang(); // re-evaluate when the language changes
     const s = this.strength();
-    if (s <= 1) return 'Fraca';
-    if (s <= 2) return 'Razoável';
-    if (s === 3) return 'Boa';
-    return 'Forte';
+    if (s <= 1) return this.t.instant('profile.strengthWeak');
+    if (s <= 2) return this.t.instant('profile.strengthFair');
+    if (s === 3) return this.t.instant('profile.strengthGood');
+    return this.t.instant('profile.strengthStrong');
   });
 
   protected readonly strengthClass = computed(() => {
@@ -118,10 +124,10 @@ export class ProfileComponent {
     this.savingStoreName.set(true);
     try {
       await this.auth.updateStoreName(next);
-      this.notify.success('Nome da loja atualizado.');
+      this.notify.success(this.t.instant('profile.storeNameUpdated'));
     } catch (err: unknown) {
       logError('[Profile] updateStoreName falhou:', err);
-      this.notify.error('Não foi possível atualizar o nome da loja.');
+      this.notify.error(this.t.instant('profile.storeNameFailed'));
     } finally {
       this.savingStoreName.set(false);
     }
@@ -132,14 +138,14 @@ export class ProfileComponent {
 
     const pwdError = validatePasswordStrength(this.newPwd());
     if (pwdError) {
-      this.notify.error(pwdError);
+      this.notify.error(this.t.instant(pwdError));
       return;
     }
 
     this.changingPassword.set(true);
     try {
       await this.auth.changePassword(this.currentPwd(), this.newPwd());
-      this.notify.success('Senha atualizada com sucesso.');
+      this.notify.success(this.t.instant('profile.passwordUpdated'));
       this.currentPwd.set('');
       this.newPwd.set('');
       this.confirmPwd.set('');
@@ -155,7 +161,7 @@ export class ProfileComponent {
     this.sendingVerification.set(true);
     try {
       await this.auth.sendVerificationEmail();
-      this.notify.success('E-mail de verificação enviado. Confira sua caixa de entrada.');
+      this.notify.success(this.t.instant('profile.verificationSent'));
     } catch (err: unknown) {
       logError('[Profile] sendVerificationEmail falhou:', err);
       this.notify.error(this.friendlyAuthError((err as { code?: string })?.code));
@@ -169,15 +175,14 @@ export class ProfileComponent {
     this.dialog
       .open<ConfirmDialogComponent, unknown, ConfirmDialogResult>(ConfirmDialogComponent, {
         data: {
-          title: 'Excluir conta',
-          message:
-            'Isso vai apagar PERMANENTEMENTE sua conta, todos os dados (compras, vendas, configurações) e seu acesso ao Lucrato. Esta ação é irreversível.',
+          title: this.t.instant('profile.deleteTitle'),
+          message: this.t.instant('profile.deleteMessage'),
           danger: true,
-          confirmText: 'Sim, excluir minha conta',
+          confirmText: this.t.instant('profile.deleteConfirm'),
           requireTextMatch: storeName,
-          requireTextLabel: 'Digite o nome da loja para confirmar',
+          requireTextLabel: this.t.instant('profile.deleteTypeStore'),
           requirePassword: true,
-          requirePasswordLabel: 'Senha atual',
+          requirePasswordLabel: this.t.instant('dialogs.currentPassword'),
         },
         width: '500px',
         maxWidth: '95vw',
@@ -192,7 +197,7 @@ export class ProfileComponent {
   private async performAccountDeletion(password: string): Promise<void> {
     const uid = this.auth.currentUser()?.uid;
     if (!uid) {
-      this.notify.error('Sessão expirada. Faça login novamente.');
+      this.notify.error(this.t.instant('profile.sessionExpired'));
       return;
     }
 
@@ -201,7 +206,7 @@ export class ProfileComponent {
       await this.auth.reauthenticate(password);
       await deleteDoc(doc(this.firestore, `users/${uid}/db/main`));
       await this.auth.deleteAccount();
-      this.notify.success('Conta excluída.');
+      this.notify.success(this.t.instant('profile.accountDeleted'));
       this.router.navigate(['/login']);
     } catch (err: unknown) {
       logError('[Profile] deleteAccount falhou:', err);
@@ -215,17 +220,17 @@ export class ProfileComponent {
     switch (code) {
       case 'auth/wrong-password':
       case 'auth/invalid-credential':
-        return 'Senha atual incorreta.';
+        return this.t.instant('profile.errWrongPassword');
       case 'auth/weak-password':
-        return 'A nova senha deve ter pelo menos 8 caracteres, com letra e número.';
+        return this.t.instant('profile.errWeakPassword');
       case 'auth/too-many-requests':
-        return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+        return this.t.instant('profile.errTooManyRequests');
       case 'auth/requires-recent-login':
-        return 'Por segurança, faça login novamente antes desta ação.';
+        return this.t.instant('profile.errRecentLogin');
       case 'auth/network-request-failed':
-        return 'Falha de conexão. Verifique sua internet.';
+        return this.t.instant('profile.errNetwork');
       default:
-        return 'Não foi possível concluir a operação. Tente novamente.';
+        return this.t.instant('profile.errGeneric');
     }
   }
 }

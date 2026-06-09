@@ -2,6 +2,7 @@ export const APP = {
   name: 'Lucrato',
   version: '1.0.0',
   themeKey: 'ml-gestao-theme',
+  langKey: 'ml-gestao-lang',
 } as const;
 
 /** Cor padrão de uma categoria sem cor cadastrada (cor da marca). */

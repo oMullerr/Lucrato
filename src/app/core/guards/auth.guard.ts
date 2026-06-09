@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { catchError, filter, map, of, take, timeout } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../services/auth.service';
 import { NotifyService } from '../services/notify.service';
 
@@ -16,6 +17,7 @@ export const authGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const notify = inject(NotifyService);
+  const t = inject(TranslateService);
 
   return toObservable(auth.currentUser).pipe(
     filter(u => u !== undefined),
@@ -29,7 +31,7 @@ export const authGuard: CanActivateFn = (_route, state) => {
       return true;
     }),
     catchError(() => {
-      notify.warning('Autenticação demorando. Verifique sua conexão.');
+      notify.warning(t.instant('auth.authTimeout'));
       return of(router.createUrlTree(['/login']));
     }),
   );
@@ -43,6 +45,7 @@ export const verifyEmailGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const notify = inject(NotifyService);
+  const t = inject(TranslateService);
 
   return toObservable(auth.currentUser).pipe(
     filter(u => u !== undefined),
@@ -54,7 +57,7 @@ export const verifyEmailGuard: CanActivateFn = () => {
       return true;
     }),
     catchError(() => {
-      notify.warning('Autenticação demorando. Verifique sua conexão.');
+      notify.warning(t.instant('auth.authTimeout'));
       return of(router.createUrlTree(['/login']));
     }),
   );

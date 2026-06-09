@@ -1,6 +1,16 @@
-import { ApplicationConfig, ErrorHandler, LOCALE_ID, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import {
+  APP_INITIALIZER,
+  ApplicationConfig,
+  ErrorHandler,
+  importProvidersFrom,
+  LOCALE_ID,
+  provideZoneChangeDetection,
+} from '@angular/core';
+import { provideRouter, TitleStrategy, withComponentInputBinding } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { HttpClient, provideHttpClient } from '@angular/common/http';
+import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
@@ -23,9 +33,15 @@ import { getApp } from 'firebase/app';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { GlobalErrorHandler } from './core/services/global-error-handler';
-import { PaginatorIntlPtBr } from './shared/i18n/paginator-intl-pt-br';
+import { TranslatePaginatorIntl } from './shared/i18n/translate-paginator-intl';
+import { TranslateTitleStrategy } from './core/services/translate-title.strategy';
+import { LanguageService } from './core/services/language.service';
 
 registerLocaleData(localePt);
+
+export function httpLoaderFactory(http: HttpClient): TranslateLoader {
+  return new TranslateHttpLoader(http, './i18n/', '.json');
+}
 
 const BR_DATE_FORMATS: MatDateFormats = {
   parse: {
@@ -53,6 +69,23 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding()),
     provideAnimations(),
+    provideHttpClient(),
+    importProvidersFrom(
+      TranslateModule.forRoot({
+        defaultLanguage: 'pt-BR',
+        loader: {
+          provide: TranslateLoader,
+          useFactory: httpLoaderFactory,
+          deps: [HttpClient],
+        },
+      }),
+    ),
+    {
+      provide: APP_INITIALIZER,
+      multi: true,
+      useFactory: (lang: LanguageService) => () => lang.init(),
+      deps: [LanguageService],
+    },
     provideCharts(withDefaultRegisterables()),
     provideNativeDateAdapter(),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
@@ -73,6 +106,7 @@ export const appConfig: ApplicationConfig = {
       provide: MAT_DIALOG_DEFAULT_OPTIONS,
       useValue: { autoFocus: 'first-tabbable', restoreFocus: true },
     },
-    { provide: MatPaginatorIntl, useClass: PaginatorIntlPtBr },
+    { provide: MatPaginatorIntl, useClass: TranslatePaginatorIntl },
+    { provide: TitleStrategy, useClass: TranslateTitleStrategy },
   ],
 };

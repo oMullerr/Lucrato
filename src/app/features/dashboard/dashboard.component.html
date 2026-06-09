@@ -1,9 +1,9 @@
 <app-page-header
-  title="Dashboard"
-  eyebrow="ANÁLISE · {{ rangeLabel(range()) }}"
-  subtitle="Visão visual da operação. Filtre por período para entender ciclos e tendências."
+  [title]="'dashboard.title' | translate"
+  [eyebrow]="'dashboard.eyebrow' | translate:{ range: rangeLabel(range()) }"
+  [subtitle]="'dashboard.subtitle' | translate"
 >
-  <div class="range-picker" role="tablist" aria-label="Período">
+  <div class="range-picker" role="tablist" [attr.aria-label]="'dashboard.period' | translate">
     @for (r of rangeOptions; track r.key) {
       <button
         type="button"
@@ -12,7 +12,7 @@
         (click)="setRange(r.key)"
         role="tab"
         [attr.aria-selected]="range() === r.key"
-      >{{ r.label }}</button>
+      >{{ r.labelKey | translate }}</button>
     }
 
     <button
@@ -22,13 +22,13 @@
       (click)="picker.open()"
       role="tab"
       [attr.aria-selected]="range() === 'custom'"
-      aria-label="Período personalizado"
+      [attr.aria-label]="'dashboard.customPeriod' | translate"
     >
       <mat-icon class="pill-icon">calendar_month</mat-icon>
       @if (range() === 'custom' && customStart() && customEnd()) {
         <span class="mono">{{ customRangeLabel() }}</span>
       } @else {
-        <span>Personalizado</span>
+        <span>{{ 'dashboard.custom' | translate }}</span>
       }
     </button>
 
@@ -61,59 +61,59 @@
   } @else if (!hasData()) {
     <app-empty-state
       icon="analytics"
-      title="Seu dashboard ganha vida com dados"
-      description="Cadastre algumas compras e registre vendas para ver gráficos, evolução mensal e composição da receita."
+      [title]="'dashboard.emptyTitle' | translate"
+      [description]="'dashboard.emptyDesc' | translate"
     >
       <a mat-stroked-button routerLink="/purchases">
         <mat-icon>shopping_cart</mat-icon>
-        Adicionar compra
+        {{ 'purchases.addPurchase' | translate }}
       </a>
       <a mat-flat-button class="primary-cta" routerLink="/sales">
         <mat-icon>sell</mat-icon>
-        Registrar venda
+        {{ 'sales.registerSale' | translate }}
       </a>
     </app-empty-state>
 
   } @else {
 
     <!-- KPI strip -->
-    <section class="kpi-strip" aria-label="Indicadores do período">
+    <section class="kpi-strip" [attr.aria-label]="'dashboard.periodKpis' | translate">
       <app-kpi-card
-        title="Lucro líquido"
+        [title]="'dashboard.kpiNetProfit' | translate"
         [value]="periodKpis().netProfit | brl"
         [variant]="periodKpis().netProfit >= 0 ? 'success' : 'danger'"
         [sparkline]="profitSpark()"
-        [note]="periodKpis().salesCount + ' vendas no período'"
+        [note]="'dashboard.kpiSalesInPeriod' | translate:{ count: periodKpis().salesCount }"
       />
       <app-kpi-card
-        title="Receita bruta"
+        [title]="'dashboard.kpiGrossRevenue' | translate"
         [value]="periodKpis().grossRevenue | brl"
         variant="brand"
         [sparkline]="revenueSpark()"
-        note="Faturamento total"
+        [note]="'dashboard.kpiTotalBilling' | translate"
       />
       <app-kpi-card
-        title="Margem"
+        [title]="'dashboard.kpiMargin' | translate"
         [value]="(periodKpis().netMargin * 100).toFixed(1) + '%'"
         variant="neutral"
         [sparkline]="marginSpark()"
-        note="Lucro líq. / receita"
+        [note]="'dashboard.kpiMarginNote' | translate"
       />
       <app-kpi-card
-        title="Taxas pagas"
+        [title]="'dashboard.kpiFeesPaid' | translate"
         [value]="periodKpis().totalFees | brl"
         variant="warning"
         [sparkline]="feesSpark()"
-        note="Total ao Mercado Livre"
+        [note]="'dashboard.kpiFeesNote' | translate"
       />
     </section>
 
     <!-- Hero chart -->
-    <section class="chart-card chart-hero" aria-label="Evolução mensal">
+    <section class="chart-card chart-hero" [attr.aria-label]="'dashboard.monthlyEvolution' | translate">
       <header class="cc-head">
         <div class="cc-title">
-          <h3 class="h-section">Evolução mensal</h3>
-          <p>Receita líquida vs Lucro líquido por mês</p>
+          <h3 class="h-section">{{ 'dashboard.monthlyEvolution' | translate }}</h3>
+          <p>{{ 'dashboard.monthlyEvolutionDesc' | translate }}</p>
         </div>
       </header>
       <div class="cc-body cc-tall">
@@ -124,7 +124,7 @@
             </div>
           </div>
         } @else {
-          <div class="no-data">Sem vendas no período selecionado.</div>
+          <div class="no-data">{{ 'dashboard.noSalesInRange' | translate }}</div>
         }
       </div>
     </section>
@@ -133,8 +133,8 @@
       <article class="chart-card">
         <header class="cc-head">
           <div class="cc-title">
-            <h3 class="h-section">Lucro por produto</h3>
-            <p>{{ productCount() }} {{ productCount() === 1 ? 'produto' : 'produtos' }} no período</p>
+            <h3 class="h-section">{{ 'dashboard.profitByProduct' | translate }}</h3>
+            <p>{{ (productCount() === 1 ? 'dashboard.productInPeriodOne' : 'dashboard.productInPeriodOther') | translate:{ count: productCount() } }}</p>
           </div>
         </header>
         <div class="cc-body">
@@ -145,7 +145,7 @@
               </div>
             </div>
           } @else {
-            <div class="no-data">Sem vendas no período.</div>
+            <div class="no-data">{{ 'dashboard.noSalesShort' | translate }}</div>
           }
         </div>
       </article>
@@ -153,8 +153,8 @@
       <article class="chart-card">
         <header class="cc-head">
           <div class="cc-title">
-            <h3 class="h-section">Composição da receita</h3>
-            <p>Onde sua receita bruta vai parar</p>
+            <h3 class="h-section">{{ 'dashboard.revenueComposition' | translate }}</h3>
+            <p>{{ 'dashboard.revenueCompositionDesc' | translate }}</p>
           </div>
         </header>
         <div class="cc-body composition-body">
@@ -162,7 +162,7 @@
             <div class="dough-wrap">
               <canvas baseChart [data]="compositionChart()" [options]="doughnutOptions()" type="doughnut"></canvas>
               <div class="dough-center">
-                <span class="dough-label">Receita bruta</span>
+                <span class="dough-label">{{ 'dashboard.kpiGrossRevenue' | translate }}</span>
                 <span class="dough-value">{{ periodKpis().grossRevenue | brl }}</span>
               </div>
             </div>
@@ -176,18 +176,18 @@
               }
             </ul>
           } @else {
-            <div class="no-data">Sem receita registrada no período.</div>
+            <div class="no-data">{{ 'dashboard.noRevenueInPeriod' | translate }}</div>
           }
         </div>
       </article>
     </section>
 
     <!-- Idle capital ranking table -->
-    <section class="chart-card" aria-label="Capital parado por lote">
+    <section class="chart-card" [attr.aria-label]="'dashboard.idleByBatch' | translate">
       <header class="cc-head">
         <div class="cc-title">
-          <h3 class="h-section">Capital parado por lote</h3>
-          <p>{{ idleRanking().length }} {{ idleRanking().length === 1 ? 'lote' : 'lotes' }} com capital preso</p>
+          <h3 class="h-section">{{ 'dashboard.idleByBatch' | translate }}</h3>
+          <p>{{ (idleRanking().length === 1 ? 'dashboard.idleBatchOne' : 'dashboard.idleBatchOther') | translate:{ count: idleRanking().length } }}</p>
         </div>
       </header>
       <div class="cc-body">
@@ -199,7 +199,7 @@
                   <div class="idle-info">
                     <span class="idle-id mono">{{ b.id }}</span>
                     <span class="idle-product">{{ b.product }}</span>
-                    <span class="idle-meta">{{ b.daysInStock }}d · {{ b.currentStock }} un</span>
+                    <span class="idle-meta">{{ b.daysInStock }}d · {{ 'dashboard.idleUnits' | translate:{ count: b.currentStock } }}</span>
                   </div>
                   <div class="idle-bar-wrap">
                     <div class="idle-bar" [style.width.%]="(b.idleValue / maxIdle()) * 100"></div>
@@ -210,17 +210,17 @@
             </ol>
           </div>
         } @else {
-          <div class="no-data">Nenhum capital parado. Excelente giro!</div>
+          <div class="no-data">{{ 'dashboard.noIdle' | translate }}</div>
         }
       </div>
     </section>
 
     <!-- Waterfall -->
-    <section class="chart-card waterfall-card" aria-label="Resumo cascata">
+    <section class="chart-card waterfall-card" [attr.aria-label]="'dashboard.waterfallLabel' | translate">
       <header class="cc-head">
         <div class="cc-title">
-          <h3 class="h-section">Da receita ao lucro</h3>
-          <p>Acompanhe o caminho de cada real</p>
+          <h3 class="h-section">{{ 'dashboard.revenueToProfit' | translate }}</h3>
+          <p>{{ 'dashboard.revenueToProfitDesc' | translate }}</p>
         </div>
       </header>
       <div class="cc-body cc-auto">
@@ -232,7 +232,7 @@
                 {{ step.value < 0 ? '−' : '' }}{{ (step.value < 0 ? -step.value : step.value) | brl }}
               </span>
               @if (step.kind === 'total') {
-                <span class="wf-step-tag">{{ (periodKpis().netMargin * 100).toFixed(1) }}% margem</span>
+                <span class="wf-step-tag">{{ 'dashboard.marginTag' | translate:{ pct: (periodKpis().netMargin * 100).toFixed(1) } }}</span>
               }
             </div>
             @if (!last) {

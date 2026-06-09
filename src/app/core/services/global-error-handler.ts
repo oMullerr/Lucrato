@@ -1,4 +1,5 @@
 import { ErrorHandler, Injectable, NgZone, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { NotifyService } from './notify.service';
 import { firestoreErrorMessage, isChunkLoadError } from './firestore-errors';
 import { logError } from './logger';
@@ -7,6 +8,7 @@ import { logError } from './logger';
 export class GlobalErrorHandler implements ErrorHandler {
   private readonly notify = inject(NotifyService);
   private readonly zone = inject(NgZone);
+  private readonly t = inject(TranslateService);
   private chunkPromptShown = false;
 
   handleError(error: unknown): void {
@@ -18,8 +20,8 @@ export class GlobalErrorHandler implements ErrorHandler {
       this.chunkPromptShown = true;
       this.zone.run(() => {
         this.notify.withAction(
-          'Nova versão disponível. Recarregue a página.',
-          'Recarregar',
+          this.t.instant('errors.newVersion'),
+          this.t.instant('errors.reload'),
           () => globalThis.location?.reload(),
           'warning',
         );
@@ -28,11 +30,11 @@ export class GlobalErrorHandler implements ErrorHandler {
     }
 
     if (this.isFirestoreError(cause)) {
-      this.zone.run(() => this.notify.error(firestoreErrorMessage(cause)));
+      this.zone.run(() => this.notify.error(this.t.instant(firestoreErrorMessage(cause))));
       return;
     }
 
-    this.zone.run(() => this.notify.error('Ocorreu um erro inesperado.'));
+    this.zone.run(() => this.notify.error(this.t.instant('errors.unexpected')));
   }
 
   private unwrap(error: unknown): unknown {

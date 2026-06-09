@@ -20,6 +20,7 @@ import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/p
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { Purchase, ComputedPurchase, InventoryStatus } from '../../core/models/models';
@@ -48,6 +49,7 @@ type StatusFilter = 'all' | InventoryStatus;
     PageHeaderComponent, StatusBadgeComponent,
     EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent,
     BrlPipe, BrDatePipe,
+    TranslateModule,
   ],
   templateUrl: './purchases.component.html',
   styleUrl: './purchases.component.scss',
@@ -57,6 +59,7 @@ export class PurchasesComponent {
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(MatDialog);
   private readonly bp = inject(BreakpointObserver);
+  private readonly t = inject(TranslateService);
 
   protected readonly textFilter = signal('');
   protected readonly statusFilter = signal<StatusFilter>('all');
@@ -228,13 +231,15 @@ export class PurchasesComponent {
       this.dialog
         .open(ConfirmDialogComponent, {
           data: {
-            title: 'Remover lote e vendas vinculadas?',
-            message:
-              `O lote ${c.id} ("${c.product}") possui ` +
-              `${linkedSales.length} venda(s) vinculada(s): ${salesList}.\n\n` +
-              `Ao confirmar, o lote e todas as suas vendas serão removidos permanentemente.`,
+            title: this.t.instant('purchases.removeLinkedTitle'),
+            message: this.t.instant('purchases.removeLinkedMsg', {
+              id: c.id,
+              product: c.product,
+              count: linkedSales.length,
+              salesList,
+            }),
             danger: true,
-            confirmText: 'Remover tudo',
+            confirmText: this.t.instant('purchases.removeAll'),
           },
           width: '460px',
           maxWidth: '95vw',
@@ -243,7 +248,7 @@ export class PurchasesComponent {
         .subscribe(confirmed => {
           if (confirmed) {
             this.data.removePurchaseWithSales(c.id);
-            this.notify.success(`Lote ${c.id} e ${linkedSales.length} venda(s) removidos.`);
+            this.notify.success(this.t.instant('purchases.removedWithSales', { id: c.id, count: linkedSales.length }));
           }
         });
       return;
@@ -252,10 +257,10 @@ export class PurchasesComponent {
     this.dialog
       .open(ConfirmDialogComponent, {
         data: {
-          title: 'Remover este lote?',
-          message: `O lote ${c.id} ("${c.product}") será removido permanentemente.`,
+          title: this.t.instant('purchases.removeTitle'),
+          message: this.t.instant('purchases.removeMsg', { id: c.id, product: c.product }),
           danger: true,
-          confirmText: 'Remover',
+          confirmText: this.t.instant('common.remove'),
         },
         width: '420px',
         maxWidth: '95vw',
@@ -264,7 +269,7 @@ export class PurchasesComponent {
       .subscribe(confirmed => {
         if (confirmed) {
           this.data.removePurchase(c.id);
-          this.notify.success(`Lote ${c.id} removido.`);
+          this.notify.success(this.t.instant('purchases.removed', { id: c.id }));
         }
       });
   }
@@ -280,14 +285,14 @@ export class PurchasesComponent {
         if (!result) return;
         if (purchase) {
           this.data.updatePurchase(purchase.id, result);
-          this.notify.success(`Lote ${result.id} atualizado.`);
+          this.notify.success(this.t.instant('purchases.updated', { id: result.id }));
         } else {
           if (this.data.findPurchase(result.id)) {
-            this.notify.error(`ID ${result.id} já existe.`);
+            this.notify.error(this.t.instant('purchases.idExists', { id: result.id }));
             return;
           }
           this.data.addPurchase(result);
-          this.notify.success(`Lote ${result.id} adicionado.`);
+          this.notify.success(this.t.instant('purchases.added', { id: result.id }));
         }
       });
   }

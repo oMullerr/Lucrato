@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { TranslateModule } from '@ngx-translate/core';
 import { Sale } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { calculateSale } from '../../core/services/calculations';
@@ -27,7 +28,7 @@ export interface SaleDialogData {
     FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatTooltipModule,
     MatDatepickerModule, MatSlideToggleModule, BrlPipe,
-    CurrencyInputDirective,
+    CurrencyInputDirective, TranslateModule,
   ],
   templateUrl: './sale-form.dialog.html',
   styleUrl: './sale-form.dialog.scss',

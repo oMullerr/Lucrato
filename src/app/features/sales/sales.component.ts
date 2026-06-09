@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { Sale, ComputedSale, SaleStatus } from '../../core/models/models';
@@ -37,6 +38,7 @@ type SaleFilter = 'all' | 'profit' | 'loss' | 'low-margin';
     PageHeaderComponent, StatusBadgeComponent, KpiCardComponent,
     EmptyStateComponent, SkeletonComponent, ColorPillComponent,
     BrlPipe, BrDatePipe,
+    TranslateModule,
   ],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss',
@@ -45,6 +47,7 @@ export class SalesComponent {
   protected readonly data = inject(DataService);
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(MatDialog);
+  private readonly t = inject(TranslateService);
 
   protected readonly textFilter = signal('');
   protected readonly channelFilter = signal('all');
@@ -194,10 +197,10 @@ export class SalesComponent {
     this.dialog
       .open(ConfirmDialogComponent, {
         data: {
-          title: 'Remover esta venda?',
-          message: `A venda ${v.id} de "${v.product}" será removida.`,
+          title: this.t.instant('sales.removeTitle'),
+          message: this.t.instant('sales.removeMsg', { id: v.id, product: v.product }),
           danger: true,
-          confirmText: 'Remover',
+          confirmText: this.t.instant('common.remove'),
         },
         width: '420px',
         maxWidth: '95vw',
@@ -206,7 +209,7 @@ export class SalesComponent {
       .subscribe(confirmed => {
         if (confirmed) {
           this.data.removeSale(v.id);
-          this.notify.success(`Venda ${v.id} removida.`);
+          this.notify.success(this.t.instant('sales.removed', { id: v.id }));
         }
       });
   }
@@ -242,14 +245,14 @@ export class SalesComponent {
         if (!result) return;
         if (sale) {
           this.data.updateSale(sale.id, result);
-          this.notify.success(`Venda ${result.id} atualizada.`);
+          this.notify.success(this.t.instant('sales.updated', { id: result.id }));
         } else {
           if (this.data.findSale(result.id)) {
-            this.notify.error(`ID ${result.id} já existe.`);
+            this.notify.error(this.t.instant('sales.idExists', { id: result.id }));
             return;
           }
           this.data.addSale(result);
-          this.notify.success(`Venda ${result.id} registrada.`);
+          this.notify.success(this.t.instant('sales.registered', { id: result.id }));
         }
       });
   }

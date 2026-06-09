@@ -1,20 +1,20 @@
 <app-page-header
-  title="Instruções"
-  eyebrow="GUIA · {{ instructions.length }} TÓPICOS"
-  subtitle="Tudo o que você precisa saber para tirar o máximo do Lucrato no dia a dia."
+  [title]="'instructions.title' | translate"
+  [eyebrow]="'instructions.eyebrow' | translate:{ count: instructions.length }"
+  [subtitle]="'instructions.subtitle' | translate"
 />
 
 <div class="page-content inst-body">
   <div class="layout">
     <!-- TOC sticky -->
-    <aside class="toc" aria-label="Índice">
-      <span class="toc-title">Nesta página</span>
+    <aside class="toc" [attr.aria-label]="'instructions.indexAria' | translate">
+      <span class="toc-title">{{ 'instructions.tocTitle' | translate }}</span>
       <ol class="toc-list">
-        @for (item of instructions; track item.title; let i = $index) {
+        @for (item of instructions; track item.titleKey; let i = $index) {
           <li>
             <a [href]="'#sec-' + i" class="toc-link">
               <span class="toc-num mono">{{ i + 1 < 10 ? '0' + (i + 1) : (i + 1) }}</span>
-              <span class="toc-label">{{ item.title }}</span>
+              <span class="toc-label">{{ item.titleKey | translate }}</span>
             </a>
           </li>
         }
@@ -23,13 +23,13 @@
 
     <!-- Sections -->
     <article class="sections">
-      @for (item of instructions; track item.title; let i = $index) {
+      @for (item of instructions; track item.titleKey; let i = $index) {
         <section class="inst-section" [attr.id]="'sec-' + i">
           <header class="inst-head">
             <span class="inst-num mono">{{ i + 1 < 10 ? '0' + (i + 1) : (i + 1) }}</span>
-            <h2>{{ item.title }}</h2>
+            <h2>{{ item.titleKey | translate }}</h2>
           </header>
-          <p class="inst-body-text">{{ item.body }}</p>
+          <p class="inst-body-text">{{ item.bodyKey | translate }}</p>
         </section>
       }
     </article>

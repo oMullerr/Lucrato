@@ -284,3 +284,9 @@ Faça este checklist no setup e revise periodicamente:
 
 
 - mais idiomas (i18n)
+
+- adiciono uma nova venda e os valores de eceita bruta nao muda, pq?
+
+- controle do MEI
+
+- como o mei tem o inss, se a minha namorada abrir o mei para a nossa loja de revenda, ela continua contribuindo para o inss e para o FGTS?

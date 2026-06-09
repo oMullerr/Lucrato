@@ -4,16 +4,15 @@
       <mat-icon>mark_email_unread</mat-icon>
     </div>
 
-    <h1>Verifique seu e-mail</h1>
+    <h1>{{ 'auth.verifyTitle' | translate }}</h1>
     <p class="lead">
-      Enviamos um link de verificação para
-      <strong>{{ email() || 'seu e-mail' }}</strong>.
-      Clique no link para liberar o acesso ao Lucrato.
+      {{ 'auth.verifyLeadBefore' | translate }}
+      <strong>{{ email() || ('auth.emailFallback' | translate) }}</strong>{{ 'auth.verifyLeadAfter' | translate }}
     </p>
 
     <div class="hint">
       <mat-icon>info</mat-icon>
-      <span>Pode demorar até 1 minuto. Confira também a pasta de spam.</span>
+      <span>{{ 'auth.verifyHint' | translate }}</span>
     </div>
 
     <div class="actions">
@@ -28,7 +27,7 @@
         } @else {
           <mat-icon>refresh</mat-icon>
         }
-        Já verifiquei
+        {{ 'auth.alreadyVerified' | translate }}
       </button>
 
       <button
@@ -38,15 +37,15 @@
       >
         <mat-icon>send</mat-icon>
         @if (cooldown() > 0) {
-          Reenviar em {{ cooldown() }}s
+          {{ 'auth.resendIn' | translate:{ s: cooldown() } }}
         } @else {
-          {{ resending() ? 'Enviando…' : 'Reenviar e-mail' }}
+          {{ (resending() ? 'auth.sending' : 'auth.resendEmail') | translate }}
         }
       </button>
     </div>
 
     <button mat-button class="logout-link" (click)="logout()">
-      Sair e usar outra conta
+      {{ 'auth.logoutOther' | translate }}
     </button>
   </mat-card>
 </div>

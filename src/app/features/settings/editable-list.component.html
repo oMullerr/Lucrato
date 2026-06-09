@@ -8,7 +8,7 @@
             class="color-swatch"
             [value]="colorOf(item)"
             (input)="setColor(item, $any($event.target).value)"
-            [attr.aria-label]="'Cor de ' + item"
+            [attr.aria-label]="'editableList.colorOf' | translate:{ item: item }"
           />
         }
         <span class="item-name">{{ item }}</span>
@@ -19,7 +19,7 @@
             class="reorder-btn"
             (click)="move(i, -1)"
             [disabled]="first"
-            aria-label="Mover para cima"
+            [attr.aria-label]="'editableList.moveUp' | translate"
           >
             <mat-icon>keyboard_arrow_up</mat-icon>
           </button>
@@ -29,7 +29,7 @@
             class="reorder-btn"
             (click)="move(i, 1)"
             [disabled]="last"
-            aria-label="Mover para baixo"
+            [attr.aria-label]="'editableList.moveDown' | translate"
           >
             <mat-icon>keyboard_arrow_down</mat-icon>
           </button>
@@ -38,7 +38,7 @@
             type="button"
             class="remove-btn"
             (click)="remove(i)"
-            aria-label="Remover"
+            [attr.aria-label]="'common.remove' | translate"
           >
             <mat-icon>close</mat-icon>
           </button>
@@ -47,7 +47,7 @@
     }
   </ul>
 } @else {
-  <p class="empty-hint">Nenhum item ainda.</p>
+  <p class="empty-hint">{{ 'editableList.noItems' | translate }}</p>
 }
 
 <div class="add-row">
@@ -56,7 +56,7 @@
       type="color"
       class="color-swatch add-swatch"
       [(ngModel)]="draftColor"
-      aria-label="Cor da nova categoria"
+      [attr.aria-label]="'editableList.newColor' | translate"
     />
   }
   <mat-form-field appearance="outline" class="add-field">
@@ -64,10 +64,10 @@
     <input
       matInput
       [(ngModel)]="draft"
-      [placeholder]="placeholder()"
+      [placeholder]="placeholder() || ('editableList.placeholder' | translate)"
       (keydown.enter)="$event.preventDefault(); add()"
     />
-    <button matSuffix mat-icon-button type="button" (click)="add()" aria-label="Adicionar">
+    <button matSuffix mat-icon-button type="button" (click)="add()" [attr.aria-label]="'common.add' | translate">
       <mat-icon>add</mat-icon>
     </button>
   </mat-form-field>

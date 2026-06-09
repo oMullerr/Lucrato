@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 // ESCRITA estilizada (modelo/exportação): o fork preserva estilos de célula.
 // Não processa entrada não-confiável, então o fork congelado é aceitável aqui.
 import * as XLSX from 'xlsx-js-style';
@@ -126,6 +127,7 @@ function cellAddr(row: number, col: number): string {
 
 @Injectable({ providedIn: 'root' })
 export class ImportService {
+  private readonly t = inject(TranslateService);
 
   downloadTemplate(settings: Settings): void {
     const wb = XLSX.utils.book_new();
@@ -384,7 +386,7 @@ export class ImportService {
       const buffer = await file.arrayBuffer();
       workbook = readWorkbook(new Uint8Array(buffer), { type: 'array', cellDates: true });
     } catch {
-      return { purchases: [], sales: [], errors: ['Arquivo inválido ou corrompido.'] };
+      return { purchases: [], sales: [], errors: [this.t.instant('importErrors.invalidFile')] };
     }
 
     try {
@@ -406,7 +408,7 @@ export class ImportService {
       return { purchases: newPurchases, sales: newSales, errors };
     } catch (err) {
       logError('[Import] parseFile crashed:', err);
-      return { purchases: [], sales: [], errors: ['Arquivo inválido ou corrompido.'] };
+      return { purchases: [], sales: [], errors: [this.t.instant('importErrors.invalidFile')] };
     }
   }
 
@@ -421,7 +423,7 @@ export class ImportService {
     const rows: any[][] = readUtils.sheet_to_json(ws, { header: 1 });
 
     if (rows.length - 3 > MAX_ROWS) {
-      errors.push(`Aba "Compras" excede o limite de ${MAX_ROWS} linhas. Divida em arquivos menores.`);
+      errors.push(this.t.instant('importErrors.purchasesExceed', { max: MAX_ROWS }));
       return [];
     }
 
@@ -447,13 +449,13 @@ export class ImportService {
 
       if (notes && /EXEMPLO/i.test(notes)) continue;
 
-      if (!product)  { errors.push(`Compra linha ${lineNum}: "Produto" é obrigatório.`);               continue; }
-      if (!category) { errors.push(`Compra linha ${lineNum}: "Categoria" é obrigatória.`);             continue; }
-      if (!purchaseDateRaw) { errors.push(`Compra linha ${lineNum}: "Data da Compra" é obrigatória.`); continue; }
-      if (quantityPurchased < 1) { errors.push(`Compra linha ${lineNum}: "Quantidade Comprada" deve ser ≥ 1.`); continue; }
+      if (!product)  { errors.push(this.t.instant('importErrors.purchaseProductRequired', { line: lineNum }));   continue; }
+      if (!category) { errors.push(this.t.instant('importErrors.purchaseCategoryRequired', { line: lineNum }));  continue; }
+      if (!purchaseDateRaw) { errors.push(this.t.instant('importErrors.purchaseDateRequired', { line: lineNum })); continue; }
+      if (quantityPurchased < 1) { errors.push(this.t.instant('importErrors.purchaseQtyMin', { line: lineNum })); continue; }
 
       const purchaseDate = this.parseDate(purchaseDateRaw);
-      if (!purchaseDate) { errors.push(`Compra linha ${lineNum}: data inválida "${purchaseDateRaw}". Use DD/MM/AAAA.`); continue; }
+      if (!purchaseDate) { errors.push(this.t.instant('importErrors.purchaseInvalidDate', { line: lineNum, value: purchaseDateRaw })); continue; }
 
       const receiptDate = receiptDateRaw ? (this.parseDate(receiptDateRaw) ?? undefined) : undefined;
 
@@ -493,7 +495,7 @@ export class ImportService {
     const rows: any[][] = readUtils.sheet_to_json(ws, { header: 1 });
 
     if (rows.length - 3 > MAX_ROWS) {
-      errors.push(`Aba "Vendas" excede o limite de ${MAX_ROWS} linhas. Divida em arquivos menores.`);
+      errors.push(this.t.instant('importErrors.salesExceed', { max: MAX_ROWS }));
       return [];
     }
 
@@ -531,38 +533,41 @@ export class ImportService {
 
       if (notes && /EXEMPLO/i.test(notes)) continue;
 
-      if (!batchId)          { errors.push(`Venda linha ${lineNum}: "ID do Lote" é obrigatório.`);        continue; }
-      if (!validBatchIds.has(batchId)) { errors.push(`Venda linha ${lineNum}: ID do Lote "${batchId}" não encontrado.`); continue; }
+      if (!batchId)          { errors.push(this.t.instant('importErrors.saleBatchRequired', { line: lineNum })); continue; }
+      if (!validBatchIds.has(batchId)) { errors.push(this.t.instant('importErrors.saleBatchNotFound', { line: lineNum, batchId })); continue; }
 
       const batch = allPurchases.find(p => p.id === batchId);
       if (batch) {
         const computed = calculatePurchase(batch, existingSales, settings);
         if (computed.status === 'Em trânsito') {
-          errors.push(`Venda linha ${lineNum}: lote "${batchId}" ainda está em trânsito (sem Data de Recebimento). Não pode receber vendas.`);
+          errors.push(this.t.instant('importErrors.saleBatchInTransit', { line: lineNum, batchId }));
           continue;
         }
         if (computed.status === 'Vendido') {
-          errors.push(`Venda linha ${lineNum}: lote "${batchId}" já está esgotado (todas as unidades vendidas).`);
+          errors.push(this.t.instant('importErrors.saleBatchSoldOut', { line: lineNum, batchId }));
           continue;
         }
       }
 
-      if (!saleDateRaw)      { errors.push(`Venda linha ${lineNum}: "Data da Venda" é obrigatória.`);     continue; }
-      if (quantitySold < 1)  { errors.push(`Venda linha ${lineNum}: "Quantidade Vendida" deve ser ≥ 1.`); continue; }
-      if (unitPrice <= 0)    { errors.push(`Venda linha ${lineNum}: "Preço Unitário" deve ser > 0.`);     continue; }
-      if (feePct < 0)         { errors.push(`Venda linha ${lineNum}: "Taxa Mercado Livre" não pode ser negativa.`);     continue; }
-      if (sellerShipping < 0) { errors.push(`Venda linha ${lineNum}: "Frete Vendedor" não pode ser negativo.`);          continue; }
-      if (flexRefund < 0)     { errors.push(`Venda linha ${lineNum}: "Estorno Envio Flex" não pode ser negativo.`);      continue; }
-      if (discount < 0)       { errors.push(`Venda linha ${lineNum}: "Desconto / Cupom" não pode ser negativo.`);        continue; }
-      if (otherCosts < 0)     { errors.push(`Venda linha ${lineNum}: "Outros Custos" não pode ser negativo.`);           continue; }
+      if (!saleDateRaw)      { errors.push(this.t.instant('importErrors.saleDateRequired', { line: lineNum }));  continue; }
+      if (quantitySold < 1)  { errors.push(this.t.instant('importErrors.saleQtyMin', { line: lineNum }));        continue; }
+      if (unitPrice <= 0)    { errors.push(this.t.instant('importErrors.salePriceMin', { line: lineNum }));      continue; }
+      if (feePct < 0)         { errors.push(this.t.instant('importErrors.saleFeeNeg', { line: lineNum }));        continue; }
+      if (sellerShipping < 0) { errors.push(this.t.instant('importErrors.saleShippingNeg', { line: lineNum }));   continue; }
+      if (flexRefund < 0)     { errors.push(this.t.instant('importErrors.saleFlexNeg', { line: lineNum }));       continue; }
+      if (discount < 0)       { errors.push(this.t.instant('importErrors.saleDiscountNeg', { line: lineNum }));   continue; }
+      if (otherCosts < 0)     { errors.push(this.t.instant('importErrors.saleOtherNeg', { line: lineNum }));      continue; }
 
       const saleDate = this.parseDate(saleDateRaw);
-      if (!saleDate) { errors.push(`Venda linha ${lineNum}: data inválida "${saleDateRaw}". Use DD/MM/AAAA.`); continue; }
+      if (!saleDate) { errors.push(this.t.instant('importErrors.saleInvalidDate', { line: lineNum, value: saleDateRaw })); continue; }
 
       if (batch && saleDate < batch.purchaseDate) {
-        errors.push(
-          `Venda linha ${lineNum}: data da venda (${this.formatDateBr(saleDate)}) é anterior à data da compra do lote "${batchId}" (${this.formatDateBr(batch.purchaseDate)}).`
-        );
+        errors.push(this.t.instant('importErrors.saleBeforePurchase', {
+          line: lineNum,
+          saleDate: this.formatDateBr(saleDate),
+          batchId,
+          purchaseDate: this.formatDateBr(batch.purchaseDate),
+        }));
         continue;
       }
 
@@ -574,9 +579,12 @@ export class ImportService {
         const alreadyUsed = usedByBatch.get(batchId) ?? 0;
         const remaining = batch.quantityPurchased - alreadyUsed;
         if (quantitySold > remaining) {
-          errors.push(
-            `Venda linha ${lineNum}: quantidade vendida (${quantitySold}) excede o estoque disponível do lote "${batchId}" (${remaining} un. restantes).`
-          );
+          errors.push(this.t.instant('importErrors.saleExceedsStock', {
+            line: lineNum,
+            qty: quantitySold,
+            batchId,
+            remaining,
+          }));
           continue;
         }
         usedByBatch.set(batchId, alreadyUsed + quantitySold);

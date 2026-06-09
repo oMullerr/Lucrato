@@ -11,7 +11,9 @@ import { MatMenuModule } from '@angular/material/menu';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from './core/services/theme.service';
+import { LanguageService } from './core/services/language.service';
 import { DataService } from './core/services/data.service';
 import { AuthService } from './core/services/auth.service';
 import { QuickActionsService } from './core/services/quick-actions.service';
@@ -31,27 +33,28 @@ interface NavItem {
   title?: string;
 }
 
+/** Labels/titles are i18n keys resolved with the `translate` pipe in the template. */
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: 'PRINCIPAL',
+    label: 'nav.groupMain',
     items: [
-      { path: '/inventory',  label: 'Estoque',   icon: 'inventory_2', title: 'Panorama' },
-      { path: '/dashboard',  label: 'Dashboard', icon: 'analytics',   title: 'Dashboard' },
-      { path: '/analytics',  label: 'Análises',  icon: 'insights',    title: 'Análises' },
+      { path: '/inventory',  label: 'nav.inventory', icon: 'inventory_2', title: 'nav.inventoryTitle' },
+      { path: '/dashboard',  label: 'nav.dashboard', icon: 'analytics',   title: 'nav.dashboard' },
+      { path: '/analytics',  label: 'nav.analytics', icon: 'insights',    title: 'nav.analytics' },
     ],
   },
   {
-    label: 'REGISTROS',
+    label: 'nav.groupRecords',
     items: [
-      { path: '/purchases', label: 'Compras', icon: 'shopping_cart', title: 'Compras' },
-      { path: '/sales',     label: 'Vendas',  icon: 'sell',          title: 'Vendas' },
+      { path: '/purchases', label: 'nav.purchases', icon: 'shopping_cart', title: 'nav.purchases' },
+      { path: '/sales',     label: 'nav.sales',     icon: 'sell',          title: 'nav.sales' },
     ],
   },
   {
-    label: 'SISTEMA',
+    label: 'nav.groupSystem',
     items: [
-      { path: '/settings',     label: 'Configurações', icon: 'tune',         title: 'Configurações' },
-      { path: '/instructions', label: 'Instruções',    icon: 'menu_book',    title: 'Instruções' },
+      { path: '/settings',     label: 'nav.settings',     icon: 'tune',      title: 'nav.settings' },
+      { path: '/instructions', label: 'nav.instructions', icon: 'menu_book', title: 'nav.instructions' },
     ],
   },
 ];
@@ -64,6 +67,7 @@ const NAV_GROUPS: NavGroup[] = [
     RouterOutlet, RouterLink, RouterLinkActive,
     MatSidenavModule, MatToolbarModule, MatListModule,
     MatIconModule, MatButtonModule, MatDividerModule, MatTooltipModule, MatMenuModule,
+    TranslateModule,
     FabActionsComponent,
     ConnectionBannerComponent,
   ],
@@ -72,6 +76,7 @@ const NAV_GROUPS: NavGroup[] = [
 })
 export class AppComponent {
   protected readonly theme = inject(ThemeService);
+  protected readonly lang = inject(LanguageService);
   protected readonly data = inject(DataService);
   protected readonly auth = inject(AuthService);
   protected readonly quick = inject(QuickActionsService);
@@ -79,6 +84,7 @@ export class AppComponent {
   private readonly router = inject(Router);
   private readonly bp = inject(BreakpointObserver);
   private readonly notify = inject(NotifyService);
+  private readonly t = inject(TranslateService);
 
   protected readonly isMobile = toSignal(
     this.bp.observe('(max-width: 768px)').pipe(map(r => r.matches)),
@@ -107,20 +113,24 @@ export class AppComponent {
     { initialValue: this.router.url }
   );
 
+  /** Returns an i18n key; the template resolves it with the `translate` pipe. */
   protected readonly currentPageTitle = computed(() => {
     const url = this.currentUrl() ?? '/';
     for (const group of NAV_GROUPS) {
       const found = group.items.find(it => url.startsWith(it.path));
       if (found) return found.title ?? found.label;
     }
-    if (url.startsWith('/profile')) return 'Perfil';
+    if (url.startsWith('/profile')) return 'nav.profile';
     return '';
   });
 
   protected readonly statusLabel = computed(() => {
+    this.lang.lang(); // re-evaluate when the language changes
     const p = this.data.purchases().length;
     const s = this.data.sales().length;
-    return `${p} ${p === 1 ? 'lote' : 'lotes'} · ${s} ${s === 1 ? 'venda' : 'vendas'}`;
+    const pl = this.t.instant(p === 1 ? 'topbar.batchOne' : 'topbar.batchOther');
+    const sl = this.t.instant(s === 1 ? 'topbar.saleOne' : 'topbar.saleOther');
+    return this.t.instant('topbar.status', { p, pl, s, sl });
   });
 
   protected readonly avatarInitials = computed(() => {
@@ -146,8 +156,8 @@ export class AppComponent {
       .subscribe(event => {
         if (isChunkLoadError(event.error)) {
           this.notify.withAction(
-            'Nova versão disponível. Recarregue a página.',
-            'Recarregar',
+            this.t.instant('errors.newVersion'),
+            this.t.instant('errors.reload'),
             () => globalThis.location?.reload(),
             'warning',
           );

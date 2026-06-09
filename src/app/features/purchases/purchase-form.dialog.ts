@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslateModule } from '@ngx-translate/core';
 import { Purchase } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
@@ -24,7 +25,7 @@ export interface PurchaseDialogData {
   imports: [
     FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatDatepickerModule, MatTooltipModule, BrlPipe,
-    CurrencyInputDirective,
+    CurrencyInputDirective, TranslateModule,
   ],
   templateUrl: './purchase-form.dialog.html',
   styleUrl: './purchase-form.dialog.scss',

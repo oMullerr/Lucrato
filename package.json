@@ -25,6 +25,8 @@
     "@angular/platform-browser": "^18.2.0",
     "@angular/platform-browser-dynamic": "^18.2.0",
     "@angular/router": "^18.2.0",
+    "@ngx-translate/core": "^15.0.0",
+    "@ngx-translate/http-loader": "^8.0.0",
     "chart.js": "^4.4.4",
     "firebase": "^10.14.1",
     "ng2-charts": "^6.0.1",

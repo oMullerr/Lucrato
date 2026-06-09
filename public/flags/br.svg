@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="Brasil">
+  <rect width="640" height="480" fill="#009B3A"/>
+  <polygon points="320,52 588,240 320,428 52,240" fill="#FEDF00"/>
+  <clipPath id="br-globe"><circle cx="320" cy="240" r="108"/></clipPath>
+  <circle cx="320" cy="240" r="108" fill="#002776"/>
+  <path clip-path="url(#br-globe)" d="M212,250 Q320,200 428,250 L428,272 Q320,222 212,272 Z" fill="#fff"/>
+</svg>

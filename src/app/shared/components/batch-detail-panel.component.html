@@ -5,7 +5,7 @@
         <span class="batch-id mono">{{ b.id }}</span>
         <app-status-badge [status]="b.status" />
       </div>
-      <button mat-icon-button class="close-btn" (click)="closed.emit()" aria-label="Fechar painel">
+      <button mat-icon-button class="close-btn" (click)="closed.emit()" [attr.aria-label]="'batchPanel.closePanel' | translate">
         <mat-icon>close</mat-icon>
       </button>
     </header>
@@ -17,36 +17,36 @@
       <app-color-pill [name]="b.supplier" kind="supplier" />
     </div>
 
-    <section class="stats" aria-label="Estatísticas do lote">
+    <section class="stats" [attr.aria-label]="'batchPanel.statsLabel' | translate">
       <div class="stat">
-        <span class="stat-label">Estoque atual</span>
+        <span class="stat-label">{{ 'batchPanel.currentStock' | translate }}</span>
         <span class="stat-value mono" [class.text-success]="b.currentStock > 0" [class.text-muted]="b.currentStock <= 0">
           {{ b.currentStock }}
         </span>
-        <span class="stat-hint">de {{ b.quantityPurchased }}</span>
+        <span class="stat-hint">{{ 'batchPanel.of' | translate:{ qty: b.quantityPurchased } }}</span>
       </div>
       <div class="stat">
-        <span class="stat-label">Vendido</span>
+        <span class="stat-label">{{ 'batchPanel.sold' | translate }}</span>
         <span class="stat-value mono">{{ b.quantitySold }}</span>
         <span class="stat-hint">{{ percentSold() }}%</span>
       </div>
       <div class="stat">
-        <span class="stat-label">Capital parado</span>
+        <span class="stat-label">{{ 'batchPanel.idleCapital' | translate }}</span>
         <span class="stat-value mono" [class.text-warning]="b.idleValue > 0">{{ b.idleValue | brl }}</span>
       </div>
       <div class="stat">
-        <span class="stat-label">Dias em estoque</span>
+        <span class="stat-label">{{ 'batchPanel.daysInStock' | translate }}</span>
         <span class="stat-value mono">{{ b.daysInStock }}</span>
-        <span class="stat-hint">dias</span>
+        <span class="stat-hint">{{ 'batchPanel.days' | translate }}</span>
       </div>
       <div class="stat">
-        <span class="stat-label">Margem média</span>
+        <span class="stat-label">{{ 'batchPanel.avgMargin' | translate }}</span>
         <span class="stat-value mono" [attr.data-tone]="marginTone()">
           @if (b.averageMargin != null) { {{ (b.averageMargin * 100).toFixed(1) }}% } @else { — }
         </span>
       </div>
       <div class="stat">
-        <span class="stat-label">Custo unitário real</span>
+        <span class="stat-label">{{ 'batchPanel.realUnitCost' | translate }}</span>
         <span class="stat-value mono">{{ b.actualUnitCost | brl }}</span>
       </div>
     </section>
@@ -64,7 +64,7 @@
     @if (batchSales().length > 0) {
       <section class="timeline">
         <div class="section-head">
-          <span class="t-caption">Últimas vendas</span>
+          <span class="t-caption">{{ 'batchPanel.recentSales' | translate }}</span>
           <span class="count">{{ batchSales().length }}</span>
         </div>
         <ol class="sales-list">
@@ -86,19 +86,19 @@
       </section>
     } @else {
       <section class="empty-sales">
-        <span class="t-caption">Nenhuma venda registrada para este lote ainda.</span>
+        <span class="t-caption">{{ 'batchPanel.noSales' | translate }}</span>
       </section>
     }
 
     <footer class="panel-foot">
       <button mat-stroked-button (click)="editRequested.emit(b)">
         <mat-icon>edit</mat-icon>
-        Editar lote
+        {{ 'batchPanel.editBatch' | translate }}
       </button>
       @if (b.status === 'Em trânsito') {
         <button mat-stroked-button class="receive-btn" (click)="markReceived()">
           <mat-icon>move_to_inbox</mat-icon>
-          Marcar recebido
+          {{ 'batchPanel.markReceived' | translate }}
         </button>
       }
       <button
@@ -106,10 +106,10 @@
         class="primary-cta"
         (click)="openNewSale()"
         [disabled]="b.currentStock <= 0"
-        [matTooltip]="b.currentStock <= 0 ? 'Sem estoque disponível' : ''"
+        [matTooltip]="b.currentStock <= 0 ? ('batchPanel.noStock' | translate) : ''"
       >
         <mat-icon>sell</mat-icon>
-        Nova venda
+        {{ 'quick.newSale' | translate }}
       </button>
     </footer>
   </aside>

@@ -16,26 +16,26 @@
             <path d="M1 7 L6 1 L11 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
-        <span class="wm-tag">Gestão Mercado Livre</span>
+        <span class="wm-tag">{{ 'nav.tagline' | translate }}</span>
       }
     </a>
 
-    <nav class="nav" aria-label="Navegação principal">
+    <nav class="nav" [attr.aria-label]="'nav.mainNav' | translate">
       @for (group of navGroups; track group.label) {
         <div class="nav-group">
-          <div class="nav-label">{{ group.label }}</div>
+          <div class="nav-label">{{ group.label | translate }}</div>
           @for (item of group.items; track item.path) {
             <a
               [routerLink]="item.path"
               routerLinkActive="active"
               class="nav-item"
-              [matTooltip]="isCompactSidebar() ? item.label : ''"
+              [matTooltip]="isCompactSidebar() ? (item.label | translate) : ''"
               matTooltipPosition="right"
               (click)="closeSidebarOnMobile()"
             >
               <span class="active-dot" aria-hidden="true"></span>
               <mat-icon>{{ item.icon }}</mat-icon>
-              <span class="nav-text">{{ item.label }}</span>
+              <span class="nav-text">{{ item.label | translate }}</span>
             </a>
           }
         </div>
@@ -56,15 +56,15 @@
     @if (auth.isLoggedIn()) {
       <mat-toolbar class="topbar">
         @if (isMobile()) {
-          <button mat-icon-button class="hamburger-btn" (click)="toggleSidebar()" aria-label="Abrir menu">
+          <button mat-icon-button class="hamburger-btn" (click)="toggleSidebar()" [attr.aria-label]="'topbar.openMenu' | translate">
             <mat-icon>menu</mat-icon>
           </button>
         }
 
-        <div class="breadcrumb" aria-label="Localização">
+        <div class="breadcrumb" [attr.aria-label]="'topbar.location' | translate">
           <span class="bc-root">Lucrato</span>
           <span class="bc-sep">/</span>
-          <span class="bc-current">{{ currentPageTitle() }}</span>
+          <span class="bc-current">{{ currentPageTitle() | translate }}</span>
         </div>
 
         <span class="topbar-spacer"></span>
@@ -72,9 +72,30 @@
         <button
           mat-icon-button
           class="topbar-btn"
+          [matMenuTriggerFor]="langMenu"
+          [matTooltip]="'topbar.language' | translate"
+          [attr.aria-label]="'topbar.language' | translate"
+        >
+          <mat-icon>language</mat-icon>
+        </button>
+        <mat-menu #langMenu="matMenu" xPosition="before">
+          @for (option of lang.available; track option.code) {
+            <button mat-menu-item (click)="lang.set(option.code)">
+              <img class="lang-flag" [src]="option.flag" alt="" aria-hidden="true" width="20" height="15" />
+              <span class="lang-label">{{ option.label }}</span>
+              @if (lang.lang() === option.code) {
+                <mat-icon class="lang-check">check</mat-icon>
+              }
+            </button>
+          }
+        </mat-menu>
+
+        <button
+          mat-icon-button
+          class="topbar-btn"
           (click)="theme.toggle()"
-          [matTooltip]="theme.isDark() ? 'Modo claro' : 'Modo escuro'"
-          aria-label="Alternar tema"
+          [matTooltip]="(theme.isDark() ? 'topbar.lightMode' : 'topbar.darkMode') | translate"
+          [attr.aria-label]="'topbar.toggleTheme' | translate"
         >
           <mat-icon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
         </button>
@@ -89,12 +110,12 @@
         <mat-menu #userMenu="matMenu" xPosition="before">
           <button mat-menu-item routerLink="/profile">
             <mat-icon>person</mat-icon>
-            <span>Perfil</span>
+            <span>{{ 'topbar.profile' | translate }}</span>
           </button>
           <mat-divider />
           <button mat-menu-item (click)="logout()">
             <mat-icon>logout</mat-icon>
-            <span>Sair</span>
+            <span>{{ 'topbar.logout' | translate }}</span>
           </button>
         </mat-menu>
       </mat-toolbar>

@@ -16,10 +16,19 @@ jest.mock('xlsx', () => ({
   },
 }));
 
+import { TestBed } from '@angular/core/testing';
+import { TranslateService } from '@ngx-translate/core';
 import * as XLSX from 'xlsx-js-style';
 import * as XLSXRead from 'xlsx';
 import { ImportService } from './import.service';
 import { Purchase, Sale, Settings } from '../models/models';
+
+/** Stub TranslateService: returns the i18n key plus serialized params so assertions
+ *  can match the key (and interpolation params) instead of translated text. */
+const fakeTranslate = {
+  instant: (key: string, params?: Record<string, unknown>) =>
+    params ? `${key} ${JSON.stringify(params)}` : key,
+} as unknown as TranslateService;
 
 function makeSettings(overrides: Partial<Settings> = {}): Settings {
   return {
@@ -61,8 +70,16 @@ describe('ImportService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new ImportService();
+    TestBed.configureTestingModule({
+      providers: [
+        ImportService,
+        { provide: TranslateService, useValue: fakeTranslate },
+      ],
+    });
+    service = TestBed.inject(ImportService);
   });
+
+  afterEach(() => TestBed.resetTestingModule());
 
   // ─── Helpers puros ─────────────────────────────────
 
@@ -241,7 +258,7 @@ describe('ImportService', () => {
         ['h1'], ['ind'], ['ex'],
         ['', 'Cat', 'Forn', '01/01/2025', '', 10, 100, 0, 0, '', ''],
       ]);
-      expect(errors[0]).toMatch(/linha 4.+Produto/);
+      expect(errors[0]).toMatch(/purchaseProductRequired.+"line":4/);
     });
 
     it('acumula erro quando "Categoria" está vazia', () => {
@@ -249,7 +266,7 @@ describe('ImportService', () => {
         ['h1'], ['ind'], ['ex'],
         ['Prod', '', 'Forn', '01/01/2025', '', 10, 100, 0, 0, '', ''],
       ]);
-      expect(errors[0]).toMatch(/Categoria/);
+      expect(errors[0]).toMatch(/purchaseCategoryRequired/);
     });
 
     it('acumula erro quando "Data da Compra" está vazia', () => {
@@ -257,7 +274,7 @@ describe('ImportService', () => {
         ['h1'], ['ind'], ['ex'],
         ['Prod', 'Cat', 'Forn', '', '', 10, 100, 0, 0, '', ''],
       ]);
-      expect(errors[0]).toMatch(/Data da Compra/);
+      expect(errors[0]).toMatch(/purchaseDateRequired/);
     });
 
     it('acumula erro quando quantidade < 1', () => {
@@ -265,7 +282,7 @@ describe('ImportService', () => {
         ['h1'], ['ind'], ['ex'],
         ['Prod', 'Cat', 'Forn', '01/01/2025', '', 0, 100, 0, 0, '', ''],
       ]);
-      expect(errors[0]).toMatch(/Quantidade Comprada/);
+      expect(errors[0]).toMatch(/purchaseQtyMin/);
     });
 
     it('acumula erro quando data é inválida', () => {
@@ -273,7 +290,7 @@ describe('ImportService', () => {
         ['h1'], ['ind'], ['ex'],
         ['Prod', 'Cat', 'Forn', 'data-ruim', '', 10, 100, 0, 0, '', ''],
       ]);
-      expect(errors[0]).toMatch(/data inválida/);
+      expect(errors[0]).toMatch(/purchaseInvalidDate/);
     });
 
     it('gera IDs sequenciais (C001, C002, ...) ignorando IDs existentes', () => {
@@ -315,7 +332,7 @@ describe('ImportService', () => {
       ];
       const { result, errors } = callParse(tooManyRows);
       expect(result).toEqual([]);
-      expect(errors[0]).toMatch(/limite de 5000/);
+      expect(errors[0]).toMatch(/purchasesExceed.+"max":5000/);
     });
   });
 
@@ -350,7 +367,7 @@ describe('ImportService', () => {
         ['h'], ['i'], ['e'],
         ['', '01/06/2025', 'ML', 1, 100, 12, 0, 0, 0, 0, 'Concluída', ''],
       ]);
-      expect(errors[0]).toMatch(/ID do Lote.+obrigatório/);
+      expect(errors[0]).toMatch(/saleBatchRequired/);
     });
 
     it('rejeita quando batchId não existe', () => {
@@ -358,7 +375,7 @@ describe('ImportService', () => {
         ['h'], ['i'], ['e'],
         ['C999', '01/06/2025', 'ML', 1, 100, 12, 0, 0, 0, 0, 'Concluída', ''],
       ]);
-      expect(errors[0]).toMatch(/não encontrado/);
+      expect(errors[0]).toMatch(/saleBatchNotFound/);
     });
 
     it('rejeita venda quando lote ainda está em trânsito (sem receiptDate)', () => {
@@ -367,7 +384,7 @@ describe('ImportService', () => {
         [['h'], ['i'], ['e'], ['C100', '01/06/2025', 'ML', 1, 100, 12, 0, 0, 0, 0, 'Concluída', '']],
         [inTransit],
       );
-      expect(errors[0]).toMatch(/em trânsito/);
+      expect(errors[0]).toMatch(/saleBatchInTransit/);
     });
 
     it('rejeita quando quantidade excede estoque disponível', () => {
@@ -376,7 +393,7 @@ describe('ImportService', () => {
         [['h'], ['i'], ['e'], ['C001', '01/06/2025', 'ML', 10, 100, 12, 0, 0, 0, 0, 'Concluída', '']],
         [batch],
       );
-      expect(errors[0]).toMatch(/excede o estoque/);
+      expect(errors[0]).toMatch(/saleExceedsStock/);
     });
 
     it('rejeita quando saleDate < purchaseDate do lote', () => {
@@ -386,7 +403,7 @@ describe('ImportService', () => {
         [batch],
       );
       expect(errors.length).toBeGreaterThan(0);
-      expect(errors.join(' ')).toMatch(/anterior/);
+      expect(errors.join(' ')).toMatch(/saleBeforePurchase/);
     });
 
     it('rejeita valores negativos em frete, desconto, taxas', () => {
@@ -395,7 +412,7 @@ describe('ImportService', () => {
         [['h'], ['i'], ['e'], ['C001', '01/06/2025', 'ML', 1, 100, -5, 0, 0, 0, 0, 'Concluída', '']],
         [batch],
       );
-      expect(errors[0]).toMatch(/Taxa.+negativa/);
+      expect(errors[0]).toMatch(/saleFeeNeg/);
     });
 
     it('gera IDs sequenciais (V001, V002, ...)', () => {
@@ -469,7 +486,7 @@ describe('ImportService', () => {
       const result = await service.parseFile(makeFakeFile(), [], [], makeSettings());
       expect(result.purchases).toEqual([]);
       expect(result.sales).toEqual([]);
-      expect(result.errors).toEqual(['Arquivo inválido ou corrompido.']);
+      expect(result.errors).toEqual(['importErrors.invalidFile']);
     });
 
     it('retorna sucesso quando XLSX.read e parsers respondem corretamente', async () => {
@@ -490,7 +507,7 @@ describe('ImportService', () => {
       });
       (XLSXRead.utils.sheet_to_json as jest.Mock).mockImplementation(() => { throw new Error('crash'); });
       const result = await service.parseFile(makeFakeFile(), [], [], makeSettings());
-      expect(result.errors).toEqual(['Arquivo inválido ou corrompido.']);
+      expect(result.errors).toEqual(['importErrors.invalidFile']);
     });
   });
 

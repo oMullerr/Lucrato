@@ -1,13 +1,13 @@
 <h2 mat-dialog-title>
   <mat-icon>{{ isEdit() ? 'edit' : 'sell' }}</mat-icon>
-  <span class="title-text">{{ isEdit() ? 'Editar Venda' : 'Nova Venda' }}</span>
-  <span class="id-badge" matTooltip="ID gerado automaticamente">{{ model().id }}</span>
+  <span class="title-text">{{ (isEdit() ? 'saleForm.editTitle' : 'saleForm.newTitle') | translate }}</span>
+  <span class="id-badge" [matTooltip]="'purchaseForm.autoId' | translate">{{ model().id }}</span>
 </h2>
 
 <mat-dialog-content>
   <form #form="ngForm" class="form-grid">
     <mat-form-field class="full">
-      <mat-label>ID Lote (da aba Compras)</mat-label>
+      <mat-label>{{ 'saleForm.batchId' | translate }}</mat-label>
       <mat-select
         [ngModel]="model().batchId"
         (ngModelChange)="onBatchIdChange($event)"
@@ -23,41 +23,41 @@
             [value]="batchFilter()"
             (input)="onBatchSearch($event)"
             (keydown)="onBatchSearchKeydown($event)"
-            placeholder="Buscar por produto..."
-            aria-label="Buscar lote por produto"
+            [placeholder]="'saleForm.searchByProduct' | translate"
+            [attr.aria-label]="'saleForm.searchBatchByProduct' | translate"
           />
         </div>
         @for (batch of filteredBatches(); track batch.id) {
           <mat-option [value]="batch.id">
             {{ batch.id }} — {{ batch.product }}
             @if (batch.currentStock <= 0) {
-              (esgotado)
+              {{ 'saleForm.soldOut' | translate }}
             } @else {
-              ({{ batch.currentStock }} disp.)
+              {{ 'saleForm.available' | translate:{ count: batch.currentStock } }}
             }
           </mat-option>
         }
         @if (availableBatches().length === 0) {
           <mat-option disabled>
-            Nenhum lote disponível. Cadastre uma compra com Data de Recebimento preenchida.
+            {{ 'saleForm.noBatchAvailable' | translate }}
           </mat-option>
         } @else if (filteredBatches().length === 0) {
-          <mat-option disabled>Nenhum lote encontrado para "{{ batchFilter() }}".</mat-option>
+          <mat-option disabled>{{ 'saleForm.noBatchFound' | translate:{ query: batchFilter() } }}</mat-option>
         }
       </mat-select>
       @if (!hasBatch()) {
-        <mat-hint>Selecione o lote para liberar os demais campos</mat-hint>
+        <mat-hint>{{ 'saleForm.selectBatchHint' | translate }}</mat-hint>
       }
     </mat-form-field>
 
     <mat-form-field class="full">
-      <mat-label>Produto</mat-label>
+      <mat-label>{{ 'purchases.colProduct' | translate }}</mat-label>
       <input matInput [value]="model().product" name="product" readonly />
-      <mat-hint>Preenchido automaticamente pelo lote</mat-hint>
+      <mat-hint>{{ 'saleForm.autoFilledByBatch' | translate }}</mat-hint>
     </mat-form-field>
 
     <mat-form-field>
-      <mat-label>Data da Venda</mat-label>
+      <mat-label>{{ 'saleForm.saleDate' | translate }}</mat-label>
       <input
         matInput
         [matDatepicker]="pickerSale"
@@ -72,13 +72,13 @@
       <mat-datepicker #pickerSale></mat-datepicker>
       @if (saleBeforePurchase()) {
         <mat-hint class="error-hint">
-          Não pode ser anterior à data da compra do lote
+          {{ 'saleForm.saleBeforePurchase' | translate }}
         </mat-hint>
       }
     </mat-form-field>
 
     <mat-form-field>
-      <mat-label>Canal</mat-label>
+      <mat-label>{{ 'sales.channel' | translate }}</mat-label>
       <mat-select
         [ngModel]="model().channel"
         (ngModelChange)="set('channel', $event)"
@@ -91,7 +91,7 @@
     </mat-form-field>
 
     <mat-form-field>
-      <mat-label>Qtd. Vendida</mat-label>
+      <mat-label>{{ 'saleForm.quantitySold' | translate }}</mat-label>
       <input matInput type="number"
         [ngModel]="model().quantitySold"
         (ngModelChange)="setNum('quantitySold', $event)"
@@ -99,15 +99,15 @@
         name="quantitySold" min="1" required />
       @if (exceedsStock()) {
         <mat-hint class="error-hint">
-          Excede o estoque: máximo {{ maxAvailable() }} un. disponíveis
+          {{ 'saleForm.exceedsStock' | translate:{ max: maxAvailable() } }}
         </mat-hint>
       } @else if (maxAvailable() !== null) {
-        <mat-hint>Disponível: {{ maxAvailable() }} un.</mat-hint>
+        <mat-hint>{{ 'saleForm.availableUnits' | translate:{ max: maxAvailable() } }}</mat-hint>
       }
     </mat-form-field>
 
     <mat-form-field>
-      <mat-label>Preço Unitário</mat-label>
+      <mat-label>{{ 'saleForm.unitPrice' | translate }}</mat-label>
       <span matTextPrefix>R$&nbsp;</span>
       <input matInput appCurrencyInput inputmode="numeric"
         [ngModel]="model().unitPrice"
@@ -121,14 +121,14 @@
       <div class="taxa-header">
         <span class="taxa-label">
           <mat-icon>local_offer</mat-icon>
-          Taxa Mercado Livre (%)
+          {{ 'saleForm.mlFeeLabel' | translate }}
         </span>
         <button
           type="button"
           mat-icon-button
           (click)="resetFee()"
           [disabled]="!hasBatch()"
-          matTooltip="Resetar para padrão ({{ (defaultFee() * 100).toFixed(1) }}%)"
+          [matTooltip]="'saleForm.resetToDefault' | translate:{ fee: (defaultFee() * 100).toFixed(1) }"
         >
           <mat-icon>restart_alt</mat-icon>
         </button>
@@ -149,26 +149,26 @@
         <span matSuffix class="percent-suffix">%</span>
       </mat-form-field>
       <small class="taxa-hint">
-        Padrão: {{ (defaultFee() * 100).toFixed(1) }}% · Edite para essa venda específica
+        {{ 'saleForm.feeHint' | translate:{ fee: (defaultFee() * 100).toFixed(1) } }}
       </small>
     </div>
 
     <!-- Shipping type toggle -->
     <div class="shipping-toggle full">
       <mat-icon>local_shipping</mat-icon>
-      <span [class.active]="!isFlexShipping()">Correios</span>
+      <span [class.active]="!isFlexShipping()">{{ 'saleForm.shippingCorreios' | translate }}</span>
       <mat-slide-toggle
         [checked]="isFlexShipping()"
         (change)="setShippingType($event.checked)"
         [disabled]="!hasBatch()"
         color="primary"
       ></mat-slide-toggle>
-      <span [class.active]="isFlexShipping()">Flex</span>
+      <span [class.active]="isFlexShipping()">{{ 'saleForm.shippingFlex' | translate }}</span>
     </div>
 
     @if (!isFlexShipping()) {
       <mat-form-field>
-        <mat-label>Frete Vendedor</mat-label>
+        <mat-label>{{ 'saleForm.sellerShipping' | translate }}</mat-label>
         <span matTextPrefix>R$&nbsp;</span>
         <input matInput appCurrencyInput inputmode="numeric"
           [ngModel]="model().sellerShipping"
@@ -178,19 +178,19 @@
       </mat-form-field>
     } @else {
       <mat-form-field>
-        <mat-label>Estorno Envio Flex</mat-label>
+        <mat-label>{{ 'saleForm.flexRefund' | translate }}</mat-label>
         <span matTextPrefix>R$&nbsp;</span>
         <input matInput appCurrencyInput inputmode="numeric"
           [ngModel]="model().flexRefund ?? 0"
           (ngModelChange)="setNum('flexRefund', $event)"
           [disabled]="!hasBatch()"
           name="flexRefund" />
-        <mat-hint>Valor devolvido pelo ML — somado à receita</mat-hint>
+        <mat-hint>{{ 'saleForm.flexRefundHint' | translate }}</mat-hint>
       </mat-form-field>
     }
 
     <mat-form-field>
-      <mat-label>Desconto / Cupom</mat-label>
+      <mat-label>{{ 'saleForm.discount' | translate }}</mat-label>
       <span matTextPrefix>R$&nbsp;</span>
       <input matInput appCurrencyInput inputmode="numeric"
         [ngModel]="model().discount"
@@ -200,7 +200,7 @@
     </mat-form-field>
 
     <mat-form-field class="full">
-      <mat-label>Outros Custos</mat-label>
+      <mat-label>{{ 'purchaseForm.otherCosts' | translate }}</mat-label>
       <span matTextPrefix>R$&nbsp;</span>
       <input matInput appCurrencyInput inputmode="numeric"
         [ngModel]="model().otherCosts"
@@ -210,7 +210,7 @@
     </mat-form-field>
 
     <mat-form-field class="full">
-      <mat-label>Observações</mat-label>
+      <mat-label>{{ 'purchaseForm.notes' | translate }}</mat-label>
       <textarea matInput rows="2"
         [ngModel]="model().notes"
         (ngModelChange)="set('notes', $event)"
@@ -223,33 +223,33 @@
   <div class="preview">
     <div class="preview-title">
       <mat-icon>calculate</mat-icon>
-      Resultado calculado
+      {{ 'saleForm.calculatedResult' | translate }}
     </div>
     <div class="preview-stats">
       <div>
-        <span>Receita Bruta</span>
+        <span>{{ 'saleForm.grossRevenue' | translate }}</span>
         <strong class="text-info">{{ preview().grossRevenue | brl }}</strong>
       </div>
       <div>
-        <span>Taxa L</span>
+        <span>{{ 'saleForm.feeShort' | translate }}</span>
         <strong class="text-warning">- {{ preview().feeAmount | brl }}</strong>
       </div>
       <div>
-        <span>Receita Líquida</span>
+        <span>{{ 'saleForm.netRevenue' | translate }}</span>
         <strong>{{ preview().netRevenue | brl }}</strong>
       </div>
       <div>
-        <span>Custo Produto</span>
+        <span>{{ 'saleForm.productCost' | translate }}</span>
         <strong class="text-danger">- {{ preview().proportionalCost | brl }}</strong>
       </div>
       <div>
-        <span>Lucro Líquido</span>
+        <span>{{ 'saleForm.netProfit' | translate }}</span>
         <strong [class]="profitClass()">
           {{ preview().netProfit | brl }}
         </strong>
       </div>
       <div>
-        <span>Margem Líquida</span>
+        <span>{{ 'saleForm.netMargin' | translate }}</span>
         <strong [class]="marginClass()">
           {{ (preview().netMargin * 100).toFixed(1) }}%
         </strong>
@@ -259,9 +259,9 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="ref.close()">Cancelar</button>
+  <button mat-button (click)="ref.close()">{{ 'common.cancel' | translate }}</button>
   <button mat-flat-button color="primary" (click)="save()" [disabled]="!isValid()">
     <mat-icon>save</mat-icon>
-    {{ isEdit() ? 'Salvar' : 'Adicionar' }}
+    {{ (isEdit() ? 'common.save' : 'common.add') | translate }}
   </button>
 </mat-dialog-actions>

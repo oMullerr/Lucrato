@@ -4,6 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { logError } from '../../core/services/logger';
@@ -14,6 +15,7 @@ import { logError } from '../../core/services/logger';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     MatCardModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule,
+    TranslateModule,
   ],
   templateUrl: './verify-email.component.html',
   styleUrl: './verify-email.component.scss',
@@ -22,6 +24,7 @@ export class VerifyEmailComponent implements OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly notify = inject(NotifyService);
   private readonly router = inject(Router);
+  private readonly t = inject(TranslateService);
 
   protected readonly email = computed(() => this.auth.currentUser()?.email ?? '');
   protected readonly checking = signal(false);
@@ -56,10 +59,10 @@ export class VerifyEmailComponent implements OnDestroy {
     try {
       await this.auth.reloadCurrentUser();
       if (this.auth.currentUser()?.emailVerified) {
-        this.notify.success('E-mail verificado! Bem-vindo.');
+        this.notify.success(this.t.instant('auth.verifiedWelcome'));
         this.router.navigate(['/inventory']);
       } else {
-        this.notify.warning('Ainda não detectamos a verificação. Confira seu e-mail.');
+        this.notify.warning(this.t.instant('auth.notDetected'));
       }
     } finally {
       this.checking.set(false);
@@ -71,15 +74,15 @@ export class VerifyEmailComponent implements OnDestroy {
     this.resending.set(true);
     try {
       await this.auth.sendVerificationEmail();
-      this.notify.success('E-mail de verificação reenviado.');
+      this.notify.success(this.t.instant('auth.verificationResent'));
       this.startCooldown(45);
     } catch (err: any) {
       logError('[VerifyEmail] resend falhou:', err);
       if (err?.code === 'auth/too-many-requests') {
-        this.notify.error('Muitas tentativas. Aguarde alguns minutos.');
+        this.notify.error(this.t.instant('auth.tooManyShort'));
         this.startCooldown(60);
       } else {
-        this.notify.error('Não foi possível reenviar o e-mail agora.');
+        this.notify.error(this.t.instant('auth.resendFailed'));
       }
     } finally {
       this.resending.set(false);

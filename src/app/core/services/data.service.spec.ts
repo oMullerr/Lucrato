@@ -8,11 +8,15 @@ jest.mock('@angular/fire/firestore', () => ({
 
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Firestore, doc, setDoc, onSnapshot } from '@angular/fire/firestore';
 import { DataService } from './data.service';
 import { AuthService } from './auth.service';
 import { NotifyService } from './notify.service';
 import { ConnectionService } from './connection.service';
+
+/** Minimal TranslateService stub: returns the key so notify assertions stay text-agnostic. */
+const fakeTranslate = { instant: (key: string) => key } as unknown as TranslateService;
 import { Purchase, Sale, Database } from '../models/models';
 import { makeFakeUser, makeFakeDatabase, makeFakeSnapshot } from '../../../testing/firebase-mocks';
 
@@ -93,6 +97,7 @@ function setupHarness(initialUser: ReturnType<typeof makeFakeUser> | null | unde
       { provide: AuthService, useValue: fakeAuth },
       { provide: NotifyService, useValue: fakeNotify },
       { provide: ConnectionService, useValue: fakeConnection },
+      { provide: TranslateService, useValue: fakeTranslate },
     ],
   });
 

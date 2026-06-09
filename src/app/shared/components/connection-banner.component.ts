@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { TranslateModule } from '@ngx-translate/core';
 import { ConnectionService } from '../../core/services/connection.service';
 
 type BannerKind = 'error' | 'offline' | 'persistence' | 'syncing' | null;
@@ -9,7 +10,7 @@ type BannerKind = 'error' | 'offline' | 'persistence' | 'syncing' | null;
   selector: 'app-connection-banner',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, MatButtonModule],
+  imports: [MatIconModule, MatButtonModule, TranslateModule],
   templateUrl: './connection-banner.component.html',
   styleUrl: './connection-banner.component.scss',
 })

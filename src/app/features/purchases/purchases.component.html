@@ -16,13 +16,13 @@
   <mat-sidenav-content>
 
     <app-page-header
-      title="Compras"
-      eyebrow="LOTES · {{ purchases().length }}"
-      subtitle="Cadastre cada lote comprado. Custos com frete e outros são distribuídos automaticamente."
+      [title]="'purchases.title' | translate"
+      [eyebrow]="'purchases.eyebrow' | translate:{ count: purchases().length }"
+      [subtitle]="'purchases.subtitle' | translate"
     >
       <button mat-flat-button class="primary-cta" (click)="openNew()">
         <mat-icon>add</mat-icon>
-        Nova Compra
+        {{ 'purchases.newPurchase' | translate }}
       </button>
     </app-page-header>
 
@@ -34,12 +34,12 @@
       } @else if (purchases().length === 0) {
         <app-empty-state
           icon="shopping_cart"
-          title="Nenhuma compra cadastrada"
-          description="Cadastre o primeiro lote para começar a acompanhar custos, estoque e margens."
+          [title]="'purchases.emptyTitle' | translate"
+          [description]="'purchases.emptyDesc' | translate"
         >
           <button mat-flat-button class="primary-cta" (click)="openNew()">
             <mat-icon>add</mat-icon>
-            Adicionar compra
+            {{ 'purchases.addPurchase' | translate }}
           </button>
         </app-empty-state>
 
@@ -50,7 +50,7 @@
             <mat-icon matPrefix>search</mat-icon>
             <input
               matInput
-              placeholder="Buscar por produto, ID, categoria ou fornecedor..."
+              [placeholder]="'purchases.searchPlaceholder' | translate"
               [ngModel]="textFilter()"
               (ngModelChange)="textFilter.set($event)"
             />
@@ -62,7 +62,7 @@
               class="chip"
               [class.active]="statusFilter() === 'all'"
               (click)="setStatus('all')"
-            >Todos <span class="chip-count">{{ totals().all }}</span></button>
+            >{{ 'common.all' | translate }} <span class="chip-count">{{ totals().all }}</span></button>
 
             <button
               type="button"
@@ -71,7 +71,7 @@
               (click)="setStatus('Em Estoque')"
             >
               <span class="status-dot success" aria-hidden="true"></span>
-              Em estoque <span class="chip-count">{{ totals()['Em Estoque'] }}</span>
+              {{ 'status.Em Estoque' | translate }} <span class="chip-count">{{ totals()['Em Estoque'] }}</span>
             </button>
 
             <button
@@ -81,7 +81,7 @@
               (click)="setStatus('Atenção')"
             >
               <span class="status-dot warning" aria-hidden="true"></span>
-              Atenção <span class="chip-count">{{ totals()['Atenção'] }}</span>
+              {{ 'status.Atenção' | translate }} <span class="chip-count">{{ totals()['Atenção'] }}</span>
             </button>
 
             <button
@@ -91,7 +91,7 @@
               (click)="setStatus('Parado')"
             >
               <span class="status-dot danger" aria-hidden="true"></span>
-              Parado <span class="chip-count">{{ totals()['Parado'] }}</span>
+              {{ 'status.Parado' | translate }} <span class="chip-count">{{ totals()['Parado'] }}</span>
             </button>
 
             <button
@@ -101,7 +101,7 @@
               (click)="setStatus('Em trânsito')"
             >
               <span class="status-dot info" aria-hidden="true"></span>
-              Em trânsito <span class="chip-count">{{ totals()['Em trânsito'] }}</span>
+              {{ 'status.Em trânsito' | translate }} <span class="chip-count">{{ totals()['Em trânsito'] }}</span>
             </button>
 
             <button
@@ -111,7 +111,7 @@
               (click)="setStatus('Vendido')"
             >
               <span class="status-dot neutral" aria-hidden="true"></span>
-              Vendido <span class="chip-count">{{ totals()['Vendido'] }}</span>
+              {{ 'status.Vendido' | translate }} <span class="chip-count">{{ totals()['Vendido'] }}</span>
             </button>
           </div>
         </section>
@@ -122,14 +122,14 @@
               <table class="data-table" matSort>
                 <thead>
                   <tr>
-                    <th mat-sort-header="id">ID</th>
-                    <th mat-sort-header="product">Produto</th>
-                    <th class="hide-on-mobile" mat-sort-header="category">Categoria</th>
-                    <th class="hide-on-mobile" mat-sort-header="supplier">Fornecedor</th>
-                    <th class="hide-on-mobile" mat-sort-header="purchaseDate">Data</th>
-                    <th class="text-center" mat-sort-header="quantityPurchased" arrowPosition="before">Qtd</th>
-                    <th class="text-right" mat-sort-header="totalActualCost" arrowPosition="before">Custo total</th>
-                    <th mat-sort-header="status">Status</th>
+                    <th mat-sort-header="id">{{ 'purchases.colId' | translate }}</th>
+                    <th mat-sort-header="product">{{ 'purchases.colProduct' | translate }}</th>
+                    <th class="hide-on-mobile" mat-sort-header="category">{{ 'purchases.colCategory' | translate }}</th>
+                    <th class="hide-on-mobile" mat-sort-header="supplier">{{ 'purchases.colSupplier' | translate }}</th>
+                    <th class="hide-on-mobile" mat-sort-header="purchaseDate">{{ 'purchases.colDate' | translate }}</th>
+                    <th class="text-center" mat-sort-header="quantityPurchased" arrowPosition="before">{{ 'purchases.colQty' | translate }}</th>
+                    <th class="text-right" mat-sort-header="totalActualCost" arrowPosition="before">{{ 'purchases.colTotalCost' | translate }}</th>
+                    <th mat-sort-header="status">{{ 'purchases.colStatus' | translate }}</th>
                     <th class="text-right col-actions"></th>
                   </tr>
                 </thead>
@@ -153,7 +153,7 @@
                           mat-icon-button
                           class="row-action"
                           (click)="toggleRow(c.id, $event)"
-                          [matTooltip]="expandedRow() === c.id ? 'Recolher' : 'Detalhes inline'"
+                          [matTooltip]="(expandedRow() === c.id ? 'purchases.collapse' : 'purchases.inlineDetails') | translate"
                         >
                           <mat-icon>{{ expandedRow() === c.id ? 'expand_less' : 'expand_more' }}</mat-icon>
                         </button>
@@ -161,7 +161,7 @@
                           mat-icon-button
                           class="row-action"
                           (click)="edit(c, $event)"
-                          matTooltip="Editar"
+                          [matTooltip]="'common.edit' | translate"
                         >
                           <mat-icon>edit</mat-icon>
                         </button>
@@ -169,7 +169,7 @@
                           mat-icon-button
                           class="row-action danger"
                           (click)="confirmRemove(c, $event)"
-                          matTooltip="Remover"
+                          [matTooltip]="'common.remove' | translate"
                         >
                           <mat-icon>delete_outline</mat-icon>
                         </button>
@@ -179,14 +179,14 @@
                       <tr class="row-expansion" (click)="$event.stopPropagation()">
                         <td colspan="9">
                           <div class="expansion-grid">
-                            <div><span class="t-caption">Recebido em</span><strong class="mono">{{ c.receiptDate ? (c.receiptDate | brDate) : '—' }}</strong></div>
-                            <div><span class="t-caption">Custo unit. nominal</span><strong class="mono">{{ c.unitCost | brl }}</strong></div>
-                            <div><span class="t-caption">Custo unit. real</span><strong class="mono">{{ c.actualUnitCost | brl }}</strong></div>
-                            <div><span class="t-caption">Frete</span><strong class="mono">{{ c.purchaseShipping | brl }}</strong></div>
-                            <div><span class="t-caption">Outros custos</span><strong class="mono">{{ c.otherCosts | brl }}</strong></div>
-                            <div><span class="t-caption">Vendido</span><strong class="mono">{{ c.quantitySold }}</strong></div>
-                            <div><span class="t-caption">Estoque atual</span><strong class="mono">{{ c.currentStock }}</strong></div>
-                            <div><span class="t-caption">Capital parado</span><strong class="mono">{{ c.idleValue | brl }}</strong></div>
+                            <div><span class="t-caption">{{ 'purchases.receivedOn' | translate }}</span><strong class="mono">{{ c.receiptDate ? (c.receiptDate | brDate) : '—' }}</strong></div>
+                            <div><span class="t-caption">{{ 'purchases.nominalUnitCost' | translate }}</span><strong class="mono">{{ c.unitCost | brl }}</strong></div>
+                            <div><span class="t-caption">{{ 'purchases.realUnitCost' | translate }}</span><strong class="mono">{{ c.actualUnitCost | brl }}</strong></div>
+                            <div><span class="t-caption">{{ 'purchases.shipping' | translate }}</span><strong class="mono">{{ c.purchaseShipping | brl }}</strong></div>
+                            <div><span class="t-caption">{{ 'purchases.otherCosts' | translate }}</span><strong class="mono">{{ c.otherCosts | brl }}</strong></div>
+                            <div><span class="t-caption">{{ 'batchPanel.sold' | translate }}</span><strong class="mono">{{ c.quantitySold }}</strong></div>
+                            <div><span class="t-caption">{{ 'batchPanel.currentStock' | translate }}</span><strong class="mono">{{ c.currentStock }}</strong></div>
+                            <div><span class="t-caption">{{ 'batchPanel.idleCapital' | translate }}</span><strong class="mono">{{ c.idleValue | brl }}</strong></div>
                           </div>
                         </td>
                       </tr>
@@ -206,8 +206,8 @@
         } @else {
           <app-empty-state
             icon="filter_alt_off"
-            title="Nenhum lote encontrado"
-            description="Ajuste a busca ou o filtro de status para ver outros lotes."
+            [title]="'purchases.noneFoundTitle' | translate"
+            [description]="'purchases.noneFoundDesc' | translate"
           />
         }
       }

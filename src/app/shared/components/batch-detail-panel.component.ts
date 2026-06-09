@@ -2,8 +2,10 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output } f
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { QuickActionsService } from '../../core/services/quick-actions.service';
+import { LanguageService } from '../../core/services/language.service';
 import { ComputedPurchase, ComputedSale } from '../../core/models/models';
 import { BrlPipe } from '../pipes/brl.pipe';
 import { BrDatePipe } from '../pipes/br-date.pipe';
@@ -18,13 +20,15 @@ import { ColorPillComponent } from './color-pill.component';
   selector: 'app-batch-detail-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, MatButtonModule, MatTooltipModule, BrlPipe, BrDatePipe, StatusBadgeComponent, ColorPillComponent],
+  imports: [MatIconModule, MatButtonModule, MatTooltipModule, TranslateModule, BrlPipe, BrDatePipe, StatusBadgeComponent, ColorPillComponent],
   templateUrl: './batch-detail-panel.component.html',
   styleUrl: './batch-detail-panel.component.scss',
 })
 export class BatchDetailPanelComponent {
   private readonly dataService = inject(DataService);
   private readonly quick = inject(QuickActionsService);
+  private readonly t = inject(TranslateService);
+  private readonly lang = inject(LanguageService);
 
   readonly batch = input.required<ComputedPurchase | null>();
   readonly closed = output<void>();
@@ -57,6 +61,7 @@ export class BatchDetailPanelComponent {
   });
 
   protected readonly suggestion = computed(() => {
+    this.lang.lang(); // re-evaluate when the language changes
     const b = this.batch();
     if (!b) return null;
     const settings = this.dataService.settings();
@@ -66,8 +71,8 @@ export class BatchDetailPanelComponent {
       return {
         tone: 'success' as const,
         icon: 'check_circle',
-        title: 'Lote concluído',
-        message: 'Esse lote foi totalmente vendido. Considere uma recompra se a margem foi saudável.',
+        title: this.t.instant('batchPanel.completedTitle'),
+        message: this.t.instant('batchPanel.completedMsg'),
       };
     }
 
@@ -75,8 +80,8 @@ export class BatchDetailPanelComponent {
       return {
         tone: 'info' as const,
         icon: 'local_shipping',
-        title: 'Lote em trânsito',
-        message: 'Marque como recebido quando ele chegar para começar a contar o tempo de estoque.',
+        title: this.t.instant('batchPanel.inTransitTitle'),
+        message: this.t.instant('batchPanel.inTransitMsg'),
       };
     }
 
@@ -85,8 +90,11 @@ export class BatchDetailPanelComponent {
       return {
         tone: 'danger' as const,
         icon: 'priority_high',
-        title: `Parado há ${b.daysInStock} dias`,
-        message: `Capital de ${formatCurrency(b.idleValue)} parado. Considere reduzir o preço em ~${suggestedReduction}% para liberar estoque.`,
+        title: this.t.instant('batchPanel.staleTitle', { days: b.daysInStock }),
+        message: this.t.instant('batchPanel.staleMsg', {
+          value: formatCurrency(b.idleValue),
+          pct: suggestedReduction,
+        }),
       };
     }
 
@@ -94,8 +102,11 @@ export class BatchDetailPanelComponent {
       return {
         tone: 'warning' as const,
         icon: 'trending_down',
-        title: 'Margem abaixo do mínimo',
-        message: `Margem média de ${(b.averageMargin * 100).toFixed(1)}% está abaixo do mínimo configurado (${(settings.minimumMargin * 100).toFixed(0)}%).`,
+        title: this.t.instant('batchPanel.lowMarginTitle'),
+        message: this.t.instant('batchPanel.lowMarginMsg', {
+          margin: (b.averageMargin * 100).toFixed(1),
+          min: (settings.minimumMargin * 100).toFixed(0),
+        }),
       };
     }
 
@@ -103,8 +114,8 @@ export class BatchDetailPanelComponent {
       return {
         tone: 'warning' as const,
         icon: 'schedule',
-        title: 'Atenção: giro lento',
-        message: `Esse lote está em estoque há ${b.daysInStock} dias. Monitore antes que vire capital parado.`,
+        title: this.t.instant('batchPanel.attentionTitle'),
+        message: this.t.instant('batchPanel.attentionMsg', { days: b.daysInStock }),
       };
     }
 

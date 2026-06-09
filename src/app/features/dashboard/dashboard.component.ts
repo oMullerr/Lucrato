@@ -9,8 +9,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { LanguageService } from '../../core/services/language.service';
 import { CHART_COLORS } from '../../core/constants/app.constants';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { KpiCardComponent } from '../../shared/components/kpi-card.component';
@@ -19,11 +21,9 @@ import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { ComputedSale } from '../../core/models/models';
 
-const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-
 type RangeKey = '7d' | '30d' | '90d' | '12m' | 'all' | 'custom';
 
-interface RangeOption { key: RangeKey; label: string; }
+interface RangeOption { key: RangeKey; labelKey: string; }
 
 interface WaterfallStep {
   label: string;
@@ -33,11 +33,11 @@ interface WaterfallStep {
 }
 
 const RANGE_OPTIONS: RangeOption[] = [
-  { key: '7d',  label: '7 dias' },
-  { key: '30d', label: '30 dias' },
-  { key: '90d', label: '90 dias' },
-  { key: '12m', label: '12 meses' },
-  { key: 'all', label: 'Tudo' },
+  { key: '7d',  labelKey: 'dashboard.range7d' },
+  { key: '30d', labelKey: 'dashboard.range30d' },
+  { key: '90d', labelKey: 'dashboard.range90d' },
+  { key: '12m', labelKey: 'dashboard.range12m' },
+  { key: 'all', labelKey: 'dashboard.rangeAll' },
 ];
 
 @Component({
@@ -49,6 +49,7 @@ const RANGE_OPTIONS: RangeOption[] = [
     MatIconModule, MatButtonModule, MatTooltipModule,
     MatFormFieldModule, MatInputModule, MatDatepickerModule,
     PageHeaderComponent, KpiCardComponent, EmptyStateComponent, SkeletonComponent, BrlPipe,
+    TranslateModule,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -56,6 +57,8 @@ const RANGE_OPTIONS: RangeOption[] = [
 export class DashboardComponent {
   protected readonly dataService = inject(DataService);
   private readonly themeService = inject(ThemeService);
+  private readonly t = inject(TranslateService);
+  private readonly lang = inject(LanguageService);
 
   protected readonly rangeOptions = RANGE_OPTIONS;
   protected readonly range = signal<RangeKey>('30d');
@@ -166,6 +169,8 @@ export class DashboardComponent {
 
   /** Hero chart — monthly evolution. */
   protected readonly monthlyChart = computed<ChartConfiguration<'line'>['data']>(() => {
+    this.lang.lang(); // re-evaluate labels when the language changes
+    const months = this.t.instant('dashboard.months') as string[];
     const sales = this.periodSales();
     const byMonth = new Map<string, { label: string; net: number; profit: number }>();
 
@@ -174,7 +179,7 @@ export class DashboardComponent {
       const year = d.getUTCFullYear();
       const month = d.getUTCMonth();
       const key = `${year}${String(month).padStart(2, '0')}`;
-      const label = `${MONTHS[month]}/${String(year).slice(2)}`;
+      const label = `${months[month]}/${String(year).slice(2)}`;
       const entry = byMonth.get(key) ?? { label, net: 0, profit: 0 };
       entry.net += v.netRevenue;
       entry.profit += v.netProfit;
@@ -189,7 +194,7 @@ export class DashboardComponent {
       labels: sorted.map(([, e]) => e.label),
       datasets: [
         {
-          label: 'Receita Líquida',
+          label: this.t.instant('dashboard.netRevenue'),
           data: sorted.map(([, e]) => e.net),
           borderColor: c.brand,
           backgroundColor: hexToRgba(c.brand, 0.10),
@@ -203,7 +208,7 @@ export class DashboardComponent {
           pointHoverRadius: 6,
         },
         {
-          label: 'Lucro Líquido',
+          label: this.t.instant('dashboard.netProfit'),
           data: sorted.map(([, e]) => e.profit),
           borderColor: c.success,
           backgroundColor: hexToRgba(c.success, 0.10),
@@ -222,6 +227,7 @@ export class DashboardComponent {
 
   /** Bar — profit by product (all products in period, with internal scroll). */
   protected readonly productProfitChart = computed<ChartConfiguration<'bar'>['data']>(() => {
+    this.lang.lang(); // re-evaluate labels when the language changes
     const sales = this.periodSales();
     const map = new Map<string, number>();
     for (const v of sales) {
@@ -233,7 +239,7 @@ export class DashboardComponent {
     return {
       labels: arr.map(([p]) => (p.length > 26 ? p.substring(0, 24) + '…' : p)),
       datasets: [{
-        label: 'Lucro Líquido',
+        label: this.t.instant('dashboard.netProfit'),
         data: arr.map(([, v]) => v),
         backgroundColor: arr.map(([, v]) => v >= 0 ? hexToRgba(c.success, 0.85) : hexToRgba(c.danger, 0.85)),
         borderColor: arr.map(([, v]) => v >= 0 ? c.success : c.danger),
@@ -266,10 +272,18 @@ export class DashboardComponent {
 
   /** Doughnut — revenue composition. */
   protected readonly compositionChart = computed<ChartConfiguration<'doughnut'>['data']>(() => {
+    this.lang.lang(); // re-evaluate labels when the language changes
     const k = this.periodKpis();
     const c = this.palette();
     return {
-      labels: ['Lucro Líq.', 'Taxas ML', 'Frete', 'Descontos', 'Outros Custos', 'Custo Produtos'],
+      labels: [
+        this.t.instant('dashboard.compNetProfit'),
+        this.t.instant('dashboard.compFees'),
+        this.t.instant('dashboard.compShipping'),
+        this.t.instant('dashboard.compDiscounts'),
+        this.t.instant('dashboard.compOtherCosts'),
+        this.t.instant('dashboard.compProductCost'),
+      ],
       datasets: [{
         data: [
           Math.max(0, k.netProfit),
@@ -302,25 +316,26 @@ export class DashboardComponent {
 
   /** Waterfall steps. Used in HTML for horizontal cascade. */
   protected readonly waterfall = computed<WaterfallStep[]>(() => {
+    this.lang.lang(); // re-evaluate labels when the language changes
     const k = this.periodKpis();
     const totalInvested = this.dataService.kpis().totalInvested;
     const steps: WaterfallStep[] = [
-      { label: 'Investido',     value: totalInvested,    tone: 'neutral', kind: 'cost' },
-      { label: 'Receita bruta', value: k.grossRevenue,   tone: 'success', kind: 'gain' },
-      { label: 'Taxas ML',      value: -k.totalFees,     tone: 'warning', kind: 'cost' },
-      { label: 'Frete',         value: -k.totalShipping, tone: 'warning', kind: 'cost' },
+      { label: this.t.instant('dashboard.wfInvested'),     value: totalInvested,    tone: 'neutral', kind: 'cost' },
+      { label: this.t.instant('dashboard.wfGrossRevenue'), value: k.grossRevenue,   tone: 'success', kind: 'gain' },
+      { label: this.t.instant('dashboard.compFees'),       value: -k.totalFees,     tone: 'warning', kind: 'cost' },
+      { label: this.t.instant('dashboard.compShipping'),   value: -k.totalShipping, tone: 'warning', kind: 'cost' },
     ];
     if (k.totalFlexRefund > 0) {
-      steps.push({ label: 'Estorno Flex', value: k.totalFlexRefund, tone: 'success', kind: 'gain' });
+      steps.push({ label: this.t.instant('dashboard.wfFlexRefund'), value: k.totalFlexRefund, tone: 'success', kind: 'gain' });
     }
-    steps.push({ label: 'Descontos', value: -k.totalDiscounts, tone: 'warning', kind: 'cost' });
+    steps.push({ label: this.t.instant('dashboard.compDiscounts'), value: -k.totalDiscounts, tone: 'warning', kind: 'cost' });
     if (k.totalOtherCosts > 0) {
-      steps.push({ label: 'Outros custos', value: -k.totalOtherCosts, tone: 'warning', kind: 'cost' });
+      steps.push({ label: this.t.instant('dashboard.wfOtherCosts'), value: -k.totalOtherCosts, tone: 'warning', kind: 'cost' });
     }
     steps.push(
-      { label: 'Receita líq.',   value: k.netRevenue,        tone: 'brand',  kind: 'subtotal' },
-      { label: 'Custo produtos', value: -k.proportionalCost, tone: 'danger', kind: 'cost' },
-      { label: 'Lucro líq.',     value: k.netProfit,         tone: k.netProfit >= 0 ? 'success' : 'danger', kind: 'total' },
+      { label: this.t.instant('dashboard.wfNetRevenue'),   value: k.netRevenue,        tone: 'brand',  kind: 'subtotal' },
+      { label: this.t.instant('dashboard.wfProductCost'),  value: -k.proportionalCost, tone: 'danger', kind: 'cost' },
+      { label: this.t.instant('dashboard.wfNetProfit'),    value: k.netProfit,         tone: k.netProfit >= 0 ? 'success' : 'danger', kind: 'total' },
     );
     return steps;
   });
@@ -416,16 +431,17 @@ export class DashboardComponent {
 
   /** Composition legend items (inline chips below doughnut). */
   protected readonly compositionLegend = computed(() => {
+    this.lang.lang(); // re-evaluate labels when the language changes
     const k = this.periodKpis();
     const c = this.palette();
     const total = Math.max(0, k.netProfit) + k.totalFees + k.totalShipping + k.totalDiscounts + k.totalOtherCosts + Math.max(0, k.proportionalCost);
     const items = [
-      { label: 'Lucro líq.',     value: Math.max(0, k.netProfit),       color: c.success },
-      { label: 'Taxas ML',       value: k.totalFees,                    color: c.warning },
-      { label: 'Frete',          value: k.totalShipping,                color: c.info },
-      { label: 'Descontos',      value: k.totalDiscounts,               color: c.danger },
-      { label: 'Outros custos',  value: k.totalOtherCosts,              color: c.neutral },
-      { label: 'Custo produtos', value: Math.max(0, k.proportionalCost), color: c.brand },
+      { label: this.t.instant('dashboard.wfNetProfit'),    value: Math.max(0, k.netProfit),        color: c.success },
+      { label: this.t.instant('dashboard.compFees'),       value: k.totalFees,                     color: c.warning },
+      { label: this.t.instant('dashboard.compShipping'),   value: k.totalShipping,                 color: c.info },
+      { label: this.t.instant('dashboard.compDiscounts'),  value: k.totalDiscounts,                color: c.danger },
+      { label: this.t.instant('dashboard.wfOtherCosts'),   value: k.totalOtherCosts,               color: c.neutral },
+      { label: this.t.instant('dashboard.wfProductCost'),  value: Math.max(0, k.proportionalCost), color: c.brand },
     ];
     return items.map(it => ({ ...it, pct: total > 0 ? (it.value / total) * 100 : 0 }));
   });
@@ -442,10 +458,12 @@ export class DashboardComponent {
   }
 
   protected rangeLabel(r: RangeKey): string {
+    this.lang.lang(); // re-evaluate when the language changes
     if (r === 'custom' && this.customStart() && this.customEnd()) {
-      return `PERSONALIZADO · ${this.customRangeLabel()}`;
+      return `${this.t.instant('dashboard.customUpper')} · ${this.customRangeLabel()}`;
     }
-    return RANGE_OPTIONS.find(o => o.key === r)?.label.toUpperCase() ?? '';
+    const opt = RANGE_OPTIONS.find(o => o.key === r);
+    return opt ? (this.t.instant(opt.labelKey) as string).toUpperCase() : '';
   }
 
   /** Number of buckets used by sparklines. Adapts to range length. */

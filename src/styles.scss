@@ -481,6 +481,19 @@ html .mat-mdc-menu-item {
   min-height: 40px;
 }
 
+/* Language selector flag (SVG asset — emoji flags don't render on Windows).
+   Lives in global styles because mat-menu content renders in a CDK overlay. */
+html .lang-flag {
+  width: 20px;
+  height: 15px;
+  flex: 0 0 auto;
+  margin-right: 12px;
+  border-radius: 3px;
+  object-fit: cover;
+  vertical-align: middle;
+  box-shadow: 0 0 0 1px var(--border-subtle);
+}
+
 html .mat-mdc-chip {
   border-radius: var(--radius-md);
   font-weight: 500;

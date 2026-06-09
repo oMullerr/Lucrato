@@ -1,13 +1,13 @@
 <h2 mat-dialog-title>
   <mat-icon>{{ isEdit() ? 'edit' : 'add_circle' }}</mat-icon>
-  <span class="title-text">{{ isEdit() ? 'Editar Compra' : 'Nova Compra' }}</span>
-  <span class="id-badge" matTooltip="ID gerado automaticamente">{{ model().id }}</span>
+  <span class="title-text">{{ (isEdit() ? 'purchaseForm.editTitle' : 'purchaseForm.newTitle') | translate }}</span>
+  <span class="id-badge" [matTooltip]="'purchaseForm.autoId' | translate">{{ model().id }}</span>
 </h2>
 
 <mat-dialog-content>
   <form #form="ngForm" class="form-grid">
     <mat-form-field class="full">
-      <mat-label>Produto</mat-label>
+      <mat-label>{{ 'purchases.colProduct' | translate }}</mat-label>
       <input matInput
         [ngModel]="model().product"
         (ngModelChange)="set('product', $event)"
@@ -15,7 +15,7 @@
     </mat-form-field>
 
     <mat-form-field>
-      <mat-label>Categoria</mat-label>
+      <mat-label>{{ 'purchases.colCategory' | translate }}</mat-label>
       <mat-select
         [ngModel]="model().category"
         (ngModelChange)="set('category', $event)"
@@ -27,7 +27,7 @@
     </mat-form-field>
 
     <mat-form-field>
-      <mat-label>Fornecedor</mat-label>
+      <mat-label>{{ 'purchases.colSupplier' | translate }}</mat-label>
       <mat-select
         [ngModel]="model().supplier"
         (ngModelChange)="set('supplier', $event)"
@@ -39,7 +39,7 @@
     </mat-form-field>
 
     <mat-form-field>
-      <mat-label>Data da Compra</mat-label>
+      <mat-label>{{ 'purchaseForm.purchaseDate' | translate }}</mat-label>
       <input
         matInput
         [matDatepicker]="pickerPurchase"
@@ -52,12 +52,12 @@
       <mat-datepicker-toggle matIconSuffix [for]="pickerPurchase"></mat-datepicker-toggle>
       <mat-datepicker #pickerPurchase></mat-datepicker>
       @if (purchaseDateInFuture()) {
-        <mat-hint class="error-hint">A data da compra não pode ser maior que hoje.</mat-hint>
+        <mat-hint class="error-hint">{{ 'purchaseForm.purchaseDateFuture' | translate }}</mat-hint>
       }
     </mat-form-field>
 
     <mat-form-field>
-      <mat-label>Data de Recebimento (opcional)</mat-label>
+      <mat-label>{{ 'purchaseForm.receiptDate' | translate }}</mat-label>
       <input
         matInput
         [matDatepicker]="pickerReceipt"
@@ -70,14 +70,14 @@
       <mat-datepicker-toggle matIconSuffix [for]="pickerReceipt"></mat-datepicker-toggle>
       <mat-datepicker #pickerReceipt></mat-datepicker>
       @if (receiptDateInFuture()) {
-        <mat-hint class="error-hint">A data de recebimento não pode ser maior que hoje.</mat-hint>
+        <mat-hint class="error-hint">{{ 'purchaseForm.receiptDateFuture' | translate }}</mat-hint>
       } @else {
-        <mat-hint>O prazo de alerta conta a partir desta data.</mat-hint>
+        <mat-hint>{{ 'purchaseForm.receiptDateHint' | translate }}</mat-hint>
       }
     </mat-form-field>
 
     <mat-form-field>
-      <mat-label>Quantidade Comprada</mat-label>
+      <mat-label>{{ 'purchaseForm.quantity' | translate }}</mat-label>
       <input matInput type="number" step="1" inputmode="numeric"
         [ngModel]="model().quantityPurchased"
         (ngModelChange)="setInt('quantityPurchased', $event, 1)"
@@ -85,7 +85,7 @@
     </mat-form-field>
 
     <mat-form-field>
-      <mat-label>Custo Unitário</mat-label>
+      <mat-label>{{ 'purchaseForm.unitCost' | translate }}</mat-label>
       <span matTextPrefix>R$&nbsp;</span>
       <input matInput appCurrencyInput inputmode="numeric"
         [ngModel]="model().unitCost"
@@ -94,7 +94,7 @@
     </mat-form-field>
 
     <mat-form-field>
-      <mat-label>Frete da Compra</mat-label>
+      <mat-label>{{ 'purchaseForm.shipping' | translate }}</mat-label>
       <span matTextPrefix>R$&nbsp;</span>
       <input matInput appCurrencyInput inputmode="numeric"
         [ngModel]="model().purchaseShipping"
@@ -103,7 +103,7 @@
     </mat-form-field>
 
     <mat-form-field>
-      <mat-label>Outros Custos</mat-label>
+      <mat-label>{{ 'purchaseForm.otherCosts' | translate }}</mat-label>
       <span matTextPrefix>R$&nbsp;</span>
       <input matInput appCurrencyInput inputmode="numeric"
         [ngModel]="model().otherCosts"
@@ -112,7 +112,7 @@
     </mat-form-field>
 
     <mat-form-field class="full">
-      <mat-label>Link da Compra (opcional)</mat-label>
+      <mat-label>{{ 'purchaseForm.link' | translate }}</mat-label>
       <input matInput type="url"
         [ngModel]="model().link"
         (ngModelChange)="set('link', $event)"
@@ -120,7 +120,7 @@
     </mat-form-field>
 
     <mat-form-field class="full">
-      <mat-label>Observações</mat-label>
+      <mat-label>{{ 'purchaseForm.notes' | translate }}</mat-label>
       <textarea matInput rows="2"
         [ngModel]="model().notes"
         (ngModelChange)="set('notes', $event)"
@@ -131,19 +131,19 @@
   <div class="preview">
     <div class="preview-title">
       <mat-icon>calculate</mat-icon>
-      Cálculo automático
+      {{ 'purchaseForm.autoCalc' | translate }}
     </div>
     <div class="preview-stats">
       <div>
-        <span>Custo Total</span>
+        <span>{{ 'purchaseForm.totalCost' | translate }}</span>
         <strong>{{ totalPurchaseCost() | brl }}</strong>
       </div>
       <div>
-        <span>Custo Total Real</span>
+        <span>{{ 'purchaseForm.totalRealCost' | translate }}</span>
         <strong>{{ totalActualCost() | brl }}</strong>
       </div>
       <div>
-        <span>Custo Unit. Real</span>
+        <span>{{ 'purchaseForm.realUnitCost' | translate }}</span>
         <strong>{{ actualUnitCost() | brl }}</strong>
       </div>
     </div>
@@ -151,16 +151,16 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="ref.close()">Cancelar</button>
+  <button mat-button (click)="ref.close()">{{ 'common.cancel' | translate }}</button>
   <button
     mat-flat-button
     color="primary"
     (click)="save()"
     [disabled]="!isValid()"
-    [matTooltip]="isValid() ? '' : 'Preencha todos os campos obrigatórios'"
+    [matTooltip]="isValid() ? '' : ('purchaseForm.fillRequired' | translate)"
     matTooltipPosition="above"
   >
     <mat-icon>save</mat-icon>
-    {{ isEdit() ? 'Salvar' : 'Adicionar' }}
+    {{ (isEdit() ? 'common.save' : 'common.add') | translate }}
   </button>
 </mat-dialog-actions>

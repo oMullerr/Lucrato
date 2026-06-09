@@ -1,11 +1,11 @@
 <app-page-header
-  title="Vendas"
-  eyebrow="REGISTRO · {{ sales().length }} VENDAS"
-  subtitle="Cada linha é uma venda. Receita, taxas e margem calculadas automaticamente."
+  [title]="'sales.title' | translate"
+  [eyebrow]="'sales.eyebrow' | translate:{ count: sales().length }"
+  [subtitle]="'sales.subtitle' | translate"
 >
   <button mat-flat-button class="primary-cta" (click)="openNew()">
     <mat-icon>add</mat-icon>
-    Nova Venda
+    {{ 'sales.newSale' | translate }}
   </button>
 </app-page-header>
 
@@ -20,12 +20,12 @@
   } @else if (sales().length === 0) {
     <app-empty-state
       icon="sell"
-      title="Nenhuma venda registrada"
-      description="Comece a acompanhar receita, taxas e margens registrando sua primeira venda."
+      [title]="'sales.emptyTitle' | translate"
+      [description]="'sales.emptyDesc' | translate"
     >
       <button mat-flat-button class="primary-cta" (click)="openNew()">
         <mat-icon>add</mat-icon>
-        Registrar venda
+        {{ 'sales.registerSale' | translate }}
       </button>
     </app-empty-state>
 
@@ -33,24 +33,24 @@
 
     <section class="quick-stats">
       <app-kpi-card
-        title="Vendas"
+        [title]="'sales.kpiSales' | translate"
         [value]="summary().total"
         variant="neutral"
-        [note]="quickFilter() === 'all' ? 'No total' : 'Com filtro aplicado'"
+        [note]="(quickFilter() === 'all' ? 'sales.kpiTotal' : 'sales.kpiFiltered') | translate"
       />
       <app-kpi-card
-        title="Receita bruta"
+        [title]="'sales.kpiGrossRevenue' | translate"
         [value]="summary().revenue | brl"
         variant="brand"
-        note="Concluídas no filtro"
+        [note]="'sales.kpiCompletedInFilter' | translate"
       />
       <app-kpi-card
-        title="Lucro líquido"
+        [title]="'sales.kpiNetProfit' | translate"
         [value]="summary().profit | brl"
         [variant]="summary().profit >= 0 ? 'success' : 'danger'"
       />
       <app-kpi-card
-        title="Margem média"
+        [title]="'sales.kpiAvgMargin' | translate"
         [value]="(summary().margin * 100).toFixed(1) + '%'"
         variant="neutral"
       />
@@ -61,16 +61,16 @@
         <mat-icon matPrefix>search</mat-icon>
         <input
           matInput
-          placeholder="Buscar por produto, ID venda ou ID lote..."
+          [placeholder]="'sales.searchPlaceholder' | translate"
           [ngModel]="textFilter()"
           (ngModelChange)="textFilter.set($event)"
         />
       </mat-form-field>
 
       <mat-form-field class="channel-select" appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Canal</mat-label>
+        <mat-label>{{ 'sales.channel' | translate }}</mat-label>
         <mat-select [ngModel]="channelFilter()" (ngModelChange)="channelFilter.set($event)">
-          <mat-option value="all">Todos os canais</mat-option>
+          <mat-option value="all">{{ 'sales.allChannels' | translate }}</mat-option>
           @for (c of channels(); track c) {
             <mat-option [value]="c">{{ c }}</mat-option>
           }
@@ -83,7 +83,7 @@
           class="chip"
           [class.active]="quickFilter() === 'all'"
           (click)="setQuickFilter('all')"
-        >Todas <span class="chip-count">{{ quickCounts().all }}</span></button>
+        >{{ 'sales.filterAll' | translate }} <span class="chip-count">{{ quickCounts().all }}</span></button>
         <button
           type="button"
           class="chip"
@@ -91,7 +91,7 @@
           (click)="setQuickFilter('profit')"
         >
           <span class="status-dot success" aria-hidden="true"></span>
-          Lucrativas <span class="chip-count">{{ quickCounts().profit }}</span>
+          {{ 'sales.filterProfit' | translate }} <span class="chip-count">{{ quickCounts().profit }}</span>
         </button>
         <button
           type="button"
@@ -100,7 +100,7 @@
           (click)="setQuickFilter('loss')"
         >
           <span class="status-dot danger" aria-hidden="true"></span>
-          Prejuízo <span class="chip-count">{{ quickCounts().loss }}</span>
+          {{ 'sales.filterLoss' | translate }} <span class="chip-count">{{ quickCounts().loss }}</span>
         </button>
         <button
           type="button"
@@ -109,7 +109,7 @@
           (click)="setQuickFilter('low-margin')"
         >
           <span class="status-dot warning" aria-hidden="true"></span>
-          Margem baixa <span class="chip-count">{{ quickCounts().lowMargin }}</span>
+          {{ 'sales.filterLowMargin' | translate }} <span class="chip-count">{{ quickCounts().lowMargin }}</span>
         </button>
       </div>
     </section>
@@ -121,15 +121,15 @@
             <thead>
               <tr>
                 <th class="col-edge"></th>
-                <th mat-sort-header="id">ID</th>
-                <th class="hide-on-mobile" mat-sort-header="batchId">Lote</th>
-                <th mat-sort-header="product">Produto</th>
-                <th class="hide-on-mobile" mat-sort-header="saleDate">Data</th>
-                <th class="hide-on-mobile" mat-sort-header="channel">Canal</th>
-                <th class="text-center" mat-sort-header="quantitySold" arrowPosition="before">Qtd</th>
-                <th class="text-right" mat-sort-header="netProfit" arrowPosition="before">Lucro líquido</th>
-                <th class="text-center hide-on-mobile" mat-sort-header="netMargin" arrowPosition="before">Margem</th>
-                <th mat-sort-header="status">Status</th>
+                <th mat-sort-header="id">{{ 'sales.colId' | translate }}</th>
+                <th class="hide-on-mobile" mat-sort-header="batchId">{{ 'sales.colBatch' | translate }}</th>
+                <th mat-sort-header="product">{{ 'sales.colProduct' | translate }}</th>
+                <th class="hide-on-mobile" mat-sort-header="saleDate">{{ 'sales.colDate' | translate }}</th>
+                <th class="hide-on-mobile" mat-sort-header="channel">{{ 'sales.colChannel' | translate }}</th>
+                <th class="text-center" mat-sort-header="quantitySold" arrowPosition="before">{{ 'sales.colQty' | translate }}</th>
+                <th class="text-right" mat-sort-header="netProfit" arrowPosition="before">{{ 'sales.colNetProfit' | translate }}</th>
+                <th class="text-center hide-on-mobile" mat-sort-header="netMargin" arrowPosition="before">{{ 'sales.colMargin' | translate }}</th>
+                <th mat-sort-header="status">{{ 'sales.colStatus' | translate }}</th>
                 <th class="text-right col-actions"></th>
               </tr>
             </thead>
@@ -165,7 +165,7 @@
                       mat-icon-button
                       class="row-action"
                       (click)="edit(v, $event)"
-                      matTooltip="Editar"
+                      [matTooltip]="'common.edit' | translate"
                     >
                       <mat-icon>edit</mat-icon>
                     </button>
@@ -173,7 +173,7 @@
                       mat-icon-button
                       class="row-action danger"
                       (click)="confirmRemove(v, $event)"
-                      matTooltip="Remover"
+                      [matTooltip]="'common.remove' | translate"
                     >
                       <mat-icon>delete_outline</mat-icon>
                     </button>
@@ -184,19 +184,19 @@
                     <td class="col-edge"></td>
                     <td colspan="10">
                       <div class="expansion-grid">
-                        <div><span class="t-caption">Preço unit.</span><strong class="mono">{{ v.unitPrice | brl }}</strong></div>
-                        <div><span class="t-caption">Receita bruta</span><strong class="mono">{{ v.grossRevenue | brl }}</strong></div>
+                        <div><span class="t-caption">{{ 'sales.unitPrice' | translate }}</span><strong class="mono">{{ v.unitPrice | brl }}</strong></div>
+                        <div><span class="t-caption">{{ 'sales.grossRevenue' | translate }}</span><strong class="mono">{{ v.grossRevenue | brl }}</strong></div>
                         <div>
-                          <span class="t-caption">Taxa ML</span>
+                          <span class="t-caption">{{ 'sales.mlFee' | translate }}</span>
                           <strong class="mono" [class.text-warning]="isCustomFee(v.feePercentage)">
                             {{ (v.feePercentage * 100).toFixed(1) }}%
                           </strong>
                         </div>
-                        <div><span class="t-caption">Taxa em R$</span><strong class="mono">{{ v.feeAmount | brl }}</strong></div>
-                        <div><span class="t-caption">Frete vendedor</span><strong class="mono">{{ v.sellerShipping | brl }}</strong></div>
-                        <div><span class="t-caption">Desconto</span><strong class="mono">{{ v.discount | brl }}</strong></div>
-                        <div><span class="t-caption">Receita líq.</span><strong class="mono">{{ v.netRevenue | brl }}</strong></div>
-                        <div><span class="t-caption">Custo (rateado)</span><strong class="mono">{{ v.proportionalCost | brl }}</strong></div>
+                        <div><span class="t-caption">{{ 'sales.feeAmount' | translate }}</span><strong class="mono">{{ v.feeAmount | brl }}</strong></div>
+                        <div><span class="t-caption">{{ 'sales.sellerShipping' | translate }}</span><strong class="mono">{{ v.sellerShipping | brl }}</strong></div>
+                        <div><span class="t-caption">{{ 'sales.discount' | translate }}</span><strong class="mono">{{ v.discount | brl }}</strong></div>
+                        <div><span class="t-caption">{{ 'sales.netRevenue' | translate }}</span><strong class="mono">{{ v.netRevenue | brl }}</strong></div>
+                        <div><span class="t-caption">{{ 'sales.proportionalCost' | translate }}</span><strong class="mono">{{ v.proportionalCost | brl }}</strong></div>
                       </div>
                     </td>
                   </tr>
@@ -216,8 +216,8 @@
     } @else {
       <app-empty-state
         icon="filter_alt_off"
-        title="Nenhuma venda encontrada"
-        description="Ajuste a busca, canal ou filtro rápido para ver outras vendas."
+        [title]="'sales.noneFoundTitle' | translate"
+        [description]="'sales.noneFoundDesc' | translate"
       />
     }
   }

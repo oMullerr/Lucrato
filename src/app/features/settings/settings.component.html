@@ -1,15 +1,15 @@
 <app-page-header
-  title="Configurações"
-  eyebrow="SISTEMA"
-  subtitle="Parâmetros, listas editáveis, importação em massa e zona de perigo."
+  [title]="'settings.title' | translate"
+  [eyebrow]="'settings.eyebrow' | translate"
+  [subtitle]="'settings.subtitle' | translate"
 >
   <button mat-stroked-button (click)="discard()" [disabled]="!hasChanges() || saving()">
     <mat-icon>undo</mat-icon>
-    Descartar
+    {{ 'settings.discard' | translate }}
   </button>
   <button mat-flat-button class="primary-cta" (click)="save()" [disabled]="!hasChanges() || saving()">
     <mat-icon>save</mat-icon>
-    {{ saving() ? 'Salvando…' : 'Salvar' }}
+    {{ (saving() ? 'settings.saving' : 'common.save') | translate }}
   </button>
 </app-page-header>
 
@@ -19,19 +19,19 @@
     <mat-tab>
       <ng-template mat-tab-label>
         <mat-icon>tune</mat-icon>
-        Parâmetros
+        {{ 'settings.tabParams' | translate }}
       </ng-template>
 
       <div class="tab-body">
         <div class="config-card">
           <div class="config-section">
             <div class="section-heading">
-              <h3>Alertas e margens</h3>
-              <p>Controla quando o sistema avisa sobre estoque parado e margens fora do ideal.</p>
+              <h3>{{ 'settings.alertsMarginsTitle' | translate }}</h3>
+              <p>{{ 'settings.alertsMarginsDesc' | translate }}</p>
             </div>
             <div class="form-grid">
               <mat-form-field>
-                <mat-label>Margem líquida mínima desejada</mat-label>
+                <mat-label>{{ 'settings.minMargin' | translate }}</mat-label>
                 <input
                   matInput
                   type="number"
@@ -42,11 +42,11 @@
                   (ngModelChange)="minMarginPct = $event"
                 />
                 <span matSuffix class="unit-suffix">%</span>
-                <mat-hint>Vendas abaixo desta margem aparecem como alerta.</mat-hint>
+                <mat-hint>{{ 'settings.minMarginHint' | translate }}</mat-hint>
               </mat-form-field>
 
               <mat-form-field>
-                <mat-label>Taxa Mercado Livre padrão</mat-label>
+                <mat-label>{{ 'settings.defaultFee' | translate }}</mat-label>
                 <input
                   matInput
                   type="number"
@@ -57,11 +57,11 @@
                   (ngModelChange)="feePct = $event"
                 />
                 <span matSuffix class="unit-suffix">%</span>
-                <mat-hint>Aplicada a novas vendas. Pode ser editada por venda.</mat-hint>
+                <mat-hint>{{ 'settings.defaultFeeHint' | translate }}</mat-hint>
               </mat-form-field>
 
               <mat-form-field>
-                <mat-label>Dias para alerta amarelo</mat-label>
+                <mat-label>{{ 'settings.yellowDays' | translate }}</mat-label>
                 <input
                   matInput
                   type="number"
@@ -69,12 +69,12 @@
                   [ngModel]="s.yellowAlertDays"
                   (ngModelChange)="updateField('yellowAlertDays', clamp0($event))"
                 />
-                <span matSuffix class="unit-suffix">dias</span>
-                <mat-hint>Produto fica em "Atenção" após este tempo parado.</mat-hint>
+                <span matSuffix class="unit-suffix">{{ 'batchPanel.days' | translate }}</span>
+                <mat-hint>{{ 'settings.yellowDaysHint' | translate }}</mat-hint>
               </mat-form-field>
 
               <mat-form-field>
-                <mat-label>Dias para alerta vermelho</mat-label>
+                <mat-label>{{ 'settings.redDays' | translate }}</mat-label>
                 <input
                   matInput
                   type="number"
@@ -82,20 +82,20 @@
                   [ngModel]="s.redAlertDays"
                   (ngModelChange)="updateField('redAlertDays', clamp0($event))"
                 />
-                <span matSuffix class="unit-suffix">dias</span>
-                <mat-hint>Produto fica como "Parado" após este tempo.</mat-hint>
+                <span matSuffix class="unit-suffix">{{ 'batchPanel.days' | translate }}</span>
+                <mat-hint>{{ 'settings.redDaysHint' | translate }}</mat-hint>
               </mat-form-field>
             </div>
           </div>
 
           <div class="config-section">
             <div class="section-heading">
-              <h3>Padrões de venda e compra</h3>
-              <p>Valores aplicados automaticamente em novos lotes e vendas.</p>
+              <h3>{{ 'settings.defaultsTitle' | translate }}</h3>
+              <p>{{ 'settings.defaultsDesc' | translate }}</p>
             </div>
             <div class="form-grid">
               <mat-form-field>
-                <mat-label>Frete padrão de compra</mat-label>
+                <mat-label>{{ 'settings.defaultShipping' | translate }}</mat-label>
                 <input
                   matInput
                   type="number"
@@ -108,7 +108,7 @@
               </mat-form-field>
 
               <mat-form-field>
-                <mat-label>Canal de venda padrão</mat-label>
+                <mat-label>{{ 'settings.defaultChannel' | translate }}</mat-label>
                 <mat-select
                   [ngModel]="s.defaultChannel"
                   (ngModelChange)="updateField('defaultChannel', $event)">
@@ -126,7 +126,7 @@
     <mat-tab>
       <ng-template mat-tab-label>
         <mat-icon>list_alt</mat-icon>
-        Listas
+        {{ 'settings.tabLists' | translate }}
       </ng-template>
 
       <div class="tab-body">
@@ -134,10 +134,10 @@
           <div class="config-card">
             <h3 class="card-title">
               <mat-icon>category</mat-icon>
-              Categorias
+              {{ 'settings.categories' | translate }}
             </h3>
             <app-editable-list
-              addLabel="Adicionar categoria"
+              [addLabel]="'settings.addCategory' | translate"
               [items]="s.categories"
               [withColor]="true"
               [colors]="s.categoryColors"
@@ -149,10 +149,10 @@
           <div class="config-card">
             <h3 class="card-title">
               <mat-icon>store</mat-icon>
-              Fornecedores
+              {{ 'settings.suppliers' | translate }}
             </h3>
             <app-editable-list
-              addLabel="Adicionar fornecedor"
+              [addLabel]="'settings.addSupplier' | translate"
               [items]="s.suppliers"
               [withColor]="true"
               [colors]="s.supplierColors"
@@ -164,10 +164,10 @@
           <div class="config-card">
             <h3 class="card-title">
               <mat-icon>storefront</mat-icon>
-              Canais de Venda
+              {{ 'settings.channels' | translate }}
             </h3>
             <app-editable-list
-              addLabel="Adicionar canal"
+              [addLabel]="'settings.addChannel' | translate"
               [items]="s.channels"
               [withColor]="true"
               [colors]="s.channelColors"
@@ -182,26 +182,26 @@
     <mat-tab>
       <ng-template mat-tab-label>
         <mat-icon>upload_file</mat-icon>
-        Importação
+        {{ 'settings.tabImport' | translate }}
       </ng-template>
 
       <div class="tab-body">
         <div class="config-card import-section">
           <h3 class="card-title">
             <mat-icon>upload_file</mat-icon>
-            Importação em Massa
+            {{ 'settings.bulkImport' | translate }}
           </h3>
           <p class="import-description">
-            Baixe o modelo Excel, preencha com suas compras e vendas (a partir da linha 3) e reimporte.
+            {{ 'settings.importDesc' | translate }}
           </p>
           <div class="import-actions">
             <button mat-stroked-button (click)="downloadTemplate()">
               <mat-icon>download</mat-icon>
-              Baixar Modelo (.xlsx)
+              {{ 'settings.downloadTemplate' | translate }}
             </button>
             <button mat-flat-button color="primary" (click)="triggerImport()" [disabled]="importing()">
               <mat-icon>{{ importing() ? 'hourglass_top' : 'upload' }}</mat-icon>
-              {{ importing() ? 'Importando…' : 'Importar Planilha' }}
+              {{ (importing() ? 'settings.importing' : 'settings.importSheet') | translate }}
             </button>
           </div>
           <input
@@ -218,19 +218,19 @@
     <mat-tab>
       <ng-template mat-tab-label>
         <mat-icon class="danger-tab-icon">warning</mat-icon>
-        Zona de Perigo
+        {{ 'settings.tabDanger' | translate }}
       </ng-template>
 
       <div class="tab-body">
         <div class="danger-card">
           <h3 class="card-title danger">
             <mat-icon>warning</mat-icon>
-            Zona de Perigo
+            {{ 'settings.tabDanger' | translate }}
           </h3>
-          <p>Resetar o sistema apaga todos os dados (compras, vendas e configurações) e restaura o exemplo inicial.</p>
+          <p>{{ 'settings.dangerDesc' | translate }}</p>
           <button mat-stroked-button class="danger-btn" (click)="resetAll()">
             <mat-icon>delete_forever</mat-icon>
-            Resetar Sistema
+            {{ 'settings.resetSystem' | translate }}
           </button>
         </div>
       </div>

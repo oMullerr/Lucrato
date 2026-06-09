@@ -1,4 +1,6 @@
+import { inject } from '@angular/core';
 import { CanDeactivateFn } from '@angular/router';
+import { TranslateService } from '@ngx-translate/core';
 
 export interface HasUnsavedChanges {
   hasChanges(): boolean;
@@ -6,5 +8,6 @@ export interface HasUnsavedChanges {
 
 export const unsavedChangesGuard: CanDeactivateFn<HasUnsavedChanges> = (component) => {
   if (!component?.hasChanges?.()) return true;
-  return confirm('Você tem alterações não salvas. Sair mesmo assim?');
+  const translate = inject(TranslateService);
+  return confirm(translate.instant('common.unsavedChanges'));
 };

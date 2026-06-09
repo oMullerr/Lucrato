@@ -17,19 +17,19 @@
   <mat-sidenav-content>
 
     <app-page-header
-      title="Panorama do Estoque"
-      [eyebrow]="'Panorama · atualizado ' + (updatedAt() | date:'HH:mm')"
+      [title]="'inventory.title' | translate"
+      [eyebrow]="'inventory.eyebrow' | translate:{ time: (updatedAt() | date:'HH:mm') }"
       [subtitle]="sortedPurchases().length === 0
-        ? 'Comece cadastrando seu primeiro lote para acompanhar a saúde do seu estoque.'
-        : (statusCounts().all + ' lotes ativos · ' + alerts().length + ' demandam atenção')"
+        ? ('inventory.subtitleEmpty' | translate)
+        : ('inventory.subtitleSummary' | translate:{ active: statusCounts().all, attention: alerts().length })"
     >
       <a mat-stroked-button routerLink="/purchases">
         <mat-icon>shopping_cart</mat-icon>
-        Compras
+        {{ 'nav.purchases' | translate }}
       </a>
       <a mat-flat-button class="primary-cta" routerLink="/sales">
         <mat-icon>sell</mat-icon>
-        Registrar Venda
+        {{ 'sales.registerSale' | translate }}
       </a>
     </app-page-header>
 
@@ -51,21 +51,21 @@
         <!-- First-time onboarding -->
         <app-empty-state
           icon="inventory_2"
-          title="Comece pelo primeiro lote"
-          description="Cadastre uma compra para começar a acompanhar seu estoque, capital investido e margens. Em seguida, registre vendas e veja o panorama se desenhar automaticamente."
+          [title]="'inventory.onboardTitle' | translate"
+          [description]="'inventory.onboardDesc' | translate"
         >
           <a mat-flat-button class="primary-cta" routerLink="/purchases">
             <mat-icon>add</mat-icon>
-            Cadastrar primeiro lote
+            {{ 'inventory.onboardCta' | translate }}
           </a>
         </app-empty-state>
 
       } @else {
         <!-- ZONA A — PULSO -->
-        <section class="hero" aria-label="Resumo financeiro">
+        <section class="hero" [attr.aria-label]="'inventory.financialSummary' | translate">
           <article class="hero-card" data-tone="success">
             <header class="hero-head">
-              <span class="eyebrow">Lucro líquido</span>
+              <span class="eyebrow">{{ 'inventory.netProfit' | translate }}</span>
               <span class="status-dot success" aria-hidden="true"></span>
             </header>
             <div class="hero-row">
@@ -73,23 +73,23 @@
                 <div class="hero-value">{{ kpis().netProfit | brl }}</div>
                 <div class="waterfall">
                   <span class="wf-step">
-                    <span class="wf-label">Receita</span>
+                    <span class="wf-label">{{ 'inventory.revenue' | translate }}</span>
                     <span class="wf-num">{{ kpis().grossRevenue | brl }}</span>
                   </span>
                   <mat-icon class="wf-arrow">chevron_right</mat-icon>
                   <span class="wf-step">
-                    <span class="wf-label">Custos + taxas</span>
+                    <span class="wf-label">{{ 'inventory.costsFees' | translate }}</span>
                     <span class="wf-num">{{ (kpis().grossRevenue - kpis().netProfit) | brl }}</span>
                   </span>
                   <mat-icon class="wf-arrow">chevron_right</mat-icon>
                   <span class="wf-step strong">
-                    <span class="wf-label">Lucro</span>
+                    <span class="wf-label">{{ 'inventory.profit' | translate }}</span>
                     <span class="wf-num text-success">{{ kpis().netProfit | brl }}</span>
                   </span>
                 </div>
               </div>
               <app-kpi-card
-                [title]="'Margem líquida'"
+                [title]="'inventory.netMargin' | translate"
                 [value]="(kpis().netMargin * 100).toFixed(1) + '%'"
                 size="compact"
                 variant="brand"
@@ -100,56 +100,56 @@
           </article>
         </section>
 
-        <section class="kpi-strip" aria-label="Indicadores secundários">
+        <section class="kpi-strip" [attr.aria-label]="'inventory.secondaryKpis' | translate">
           <app-kpi-card
-            title="Receita bruta"
+            [title]="'inventory.grossRevenue' | translate"
             [value]="kpis().grossRevenue | brl"
             variant="brand"
             [sparkline]="revenueSparkline()"
-            note="Total faturado"
+            [note]="'inventory.totalBilled' | translate"
           />
           <app-kpi-card
-            title="Capital parado"
+            [title]="'inventory.idleCapital' | translate"
             [value]="kpis().idleCapital | brl"
             [variant]="kpis().idleCapital > 0 ? 'warning' : 'neutral'"
             [sparkline]="idleSparkline()"
-            note="Estoque × custo real"
+            [note]="'inventory.stockTimesCost' | translate"
           />
           <app-kpi-card
-            title="Lotes em estoque"
+            [title]="'inventory.batchesInStock' | translate"
             [value]="kpis().batchesInStock"
             variant="neutral"
-            [note]="kpis().totalBatches + ' lotes no total'"
+            [note]="'inventory.batchesTotal' | translate:{ count: kpis().totalBatches }"
           />
           <app-kpi-card
-            title="Ticket médio"
+            [title]="'inventory.avgTicket' | translate"
             [value]="kpis().averageTicket | brl"
             variant="neutral"
-            [note]="kpis().totalSold + ' unidades vendidas'"
+            [note]="'inventory.unitsSold' | translate:{ count: kpis().totalSold }"
           />
         </section>
 
         <!-- ZONA B — ALERTAS -->
         @if (alerts().length > 0) {
-          <section class="alert-card" [attr.data-level]="alertLevel()" aria-label="Alertas">
+          <section class="alert-card" [attr.data-level]="alertLevel()" [attr.aria-label]="'inventory.alertsLabel' | translate">
             <div class="alert-stripe" aria-hidden="true"></div>
             <div class="alert-body">
               <div class="alert-text">
                 <strong>
                   @if (alertSummary().stalledCount > 0) {
-                    {{ alertSummary().stalledCount }} {{ alertSummary().stalledCount === 1 ? 'lote parado' : 'lotes parados' }} há mais de 30 dias
+                    {{ (alertSummary().stalledCount === 1 ? 'inventory.alertStalledOne' : 'inventory.alertStalledOther') | translate:{ count: alertSummary().stalledCount } }}
                   } @else {
-                    {{ alerts().length }} {{ alerts().length === 1 ? 'lote' : 'lotes' }} pedindo atenção
+                    {{ (alerts().length === 1 ? 'inventory.alertAttentionOne' : 'inventory.alertAttentionOther') | translate:{ count: alerts().length } }}
                   }
                 </strong>
                 @if (alertSummary().idleValue > 0) {
-                  <span class="alert-desc">{{ alertSummary().idleValue | brl }} em capital travado — considere reduzir preços ou reposicionar.</span>
+                  <span class="alert-desc">{{ 'inventory.alertIdleDesc' | translate:{ value: (alertSummary().idleValue | brl) } }}</span>
                 } @else {
-                  <span class="alert-desc">Acompanhe para evitar que vire capital parado.</span>
+                  <span class="alert-desc">{{ 'inventory.alertWatchDesc' | translate }}</span>
                 }
               </div>
               <button mat-button class="alert-cta" (click)="scrollToAlerts()">
-                Ver lotes
+                {{ 'inventory.viewBatches' | translate }}
                 <mat-icon>arrow_forward</mat-icon>
               </button>
             </div>
@@ -157,11 +157,11 @@
         }
 
         <!-- ZONA C — POSIÇÃO DETALHADA -->
-        <section class="positions" id="positions-table" aria-label="Posição detalhada por lote">
+        <section class="positions" id="positions-table" [attr.aria-label]="'inventory.positionsLabel' | translate">
           <header class="positions-head">
             <div class="ph-text">
-              <h2 class="h-section">Posição por lote</h2>
-              <span class="t-caption">{{ filteredPurchases().length }} de {{ statusCounts().all }} lotes</span>
+              <h2 class="h-section">{{ 'inventory.positionByBatch' | translate }}</h2>
+              <span class="t-caption">{{ 'inventory.ofBatches' | translate:{ shown: filteredPurchases().length, total: statusCounts().all } }}</span>
             </div>
             <div class="filter-chips" role="tablist">
               <button
@@ -171,7 +171,7 @@
                 (click)="setFilter('all')"
                 role="tab"
                 [attr.aria-selected]="filter() === 'all'"
-              >Todos <span class="chip-count">{{ statusCounts().all }}</span></button>
+              >{{ 'common.all' | translate }} <span class="chip-count">{{ statusCounts().all }}</span></button>
 
               <button
                 type="button"
@@ -182,7 +182,7 @@
                 [attr.aria-selected]="filter() === 'Em Estoque'"
               >
                 <span class="status-dot success" aria-hidden="true"></span>
-                Em estoque <span class="chip-count">{{ statusCounts()['Em Estoque'] }}</span>
+                {{ 'status.Em Estoque' | translate }} <span class="chip-count">{{ statusCounts()['Em Estoque'] }}</span>
               </button>
 
               <button
@@ -194,7 +194,7 @@
                 [attr.aria-selected]="filter() === 'Atenção'"
               >
                 <span class="status-dot warning" aria-hidden="true"></span>
-                Atenção <span class="chip-count">{{ statusCounts()['Atenção'] }}</span>
+                {{ 'status.Atenção' | translate }} <span class="chip-count">{{ statusCounts()['Atenção'] }}</span>
               </button>
 
               <button
@@ -206,7 +206,7 @@
                 [attr.aria-selected]="filter() === 'Parado'"
               >
                 <span class="status-dot danger" aria-hidden="true"></span>
-                Parado <span class="chip-count">{{ statusCounts()['Parado'] }}</span>
+                {{ 'status.Parado' | translate }} <span class="chip-count">{{ statusCounts()['Parado'] }}</span>
               </button>
 
               <button
@@ -218,7 +218,7 @@
                 [attr.aria-selected]="filter() === 'Em trânsito'"
               >
                 <span class="status-dot info" aria-hidden="true"></span>
-                Em trânsito <span class="chip-count">{{ statusCounts()['Em trânsito'] }}</span>
+                {{ 'status.Em trânsito' | translate }} <span class="chip-count">{{ statusCounts()['Em trânsito'] }}</span>
               </button>
 
               <button
@@ -230,14 +230,14 @@
                 [attr.aria-selected]="filter() === 'Vendido'"
               >
                 <span class="status-dot neutral" aria-hidden="true"></span>
-                Vendido <span class="chip-count">{{ statusCounts()['Vendido'] }}</span>
+                {{ 'status.Vendido' | translate }} <span class="chip-count">{{ statusCounts()['Vendido'] }}</span>
               </button>
             </div>
           </header>
 
           @if (filteredPurchases().length === 0) {
             <div class="empty-filter">
-              <span class="t-caption">Nenhum lote com este status.</span>
+              <span class="t-caption">{{ 'inventory.noneWithStatus' | translate }}</span>
             </div>
           } @else {
             <div class="table-card">
@@ -246,13 +246,13 @@
                   <thead>
                     <tr>
                       <th class="col-edge"></th>
-                      <th mat-sort-header="id">ID</th>
-                      <th mat-sort-header="product">Produto</th>
-                      <th class="hide-on-mobile" mat-sort-header="category">Categoria</th>
-                      <th class="text-center" mat-sort-header="currentStock" arrowPosition="before">Estoque</th>
-                      <th class="text-right" mat-sort-header="idleValue" arrowPosition="before">Capital parado</th>
-                      <th class="text-center hide-on-mobile" mat-sort-header="averageMargin" arrowPosition="before">Margem</th>
-                      <th mat-sort-header="status">Status</th>
+                      <th mat-sort-header="id">{{ 'purchases.colId' | translate }}</th>
+                      <th mat-sort-header="product">{{ 'purchases.colProduct' | translate }}</th>
+                      <th class="hide-on-mobile" mat-sort-header="category">{{ 'purchases.colCategory' | translate }}</th>
+                      <th class="text-center" mat-sort-header="currentStock" arrowPosition="before">{{ 'inventory.colStock' | translate }}</th>
+                      <th class="text-right" mat-sort-header="idleValue" arrowPosition="before">{{ 'inventory.idleCapital' | translate }}</th>
+                      <th class="text-center hide-on-mobile" mat-sort-header="averageMargin" arrowPosition="before">{{ 'sales.colMargin' | translate }}</th>
+                      <th mat-sort-header="status">{{ 'purchases.colStatus' | translate }}</th>
                       <th class="text-right col-actions"></th>
                     </tr>
                   </thead>
@@ -290,7 +290,7 @@
                               mat-icon-button
                               class="row-action success"
                               (click)="markReceived(c, $event)"
-                              matTooltip="Marcar como recebido (hoje)"
+                              [matTooltip]="'inventory.markReceivedToday' | translate"
                             >
                               <mat-icon>move_to_inbox</mat-icon>
                             </button>
@@ -299,7 +299,7 @@
                             mat-icon-button
                             class="row-action"
                             (click)="toggleRow(c.id, $event)"
-                            [matTooltip]="expandedRow() === c.id ? 'Recolher' : 'Detalhes inline'"
+                            [matTooltip]="(expandedRow() === c.id ? 'purchases.collapse' : 'purchases.inlineDetails') | translate"
                           >
                             <mat-icon>{{ expandedRow() === c.id ? 'expand_less' : 'expand_more' }}</mat-icon>
                           </button>
@@ -307,7 +307,7 @@
                             mat-icon-button
                             class="row-action danger"
                             (click)="confirmDelete(c, $event)"
-                            matTooltip="Excluir"
+                            [matTooltip]="'common.delete' | translate"
                           >
                             <mat-icon>delete_outline</mat-icon>
                           </button>
@@ -318,14 +318,14 @@
                           <td class="col-edge"></td>
                           <td colspan="8">
                             <div class="expansion-grid">
-                              <div><span class="t-caption">Data compra</span><strong class="mono">{{ c.purchaseDate | brDate }}</strong></div>
-                              <div><span class="t-caption">Recebido em</span><strong class="mono">{{ c.receiptDate ? (c.receiptDate | brDate) : '—' }}</strong></div>
-                              <div><span class="t-caption">Custo unit. real</span><strong class="mono">{{ c.actualUnitCost | brl }}</strong></div>
-                              <div><span class="t-caption">Custo total</span><strong class="mono">{{ c.totalActualCost | brl }}</strong></div>
-                              <div><span class="t-caption">Vendido</span><strong class="mono">{{ c.quantitySold }}</strong></div>
-                              <div><span class="t-caption">Dias em estoque</span><strong class="mono">{{ c.daysInStock }}d</strong></div>
-                              <div><span class="t-caption">Primeira venda</span><strong class="mono">{{ c.firstSale ? (c.firstSale | brDate) : '—' }}</strong></div>
-                              <div><span class="t-caption">Última venda</span><strong class="mono">{{ c.lastSale ? (c.lastSale | brDate) : '—' }}</strong></div>
+                              <div><span class="t-caption">{{ 'inventory.purchaseDate' | translate }}</span><strong class="mono">{{ c.purchaseDate | brDate }}</strong></div>
+                              <div><span class="t-caption">{{ 'purchases.receivedOn' | translate }}</span><strong class="mono">{{ c.receiptDate ? (c.receiptDate | brDate) : '—' }}</strong></div>
+                              <div><span class="t-caption">{{ 'purchases.realUnitCost' | translate }}</span><strong class="mono">{{ c.actualUnitCost | brl }}</strong></div>
+                              <div><span class="t-caption">{{ 'purchases.colTotalCost' | translate }}</span><strong class="mono">{{ c.totalActualCost | brl }}</strong></div>
+                              <div><span class="t-caption">{{ 'batchPanel.sold' | translate }}</span><strong class="mono">{{ c.quantitySold }}</strong></div>
+                              <div><span class="t-caption">{{ 'batchPanel.daysInStock' | translate }}</span><strong class="mono">{{ c.daysInStock }}d</strong></div>
+                              <div><span class="t-caption">{{ 'inventory.firstSale' | translate }}</span><strong class="mono">{{ c.firstSale ? (c.firstSale | brDate) : '—' }}</strong></div>
+                              <div><span class="t-caption">{{ 'inventory.lastSale' | translate }}</span><strong class="mono">{{ c.lastSale ? (c.lastSale | brDate) : '—' }}</strong></div>
                             </div>
                           </td>
                         </tr>

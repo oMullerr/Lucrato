@@ -1,30 +1,32 @@
 import { FirestoreError } from '@angular/fire/firestore';
 
+/** Returns an i18n key (under `errors.*`) for the given Firestore error.
+ *  Callers resolve it with TranslateService at display time. */
 export function firestoreErrorMessage(err: unknown): string {
   const code = (err as FirestoreError | undefined)?.code;
   switch (code) {
     case 'permission-denied':
-      return 'Você não tem permissão para acessar estes dados. Faça login novamente.';
+      return 'errors.permissionDenied';
     case 'unauthenticated':
-      return 'Sua sessão expirou. Faça login novamente.';
+      return 'errors.unauthenticated';
     case 'unavailable':
-      return 'Servidor temporariamente indisponível. Tentando reconectar…';
+      return 'errors.unavailable';
     case 'resource-exhausted':
-      return 'Limite de uso atingido. Aguarde alguns instantes e tente novamente.';
+      return 'errors.resourceExhausted';
     case 'failed-precondition':
-      return 'Cache local indisponível. Recarregue a página.';
+      return 'errors.failedPrecondition';
     case 'deadline-exceeded':
-      return 'A conexão está lenta. Tentando novamente…';
+      return 'errors.deadlineExceeded';
     case 'cancelled':
-      return 'Operação cancelada.';
+      return 'errors.cancelled';
     case 'not-found':
-      return 'Registro não encontrado no servidor.';
+      return 'errors.notFound';
     case 'aborted':
     case 'internal':
     case 'data-loss':
-      return 'Erro interno do servidor. Tente novamente em instantes.';
+      return 'errors.internal';
     default:
-      return 'Erro ao sincronizar dados. Verifique sua conexão.';
+      return 'errors.sync';
   }
 }
 

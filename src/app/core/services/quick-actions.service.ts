@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { TranslateService } from '@ngx-translate/core';
 import { Purchase, Sale } from '../models/models';
 import { SaleFormDialogComponent } from '../../features/sales/sale-form.dialog';
 import { PurchaseFormDialogComponent } from '../../features/purchases/purchase-form.dialog';
@@ -15,6 +16,7 @@ export class QuickActionsService {
   private readonly dialog = inject(MatDialog);
   private readonly data = inject(DataService);
   private readonly notify = inject(NotifyService);
+  private readonly t = inject(TranslateService);
 
   openNewSale(): void {
     this.dialog
@@ -26,11 +28,11 @@ export class QuickActionsService {
       .subscribe(result => {
         if (!result) return;
         if (this.data.findSale(result.id)) {
-          this.notify.error(`ID ${result.id} já existe.`);
+          this.notify.error(this.t.instant('sales.idExists', { id: result.id }));
           return;
         }
         this.data.addSale(result);
-        this.notify.success(`Venda ${result.id} registrada.`);
+        this.notify.success(this.t.instant('sales.registered', { id: result.id }));
       });
   }
 
@@ -44,11 +46,11 @@ export class QuickActionsService {
       .subscribe(result => {
         if (!result) return;
         if (this.data.findPurchase(result.id)) {
-          this.notify.error(`ID ${result.id} já existe.`);
+          this.notify.error(this.t.instant('purchases.idExists', { id: result.id }));
           return;
         }
         this.data.addPurchase(result);
-        this.notify.success(`Lote ${result.id} adicionado.`);
+        this.notify.success(this.t.instant('purchases.added', { id: result.id }));
       });
   }
 
@@ -64,9 +66,13 @@ export class QuickActionsService {
       .open<ConfirmDialogComponent, unknown, ConfirmDialogResult>(ConfirmDialogComponent, {
         width: '420px',
         data: {
-          title: 'Marcar como recebido?',
-          message: `O lote ${purchase.id} (${purchase.product}) será marcado como recebido hoje (${formatBrDate(today)}). O tempo de estoque passa a contar a partir de hoje.`,
-          confirmText: 'Marcar recebido',
+          title: this.t.instant('quick.markReceivedTitle'),
+          message: this.t.instant('quick.markReceivedMsg', {
+            id: purchase.id,
+            product: purchase.product,
+            date: formatBrDate(today),
+          }),
+          confirmText: this.t.instant('batchPanel.markReceived'),
           danger: false,
         },
       })
@@ -74,7 +80,7 @@ export class QuickActionsService {
       .subscribe(result => {
         if (!result || !result.confirmed) return;
         this.data.updatePurchase(purchase.id, { receiptDate: today });
-        this.notify.success(`Lote ${purchase.id} marcado como recebido hoje.`);
+        this.notify.success(this.t.instant('quick.markedReceived', { id: purchase.id }));
       });
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { Firestore, doc, onSnapshot, setDoc } from '@angular/fire/firestore';
 import type { Unsubscribe } from '@angular/fire/firestore';
+import { TranslateService } from '@ngx-translate/core';
 import { APP, DEFAULT_CATEGORY_COLOR } from '../constants/app.constants';
 import {
   Purchase, Sale, Settings, Database, SaleChannel
@@ -20,6 +21,7 @@ export class DataService {
   private readonly auth = inject(AuthService);
   private readonly notify = inject(NotifyService);
   private readonly connection = inject(ConnectionService);
+  private readonly t = inject(TranslateService);
 
   private readonly db = signal<Database | null>(null);
   private _unsub?: Unsubscribe;
@@ -71,7 +73,7 @@ export class DataService {
         this.connection.reportSnapshot(snap.metadata);
         if (this.connection.syncError()) {
           this.connection.clearSyncError();
-          this.notify.success('Sincronização restaurada');
+          this.notify.success(this.t.instant('notify.syncRestored'));
         }
         this._retryAttempt = 0;
 
@@ -82,7 +84,7 @@ export class DataService {
             this.db.set(this.createEmpty());
             if (!this._warnedFirstOffline) {
               this._warnedFirstOffline = true;
-              this.notify.warning('Você está offline. Seus dados aparecerão quando conectar ao servidor.');
+              this.notify.warning(this.t.instant('notify.offlineData'));
             }
           }
         } else {
@@ -91,14 +93,14 @@ export class DataService {
           setDoc(ref, empty).catch(err => {
             logError('[Firestore] Falha ao criar documento inicial:', err);
             this.connection.reportSnapshotError(err);
-            this.notify.warning('Não foi possível criar seu banco de dados inicial. Recarregue a página.');
+            this.notify.warning(this.t.instant('notify.initialDbFailed'));
           });
         }
       },
       err => {
         logError('[Firestore] onSnapshot falhou:', err);
         this.connection.reportSnapshotError(err);
-        this.notify.error(firestoreErrorMessage(err));
+        this.notify.error(this.t.instant(firestoreErrorMessage(err)));
         this.scheduleRetry(uid);
       },
     );
@@ -146,7 +148,7 @@ export class DataService {
     return setDoc(doc(this.firestore, `users/${uid}/db/main`), payload, { merge: true })
       .catch(err => {
         logError('[Firestore] Falha ao salvar:', err);
-        this.notify.error(firestoreErrorMessage(err));
+        this.notify.error(this.t.instant(firestoreErrorMessage(err)));
         throw err;
       });
   }
@@ -181,7 +183,7 @@ export class DataService {
     } catch (err) {
       logError('[Firestore] Falha ao zerar dados:', err);
       this.db.set(prev);
-      this.notify.error(firestoreErrorMessage(err));
+      this.notify.error(this.t.instant(firestoreErrorMessage(err)));
       throw err;
     }
   }

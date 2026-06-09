@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { moveItemInArray } from '@angular/cdk/drag-drop';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotifyService } from '../../core/services/notify.service';
 import { DEFAULT_CATEGORY_COLOR } from '../../core/constants/app.constants';
 
@@ -12,16 +13,18 @@ import { DEFAULT_CATEGORY_COLOR } from '../../core/constants/app.constants';
   selector: 'app-editable-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MatIconModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [FormsModule, MatIconModule, MatButtonModule, MatFormFieldModule, MatInputModule, TranslateModule],
   templateUrl: './editable-list.component.html',
   styleUrl: './editable-list.component.scss',
 })
 export class EditableListComponent {
   private readonly notify = inject(NotifyService);
+  private readonly t = inject(TranslateService);
 
   readonly items = input.required<string[]>();
   readonly addLabel = input<string>('');
-  readonly placeholder = input<string>('Digite e pressione Enter');
+  /** Empty default — the template falls back to a translated placeholder. */
+  readonly placeholder = input<string>('');
 
   /** Quando true, cada item ganha um seletor de cor e o mapa `colors` é editado junto. */
   readonly withColor = input<boolean>(false);
@@ -42,7 +45,7 @@ export class EditableListComponent {
     const v = this.draft.trim();
     if (!v) return;
     if (this.items().includes(v)) {
-      this.notify.warning(`"${v}" já existe na lista.`);
+      this.notify.warning(this.t.instant('editableList.alreadyExists', { item: v }));
       return;
     }
     this.itemsChange.emit([...this.items(), v]);
