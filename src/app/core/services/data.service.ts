@@ -1,5 +1,5 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
-import { Firestore, doc, onSnapshot, setDoc } from '@angular/fire/firestore';
+import { Firestore, doc, onSnapshot, setDoc, deleteField } from '@angular/fire/firestore';
 import type { Unsubscribe } from '@angular/fire/firestore';
 import { TranslateService } from '@ngx-translate/core';
 import { APP, DEFAULT_CATEGORY_COLOR } from '../constants/app.constants';
@@ -7,6 +7,9 @@ import {
   Purchase, Sale, Settings, Database, SaleChannel
 } from '../models/models';
 import { calculatePurchase, calculateKpis, calculateSale, nextId } from './calculations';
+import { computeFiscalStatus } from '../fiscal/fiscal';
+import { DEFAULT_FISCAL_CONFIG } from '../fiscal/fiscal-regimes';
+import { FiscalConfig } from '../fiscal/fiscal.model';
 import { AuthService } from './auth.service';
 import { NotifyService } from './notify.service';
 import { ConnectionService } from './connection.service';
@@ -47,6 +50,20 @@ export class DataService {
   readonly kpis = computed(() =>
     calculateKpis(this.computedPurchases(), this.computedSales())
   );
+
+  /** Config do regime tributário, com fallback para o padrão (MEI). */
+  readonly fiscalConfig = computed<FiscalConfig>(() => this.settings()?.fiscal ?? DEFAULT_FISCAL_CONFIG);
+
+  /** Status fiscal do ano corrente — útil para banners/resumos fora da página fiscal. */
+  readonly fiscalStatus = computed(() =>
+    computeFiscalStatus(this.fiscalConfig(), this.computedSales(), new Date().getUTCFullYear())
+  );
+
+  /** Competências do DAS marcadas como pagas ('YYYY-MM'). */
+  readonly dasPaidMonths = computed<string[]>(() => this.settings()?.dasPaidMonths ?? []);
+
+  /** Anos-base com DASN-SIMEI entregue. */
+  readonly dasnDeclaredYears = computed<number[]>(() => this.settings()?.dasnDeclaredYears ?? []);
 
   constructor() {
     effect(() => {
@@ -205,6 +222,73 @@ export class DataService {
     return map?.[name] ?? DEFAULT_CATEGORY_COLOR;
   }
 
+  /**
+   * Persiste a config do regime tributário em `settings.fiscal` (merge aninhado, mesmo
+   * padrão do SettingsComponent). Aplica update otimista e faz rollback em caso de falha.
+   */
+  async updateFiscalConfig(cfg: FiscalConfig): Promise<void> {
+    const uid = this.auth.currentUser()?.uid;
+    if (!uid) return;
+    const current = this.db();
+    if (current) {
+      // Normaliza: omite a chave quando não há data (evita carregar `undefined` no signal).
+      const localFiscal: FiscalConfig = cfg.regimeStartDate
+        ? cfg
+        : { regime: cfg.regime, activity: cfg.activity };
+      this.db.set({ ...current, settings: { ...current.settings, fiscal: localFiscal } });
+    }
+    // Firestore rejeita `undefined`; ao limpar a data, removemos o campo com deleteField().
+    const fiscalPayload = {
+      regime: cfg.regime,
+      activity: cfg.activity,
+      regimeStartDate: cfg.regimeStartDate ? cfg.regimeStartDate : deleteField(),
+    };
+    try {
+      await setDoc(
+        doc(this.firestore, `users/${uid}/db/main`),
+        { settings: { fiscal: fiscalPayload } },
+        { merge: true },
+      );
+    } catch (err) {
+      logError('[Firestore] Falha ao salvar config fiscal:', err);
+      if (current) this.db.set(current);
+      this.notify.error(this.t.instant(firestoreErrorMessage(err)));
+      throw err;
+    }
+  }
+
+  /** Merge otimista de campos simples de `settings` (arrays/valores), com rollback em falha. */
+  private async mergeSettings(patch: Partial<Settings>): Promise<void> {
+    const uid = this.auth.currentUser()?.uid;
+    if (!uid) return;
+    const current = this.db();
+    if (current) {
+      this.db.set({ ...current, settings: { ...current.settings, ...patch } });
+    }
+    try {
+      await setDoc(doc(this.firestore, `users/${uid}/db/main`), { settings: patch }, { merge: true });
+    } catch (err) {
+      logError('[Firestore] Falha ao salvar settings:', err);
+      if (current) this.db.set(current);
+      this.notify.error(this.t.instant(firestoreErrorMessage(err)));
+      throw err;
+    }
+  }
+
+  /** Marca/desmarca o DAS de uma competência ('YYYY-MM') como pago. */
+  async setDasPaid(periodKey: string, paid: boolean): Promise<void> {
+    const set = new Set(this.dasPaidMonths());
+    if (paid) set.add(periodKey); else set.delete(periodKey);
+    await this.mergeSettings({ dasPaidMonths: [...set].sort() });
+  }
+
+  /** Marca/desmarca a DASN-SIMEI de um ano-base como entregue. */
+  async setDasnDeclared(baseYear: number, declared: boolean): Promise<void> {
+    const set = new Set(this.dasnDeclaredYears());
+    if (declared) set.add(baseYear); else set.delete(baseYear);
+    await this.mergeSettings({ dasnDeclaredYears: [...set].sort((a, b) => a - b) });
+  }
+
   addPurchase(purchase: Purchase): void {
     this.update(d => { d.purchases.push({ ...purchase }); });
   }
@@ -288,6 +372,9 @@ export class DataService {
       supplierColors: cfg.supplierColors ?? defaults.supplierColors,
       channels: cfg.channels ?? defaults.channels,
       channelColors: cfg.channelColors ?? defaults.channelColors,
+      fiscal: cfg.fiscal ?? defaults.fiscal,
+      dasPaidMonths: cfg.dasPaidMonths ?? defaults.dasPaidMonths,
+      dasnDeclaredYears: cfg.dasnDeclaredYears ?? defaults.dasnDeclaredYears,
     };
 
     return {
@@ -313,6 +400,9 @@ export class DataService {
       supplierColors: {},
       channels: ['Mercado Livre', 'Outro'],
       channelColors: {},
+      fiscal: DEFAULT_FISCAL_CONFIG,
+      dasPaidMonths: [],
+      dasnDeclaredYears: [],
     };
   }
 

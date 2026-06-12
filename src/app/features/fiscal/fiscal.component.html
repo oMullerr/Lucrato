@@ -1,0 +1,273 @@
+<app-page-header
+  [title]="'fiscal.title' | translate"
+  [eyebrow]="'fiscal.eyebrow' | translate:{ year: selectedYear() }"
+  [subtitle]="'fiscal.subtitle' | translate"
+>
+  @if (years().length > 1) {
+    <div class="year-picker" role="tablist" [attr.aria-label]="'fiscal.yearLabel' | translate">
+      @for (y of years(); track y) {
+        <button
+          type="button"
+          class="year-pill"
+          [class.active]="selectedYear() === y"
+          (click)="setYear(y)"
+          role="tab"
+          [attr.aria-selected]="selectedYear() === y"
+        >{{ y }}</button>
+      }
+    </div>
+  }
+</app-page-header>
+
+<div class="page-content fiscal-body">
+
+  <!-- Config do regime -->
+  <section class="chart-card config-card" [attr.aria-label]="'fiscal.configTitle' | translate">
+    <header class="cc-head">
+      <div class="cc-title">
+        <h3 class="h-section">{{ 'fiscal.configTitle' | translate }}</h3>
+        <p>{{ 'fiscal.configDesc' | translate }}</p>
+      </div>
+    </header>
+    <div class="config-grid">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'fiscal.regimeLabel' | translate }}</mat-label>
+        <mat-select [value]="config().regime" (selectionChange)="onRegimeChange($event.value)">
+          @for (r of regimeOptions; track r) {
+            <mat-option [value]="r">{{ regimeLabel(r) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'fiscal.activityLabel' | translate }}</mat-label>
+        <mat-select [value]="config().activity" (selectionChange)="onActivityChange($event.value)" [disabled]="!hasRegime()">
+          @for (a of activityOptions; track a) {
+            <mat-option [value]="a">{{ activityLabel(a) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'fiscal.startDateLabel' | translate }}</mat-label>
+        <input
+          matInput
+          [matDatepicker]="startPicker"
+          [value]="startDateValue()"
+          [max]="today"
+          [disabled]="!hasRegime()"
+          (dateChange)="onStartDateChange($event.value)"
+        />
+        <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+        <mat-hint>{{ 'fiscal.startDateHint' | translate }}</mat-hint>
+      </mat-form-field>
+    </div>
+  </section>
+
+  @if (!data.loaded()) {
+    <section class="kpi-strip">
+      <app-skeleton variant="kpi" [count]="4" />
+    </section>
+    <section class="chart-hero-skel">
+      <app-skeleton variant="chart" />
+    </section>
+
+  } @else if (!hasRegime()) {
+    <app-empty-state
+      icon="account_balance"
+      [title]="'fiscal.noneTitle' | translate"
+      [description]="'fiscal.noneMsg' | translate"
+    />
+
+  } @else if (!hasData()) {
+    <app-empty-state
+      icon="receipt_long"
+      [title]="'fiscal.emptyTitle' | translate"
+      [description]="'fiscal.emptyDesc' | translate"
+    >
+      <a mat-flat-button class="primary-cta" routerLink="/sales">
+        <mat-icon>sell</mat-icon>
+        {{ 'sales.registerSale' | translate }}
+      </a>
+    </app-empty-state>
+
+  } @else {
+
+    <!-- Hero: barra de progresso faturamento vs teto -->
+    <section class="chart-card hero-card" [attr.data-band]="status().band" [attr.aria-label]="'fiscal.title' | translate">
+      <div class="hero-top">
+        <div class="hero-figs">
+          <span class="hero-eyebrow">{{ 'fiscal.revenueYear' | translate }}</span>
+          <span class="hero-value mono">{{ status().revenue | brl }}</span>
+          <span class="hero-ceiling">{{ 'fiscal.ofCeiling' | translate:{ ceiling: (status().ceiling | brl) } }}</span>
+        </div>
+        <div class="hero-pct mono" [attr.data-band]="status().band">{{ (status().usagePct * 100).toFixed(0) }}%</div>
+      </div>
+
+      <div class="progress-track" role="progressbar" [attr.aria-valuenow]="(status().usagePct * 100).toFixed(0)" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-fill" [attr.data-band]="status().band" [style.width.%]="progressPct()"></div>
+      </div>
+
+      <div class="hero-foot">
+        @if (status().band === 'over') {
+          <span class="foot-item danger">
+            <mat-icon aria-hidden="true">trending_up</mat-icon>
+            {{ 'fiscal.overBy' | translate:{ value: (status().overBy | brl) } }}
+          </span>
+        } @else {
+          <span class="foot-item">
+            <mat-icon aria-hidden="true">savings</mat-icon>
+            {{ 'fiscal.availableShort' | translate:{ value: (status().remaining | brl) } }}
+          </span>
+        }
+        <span class="foot-item" [class.danger]="forecastView().tone === 'danger'">
+          <mat-icon aria-hidden="true">{{ forecastView().icon }}</mat-icon>
+          {{ forecastView().key | translate:forecastView().params }}
+        </span>
+        @if (status().isProportional) {
+          <span class="foot-item muted" [matTooltip]="'fiscal.proportionalNote' | translate:{ months: status().monthsActive, monthly: (status().monthlyAvgLimit | brl) }">
+            <mat-icon aria-hidden="true">event</mat-icon>
+            {{ 'fiscal.proportionalTag' | translate:{ months: status().monthsActive } }}
+          </span>
+        }
+      </div>
+    </section>
+
+    <!-- KPIs -->
+    <section class="kpi-strip" [attr.aria-label]="'fiscal.title' | translate">
+      <app-kpi-card
+        [title]="'fiscal.revenueYear' | translate"
+        [value]="status().revenue | brl"
+        [variant]="bandVariant()"
+        icon="payments"
+        [note]="'fiscal.usedOfCeiling' | translate:{ pct: (status().usagePct * 100).toFixed(0) }"
+      />
+      <app-kpi-card
+        [title]="'fiscal.ceiling' | translate"
+        [value]="status().ceiling | brl"
+        variant="neutral"
+        icon="straighten"
+        [note]="status().isProportional
+          ? ('fiscal.ceilingProportional' | translate:{ months: status().monthsActive })
+          : ('fiscal.ceilingFull' | translate)"
+      />
+      <app-kpi-card
+        [title]="status().band === 'over' ? ('fiscal.over' | translate) : ('fiscal.available' | translate)"
+        [value]="(status().band === 'over' ? status().overBy : status().remaining) | brl"
+        [variant]="status().band === 'over' ? 'danger' : 'success'"
+        [icon]="status().band === 'over' ? 'priority_high' : 'savings'"
+        [note]="(status().band === 'over' ? 'fiscal.overNote' : 'fiscal.availableNote') | translate"
+      />
+      <app-kpi-card
+        [title]="'fiscal.projection' | translate"
+        [value]="status().projectedAnnual | brl"
+        [variant]="status().projectedAnnual > status().ceiling ? 'danger' : 'info'"
+        icon="insights"
+        [note]="'fiscal.projectionNote' | translate"
+      />
+    </section>
+
+    <!-- DAS + gráfico mensal -->
+    <section class="fiscal-grid">
+      @if (status().tax) {
+        <article class="chart-card das-card">
+          <header class="cc-head">
+            <div class="cc-title">
+              <h3 class="h-section">{{ 'fiscal.das' | translate }}</h3>
+              <p>{{ dasNote() }}</p>
+            </div>
+          </header>
+          <div class="das-total mono">{{ status().tax!.total | brl }}<span>/{{ 'fiscal.perMonth' | translate }}</span></div>
+          <ul class="das-breakdown">
+            <li><span>{{ 'fiscal.dasInss' | translate }}</span><span class="mono">{{ status().tax!.inss | brl }}</span></li>
+            @if (status().tax!.icms > 0) {
+              <li><span>{{ 'fiscal.dasIcms' | translate }}</span><span class="mono">{{ status().tax!.icms | brl }}</span></li>
+            }
+            @if (status().tax!.iss > 0) {
+              <li><span>{{ 'fiscal.dasIss' | translate }}</span><span class="mono">{{ status().tax!.iss | brl }}</span></li>
+            }
+          </ul>
+        </article>
+      }
+
+      <article class="chart-card chart-monthly">
+        <header class="cc-head">
+          <div class="cc-title">
+            <h3 class="h-section">{{ 'fiscal.monthlyChartTitle' | translate }}</h3>
+            <p>{{ 'fiscal.monthlyChartDesc' | translate:{ limit: (status().monthlyAvgLimit | brl) } }}</p>
+          </div>
+        </header>
+        <div class="cc-body cc-tall">
+          <canvas baseChart [data]="monthlyChart()" [options]="chartOptions()" type="bar"></canvas>
+        </div>
+      </article>
+    </section>
+
+    <!-- DAS do ano: controle de pagamento -->
+    @if (status().tax) {
+      <section class="chart-card das-schedule" [attr.aria-label]="'fiscal.dasYearTitle' | translate">
+        <header class="cc-head">
+          <div class="cc-title">
+            <h3 class="h-section">{{ 'fiscal.dasYearTitle' | translate }}</h3>
+            <p>
+              {{ 'fiscal.dasSummary' | translate:{ paid: dasSummary().paid, total: dasSummary().total } }}
+              @if (dasSummary().overdue > 0) {
+                <span class="das-overdue-tag">· {{ 'fiscal.dasOverdueCount' | translate:{ count: dasSummary().overdue } }}</span>
+              }
+            </p>
+          </div>
+        </header>
+        <div class="das-grid">
+          @for (m of dasMonths(); track m.periodKey) {
+            <button
+              type="button"
+              class="das-cell"
+              [attr.data-status]="m.status"
+              [disabled]="m.status === 'inactive'"
+              (click)="toggleDasPaid(m)"
+              [matTooltip]="m.status === 'inactive' ? '' : ('fiscal.dueOn' | translate:{ date: formatBrDate(m.dueDate) })"
+            >
+              <span class="das-month">{{ monthNames()[m.month] }}</span>
+              <span class="das-amount mono">{{ m.status === 'inactive' ? '—' : (m.amount | brl) }}</span>
+              <span class="das-chip">{{ dasStatusKey(m.status) | translate }}</span>
+            </button>
+          }
+        </div>
+        <p class="das-hint">{{ 'fiscal.dasHint' | translate }}</p>
+      </section>
+    }
+
+    <!-- Alerta de situação -->
+    <section class="status-banner" [attr.data-tone]="alert().tone" role="status">
+      <mat-icon class="status-ic" aria-hidden="true">{{ alert().icon }}</mat-icon>
+      <div class="status-text">
+        <strong>{{ alert().titleKey | translate }}</strong>
+        <p>{{ alert().messageKey | translate:alert().params }}</p>
+        @if (status().isProportional) {
+          <p class="status-sub">{{ 'fiscal.proportionalNote' | translate:{ months: status().monthsActive, ceiling: (status().ceiling | brl), monthly: (status().monthlyAvgLimit | brl) } }}</p>
+        }
+      </div>
+    </section>
+
+    <!-- DASN-SIMEI: declaração anual -->
+    <section class="dasn-banner" [attr.data-status]="dasn().status" role="status">
+      <mat-icon class="dasn-ic" aria-hidden="true">{{ dasnDeclared() ? 'task_alt' : 'event_note' }}</mat-icon>
+      <div class="dasn-text">
+        <strong>{{ 'fiscal.dasnTitle' | translate:{ year: dasn().baseYear } }}</strong>
+        <p>{{ dasnStatusKey(dasn().status) | translate:{ deadline: formatBrDate(dasn().deadline) } }}</p>
+      </div>
+      <button mat-stroked-button type="button" class="dasn-action" (click)="markDasnDeclared(!dasnDeclared())">
+        <mat-icon>{{ dasnDeclared() ? 'undo' : 'check' }}</mat-icon>
+        {{ (dasnDeclared() ? 'fiscal.dasnUndo' : 'fiscal.dasnMark') | translate }}
+      </button>
+    </section>
+
+  }
+
+  <p class="fiscal-disclaimer">
+    <mat-icon aria-hidden="true">info</mat-icon>
+    {{ 'fiscal.disclaimer' | translate }}
+  </p>
+
+</div>

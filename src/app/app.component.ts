@@ -38,9 +38,10 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'nav.groupMain',
     items: [
-      { path: '/inventory',  label: 'nav.inventory', icon: 'inventory_2', title: 'nav.inventoryTitle' },
-      { path: '/dashboard',  label: 'nav.dashboard', icon: 'analytics',   title: 'nav.dashboard' },
-      { path: '/analytics',  label: 'nav.analytics', icon: 'insights',    title: 'nav.analytics' },
+      { path: '/inventory',  label: 'nav.inventory', icon: 'inventory_2',    title: 'nav.inventoryTitle' },
+      { path: '/dashboard',  label: 'nav.dashboard', icon: 'analytics',      title: 'nav.dashboard' },
+      { path: '/analytics',  label: 'nav.analytics', icon: 'insights',       title: 'nav.analytics' },
+      { path: '/fiscal',     label: 'nav.fiscal',    icon: 'account_balance', title: 'nav.fiscal' },
     ],
   },
   {

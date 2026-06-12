@@ -1,0 +1,370 @@
+.fiscal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.primary-cta {
+  --mdc-filled-button-container-color: var(--brand-primary);
+  --mdc-filled-button-label-text-color: #FFFFFF;
+}
+
+/* Year picker (page-header actions slot) */
+.year-picker {
+  display: inline-flex;
+  gap: 0;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 3px;
+}
+
+.year-pill {
+  background: transparent;
+  border: none;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+
+  &:hover { color: var(--text-primary); }
+
+  &.active {
+    background: var(--bg-surface-1);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+/* Shared card shell (mirrors dashboard) */
+.chart-card {
+  background: var(--bg-surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  .cc-title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    h3.h-section { margin: 0; }
+    p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+  }
+}
+
+.cc-body { position: relative; }
+.cc-tall { height: 320px; }
+
+/* Config */
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+
+  mat-form-field { width: 100%; }
+}
+@media (max-width: 860px) { .config-grid { grid-template-columns: 1fr; } }
+
+/* KPI strip */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+@media (max-width: 1100px) { .kpi-strip { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .kpi-strip { grid-template-columns: 1fr; } }
+
+/* Hero progress */
+.hero-card {
+  gap: 16px;
+
+  /* tinted left edge by band */
+  border-left: 3px solid var(--band-color, var(--brand-primary));
+
+  &[data-band="ok"]      { --band-color: var(--brand-primary); }
+  &[data-band="warning"] { --band-color: var(--color-warning); }
+  &[data-band="danger"]  { --band-color: var(--color-danger); }
+  &[data-band="over"]    { --band-color: var(--color-danger); }
+}
+
+.hero-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.hero-figs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hero-eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.hero-value {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 650;
+  line-height: 1.05;
+  color: var(--text-primary);
+}
+
+.hero-ceiling {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.hero-pct {
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 700;
+  color: var(--band-color, var(--brand-primary));
+
+  &[data-band="ok"]      { color: var(--brand-primary); }
+  &[data-band="warning"] { color: var(--color-warning); }
+  &[data-band="danger"]  { color: var(--color-danger); }
+  &[data-band="over"]    { color: var(--color-danger); }
+}
+
+.progress-track {
+  position: relative;
+  height: 14px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-3);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--dur-slow, 420ms) var(--ease-out);
+  background: var(--brand-primary);
+
+  &[data-band="warning"] { background: var(--color-warning); }
+  &[data-band="danger"]  { background: var(--color-danger); }
+  &[data-band="over"]    { background: var(--color-danger); }
+}
+
+.hero-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+
+  .foot-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-primary);
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--text-muted); }
+
+    &.danger { color: var(--color-danger); mat-icon { color: var(--color-danger); } }
+    &.muted  { color: var(--text-muted); cursor: help; }
+  }
+}
+
+/* DAS + chart grid */
+.fiscal-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 14px;
+}
+@media (max-width: 920px) { .fiscal-grid { grid-template-columns: 1fr; } }
+
+.das-card {
+  gap: 12px;
+
+  .das-total {
+    font-size: 30px;
+    font-weight: 650;
+    color: var(--text-primary);
+
+    span {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+  }
+
+  .das-breakdown {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-muted);
+      padding-top: 8px;
+      border-top: 1px solid var(--border-subtle);
+
+      .mono { color: var(--text-primary); }
+    }
+  }
+}
+
+.chart-monthly .cc-tall { height: 300px; }
+
+/* Status banner */
+.status-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface-1);
+  border-left: 3px solid var(--tone-color, var(--brand-primary));
+
+  &[data-tone="ok"]      { --tone-color: var(--brand-primary); }
+  &[data-tone="warning"] { --tone-color: var(--color-warning); }
+  &[data-tone="danger"]  { --tone-color: var(--color-danger); }
+  &[data-tone="over"]    { --tone-color: var(--color-danger); }
+
+  .status-ic {
+    flex-shrink: 0;
+    color: var(--tone-color, var(--brand-primary));
+  }
+
+  .status-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    strong { font-size: 14.5px; color: var(--text-primary); }
+    p { margin: 0; font-size: 13.5px; color: var(--text-muted); line-height: 1.5; }
+    .status-sub { font-size: 12.5px; opacity: 0.9; }
+  }
+}
+
+/* DAS do ano — controle de pagamento */
+.das-overdue-tag { color: var(--color-danger); font-weight: 600; }
+
+.das-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+@media (max-width: 900px) { .das-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 520px) { .das-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.das-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface-2);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+
+  &:hover:not(:disabled) { border-color: var(--brand-primary); }
+  &:disabled { opacity: 0.45; cursor: default; }
+
+  .das-month { font-size: 12px; font-weight: 600; color: var(--text-primary); text-transform: capitalize; }
+  .das-amount { font-size: 12.5px; color: var(--text-primary); }
+  .das-chip {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  &[data-status="paid"] {
+    border-color: color-mix(in srgb, var(--color-success) 45%, var(--border-subtle));
+    background: color-mix(in srgb, var(--color-success) 8%, var(--bg-surface-1));
+    .das-chip { color: var(--color-success); }
+  }
+  &[data-status="overdue"] {
+    border-color: color-mix(in srgb, var(--color-danger) 45%, var(--border-subtle));
+    background: color-mix(in srgb, var(--color-danger) 8%, var(--bg-surface-1));
+    .das-chip { color: var(--color-danger); }
+  }
+  &[data-status="pending"] { .das-chip { color: var(--color-warning); } }
+}
+
+.das-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* DASN-SIMEI banner */
+.dasn-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface-1);
+  border-left: 3px solid var(--tone-color, var(--brand-primary));
+
+  &[data-status="declared"] { --tone-color: var(--color-success); }
+  &[data-status="open"]     { --tone-color: var(--color-info); }
+  &[data-status="overdue"]  { --tone-color: var(--color-danger); }
+  &[data-status="upcoming"] { --tone-color: var(--text-muted); }
+
+  .dasn-ic { flex-shrink: 0; color: var(--tone-color, var(--brand-primary)); }
+
+  .dasn-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    strong { font-size: 14px; color: var(--text-primary); }
+    p { margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.45; }
+  }
+
+  .dasn-action { flex-shrink: 0; }
+
+  @media (max-width: 560px) {
+    flex-wrap: wrap;
+    .dasn-action { width: 100%; }
+  }
+}
+
+/* Disclaimer */
+.fiscal-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+}

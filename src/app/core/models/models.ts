@@ -1,3 +1,5 @@
+import { FiscalConfig } from '../fiscal/fiscal.model';
+
 export type InventoryStatus = 'Em Estoque' | 'Vendido' | 'Atenção' | 'Parado' | 'Em trânsito';
 export type SaleStatus = 'Concluída' | 'Cancelada' | 'Devolvida' | 'Em disputa';
 export type SaleChannel = 'Mercado Livre' | 'Shopee' | 'Amazon' | 'Instagram' | 'WhatsApp' | 'Outro';
@@ -54,6 +56,12 @@ export interface Settings {
   channels: string[];
   /** Cor (hex) por canal, indexada pelo nome. Ausência = cor padrão. */
   channelColors: Record<string, string>;
+  /** Configuração do regime tributário (MEI etc.). Ausência = padrão (ver DEFAULT_FISCAL_CONFIG). */
+  fiscal?: FiscalConfig;
+  /** Competências do DAS pagas, no formato 'YYYY-MM'. Ausência = nenhuma paga. */
+  dasPaidMonths?: string[];
+  /** Anos-base com DASN-SIMEI já entregue. */
+  dasnDeclaredYears?: number[];
 }
 
 /** Purchase with derived computed fields */

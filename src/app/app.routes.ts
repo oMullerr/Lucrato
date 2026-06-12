@@ -47,6 +47,12 @@ export const routes: Routes = [
     title: 'routeTitles.analytics',
   },
   {
+    path: 'fiscal',
+    loadComponent: () => import('./features/fiscal/fiscal.component').then(m => m.FiscalComponent),
+    canActivate: [authGuard],
+    title: 'routeTitles.fiscal',
+  },
+  {
     path: 'settings',
     loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent),
     canActivate: [authGuard],

@@ -11,6 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Firestore, doc, onSnapshot, setDoc, Unsubscribe } from '@angular/fire/firestore';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Settings } from '../../core/models/models';
+import { DEFAULT_FISCAL_CONFIG } from '../../core/fiscal/fiscal-regimes';
 import { DataService } from '../../core/services/data.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ImportService } from '../../core/services/import.service';
@@ -35,6 +36,9 @@ const DEFAULT_SETTINGS: Settings = {
   supplierColors: {},
   channels: [],
   channelColors: {},
+  fiscal: DEFAULT_FISCAL_CONFIG,
+  dasPaidMonths: [],
+  dasnDeclaredYears: [],
 };
 
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
@@ -132,6 +136,9 @@ export class SettingsComponent implements OnDestroy {
           supplierColors: raw?.supplierColors ?? DEFAULT_SETTINGS.supplierColors,
           channels: raw?.channels ?? DEFAULT_SETTINGS.channels,
           channelColors: raw?.channelColors ?? DEFAULT_SETTINGS.channelColors,
+          fiscal: raw?.fiscal ?? DEFAULT_SETTINGS.fiscal,
+          dasPaidMonths: raw?.dasPaidMonths ?? DEFAULT_SETTINGS.dasPaidMonths,
+          dasnDeclaredYears: raw?.dasnDeclaredYears ?? DEFAULT_SETTINGS.dasnDeclaredYears,
         };
         this.serverSettings.set(composed);
       },
