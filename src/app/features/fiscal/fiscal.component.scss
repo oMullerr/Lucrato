@@ -75,11 +75,15 @@
 
 /* Config */
 .config-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
   gap: 14px;
+  align-items: flex-start;
 
-  mat-form-field { width: 100%; }
+  mat-form-field {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 100%;
+  }
 }
 @media (max-width: 860px) { .config-grid { grid-template-columns: 1fr; } }
 
