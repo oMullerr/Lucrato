@@ -273,20 +273,10 @@ Faça este checklist no setup e revise periodicamente:
 
 ## TODO
 
-- Revisar textos e labels
-- Revisar codigo
-- Revisar texto de instruções
-- Redistribuir o codigo (html so com html, css so com css e ts so com ts)
 - Ler como ficou o texto das instruções
-- Rever calculos da aplicação
+- tag de tipo de envio (correio/flex/full)
+- manter os dados no modal, mesmo se fechar a modal
+- adicionar logica do full e agencia
+- usuario escolher se ele quer colocar as taxas manualmente ou colocar só o valor vendido, valor anunciado e taxa de envio e o sistema calcula as taxas automaticamente
 
 ## BUGS
-
-
-- mais idiomas (i18n)
-
-- adiciono uma nova venda e os valores de eceita bruta nao muda, pq?
-
-- controle do MEI
-
-- como o mei tem o inss, se a minha namorada abrir o mei para a nossa loja de revenda, ela continua contribuindo para o inss e para o FGTS?

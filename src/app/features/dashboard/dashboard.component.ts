@@ -6,9 +6,6 @@ import type { ChartConfiguration } from 'chart.js';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { ThemeService } from '../../core/services/theme.service';
@@ -18,10 +15,9 @@ import { PageHeaderComponent } from '../../shared/components/page-header.compone
 import { KpiCardComponent } from '../../shared/components/kpi-card.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
+import { DateRangePickerComponent, RangeKey } from '../../shared/components/date-range-picker.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { ComputedSale } from '../../core/models/models';
-
-type RangeKey = '7d' | '30d' | '90d' | '12m' | 'all' | 'custom';
 
 interface RangeOption { key: RangeKey; labelKey: string; }
 
@@ -47,8 +43,7 @@ const RANGE_OPTIONS: RangeOption[] = [
   imports: [
     FormsModule, RouterLink, BaseChartDirective,
     MatIconModule, MatButtonModule, MatTooltipModule,
-    MatFormFieldModule, MatInputModule, MatDatepickerModule,
-    PageHeaderComponent, KpiCardComponent, EmptyStateComponent, SkeletonComponent, BrlPipe,
+    DateRangePickerComponent, PageHeaderComponent, KpiCardComponent, EmptyStateComponent, SkeletonComponent, BrlPipe,
     TranslateModule,
   ],
   templateUrl: './dashboard.component.html',
@@ -445,17 +440,6 @@ export class DashboardComponent {
     ];
     return items.map(it => ({ ...it, pct: total > 0 ? (it.value / total) * 100 : 0 }));
   });
-
-  protected setRange(r: RangeKey): void {
-    this.range.set(r);
-  }
-
-  /** Called when the date-range picker closes. Only commits if both dates are set. */
-  protected onPickerClosed(): void {
-    if (this.customStart() && this.customEnd()) {
-      this.range.set('custom');
-    }
-  }
 
   protected rangeLabel(r: RangeKey): string {
     this.lang.lang(); // re-evaluate when the language changes

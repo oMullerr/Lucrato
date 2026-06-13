@@ -521,3 +521,45 @@ describe('nextId', () => {
     expect(nextId(['V099'], 'V')).toBe('V100');
   });
 });
+
+describe('calculatePurchase — endurecimento (auditoria 06/2026)', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-03-01T00:00:00Z'));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('receiptDate FUTURA não produz dias negativos (clamp em 0) nem status de alerta', () => {
+    const purchase = makePurchase({ receiptDate: '2026-03-10' }); // 9 dias no futuro
+    const result = calculatePurchase(purchase, [], makeSettings());
+
+    expect(result.daysInStock).toBe(0);
+    expect(result.status).toBe('Em Estoque'); // 0 < yellowAlertDays
+  });
+
+  it('vendas "Em disputa" também devolvem o estoque (só Concluída consome)', () => {
+    const purchase = makePurchase({ quantityPurchased: 10 });
+    const sales: Sale[] = [
+      makeSale({ id: 'V001', quantitySold: 4, status: 'Em disputa' }),
+    ];
+    const result = calculatePurchase(purchase, sales, makeSettings());
+
+    expect(result.quantitySold).toBe(0);
+    expect(result.currentStock).toBe(10);
+  });
+
+  it('COMPORTAMENTO DOCUMENTADO: venda com lote órfão tem custo 0 e lucro = receita líquida', () => {
+    // A função pura mantém custo 0 (sem dado para calcular). Na prática o caso é prevenido:
+    // formulário e importação validam o lote, a exclusão de lote com vendas é bloqueada,
+    // e a tabela de Vendas sinaliza órfãos legados (ícone + tooltip sales.batchMissing).
+    const orphan = makeSale({ batchId: 'C999', quantitySold: 2, unitPrice: 100 });
+    const result = calculateSale(orphan, [makePurchase()]);
+
+    expect(result.actualUnitCost).toBe(0);
+    expect(result.proportionalCost).toBe(0);
+    expect(result.netProfit).toBeCloseTo(result.netRevenue, 10);
+  });
+});

@@ -77,7 +77,7 @@
                     <span class="wf-num">{{ kpis().grossRevenue | brl }}</span>
                   </span>
                   <mat-icon class="wf-arrow">chevron_right</mat-icon>
-                  <span class="wf-step">
+                  <span class="wf-step" [matTooltip]="'inventory.costsFeesHint' | translate">
                     <span class="wf-label">{{ 'inventory.costsFees' | translate }}</span>
                     <span class="wf-num">{{ (kpis().grossRevenue - kpis().netProfit) | brl }}</span>
                   </span>

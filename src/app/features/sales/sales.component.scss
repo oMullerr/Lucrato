@@ -183,6 +183,16 @@
   color: var(--text-secondary);
 }
 
+// Aviso de lote órfão ao lado do id-tag (venda sem lote → custo 0)
+.orphan-warn {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin-left: 4px;
+  cursor: help;
+}
+
 .id-sale {
   background: var(--tint-success);
   color: var(--color-success);

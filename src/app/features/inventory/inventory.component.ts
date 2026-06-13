@@ -256,11 +256,12 @@ export class InventoryComponent {
       const ref = new Date(today);
       ref.setDate(ref.getDate() - i);
       const total = purchases.reduce((acc, c) => {
-        if (!c.receiptDate) return acc;
-        const start = new Date(c.receiptDate);
+        // Mesmo fallback do daysInStock: em trânsito conta como capital imobilizado
+        // desde a compra — mantém a sparkline igual ao KPI idleCapital do card.
+        const start = new Date(c.receiptDate ?? c.purchaseDate);
         if (start > ref) return acc;
         const soldByDate = this.data.sales()
-          .filter(s => s.batchId === c.id && new Date(s.saleDate) <= ref)
+          .filter(s => s.batchId === c.id && s.status === 'Concluída' && new Date(s.saleDate) <= ref)
           .reduce((sum, s) => sum + s.quantitySold, 0);
         const remaining = Math.max(0, c.quantityPurchased - soldByDate);
         return acc + remaining * c.actualUnitCost;
@@ -361,7 +362,9 @@ export class InventoryComponent {
 
   protected confirmDelete(batch: ComputedPurchase, event: Event): void {
     event.stopPropagation();
-    if (batch.quantitySold > 0) {
+    // Qualquer venda vinculada (mesmo cancelada/devolvida) bloqueia: excluir o lote
+    // deixaria vendas órfãs com custo 0. Cascata disponível na tela Compras.
+    if (this.data.sales().some(s => s.batchId === batch.id)) {
       this.notify.warning(this.t.instant('inventory.hasLinkedSales'));
       return;
     }

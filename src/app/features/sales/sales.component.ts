@@ -20,6 +20,7 @@ import { KpiCardComponent } from '../../shared/components/kpi-card.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { ColorPillComponent } from '../../shared/components/color-pill.component';
+import { DateRangePickerComponent, RangeBounds, RangeChange } from '../../shared/components/date-range-picker.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 import { SaleFormDialogComponent } from './sale-form.dialog';
@@ -36,7 +37,7 @@ type SaleFilter = 'all' | 'profit' | 'loss' | 'low-margin';
     MatFormFieldModule, MatInputModule, MatSelectModule, MatTooltipModule,
     MatSortModule, MatPaginatorModule,
     PageHeaderComponent, StatusBadgeComponent, KpiCardComponent,
-    EmptyStateComponent, SkeletonComponent, ColorPillComponent,
+    EmptyStateComponent, SkeletonComponent, ColorPillComponent, DateRangePickerComponent,
     BrlPipe, BrDatePipe,
     TranslateModule,
   ],
@@ -52,6 +53,7 @@ export class SalesComponent {
   protected readonly textFilter = signal('');
   protected readonly channelFilter = signal('all');
   protected readonly quickFilter = signal<SaleFilter>('all');
+  protected readonly dateBounds = signal<RangeBounds | null>(null);
   protected readonly expandedRow = signal<string | null>(null);
 
   protected readonly sales = this.data.computedSales;
@@ -105,11 +107,17 @@ export class SalesComponent {
       this.textFilter();
       this.channelFilter();
       this.quickFilter();
+      this.dateBounds();
       this.paginatorRef()?.firstPage();
     });
   }
 
-  /** Filtered list (channel + text + quick) sorted by sale date DESC — newest first (default order). */
+  /** Stores the effective date-range bounds emitted by the period picker. */
+  protected onRangeChange(e: RangeChange): void {
+    this.dateBounds.set(e.bounds);
+  }
+
+  /** Filtered list (channel + text + quick + date range) sorted by sale date DESC — newest first (default order). */
   private readonly filteredBase = computed(() => {
     let vs = this.sales();
     if (this.channelFilter() !== 'all') {
@@ -123,9 +131,17 @@ export class SalesComponent {
         v.batchId.toLowerCase().includes(text)
       );
     }
+    const b = this.dateBounds();
+    if (b) {
+      vs = vs.filter(v => {
+        const d = new Date(v.saleDate);
+        return d >= b.start && d <= b.end;
+      });
+    }
     const qf = this.quickFilter();
-    if (qf === 'loss') vs = vs.filter(v => v.netProfit < 0);
-    else if (qf === 'profit') vs = vs.filter(v => v.netProfit > 0);
+    // Lucro/prejuízo só fazem sentido em vendas concluídas — cancelada não realizou resultado.
+    if (qf === 'loss') vs = vs.filter(v => v.netProfit < 0 && v.status === 'Concluída');
+    else if (qf === 'profit') vs = vs.filter(v => v.netProfit > 0 && v.status === 'Concluída');
     else if (qf === 'low-margin') vs = vs.filter(v => v.netMargin < this.minimumMargin() && v.status === 'Concluída');
     return [...vs].sort((a, b) => {
       const byDate = b.saleDate.localeCompare(a.saleDate);
@@ -174,14 +190,22 @@ export class SalesComponent {
 
   protected readonly quickCounts = computed(() => {
     const all = this.sales();
+    const completed = all.filter(v => v.status === 'Concluída');
     const min = this.minimumMargin();
     return {
       all: all.length,
-      profit: all.filter(v => v.netProfit > 0).length,
-      loss: all.filter(v => v.netProfit < 0).length,
-      lowMargin: all.filter(v => v.netMargin < min && v.status === 'Concluída').length,
+      profit: completed.filter(v => v.netProfit > 0).length,
+      loss: completed.filter(v => v.netProfit < 0).length,
+      lowMargin: completed.filter(v => v.netMargin < min).length,
     };
   });
+
+  /** Ids de lotes existentes — vendas cujo lote não resolve têm custo 0 (sinalizadas na tabela). */
+  private readonly batchIds = computed(() => new Set(this.data.purchases().map(c => c.id)));
+
+  protected isOrphanBatch(batchId: string): boolean {
+    return !this.batchIds().has(batchId);
+  }
 
   protected openNew(): void {
     this.openForm();

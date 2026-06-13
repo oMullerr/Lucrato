@@ -3,45 +3,12 @@
   [eyebrow]="'dashboard.eyebrow' | translate:{ range: rangeLabel(range()) }"
   [subtitle]="'dashboard.subtitle' | translate"
 >
-  <div class="range-picker" role="tablist" [attr.aria-label]="'dashboard.period' | translate">
-    @for (r of rangeOptions; track r.key) {
-      <button
-        type="button"
-        class="range-pill"
-        [class.active]="range() === r.key"
-        (click)="setRange(r.key)"
-        role="tab"
-        [attr.aria-selected]="range() === r.key"
-      >{{ r.labelKey | translate }}</button>
-    }
-
-    <button
-      type="button"
-      class="range-pill range-pill-custom"
-      [class.active]="range() === 'custom'"
-      (click)="picker.open()"
-      role="tab"
-      [attr.aria-selected]="range() === 'custom'"
-      [attr.aria-label]="'dashboard.customPeriod' | translate"
-    >
-      <mat-icon class="pill-icon">calendar_month</mat-icon>
-      @if (range() === 'custom' && customStart() && customEnd()) {
-        <span class="mono">{{ customRangeLabel() }}</span>
-      } @else {
-        <span>{{ 'dashboard.custom' | translate }}</span>
-      }
-    </button>
-
-    <div class="range-picker-host" aria-hidden="true">
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-date-range-input [rangePicker]="picker" [max]="today">
-          <input matStartDate [value]="customStart()" (dateChange)="customStart.set($event.value)" />
-          <input matEndDate [value]="customEnd()" (dateChange)="customEnd.set($event.value)" />
-        </mat-date-range-input>
-        <mat-date-range-picker #picker (closed)="onPickerClosed()"></mat-date-range-picker>
-      </mat-form-field>
-    </div>
-  </div>
+  <app-date-range-picker
+    [(range)]="range"
+    [(customStart)]="customStart"
+    [(customEnd)]="customEnd"
+    [max]="today"
+  />
 </app-page-header>
 
 <div class="page-content dash-body">

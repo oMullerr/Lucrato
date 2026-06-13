@@ -31,6 +31,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { BatchDetailPanelComponent } from '../../shared/components/batch-detail-panel.component';
 import { ColorPillComponent } from '../../shared/components/color-pill.component';
+import { DateRangePickerComponent, RangeBounds, RangeChange } from '../../shared/components/date-range-picker.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 import { PurchaseFormDialogComponent } from './purchase-form.dialog';
@@ -47,7 +48,7 @@ type StatusFilter = 'all' | InventoryStatus;
     MatFormFieldModule, MatInputModule, MatTooltipModule,
     MatSortModule, MatPaginatorModule,
     PageHeaderComponent, StatusBadgeComponent,
-    EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent,
+    EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent, DateRangePickerComponent,
     BrlPipe, BrDatePipe,
     TranslateModule,
   ],
@@ -63,6 +64,7 @@ export class PurchasesComponent {
 
   protected readonly textFilter = signal('');
   protected readonly statusFilter = signal<StatusFilter>('all');
+  protected readonly dateBounds = signal<RangeBounds | null>(null);
   protected readonly expandedRow = signal<string | null>(null);
   protected readonly selectedBatch = signal<ComputedPurchase | null>(null);
   protected readonly panelOpen = computed(() => this.selectedBatch() !== null);
@@ -125,6 +127,7 @@ export class PurchasesComponent {
     effect(() => {
       this.statusFilter();
       this.textFilter();
+      this.dateBounds();
       this.paginatorRef()?.firstPage();
     });
   }
@@ -141,7 +144,12 @@ export class PurchasesComponent {
     };
   });
 
-  /** Status + text filtered list, sorted by purchase date DESC — newest first (default order). */
+  /** Stores the effective date-range bounds emitted by the period picker. */
+  protected onRangeChange(e: RangeChange): void {
+    this.dateBounds.set(e.bounds);
+  }
+
+  /** Status + text + date range filtered list, sorted by purchase date DESC — newest first (default order). */
   private readonly filteredBase = computed(() => {
     let cs = this.purchases();
     const status = this.statusFilter();
@@ -156,6 +164,13 @@ export class PurchasesComponent {
         c.category.toLowerCase().includes(text) ||
         c.supplier.toLowerCase().includes(text)
       );
+    }
+    const b = this.dateBounds();
+    if (b) {
+      cs = cs.filter(c => {
+        const d = new Date(c.purchaseDate);
+        return d >= b.start && d <= b.end;
+      });
     }
     return [...cs].sort((a, b) => {
       const byDate = b.purchaseDate.localeCompare(a.purchaseDate);

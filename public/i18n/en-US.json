@@ -270,6 +270,18 @@
     "statusOverHardMsg": "Revenue of {{revenue}}, more than 20% over the {{ceiling}} ceiling. The status loss is retroactive to the start of the year — talk to your accountant as soon as possible.",
     "disclaimer": "Informational estimates. Ceiling, minimum wage and rules change by law — confirm on the official portal or with your accountant."
   },
+  "dateRange": {
+    "period": "Period",
+    "customPeriod": "Custom period",
+    "custom": "Custom",
+    "customUpper": "CUSTOM",
+    "range7d": "7 days",
+    "range30d": "30 days",
+    "range90d": "90 days",
+    "range12m": "12 months",
+    "rangeAll": "All",
+    "clear": "Clear period filter"
+  },
   "dashboard": {
     "title": "Dashboard",
     "eyebrow": "ANALYSIS · {{range}}",
@@ -342,6 +354,7 @@
     "netProfit": "Net profit",
     "revenue": "Revenue",
     "costsFees": "Costs + fees",
+    "costsFeesHint": "Sales fees + shipping + discounts + other costs + product cost, net of Flex refunds",
     "profit": "Profit",
     "netMargin": "Net margin",
     "secondaryKpis": "Secondary indicators",
@@ -498,6 +511,7 @@
     "filterProfit": "Profitable",
     "filterLoss": "Loss",
     "filterLowMargin": "Low margin",
+    "batchMissing": "Batch {{id}} not found — product cost was not included in this sale's profit",
     "colId": "ID",
     "colBatch": "Batch",
     "colProduct": "Product",

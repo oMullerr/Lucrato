@@ -12,7 +12,7 @@ import {
  */
 
 /** Salário mínimo vigente (base do INSS no DAS-MEI). Atualizar a cada reajuste. */
-export const MINIMUM_WAGE_BRL = 1621; // ref. 2025 — conferir valor do ano corrente.
+export const MINIMUM_WAGE_BRL = 1621; // 2026 — Decreto nº 12.797/2025 (DOU 24/12/2025). Conferido em 12/06/2026.
 
 /** Alíquota de INSS do MEI sobre o salário mínimo. */
 export const MEI_INSS_RATE = 0.05;

@@ -1,0 +1,83 @@
+@if (variant() === 'menu') {
+  <div class="period-control" [class.active]="range() !== 'all'">
+    <button
+      type="button"
+      class="period-trigger"
+      [matMenuTriggerFor]="menu"
+      [attr.aria-label]="'dateRange.period' | translate"
+    >
+      <mat-icon class="cal-icon">calendar_month</mat-icon>
+      <span class="period-label">{{ triggerLabel() }}</span>
+      @if (range() === 'all') {
+        <mat-icon class="chev" aria-hidden="true">expand_more</mat-icon>
+      }
+    </button>
+    @if (range() !== 'all') {
+      <button
+        type="button"
+        class="period-clear"
+        (click)="clear()"
+        [attr.aria-label]="'dateRange.clear' | translate"
+      >
+        <mat-icon aria-hidden="true">close</mat-icon>
+      </button>
+    }
+  </div>
+  <mat-menu #menu="matMenu" class="period-menu">
+    @for (r of rangeOptions; track r.key) {
+      <button type="button" mat-menu-item (click)="setRange(r.key)">
+        <span class="pm-label">{{ r.labelKey | translate }}</span>
+        @if (range() === r.key) { <mat-icon class="pm-check">check</mat-icon> }
+      </button>
+    }
+    <mat-divider />
+    <button type="button" mat-menu-item (click)="picker.open()">
+      <mat-icon>date_range</mat-icon>
+      <span class="pm-label">{{ 'dateRange.custom' | translate }}</span>
+      @if (range() === 'custom') { <mat-icon class="pm-check">check</mat-icon> }
+    </button>
+  </mat-menu>
+} @else {
+  <div class="range-picker" role="tablist" [attr.aria-label]="'dateRange.period' | translate">
+    @if (showPresets()) {
+      @for (r of rangeOptions; track r.key) {
+        <button
+          type="button"
+          class="range-pill"
+          [class.active]="range() === r.key"
+          (click)="setRange(r.key)"
+          role="tab"
+          [attr.aria-selected]="range() === r.key"
+        >{{ r.labelKey | translate }}</button>
+      }
+    }
+
+    <button
+      type="button"
+      class="range-pill range-pill-custom"
+      [class.active]="range() === 'custom'"
+      (click)="picker.open()"
+      role="tab"
+      [attr.aria-selected]="range() === 'custom'"
+      [attr.aria-label]="'dateRange.customPeriod' | translate"
+    >
+      <mat-icon class="pill-icon">calendar_month</mat-icon>
+      @if (range() === 'custom' && customStart() && customEnd()) {
+        <span class="mono">{{ customRangeLabel() }}</span>
+      } @else {
+        <span>{{ 'dateRange.custom' | translate }}</span>
+      }
+    </button>
+  </div>
+}
+
+<!-- Hidden calendar host — shared by both variants; #picker is reachable anywhere in the template. -->
+<div class="range-picker-host" aria-hidden="true">
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-date-range-input [rangePicker]="picker" [max]="max()">
+      <input matStartDate [value]="customStart()" (dateChange)="customStart.set($event.value)" />
+      <input matEndDate [value]="customEnd()" (dateChange)="customEnd.set($event.value)" />
+    </mat-date-range-input>
+    <mat-date-range-picker #picker (closed)="onPickerClosed()"></mat-date-range-picker>
+  </mat-form-field>
+</div>

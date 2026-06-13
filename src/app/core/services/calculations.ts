@@ -47,7 +47,8 @@ export function calculatePurchase(
   const now = new Date();
   const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const endRef = (currentStock <= 0 && lastSale) ? new Date(lastSale) : todayUtc;
-  const daysInStock = Math.floor((endRef.getTime() - startDate.getTime()) / MS_PER_DAY);
+  // Clamp em 0: receiptDate futura (erro de digitação) não pode exibir dias negativos.
+  const daysInStock = Math.max(0, Math.floor((endRef.getTime() - startDate.getTime()) / MS_PER_DAY));
 
   let status: InventoryStatus;
   if (currentStock <= 0) status = 'Vendido';

@@ -183,6 +183,18 @@
     "idleTitle": "Capital parado em estoque",
     "exportTitle": "Análises Lucrato"
   },
+  "dateRange": {
+    "period": "Período",
+    "customPeriod": "Período personalizado",
+    "custom": "Personalizado",
+    "customUpper": "PERSONALIZADO",
+    "range7d": "7 dias",
+    "range30d": "30 dias",
+    "range90d": "90 dias",
+    "range12m": "12 meses",
+    "rangeAll": "Tudo",
+    "clear": "Remover filtro de período"
+  },
   "dashboard": {
     "title": "Dashboard",
     "eyebrow": "ANÁLISE · {{range}}",
@@ -342,6 +354,7 @@
     "netProfit": "Lucro líquido",
     "revenue": "Receita",
     "costsFees": "Custos + taxas",
+    "costsFeesHint": "Taxas de venda + fretes + descontos + outros custos + custo dos produtos, descontados os reembolsos Flex",
     "profit": "Lucro",
     "netMargin": "Margem líquida",
     "secondaryKpis": "Indicadores secundários",
@@ -498,6 +511,7 @@
     "filterProfit": "Lucrativas",
     "filterLoss": "Prejuízo",
     "filterLowMargin": "Margem baixa",
+    "batchMissing": "Lote {{id}} não encontrado — o custo do produto não entrou no cálculo do lucro desta venda",
     "colId": "ID",
     "colBatch": "Lote",
     "colProduct": "Produto",

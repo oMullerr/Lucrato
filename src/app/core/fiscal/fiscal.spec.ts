@@ -103,6 +103,16 @@ describe('monthsActiveInYear', () => {
   it('retorna 0 em anos anteriores ao de início', () => {
     expect(monthsActiveInYear('2026-10-15', 2025)).toBe(0);
   });
+
+  it('data inválida ou vazia cai no guard de NaN → tratada como sem início (12 meses)', () => {
+    expect(monthsActiveInYear('garbage', 2026)).toBe(12);
+    expect(monthsActiveInYear('', 2026)).toBe(12);
+  });
+
+  it('COMPORTAMENTO DOCUMENTADO: data leniente "2026-02-30" rola para março (parse nativo do Date)', () => {
+    // new Date('2026-02-30') não é NaN: vira 2026-03-02 (UTC). O mês ativo conta a partir de março.
+    expect(monthsActiveInYear('2026-02-30', 2026)).toBe(12 - 2); // mar..dez = 10
+  });
 });
 
 describe('availableYears', () => {

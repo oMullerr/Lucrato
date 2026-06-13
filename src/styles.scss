@@ -481,6 +481,16 @@ html .mat-mdc-menu-item {
   min-height: 40px;
 }
 
+/* Period dropdown (app-date-range-picker variant="menu") — check on the active option,
+   pushed to the right. Global because mat-menu content renders in a CDK overlay. */
+html .mat-mdc-menu-item .pm-check {
+  margin-left: auto;
+  color: var(--brand-primary);
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
 /* Language selector flag (SVG asset — emoji flags don't render on Windows).
    Lives in global styles because mat-menu content renders in a CDK overlay. */
 html .lang-flag {

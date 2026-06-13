@@ -270,6 +270,18 @@
     "statusOverHardMsg": "Facturaste {{revenue}}, superando en más del 20% el techo de {{ceiling}}. La pérdida del encuadre es retroactiva al inicio del año — consulta a tu contador cuanto antes.",
     "disclaimer": "Estimaciones informativas. El techo, el salario mínimo y las reglas cambian por ley — confírmalo en el portal oficial o con tu contador."
   },
+  "dateRange": {
+    "period": "Período",
+    "customPeriod": "Período personalizado",
+    "custom": "Personalizado",
+    "customUpper": "PERSONALIZADO",
+    "range7d": "7 días",
+    "range30d": "30 días",
+    "range90d": "90 días",
+    "range12m": "12 meses",
+    "rangeAll": "Todo",
+    "clear": "Quitar filtro de período"
+  },
   "dashboard": {
     "title": "Panel",
     "eyebrow": "ANÁLISIS · {{range}}",
@@ -342,6 +354,7 @@
     "netProfit": "Beneficio neto",
     "revenue": "Ingreso",
     "costsFees": "Costos + tarifas",
+    "costsFeesHint": "Comisiones de venta + envíos + descuentos + otros costos + costo de los productos, netos de reembolsos Flex",
     "profit": "Beneficio",
     "netMargin": "Margen neto",
     "secondaryKpis": "Indicadores secundarios",
@@ -498,6 +511,7 @@
     "filterProfit": "Rentables",
     "filterLoss": "Pérdida",
     "filterLowMargin": "Margen bajo",
+    "batchMissing": "Lote {{id}} no encontrado — el costo del producto no se incluyó en la ganancia de esta venta",
     "colId": "ID",
     "colBatch": "Lote",
     "colProduct": "Producto",
