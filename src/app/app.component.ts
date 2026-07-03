@@ -1,14 +1,5 @@
 import { ChangeDetectionStrategy, Component, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, NavigationError, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatListModule } from '@angular/material/list';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatMenuModule } from '@angular/material/menu';
-import { BreakpointObserver } from '@angular/cdk/layout';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -21,6 +12,16 @@ import { NotifyService } from './core/services/notify.service';
 import { FabActionsComponent } from './shared/components/fab-actions.component';
 import { ConnectionBannerComponent } from './shared/components/connection-banner.component';
 import { isChunkLoadError } from './core/services/firestore-errors';
+import { BreakpointService } from './shared/ui/breakpoint.service';
+import { DrawerComponent } from './shared/ui/drawer/drawer.component';
+import { MenuComponent } from './shared/ui/menu/menu.component';
+import { MenuItemComponent } from './shared/ui/menu/menu-item.component';
+import { MenuTriggerDirective } from './shared/ui/menu/menu-trigger.directive';
+import { TooltipDirective } from './shared/ui/tooltip/tooltip.directive';
+import { IconComponent } from './shared/ui/icon/icon.component';
+import { ButtonComponent } from './shared/ui/button/button.component';
+import { ToastHostComponent } from './shared/ui/toast/toast-host.component';
+import { IconName } from './shared/ui/icon/icons';
 
 interface NavGroup {
   label: string;
@@ -29,33 +30,33 @@ interface NavGroup {
 interface NavItem {
   path: string;
   label: string;
-  icon: string;
+  icon: IconName;
   title?: string;
 }
 
-/** Labels/titles are i18n keys resolved with the `translate` pipe in the template. */
+/** Labels/títulos são chaves i18n resolvidas com o pipe `translate` no template. */
 const NAV_GROUPS: NavGroup[] = [
   {
     label: 'nav.groupMain',
     items: [
-      { path: '/inventory',  label: 'nav.inventory', icon: 'inventory_2',    title: 'nav.inventoryTitle' },
-      { path: '/dashboard',  label: 'nav.dashboard', icon: 'analytics',      title: 'nav.dashboard' },
-      { path: '/analytics',  label: 'nav.analytics', icon: 'insights',       title: 'nav.analytics' },
-      { path: '/fiscal',     label: 'nav.fiscal',    icon: 'account_balance', title: 'nav.fiscal' },
+      { path: '/inventory',  label: 'nav.inventory', icon: 'package',      title: 'nav.inventoryTitle' },
+      { path: '/dashboard',  label: 'nav.dashboard', icon: 'chart-column', title: 'nav.dashboard' },
+      { path: '/analytics',  label: 'nav.analytics', icon: 'chart-spline', title: 'nav.analytics' },
+      { path: '/fiscal',     label: 'nav.fiscal',    icon: 'landmark',     title: 'nav.fiscal' },
     ],
   },
   {
     label: 'nav.groupRecords',
     items: [
-      { path: '/purchases', label: 'nav.purchases', icon: 'shopping_cart', title: 'nav.purchases' },
-      { path: '/sales',     label: 'nav.sales',     icon: 'sell',          title: 'nav.sales' },
+      { path: '/purchases', label: 'nav.purchases', icon: 'shopping-cart', title: 'nav.purchases' },
+      { path: '/sales',     label: 'nav.sales',     icon: 'tag',           title: 'nav.sales' },
     ],
   },
   {
     label: 'nav.groupSystem',
     items: [
-      { path: '/settings',     label: 'nav.settings',     icon: 'tune',      title: 'nav.settings' },
-      { path: '/instructions', label: 'nav.instructions', icon: 'menu_book', title: 'nav.instructions' },
+      { path: '/settings',     label: 'nav.settings',     icon: 'sliders-horizontal', title: 'nav.settings' },
+      { path: '/instructions', label: 'nav.instructions', icon: 'book-open',          title: 'nav.instructions' },
     ],
   },
 ];
@@ -66,11 +67,13 @@ const NAV_GROUPS: NavGroup[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterOutlet, RouterLink, RouterLinkActive,
-    MatSidenavModule, MatToolbarModule, MatListModule,
-    MatIconModule, MatButtonModule, MatDividerModule, MatTooltipModule, MatMenuModule,
     TranslateModule,
     FabActionsComponent,
     ConnectionBannerComponent,
+    DrawerComponent,
+    MenuComponent, MenuItemComponent, MenuTriggerDirective,
+    TooltipDirective, IconComponent, ButtonComponent,
+    ToastHostComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -81,31 +84,18 @@ export class AppComponent {
   protected readonly data = inject(DataService);
   protected readonly auth = inject(AuthService);
   protected readonly quick = inject(QuickActionsService);
+  protected readonly bp = inject(BreakpointService);
   protected readonly navGroups = NAV_GROUPS;
   private readonly router = inject(Router);
-  private readonly bp = inject(BreakpointObserver);
   private readonly notify = inject(NotifyService);
   private readonly t = inject(TranslateService);
 
-  protected readonly isMobile = toSignal(
-    this.bp.observe('(max-width: 768px)').pipe(map(r => r.matches)),
-    { initialValue: globalThis.window ? globalThis.window.innerWidth <= 768 : false }
-  );
+  protected readonly sidebarOpen = signal(true);
 
-  protected readonly isCompactSidebar = toSignal(
-    this.bp.observe('(min-width: 769px) and (max-width: 1100px)').pipe(map(r => r.matches)),
-    {
-      initialValue: globalThis.window
-        ? globalThis.window.innerWidth >= 769 && globalThis.window.innerWidth <= 1100
-        : false,
-    }
-  );
+  /** Rail compacto: só quando o sidebar está em modo side (não no drawer mobile). */
+  protected readonly railMode = computed(() => this.bp.isCompactSidebar() && !this.bp.isMobile());
 
-  protected readonly sidebarOpen = signal(
-    globalThis.window ? globalThis.window.innerWidth > 768 : true
-  );
-
-  /** Title of the current page, derived from the active route. */
+  /** Título da página atual, derivado da rota ativa. */
   private readonly currentUrl = toSignal(
     this.router.events.pipe(
       filter(e => e instanceof NavigationEnd),
@@ -114,7 +104,7 @@ export class AppComponent {
     { initialValue: this.router.url }
   );
 
-  /** Returns an i18n key; the template resolves it with the `translate` pipe. */
+  /** Retorna uma chave i18n; o template resolve com o pipe `translate`. */
   protected readonly currentPageTitle = computed(() => {
     const url = this.currentUrl() ?? '/';
     for (const group of NAV_GROUPS) {
@@ -126,7 +116,7 @@ export class AppComponent {
   });
 
   protected readonly statusLabel = computed(() => {
-    this.lang.lang(); // re-evaluate when the language changes
+    this.lang.lang(); // reavalia quando o idioma muda
     const p = this.data.purchases().length;
     const s = this.data.sales().length;
     const pl = this.t.instant(p === 1 ? 'topbar.batchOne' : 'topbar.batchOther');
@@ -152,6 +142,12 @@ export class AppComponent {
       }
     });
 
+    /* Ao cruzar o breakpoint, volta ao padrão do modo: aberto no desktop,
+       fechado no mobile (o hambúrguer abre). */
+    effect(() => {
+      this.sidebarOpen.set(!this.bp.isMobile());
+    }, { allowSignalWrites: true });
+
     this.router.events
       .pipe(filter((e): e is NavigationError => e instanceof NavigationError))
       .subscribe(event => {
@@ -169,11 +165,7 @@ export class AppComponent {
   protected toggleSidebar(): void { this.sidebarOpen.update(v => !v); }
 
   protected closeSidebarOnMobile(): void {
-    if (this.isMobile()) this.sidebarOpen.set(false);
-  }
-
-  protected onSidenavChange(opened: boolean): void {
-    if (this.auth.isLoggedIn()) this.sidebarOpen.set(opened);
+    if (this.bp.isMobile()) this.sidebarOpen.set(false);
   }
 
   protected async logout(): Promise<void> {

@@ -1,18 +1,20 @@
 <button
-  mat-fab
+  appBtn
+  size="lg"
+  iconOnly
   class="fab"
-  [matMenuTriggerFor]="quickMenu"
+  [appMenuTrigger]="quickMenu"
   [attr.aria-label]="'quick.quickActions' | translate"
 >
-  <mat-icon>add</mat-icon>
+  <app-icon name="plus" [size]="24" />
 </button>
-<mat-menu #quickMenu="matMenu" xPosition="before" yPosition="above" class="fab-menu">
-  <button mat-menu-item (click)="quick.openNewSale()">
-    <mat-icon class="menu-icon success">sell</mat-icon>
+<app-menu #quickMenu xPosition="before" yPosition="above">
+  <button app-menu-item (click)="quick.openNewSale()">
+    <app-icon class="text-success" name="tag" [size]="18" />
     <span>{{ 'quick.newSale' | translate }}</span>
   </button>
-  <button mat-menu-item (click)="quick.openNewPurchase()">
-    <mat-icon class="menu-icon brand">shopping_cart</mat-icon>
+  <button app-menu-item (click)="quick.openNewPurchase()">
+    <app-icon class="text-brand" name="shopping-cart" [size]="18" />
     <span>{{ 'quick.newPurchase' | translate }}</span>
   </button>
-</mat-menu>
+</app-menu>

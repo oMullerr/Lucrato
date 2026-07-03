@@ -12,10 +12,10 @@
           />
         }
       }
-      @if (icon()) {
+      @if (icon(); as ic) {
         <foreignObject x="32" y="32" width="32" height="32">
           <div class="icon-wrap">
-            <mat-icon>{{ icon() }}</mat-icon>
+            <app-icon [name]="ic" [size]="24" />
           </div>
         </foreignObject>
       }

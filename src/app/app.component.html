@@ -1,124 +1,132 @@
-<mat-sidenav-container class="app-shell">
-  <mat-sidenav
-    [mode]="isMobile() ? 'over' : 'side'"
-    [opened]="auth.isLoggedIn() && sidebarOpen()"
-    (openedChange)="onSidenavChange($event)"
-    class="sidebar"
-    [class.rail]="isCompactSidebar()"
-  >
-    <a class="brand" routerLink="/inventory" aria-label="Lucrato">
-      @if (isCompactSidebar()) {
-        <span class="brand-mark">L</span>
-      } @else {
-        <span class="wordmark">
-          <span class="wm-l">L</span><span class="wm-u">u</span><span>crato</span>
-          <svg class="wm-arrow" viewBox="0 0 12 8" aria-hidden="true">
-            <path d="M1 7 L6 1 L11 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </span>
-        <span class="wm-tag">{{ 'nav.tagline' | translate }}</span>
-      }
-    </a>
+<div class="app-shell">
+  @if (auth.isLoggedIn()) {
+    <app-drawer
+      class="shell-sidebar"
+      [(open)]="sidebarOpen"
+      [mode]="bp.isMobile() ? 'over' : 'side'"
+      [width]="bp.isMobile() ? '280px' : railMode() ? 'var(--sidebar-rail)' : 'var(--sidebar-width)'"
+      [ariaLabel]="'nav.mainNav' | translate"
+    >
+      <div class="sidebar" [class.rail]="railMode()">
+        <a class="brand" routerLink="/inventory" aria-label="Lucrato">
+          @if (railMode()) {
+            <span class="brand-mark">L</span>
+          } @else {
+            <span class="wordmark">
+              <span class="wm-l">L</span><span class="wm-u">u</span><span>crato</span>
+              <svg class="wm-arrow" viewBox="0 0 12 8" aria-hidden="true">
+                <path d="M1 7 L6 1 L11 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="wm-tag">{{ 'nav.tagline' | translate }}</span>
+          }
+        </a>
 
-    <nav class="nav" [attr.aria-label]="'nav.mainNav' | translate">
-      @for (group of navGroups; track group.label) {
-        <div class="nav-group">
-          <div class="nav-label">{{ group.label | translate }}</div>
-          @for (item of group.items; track item.path) {
-            <a
-              [routerLink]="item.path"
-              routerLinkActive="active"
-              class="nav-item"
-              [matTooltip]="isCompactSidebar() ? (item.label | translate) : ''"
-              matTooltipPosition="right"
-              (click)="closeSidebarOnMobile()"
-            >
-              <span class="active-dot" aria-hidden="true"></span>
-              <mat-icon>{{ item.icon }}</mat-icon>
-              <span class="nav-text">{{ item.label | translate }}</span>
-            </a>
+        <nav class="nav" [attr.aria-label]="'nav.mainNav' | translate">
+          @for (group of navGroups; track group.label) {
+            <div class="nav-group">
+              <div class="nav-label">{{ group.label | translate }}</div>
+              @for (item of group.items; track item.path) {
+                <a
+                  [routerLink]="item.path"
+                  routerLinkActive="active"
+                  class="nav-item"
+                  [appTooltip]="railMode() ? (item.label | translate) : ''"
+                  tooltipPosition="right"
+                  (click)="closeSidebarOnMobile()"
+                >
+                  <span class="active-dot" aria-hidden="true"></span>
+                  <app-icon [name]="item.icon" />
+                  <span class="nav-text">{{ item.label | translate }}</span>
+                </a>
+              }
+            </div>
+          }
+        </nav>
+
+        <div class="sidebar-footer">
+          @if (data.loaded()) {
+            <div class="status" [appTooltip]="railMode() ? statusLabel() : ''" tooltipPosition="right">
+              <span class="status-dot success"></span>
+              <span class="status-text">{{ statusLabel() }}</span>
+            </div>
           }
         </div>
-      }
-    </nav>
+      </div>
+    </app-drawer>
+  }
 
-    <div class="sidebar-footer">
-      @if (data.loaded()) {
-        <div class="status" [matTooltip]="isCompactSidebar() ? statusLabel() : ''" matTooltipPosition="right">
-          <span class="status-dot success"></span>
-          <span class="status-text">{{ statusLabel() }}</span>
-        </div>
-      }
-    </div>
-  </mat-sidenav>
-
-  <mat-sidenav-content>
+  <div class="shell-main">
     @if (auth.isLoggedIn()) {
-      <mat-toolbar class="topbar">
-        @if (isMobile()) {
-          <button mat-icon-button class="hamburger-btn" (click)="toggleSidebar()" [attr.aria-label]="'topbar.openMenu' | translate">
-            <mat-icon>menu</mat-icon>
+      <header class="topbar">
+        @if (bp.isMobile()) {
+          <button
+            appBtn="ghost"
+            iconOnly
+            class="hamburger-btn"
+            (click)="toggleSidebar()"
+            [attr.aria-label]="'topbar.openMenu' | translate"
+          >
+            <app-icon name="menu" />
           </button>
         }
 
-        <div class="breadcrumb" [attr.aria-label]="'topbar.location' | translate">
-          <span class="bc-root">Lucrato</span>
-          <span class="bc-sep">/</span>
-          <span class="bc-current">{{ currentPageTitle() | translate }}</span>
-        </div>
+        <nav class="breadcrumb" [attr.aria-label]="'topbar.location' | translate">
+          <a class="bc-root" routerLink="/inventory">Lucrato</a>
+          <span class="bc-sep" aria-hidden="true">/</span>
+          <span class="bc-current" aria-current="page">{{ currentPageTitle() | translate }}</span>
+        </nav>
 
         <span class="topbar-spacer"></span>
 
         <button
-          mat-icon-button
-          class="topbar-btn"
-          [matMenuTriggerFor]="langMenu"
-          [matTooltip]="'topbar.language' | translate"
+          appBtn="ghost"
+          iconOnly
+          [appMenuTrigger]="langMenu"
+          [appTooltip]="'topbar.language' | translate"
           [attr.aria-label]="'topbar.language' | translate"
         >
-          <mat-icon>language</mat-icon>
+          <app-icon name="globe" />
         </button>
-        <mat-menu #langMenu="matMenu" xPosition="before">
+        <app-menu #langMenu xPosition="before">
           @for (option of lang.available; track option.code) {
-            <button mat-menu-item (click)="lang.set(option.code)">
+            <button app-menu-item (click)="lang.set(option.code)">
               <img class="lang-flag" [src]="option.flag" alt="" aria-hidden="true" width="20" height="15" />
               <span class="lang-label">{{ option.label }}</span>
               @if (lang.lang() === option.code) {
-                <mat-icon class="lang-check">check</mat-icon>
+                <app-icon class="menu-check" name="check" [size]="18" />
               }
             </button>
           }
-        </mat-menu>
+        </app-menu>
 
         <button
-          mat-icon-button
-          class="topbar-btn"
+          appBtn="ghost"
+          iconOnly
           (click)="theme.toggle()"
-          [matTooltip]="(theme.isDark() ? 'topbar.lightMode' : 'topbar.darkMode') | translate"
+          [appTooltip]="(theme.isDark() ? 'topbar.lightMode' : 'topbar.darkMode') | translate"
           [attr.aria-label]="'topbar.toggleTheme' | translate"
         >
-          <mat-icon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+          <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" />
         </button>
 
-        <button mat-button [matMenuTriggerFor]="userMenu" class="user-btn">
-          <span class="user-btn-inner">
-            <span class="avatar" aria-hidden="true">{{ avatarInitials() }}</span>
-            <span class="user-name">{{ auth.storeName() }}</span>
-            <mat-icon class="chevron">expand_more</mat-icon>
-          </span>
+        <button type="button" class="user-btn" [appMenuTrigger]="userMenu">
+          <span class="avatar" aria-hidden="true">{{ avatarInitials() }}</span>
+          <span class="user-name">{{ auth.storeName() }}</span>
+          <app-icon class="chevron" name="chevron-down" [size]="16" />
         </button>
-        <mat-menu #userMenu="matMenu" xPosition="before">
-          <button mat-menu-item routerLink="/profile">
-            <mat-icon>person</mat-icon>
+        <app-menu #userMenu xPosition="before">
+          <a app-menu-item routerLink="/profile">
+            <app-icon name="user" [size]="18" />
             <span>{{ 'topbar.profile' | translate }}</span>
-          </button>
-          <mat-divider />
-          <button mat-menu-item (click)="logout()">
-            <mat-icon>logout</mat-icon>
+          </a>
+          <div class="menu-divider" role="separator"></div>
+          <button app-menu-item (click)="logout()">
+            <app-icon name="log-out" [size]="18" />
             <span>{{ 'topbar.logout' | translate }}</span>
           </button>
-        </mat-menu>
-      </mat-toolbar>
+        </app-menu>
+      </header>
     }
 
     <app-connection-banner />
@@ -127,8 +135,10 @@
       <router-outlet />
     </div>
 
-    @if (auth.isLoggedIn() && isMobile()) {
+    @if (auth.isLoggedIn() && bp.isMobile()) {
       <app-fab-actions />
     }
-  </mat-sidenav-content>
-</mat-sidenav-container>
+  </div>
+
+  <app-toast-host />
+</div>

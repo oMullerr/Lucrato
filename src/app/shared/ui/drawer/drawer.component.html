@@ -1,0 +1,13 @@
+@if (mode() === 'over' && open()) {
+  <div class="drawer-backdrop" (click)="onBackdrop()" aria-hidden="true"></div>
+}
+<aside
+  class="drawer-panel"
+  [style.width]="width()"
+  [attr.aria-label]="ariaLabel() || null"
+  [attr.aria-hidden]="!open() ? 'true' : null"
+  [cdkTrapFocus]="mode() === 'over' && open()"
+  [cdkTrapFocusAutoCapture]="mode() === 'over' && open()"
+>
+  <ng-content />
+</aside>

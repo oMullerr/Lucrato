@@ -25,7 +25,7 @@
 
   } @else if (!hasData()) {
     <app-empty-state
-      icon="insights"
+      icon="chart-spline"
       [title]="'analytics.emptyTitle' | translate"
       [description]="'analytics.emptyDesc' | translate"
     >
@@ -85,7 +85,7 @@
             </div>
             @if (productRanking().length === 0) {
               <app-empty-state
-                icon="sell"
+                icon="tag"
                 [title]="'analytics.noSalesTitle' | translate"
                 [description]="'analytics.noSalesDesc' | translate"
               />
@@ -213,7 +213,7 @@
             </div>
             @if (monthlyStats().length === 0) {
               <app-empty-state
-                icon="calendar_month"
+                icon="calendar-days"
                 [title]="'analytics.noMonthlyTitle' | translate"
                 [description]="'analytics.noMonthlyDesc' | translate"
               />
@@ -282,7 +282,7 @@
             </div>
             @if (idleInventory().length === 0) {
               <app-empty-state
-                icon="celebration"
+                icon="party-popper"
                 [title]="'analytics.noIdleTitle' | translate"
                 [description]="'analytics.noIdleDesc' | translate"
               />

@@ -1,0 +1,67 @@
+/* ---------- side: participa do layout ---------- */
+:host(.is-side) {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+
+  &:not(.is-open) { width: 0 !important; }
+
+  .drawer-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    /* Largura anima entre sidebar completa e rail */
+    transition: width var(--dur-base) var(--ease-out);
+  }
+}
+
+:host(.is-side.is-open) { width: auto; }
+
+/* ---------- over: flutua com backdrop ---------- */
+:host(.is-over) {
+  display: contents;
+
+  .drawer-panel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    max-width: 100dvw;
+    height: 100dvh;
+    box-shadow: var(--shadow-xl);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform var(--dur-slow) var(--ease-out),
+      visibility 0s linear var(--dur-slow);
+  }
+
+  &.pos-end .drawer-panel {
+    left: auto;
+    right: 0;
+    transform: translateX(100%);
+  }
+
+  &.is-open .drawer-panel {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(8, 12, 11, 0.55);
+  backdrop-filter: blur(2px);
+  animation: backdrop-in var(--dur-base) var(--ease-out) both;
+}
+
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

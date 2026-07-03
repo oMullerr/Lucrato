@@ -33,7 +33,7 @@
 
       } @else if (purchases().length === 0) {
         <app-empty-state
-          icon="shopping_cart"
+          icon="shopping-cart"
           [title]="'purchases.emptyTitle' | translate"
           [description]="'purchases.emptyDesc' | translate"
         >
@@ -207,7 +207,7 @@
           </div>
         } @else {
           <app-empty-state
-            icon="filter_alt_off"
+            icon="filter-x"
             [title]="'purchases.noneFoundTitle' | translate"
             [description]="'purchases.noneFoundDesc' | translate"
           />

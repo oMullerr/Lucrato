@@ -55,6 +55,41 @@
   gap: var(--space-4);
 }
 
+/* Trava o scroll do body enquanto um drawer over está aberto. */
+body.drawer-scroll-lock { overflow: hidden; }
+
+/* Painel do app-menu — global porque renderiza dentro do CDK Overlay. */
+.menu-panel {
+  min-width: 200px;
+  padding: 6px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-overlay);
+  box-shadow: var(--shadow-lg);
+  animation: menu-in var(--dur-fast) var(--ease-out) both;
+}
+
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Check da opção ativa em menus (idioma/período), empurrado à direita. */
+.menu-panel .menu-check {
+  margin-left: auto;
+  color: var(--brand-primary);
+}
+
+/* Bandeira do seletor de idioma (SVG — flags emoji não renderizam no Windows). */
+.menu-panel .lang-flag {
+  width: 20px;
+  height: 15px;
+  flex: 0 0 auto;
+  border-radius: 3px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--border-subtle);
+}
+
 /* Backdrop de overlays (CDK) — sobrevive à saída do Material (fase 6),
    pois nossos dialogs/menus continuam sobre o CDK Overlay. */
 html .cdk-overlay-backdrop {

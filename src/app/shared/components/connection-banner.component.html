@@ -2,14 +2,14 @@
   @switch (kind) {
     @case ('error') {
       <div class="banner banner-error" role="status" aria-live="polite">
-        <mat-icon class="banner-icon">sync_problem</mat-icon>
+        <app-icon class="banner-icon" name="cloud-alert" [size]="18" />
         <span class="banner-text">{{ 'connection.syncError' | translate }}</span>
         <span class="banner-spinner" aria-hidden="true"></span>
       </div>
     }
     @case ('offline') {
       <div class="banner banner-offline" role="status" aria-live="polite">
-        <mat-icon class="banner-icon">cloud_off</mat-icon>
+        <app-icon class="banner-icon" name="cloud-off" [size]="18" />
         <span class="banner-text">
           {{ 'connection.offline' | translate }}
         </span>
@@ -17,7 +17,7 @@
     }
     @case ('persistence') {
       <div class="banner banner-persistence" role="status" aria-live="polite">
-        <mat-icon class="banner-icon">warning</mat-icon>
+        <app-icon class="banner-icon" name="triangle-alert" [size]="18" />
         <span class="banner-text">
           {{ 'connection.persistence' | translate }}
         </span>
@@ -27,7 +27,7 @@
           (click)="dismissPersistence()"
           [attr.aria-label]="'connection.dismiss' | translate"
         >
-          <mat-icon>close</mat-icon>
+          <app-icon name="x" [size]="16" />
         </button>
       </div>
     }

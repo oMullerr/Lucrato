@@ -2,7 +2,7 @@
   <header class="kpi-head">
     <span class="kpi-title">{{ title() }}</span>
     @if (icon(); as ic) {
-      <mat-icon class="kpi-icon" aria-hidden="true">{{ ic }}</mat-icon>
+      <app-icon class="kpi-icon" [name]="ic" [size]="18" />
     }
   </header>
 
@@ -11,7 +11,7 @@
       <div class="kpi-value">{{ value() }}</div>
       @if (delta() !== null) {
         <div class="kpi-delta" [class.up]="deltaDir() === 'up'" [class.down]="deltaDir() === 'down'" [class.flat]="deltaDir() === 'flat'">
-          <mat-icon class="delta-icon">{{ deltaIcon() }}</mat-icon>
+          <app-icon class="delta-icon" [name]="deltaIcon()" [size]="14" />
           <span>{{ deltaLabel() || formattedDelta() }}</span>
         </div>
       } @else if (note()) {

@@ -1,0 +1,27 @@
+<div class="toast-stack">
+  @for (toast of toasts.toasts(); track toast.id) {
+    <div
+      class="toast"
+      [class]="'toast toast--' + toast.kind"
+      [attr.role]="toast.kind === 'error' ? 'alert' : 'status'"
+      (mouseenter)="toasts.pause(toast.id)"
+      (mouseleave)="toasts.resume(toast.id)"
+    >
+      <app-icon class="toast-icon" [name]="icon(toast.kind)" [size]="18" />
+      <span class="toast-message">{{ toast.message }}</span>
+      @if (toast.actionLabel) {
+        <button type="button" class="toast-action" (click)="toasts.runAction(toast)">
+          {{ toast.actionLabel }}
+        </button>
+      }
+      <button
+        type="button"
+        class="toast-close"
+        (click)="toasts.dismiss(toast.id)"
+        [attr.aria-label]="'common.close' | translate"
+      >
+        <app-icon name="x" [size]="14" />
+      </button>
+    </div>
+  }
+</div>

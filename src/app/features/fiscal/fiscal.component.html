@@ -75,14 +75,14 @@
 
   } @else if (!hasRegime()) {
     <app-empty-state
-      icon="account_balance"
+      icon="landmark"
       [title]="'fiscal.noneTitle' | translate"
       [description]="'fiscal.noneMsg' | translate"
     />
 
   } @else if (!hasData()) {
     <app-empty-state
-      icon="receipt_long"
+      icon="receipt-text"
       [title]="'fiscal.emptyTitle' | translate"
       [description]="'fiscal.emptyDesc' | translate"
     >
@@ -140,14 +140,14 @@
         [title]="'fiscal.revenueYear' | translate"
         [value]="status().revenue | brl"
         [variant]="bandVariant()"
-        icon="payments"
+        icon="banknote"
         [note]="'fiscal.usedOfCeiling' | translate:{ pct: (status().usagePct * 100).toFixed(0) }"
       />
       <app-kpi-card
         [title]="'fiscal.ceiling' | translate"
         [value]="status().ceiling | brl"
         variant="neutral"
-        icon="straighten"
+        icon="ruler"
         [note]="status().isProportional
           ? ('fiscal.ceilingProportional' | translate:{ months: status().monthsActive })
           : ('fiscal.ceilingFull' | translate)"
@@ -156,14 +156,14 @@
         [title]="status().band === 'over' ? ('fiscal.over' | translate) : ('fiscal.available' | translate)"
         [value]="(status().band === 'over' ? status().overBy : status().remaining) | brl"
         [variant]="status().band === 'over' ? 'danger' : 'success'"
-        [icon]="status().band === 'over' ? 'priority_high' : 'savings'"
+        [icon]="status().band === 'over' ? 'octagon-alert' : 'piggy-bank'"
         [note]="(status().band === 'over' ? 'fiscal.overNote' : 'fiscal.availableNote') | translate"
       />
       <app-kpi-card
         [title]="'fiscal.projection' | translate"
         [value]="status().projectedAnnual | brl"
         [variant]="status().projectedAnnual > status().ceiling ? 'danger' : 'info'"
-        icon="insights"
+        icon="chart-spline"
         [note]="'fiscal.projectionNote' | translate"
       />
     </section>

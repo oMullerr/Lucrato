@@ -1,15 +1,17 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
 import { TranslateModule } from '@ngx-translate/core';
 import { QuickActionsService } from '../../core/services/quick-actions.service';
+import { ButtonComponent } from '../ui/button/button.component';
+import { IconComponent } from '../ui/icon/icon.component';
+import { MenuComponent } from '../ui/menu/menu.component';
+import { MenuItemComponent } from '../ui/menu/menu-item.component';
+import { MenuTriggerDirective } from '../ui/menu/menu-trigger.directive';
 
 @Component({
   selector: 'app-fab-actions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatIconModule, MatMenuModule, TranslateModule],
+  imports: [TranslateModule, ButtonComponent, IconComponent, MenuComponent, MenuItemComponent, MenuTriggerDirective],
   templateUrl: './fab-actions.component.html',
   styleUrl: './fab-actions.component.scss',
 })

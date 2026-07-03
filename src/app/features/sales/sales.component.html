@@ -19,7 +19,7 @@
 
   } @else if (sales().length === 0) {
     <app-empty-state
-      icon="sell"
+      icon="tag"
       [title]="'sales.emptyTitle' | translate"
       [description]="'sales.emptyDesc' | translate"
     >
@@ -225,7 +225,7 @@
       </div>
     } @else {
       <app-empty-state
-        icon="filter_alt_off"
+        icon="filter-x"
         [title]="'sales.noneFoundTitle' | translate"
         [description]="'sales.noneFoundDesc' | translate"
       />

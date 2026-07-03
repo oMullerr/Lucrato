@@ -1,16 +1,17 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
+import { IconComponent } from '../ui/icon/icon.component';
+import { IconName } from '../ui/icon/icons';
 
 @Component({
   selector: 'app-empty-state',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule],
+  imports: [IconComponent],
   templateUrl: './empty-state.component.html',
   styleUrl: './empty-state.component.scss',
 })
 export class EmptyStateComponent {
-  readonly icon = input<string>('');
+  readonly icon = input<IconName | ''>('');
   readonly title = input.required<string>();
   readonly description = input<string>('');
 
