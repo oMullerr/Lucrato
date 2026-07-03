@@ -123,7 +123,7 @@ describe('FiscalComponent (tela Fiscal/MEI — valores exibidos)', () => {
       expect(s.toleranceCeiling).toBeCloseTo(81_000 * 1.2, 10);
       const a = cmp.alert();
       expect(a.tone).toBe('over');
-      expect(a.icon).toBe('report');
+      expect(a.icon).toBe('octagon-alert');
       expect(a.titleKey).toBe('fiscal.statusOverTitle');
     });
 
@@ -131,7 +131,7 @@ describe('FiscalComponent (tela Fiscal/MEI — valores exibidos)', () => {
       TestBed.resetTestingModule();
       setup(dbWithRevenue(100_000));
       const a = cmp.alert();
-      expect(a.icon).toBe('gpp_bad');
+      expect(a.icon).toBe('ban');
       expect(a.titleKey).toBe('fiscal.statusOverHardTitle');
       expect(cmp.progressPct()).toBe(100); // barra de progresso trava em 100%
     });

@@ -8,8 +8,8 @@
 
   @if (data.loaded() && hasData()) {
     <div class="export-all-bar">
-      <button mat-flat-button class="primary-cta" (click)="exportAll()" [matTooltip]="'analytics.exportAllTooltip' | translate">
-        <mat-icon>download_for_offline</mat-icon>
+      <button appBtn type="button" (click)="exportAll()" [appTooltip]="'analytics.exportAllTooltip' | translate">
+        <app-icon name="hard-drive-download" [size]="16" />
         {{ 'analytics.exportAll' | translate }}
       </button>
     </div>
@@ -29,8 +29,8 @@
       [title]="'analytics.emptyTitle' | translate"
       [description]="'analytics.emptyDesc' | translate"
     >
-      <a mat-flat-button class="primary-cta" routerLink="/sales">
-        <mat-icon>sell</mat-icon>
+      <a appBtn routerLink="/sales">
+        <app-icon name="tag" [size]="16" />
         {{ 'sales.registerSale' | translate }}
       </a>
     </app-empty-state>
@@ -42,7 +42,7 @@
       @for (block of resumeBlocks(); track block.title) {
         <article class="resume-card">
           <header class="rc-head">
-            <mat-icon class="rc-icon">{{ block.icon }}</mat-icon>
+            <app-icon class="rc-icon" [name]="block.icon" [size]="18" />
             <h3>{{ block.title }}</h3>
           </header>
           <ul class="rc-rows">
@@ -68,18 +68,14 @@
 
     <!-- Tabbed tables -->
     <section class="tabs-card">
-      <mat-tab-group animationDuration="180ms">
+      <app-tabs>
         <!-- Produto -->
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <mat-icon>emoji_events</mat-icon>
-            {{ 'analytics.tabProduct' | translate }}
-          </ng-template>
+        <app-tab [label]="'analytics.tabProduct' | translate">
           <div class="tab-body">
             <div class="tab-head">
               <span class="t-caption">{{ 'analytics.countProducts' | translate:{ count: productRanking().length } }}</span>
-              <button mat-stroked-button class="export-btn" (click)="exportProducts()" [disabled]="productRanking().length === 0">
-                <mat-icon>file_download</mat-icon>
+              <button appBtn="outline" size="sm" type="button" class="export-btn" (click)="exportProducts()" [disabled]="productRanking().length === 0">
+                <app-icon name="file-down" [size]="15" />
                 {{ 'analytics.exportExcel' | translate }}
               </button>
             </div>
@@ -90,18 +86,18 @@
                 [description]="'analytics.noSalesDesc' | translate"
               />
             } @else {
-              <div class="table-wrapper">
+              <div class="table-scroll">
                 <table class="data-table">
                   <thead>
                     <tr>
                       <th class="text-center">#</th>
-                      <th><button class="sort-btn" (click)="sortProduct('product')">{{ 'analytics.colProduct' | translate }} <mat-icon>{{ sortIcon(productSort(), 'product') }}</mat-icon></button></th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortProduct('qty')">{{ 'purchases.colQty' | translate }} <mat-icon>{{ sortIcon(productSort(), 'qty') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('revenue')">{{ 'analytics.hGrossRevenue' | translate }} <mat-icon>{{ sortIcon(productSort(), 'revenue') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('netRevenue')">{{ 'analytics.hNetRevenue' | translate }} <mat-icon>{{ sortIcon(productSort(), 'netRevenue') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('cost')">{{ 'analytics.hCost' | translate }} <mat-icon>{{ sortIcon(productSort(), 'cost') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('netProfit')">{{ 'analytics.hNetProfit' | translate }} <mat-icon>{{ sortIcon(productSort(), 'netProfit') }}</mat-icon></button></th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortProduct('margin')">{{ 'sales.colMargin' | translate }} <mat-icon>{{ sortIcon(productSort(), 'margin') }}</mat-icon></button></th>
+                      <th><button class="sort-btn" (click)="sortProduct('product')">{{ 'analytics.colProduct' | translate }} <app-icon [name]="sortIcon(productSort(), 'product')" [size]="14" /></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortProduct('qty')">{{ 'purchases.colQty' | translate }} <app-icon [name]="sortIcon(productSort(), 'qty')" [size]="14" /></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('revenue')">{{ 'analytics.hGrossRevenue' | translate }} <app-icon [name]="sortIcon(productSort(), 'revenue')" [size]="14" /></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('netRevenue')">{{ 'analytics.hNetRevenue' | translate }} <app-icon [name]="sortIcon(productSort(), 'netRevenue')" [size]="14" /></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('cost')">{{ 'analytics.hCost' | translate }} <app-icon [name]="sortIcon(productSort(), 'cost')" [size]="14" /></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('netProfit')">{{ 'analytics.hNetProfit' | translate }} <app-icon [name]="sortIcon(productSort(), 'netProfit')" [size]="14" /></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortProduct('margin')">{{ 'sales.colMargin' | translate }} <app-icon [name]="sortIcon(productSort(), 'margin')" [size]="14" /></button></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -126,43 +122,32 @@
                   </tbody>
                 </table>
               </div>
-              <mat-paginator
-                #productPaginator
-                class="anl-paginator"
-                [length]="productRanking().length"
-                [pageSize]="15"
-                [pageSizeOptions]="pageSizeOptions"
-                showFirstLastButtons
-              />
+              <app-paginator [length]="productRanking().length" [pageSize]="productPage().pageSize" [pageIndex]="productPage().pageIndex" [pageSizeOptions]="pageSizeOptions" [showFirstLast]="true" (page)="productPage.set($event)" />
             }
           </div>
-        </mat-tab>
+        </app-tab>
 
         <!-- Categoria -->
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <mat-icon>category</mat-icon>
-            {{ 'analytics.tabCategory' | translate }}
-          </ng-template>
+        <app-tab [label]="'analytics.tabCategory' | translate">
           <div class="tab-body">
             <div class="tab-head">
               <span class="t-caption">{{ 'analytics.countCategories' | translate:{ count: categoryStats().length } }}</span>
-              <button mat-stroked-button class="export-btn" (click)="exportCategories()" [disabled]="categoryStats().length === 0">
-                <mat-icon>file_download</mat-icon>
+              <button appBtn="outline" size="sm" type="button" class="export-btn" (click)="exportCategories()" [disabled]="categoryStats().length === 0">
+                <app-icon name="file-down" [size]="15" />
                 {{ 'analytics.exportExcel' | translate }}
               </button>
             </div>
-            <div class="table-wrapper">
+            <div class="table-scroll">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th><button class="sort-btn" (click)="sortCategory('category')">{{ 'analytics.colCategory' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'category') }}</mat-icon></button></th>
-                    <th class="text-center"><button class="sort-btn" (click)="sortCategory('batches')">{{ 'analytics.hBatches' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'batches') }}</mat-icon></button></th>
-                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('invested')">{{ 'analytics.hInvested' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'invested') }}</mat-icon></button></th>
-                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('idleCapital')">{{ 'analytics.hIdleShort' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'idleCapital') }}</mat-icon></button></th>
-                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('revenue')">{{ 'analytics.hRevenue' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'revenue') }}</mat-icon></button></th>
-                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('profit')">{{ 'analytics.hNetProfit' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'profit') }}</mat-icon></button></th>
-                    <th class="text-center"><button class="sort-btn" (click)="sortCategory('margin')">{{ 'sales.colMargin' | translate }} <mat-icon>{{ sortIcon(categorySort(), 'margin') }}</mat-icon></button></th>
+                    <th><button class="sort-btn" (click)="sortCategory('category')">{{ 'analytics.colCategory' | translate }} <app-icon [name]="sortIcon(categorySort(), 'category')" [size]="14" /></button></th>
+                    <th class="text-center"><button class="sort-btn" (click)="sortCategory('batches')">{{ 'analytics.hBatches' | translate }} <app-icon [name]="sortIcon(categorySort(), 'batches')" [size]="14" /></button></th>
+                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('invested')">{{ 'analytics.hInvested' | translate }} <app-icon [name]="sortIcon(categorySort(), 'invested')" [size]="14" /></button></th>
+                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('idleCapital')">{{ 'analytics.hIdleShort' | translate }} <app-icon [name]="sortIcon(categorySort(), 'idleCapital')" [size]="14" /></button></th>
+                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('revenue')">{{ 'analytics.hRevenue' | translate }} <app-icon [name]="sortIcon(categorySort(), 'revenue')" [size]="14" /></button></th>
+                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('profit')">{{ 'analytics.hNetProfit' | translate }} <app-icon [name]="sortIcon(categorySort(), 'profit')" [size]="14" /></button></th>
+                    <th class="text-center"><button class="sort-btn" (click)="sortCategory('margin')">{{ 'sales.colMargin' | translate }} <app-icon [name]="sortIcon(categorySort(), 'margin')" [size]="14" /></button></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -186,28 +171,17 @@
                 </tbody>
               </table>
             </div>
-            <mat-paginator
-              #categoryPaginator
-              class="anl-paginator"
-              [length]="categoryStats().length"
-              [pageSize]="15"
-              [pageSizeOptions]="pageSizeOptions"
-              showFirstLastButtons
-            />
+            <app-paginator [length]="categoryStats().length" [pageSize]="categoryPage().pageSize" [pageIndex]="categoryPage().pageIndex" [pageSizeOptions]="pageSizeOptions" [showFirstLast]="true" (page)="categoryPage.set($event)" />
           </div>
-        </mat-tab>
+        </app-tab>
 
         <!-- Mensal -->
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <mat-icon>calendar_month</mat-icon>
-            {{ 'analytics.tabMonthly' | translate }}
-          </ng-template>
+        <app-tab [label]="'analytics.tabMonthly' | translate">
           <div class="tab-body">
             <div class="tab-head">
               <span class="t-caption">{{ 'analytics.countMonths' | translate:{ count: monthlyStats().length } }}</span>
-              <button mat-stroked-button class="export-btn" (click)="exportMonthly()" [disabled]="monthlyStats().length === 0">
-                <mat-icon>file_download</mat-icon>
+              <button appBtn="outline" size="sm" type="button" class="export-btn" (click)="exportMonthly()" [disabled]="monthlyStats().length === 0">
+                <app-icon name="file-down" [size]="15" />
                 {{ 'analytics.exportExcel' | translate }}
               </button>
             </div>
@@ -218,18 +192,18 @@
                 [description]="'analytics.noMonthlyDesc' | translate"
               />
             } @else {
-              <div class="table-wrapper">
+              <div class="table-scroll">
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th><button class="sort-btn" (click)="sortMonth('sortKey')">{{ 'analytics.hMonth' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'sortKey') }}</mat-icon></button></th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortMonth('qty')">{{ 'analytics.hSales' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'qty') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('revenue')">{{ 'analytics.hRevenue' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'revenue') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('fees')">{{ 'analytics.hFees' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'fees') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('netRevenue')">{{ 'analytics.hNetRevenue' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'netRevenue') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('cost')">{{ 'analytics.hCost' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'cost') }}</mat-icon></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('profit')">{{ 'analytics.hProfit' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'profit') }}</mat-icon></button></th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortMonth('margin')">{{ 'sales.colMargin' | translate }} <mat-icon>{{ sortIcon(monthSort(), 'margin') }}</mat-icon></button></th>
+                      <th><button class="sort-btn" (click)="sortMonth('sortKey')">{{ 'analytics.hMonth' | translate }} <app-icon [name]="sortIcon(monthSort(), 'sortKey')" [size]="14" /></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortMonth('qty')">{{ 'analytics.hSales' | translate }} <app-icon [name]="sortIcon(monthSort(), 'qty')" [size]="14" /></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('revenue')">{{ 'analytics.hRevenue' | translate }} <app-icon [name]="sortIcon(monthSort(), 'revenue')" [size]="14" /></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('fees')">{{ 'analytics.hFees' | translate }} <app-icon [name]="sortIcon(monthSort(), 'fees')" [size]="14" /></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('netRevenue')">{{ 'analytics.hNetRevenue' | translate }} <app-icon [name]="sortIcon(monthSort(), 'netRevenue')" [size]="14" /></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('cost')">{{ 'analytics.hCost' | translate }} <app-icon [name]="sortIcon(monthSort(), 'cost')" [size]="14" /></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('profit')">{{ 'analytics.hProfit' | translate }} <app-icon [name]="sortIcon(monthSort(), 'profit')" [size]="14" /></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortMonth('margin')">{{ 'sales.colMargin' | translate }} <app-icon [name]="sortIcon(monthSort(), 'margin')" [size]="14" /></button></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -254,29 +228,18 @@
                   </tbody>
                 </table>
               </div>
-              <mat-paginator
-                #monthPaginator
-                class="anl-paginator"
-                [length]="monthlyStats().length"
-                [pageSize]="15"
-                [pageSizeOptions]="pageSizeOptions"
-                showFirstLastButtons
-              />
+              <app-paginator [length]="monthlyStats().length" [pageSize]="monthPage().pageSize" [pageIndex]="monthPage().pageIndex" [pageSizeOptions]="pageSizeOptions" [showFirstLast]="true" (page)="monthPage.set($event)" />
             }
           </div>
-        </mat-tab>
+        </app-tab>
 
         <!-- Estoque parado -->
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <mat-icon>warning</mat-icon>
-            {{ 'analytics.tabIdle' | translate }}
-          </ng-template>
+        <app-tab [label]="'analytics.tabIdle' | translate">
           <div class="tab-body">
             <div class="tab-head">
               <span class="t-caption">{{ 'analytics.countBatchesWithStock' | translate:{ count: idleInventory().length } }}</span>
-              <button mat-stroked-button class="export-btn" (click)="exportIdle()" [disabled]="idleInventory().length === 0">
-                <mat-icon>file_download</mat-icon>
+              <button appBtn="outline" size="sm" type="button" class="export-btn" (click)="exportIdle()" [disabled]="idleInventory().length === 0">
+                <app-icon name="file-down" [size]="15" />
                 {{ 'analytics.exportExcel' | translate }}
               </button>
             </div>
@@ -287,16 +250,16 @@
                 [description]="'analytics.noIdleDesc' | translate"
               />
             } @else {
-              <div class="table-wrapper">
+              <div class="table-scroll">
                 <table class="data-table">
                   <thead>
                     <tr>
                       <th>{{ 'analytics.colId' | translate }}</th>
                       <th>{{ 'analytics.colProduct' | translate }}</th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortIdle('currentStock')">{{ 'inventory.colStock' | translate }} <mat-icon>{{ sortIcon(idleSort(), 'currentStock') }}</mat-icon></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortIdle('currentStock')">{{ 'inventory.colStock' | translate }} <app-icon [name]="sortIcon(idleSort(), 'currentStock')" [size]="14" /></button></th>
                       <th class="text-right">{{ 'analytics.hUnitCost' | translate }}</th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortIdle('idleValue')">{{ 'analytics.hIdleShort' | translate }} <mat-icon>{{ sortIcon(idleSort(), 'idleValue') }}</mat-icon></button></th>
-                      <th class="text-left col-days"><button class="sort-btn" (click)="sortIdle('daysInStock')">{{ 'analytics.hDaysIdle' | translate }} <mat-icon>{{ sortIcon(idleSort(), 'daysInStock') }}</mat-icon></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortIdle('idleValue')">{{ 'analytics.hIdleShort' | translate }} <app-icon [name]="sortIcon(idleSort(), 'idleValue')" [size]="14" /></button></th>
+                      <th class="text-left col-days"><button class="sort-btn" (click)="sortIdle('daysInStock')">{{ 'analytics.hDaysIdle' | translate }} <app-icon [name]="sortIcon(idleSort(), 'daysInStock')" [size]="14" /></button></th>
                       <th>{{ 'purchases.colStatus' | translate }}</th>
                     </tr>
                   </thead>
@@ -330,18 +293,11 @@
                   </tbody>
                 </table>
               </div>
-              <mat-paginator
-                #idlePaginator
-                class="anl-paginator"
-                [length]="idleInventory().length"
-                [pageSize]="15"
-                [pageSizeOptions]="pageSizeOptions"
-                showFirstLastButtons
-              />
+              <app-paginator [length]="idleInventory().length" [pageSize]="idlePage().pageSize" [pageIndex]="idlePage().pageIndex" [pageSizeOptions]="pageSizeOptions" [showFirstLast]="true" (page)="idlePage.set($event)" />
             }
           </div>
-        </mat-tab>
-      </mat-tab-group>
+        </app-tab>
+      </app-tabs>
     </section>
   }
 </div>

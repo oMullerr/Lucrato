@@ -1,10 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, Signal, viewChild, WritableSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
@@ -17,6 +12,13 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { ColorPillComponent } from '../../shared/components/color-pill.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { IconName } from '../../shared/ui/icon/icons';
+import { TooltipDirective } from '../../shared/ui/tooltip/tooltip.directive';
+import { TabsComponent } from '../../shared/ui/tabs/tabs.component';
+import { TabComponent } from '../../shared/ui/tabs/tab.component';
+import { PaginatorComponent, PageChangeEvent } from '../../shared/ui/paginator/paginator.component';
 
 interface ProductStat {
   product: string;
@@ -58,8 +60,8 @@ type SortDir = 'asc' | 'desc';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    RouterLink, CommonModule, MatIconModule, MatButtonModule, MatTabsModule, MatTooltipModule,
-    MatPaginatorModule,
+    RouterLink, CommonModule,
+    ButtonComponent, IconComponent, TooltipDirective, TabsComponent, TabComponent, PaginatorComponent,
     PageHeaderComponent, StatusBadgeComponent, EmptyStateComponent, SkeletonComponent, ColorPillComponent, BrlPipe,
     TranslateModule,
   ],
@@ -85,36 +87,12 @@ export class AnalyticsComponent {
 
   /** Pagination — one state signal + one paginator ref per table. */
   protected readonly pageSizeOptions = [15, 30, 50, 100, 150];
-  protected readonly productPage = signal<PageEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
-  protected readonly categoryPage = signal<PageEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
-  protected readonly monthPage = signal<PageEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
-  protected readonly idlePage = signal<PageEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
+  protected readonly productPage = signal<PageChangeEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
+  protected readonly categoryPage = signal<PageChangeEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
+  protected readonly monthPage = signal<PageChangeEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
+  protected readonly idlePage = signal<PageChangeEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
 
-  private readonly productPaginator = viewChild('productPaginator', { read: MatPaginator });
-  private readonly categoryPaginator = viewChild('categoryPaginator', { read: MatPaginator });
-  private readonly monthPaginator = viewChild('monthPaginator', { read: MatPaginator });
-  private readonly idlePaginator = viewChild('idlePaginator', { read: MatPaginator });
-
-  constructor() {
-    this.wirePaginator(this.productPaginator, this.productPage);
-    this.wirePaginator(this.categoryPaginator, this.categoryPage);
-    this.wirePaginator(this.monthPaginator, this.monthPage);
-    this.wirePaginator(this.idlePaginator, this.idlePage);
-  }
-
-  private wirePaginator(
-    ref: Signal<MatPaginator | undefined>,
-    state: WritableSignal<PageEvent>,
-  ): void {
-    effect((onCleanup) => {
-      const p = ref();
-      if (!p) return;
-      const sub = p.page.subscribe((evt: PageEvent) => state.set(evt));
-      onCleanup(() => sub.unsubscribe());
-    });
-  }
-
-  private slicePage<T>(list: T[], state: PageEvent): T[] {
+  private slicePage<T>(list: T[], state: PageChangeEvent): T[] {
     const start = state.pageIndex * state.pageSize;
     return list.slice(start, start + state.pageSize);
   }
@@ -245,7 +223,7 @@ export class AnalyticsComponent {
     return [
       {
         title: tr('analytics.resInvestment'),
-        icon: 'savings',
+        icon: 'piggy-bank' as IconName,
         rows: [
           { label: tr('analytics.investedInPurchases'), value: k.totalInvested, tone: 'neutral' as const, prefix: '' },
           { label: tr('analytics.idleCapital'),         value: k.idleCapital,   tone: 'warning' as const, prefix: '' },
@@ -255,7 +233,7 @@ export class AnalyticsComponent {
       },
       {
         title: tr('analytics.resResult'),
-        icon: 'trending_up',
+        icon: 'trending-up' as IconName,
         rows: [
           { label: tr('analytics.grossRevenue'), value: k.grossRevenue, tone: 'neutral' as const, prefix: '' },
           { label: tr('analytics.netRevenue'),   value: k.netRevenue,   tone: 'neutral' as const, prefix: '' },
@@ -265,7 +243,7 @@ export class AnalyticsComponent {
       },
       {
         title: tr('analytics.resEfficiency'),
-        icon: 'auto_graph',
+        icon: 'chart-no-axes-combined' as IconName,
         rows: [
           { label: tr('analytics.feesPaid'),       value: k.totalFees,      tone: 'warning' as const, prefix: '' },
           { label: tr('analytics.totalDiscounts'), value: k.totalDiscounts, tone: 'neutral' as const, prefix: '' },
@@ -289,9 +267,9 @@ export class AnalyticsComponent {
     this.idleSort.update(s => ({ key, dir: s.key === key && s.dir === 'desc' ? 'asc' : 'desc' }));
   }
 
-  protected sortIcon<T>(state: { key: T; dir: SortDir }, key: T): string {
-    if (state.key !== key) return 'unfold_more';
-    return state.dir === 'desc' ? 'arrow_downward' : 'arrow_upward';
+  protected sortIcon<T>(state: { key: T; dir: SortDir }, key: T): IconName {
+    if (state.key !== key) return 'chevrons-up-down';
+    return state.dir === 'desc' ? 'arrow-down' : 'arrow-up';
   }
 
   protected exportProducts(): void {

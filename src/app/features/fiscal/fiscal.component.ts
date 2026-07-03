@@ -1,14 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
 import type { ChartConfiguration, ChartData } from 'chart.js';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatInputModule } from '@angular/material/input';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { ThemeService } from '../../core/services/theme.service';
@@ -24,17 +18,25 @@ import { computeFiscalStatus, availableYears, dasSchedule, dasnReminder } from '
 import {
   FiscalActivity, FiscalRegimeId, DasMonth, DasMonthStatus, DasnReminder, DasnStatus,
 } from '../../core/fiscal/fiscal.model';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { IconName } from '../../shared/ui/icon/icons';
+import { TooltipDirective } from '../../shared/ui/tooltip/tooltip.directive';
+import { FieldComponent } from '../../shared/ui/field/field.component';
+import { SelectComponent } from '../../shared/ui/select/select.component';
+import { OptionComponent } from '../../shared/ui/select/option.component';
+import { DateInputComponent } from '../../shared/ui/date-input/date-input.component';
 
 interface AlertView {
   tone: 'ok' | 'warning' | 'danger' | 'over';
-  icon: string;
+  icon: IconName;
   titleKey: string;
   messageKey: string;
   params: Record<string, string>;
 }
 
 interface ForecastView {
-  icon: string;
+  icon: IconName;
   key: string;
   params: Record<string, string>;
   tone: 'ok' | 'danger';
@@ -48,10 +50,10 @@ const ACTIVITY_OPTIONS: FiscalActivity[] = ['commerce', 'services', 'mixed'];
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    RouterLink, BaseChartDirective,
-    MatIconModule, MatButtonModule, MatTooltipModule,
-    MatFormFieldModule, MatSelectModule, MatInputModule, MatDatepickerModule,
+    RouterLink, FormsModule, BaseChartDirective,
     PageHeaderComponent, KpiCardComponent, EmptyStateComponent, SkeletonComponent, BrlPipe,
+    ButtonComponent, IconComponent, TooltipDirective,
+    FieldComponent, SelectComponent, OptionComponent, DateInputComponent,
     TranslateModule,
   ],
   templateUrl: './fiscal.component.html',
@@ -110,19 +112,19 @@ export class FiscalComponent {
       const hard = s.revenue > s.toleranceCeiling;
       return {
         tone: 'over',
-        icon: hard ? 'gpp_bad' : 'report',
+        icon: hard ? 'ban' : 'octagon-alert',
         titleKey: hard ? 'fiscal.statusOverHardTitle' : 'fiscal.statusOverTitle',
         messageKey: hard ? 'fiscal.statusOverHardMsg' : 'fiscal.statusOverMsg',
         params: p,
       };
     }
     if (s.band === 'danger') {
-      return { tone: 'danger', icon: 'warning', titleKey: 'fiscal.statusDangerTitle', messageKey: 'fiscal.statusDangerMsg', params: p };
+      return { tone: 'danger', icon: 'triangle-alert', titleKey: 'fiscal.statusDangerTitle', messageKey: 'fiscal.statusDangerMsg', params: p };
     }
     if (s.band === 'warning') {
-      return { tone: 'warning', icon: 'trending_up', titleKey: 'fiscal.statusWarnTitle', messageKey: 'fiscal.statusWarnMsg', params: p };
+      return { tone: 'warning', icon: 'trending-up', titleKey: 'fiscal.statusWarnTitle', messageKey: 'fiscal.statusWarnMsg', params: p };
     }
-    return { tone: 'ok', icon: 'check_circle', titleKey: 'fiscal.statusOkTitle', messageKey: 'fiscal.statusOkMsg', params: p };
+    return { tone: 'ok', icon: 'circle-check', titleKey: 'fiscal.statusOkTitle', messageKey: 'fiscal.statusOkMsg', params: p };
   });
 
   /** Variant do KPI de faturamento/disponível conforme a banda. */
@@ -160,12 +162,12 @@ export class FiscalComponent {
     const params: Record<string, string> =
       s.projectedHitsCeiling && s.ceilingHitDate ? { when: this.formatMonthYear(s.ceilingHitDate) } : {};
     if (s.band === 'over') {
-      return { icon: 'block', key: 'fiscal.forecastOver', params, tone: 'danger' };
+      return { icon: 'ban', key: 'fiscal.forecastOver', params, tone: 'danger' };
     }
     if (s.projectedHitsCeiling && s.ceilingHitDate) {
-      return { icon: 'event_busy', key: 'fiscal.forecastWillHit', params, tone: 'danger' };
+      return { icon: 'calendar-x', key: 'fiscal.forecastWillHit', params, tone: 'danger' };
     }
-    return { icon: 'event_available', key: 'fiscal.forecastSafe', params, tone: 'ok' };
+    return { icon: 'calendar-check', key: 'fiscal.forecastSafe', params, tone: 'ok' };
   });
 
   /** Agenda do DAS do ano selecionado. */

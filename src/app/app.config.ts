@@ -13,7 +13,6 @@ import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
-import { MatPaginatorIntl } from '@angular/material/paginator';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
@@ -26,7 +25,6 @@ import { getApp } from 'firebase/app';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { GlobalErrorHandler } from './core/services/global-error-handler';
-import { TranslatePaginatorIntl } from './shared/i18n/translate-paginator-intl';
 import { TranslateTitleStrategy } from './core/services/translate-title.strategy';
 import { LanguageService } from './core/services/language.service';
 
@@ -80,7 +78,6 @@ export const appConfig: ApplicationConfig = {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
       useValue: { appearance: 'outline', subscriptSizing: 'dynamic' },
     },
-    { provide: MatPaginatorIntl, useClass: TranslatePaginatorIntl },
     { provide: TitleStrategy, useClass: TranslateTitleStrategy },
   ],
 };

@@ -3,9 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import type { ChartConfiguration } from 'chart.js';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { ThemeService } from '../../core/services/theme.service';
@@ -18,6 +15,10 @@ import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { DateRangePickerComponent, RangeKey } from '../../shared/components/date-range-picker.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { ComputedSale } from '../../core/models/models';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { MoneyComponent } from '../../shared/ui/money/money.component';
+import { SparklineComponent } from '../../shared/components/sparkline.component';
 
 interface RangeOption { key: RangeKey; labelKey: string; }
 
@@ -42,8 +43,8 @@ const RANGE_OPTIONS: RangeOption[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule, RouterLink, BaseChartDirective,
-    MatIconModule, MatButtonModule, MatTooltipModule,
     DateRangePickerComponent, PageHeaderComponent, KpiCardComponent, EmptyStateComponent, SkeletonComponent, BrlPipe,
+    ButtonComponent, IconComponent, MoneyComponent, SparklineComponent,
     TranslateModule,
   ],
   templateUrl: './dashboard.component.html',

@@ -14,7 +14,7 @@
 <div class="page-content dash-body">
 
   @if (!dataService.loaded()) {
-    <section class="kpi-strip">
+    <section class="kpi-grid">
       <app-skeleton variant="kpi" [count]="4" />
     </section>
     <section class="chart-hero-skel">
@@ -31,27 +31,40 @@
       [title]="'dashboard.emptyTitle' | translate"
       [description]="'dashboard.emptyDesc' | translate"
     >
-      <a mat-stroked-button routerLink="/purchases">
-        <mat-icon>shopping_cart</mat-icon>
+      <a appBtn="outline" routerLink="/purchases">
+        <app-icon name="shopping-cart" [size]="16" />
         {{ 'purchases.addPurchase' | translate }}
       </a>
-      <a mat-flat-button class="primary-cta" routerLink="/sales">
-        <mat-icon>sell</mat-icon>
+      <a appBtn routerLink="/sales">
+        <app-icon name="tag" [size]="16" />
         {{ 'sales.registerSale' | translate }}
       </a>
     </app-empty-state>
 
   } @else {
 
+    <!-- Herói: O Número — lucro do período -->
+    <section class="dash-hero surface-card" [attr.aria-label]="'dashboard.kpiNetProfit' | translate">
+      <div class="dash-hero-main">
+        <span class="eyebrow">{{ 'dashboard.kpiNetProfit' | translate }} · {{ rangeLabel(range()) }}</span>
+        <app-money [value]="periodKpis().netProfit" variant="hero" />
+        <span class="dash-hero-note">{{ 'dashboard.kpiSalesInPeriod' | translate:{ count: periodKpis().salesCount } }}</span>
+      </div>
+      @if (profitSpark().length > 1) {
+        <div class="dash-hero-spark" aria-hidden="true">
+          <app-sparkline
+            [points]="profitSpark()"
+            [width]="180"
+            [height]="56"
+            [tone]="periodKpis().netProfit >= 0 ? 'success' : 'danger'"
+            [fill]="true"
+          />
+        </div>
+      }
+    </section>
+
     <!-- KPI strip -->
-    <section class="kpi-strip" [attr.aria-label]="'dashboard.periodKpis' | translate">
-      <app-kpi-card
-        [title]="'dashboard.kpiNetProfit' | translate"
-        [value]="periodKpis().netProfit | brl"
-        [variant]="periodKpis().netProfit >= 0 ? 'success' : 'danger'"
-        [sparkline]="profitSpark()"
-        [note]="'dashboard.kpiSalesInPeriod' | translate:{ count: periodKpis().salesCount }"
-      />
+    <section class="kpi-grid" [attr.aria-label]="'dashboard.periodKpis' | translate">
       <app-kpi-card
         [title]="'dashboard.kpiGrossRevenue' | translate"
         [value]="periodKpis().grossRevenue | brl"
@@ -203,7 +216,7 @@
               }
             </div>
             @if (!last) {
-              <mat-icon class="wf-sep" aria-hidden="true">arrow_forward</mat-icon>
+              <app-icon class="wf-sep" name="arrow-right" [size]="16" />
             }
           }
         </div>

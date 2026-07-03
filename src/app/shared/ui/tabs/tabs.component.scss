@@ -1,0 +1,52 @@
+:host { display: block; }
+
+.tabs-header {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--border-subtle);
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.tab-btn {
+  position: relative;
+  padding: 10px var(--space-4);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out);
+
+  &:hover { color: var(--text-primary); }
+
+  /* Indicador ativo */
+  &::after {
+    content: '';
+    position: absolute;
+    left: var(--space-3);
+    right: var(--space-3);
+    bottom: -1px;
+    height: 2px;
+    border-radius: var(--radius-full);
+    background: transparent;
+    transition: background var(--dur-fast) var(--ease-out);
+  }
+}
+
+.tab-btn--active {
+  color: var(--brand-primary);
+  font-weight: 600;
+
+  &::after { background: var(--brand-primary); }
+}
+
+.tab-panel {
+  padding-top: var(--space-5);
+}

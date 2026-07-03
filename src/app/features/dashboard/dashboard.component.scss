@@ -1,22 +1,35 @@
+@use '../../../styles/breakpoints' as bp;
+
 .dash-body {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.primary-cta {
-  --mdc-filled-button-container-color: var(--brand-primary);
-  --mdc-filled-button-label-text-color: #FFFFFF;
+/* ---------- Herói: O Número ---------- */
+.dash-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  flex-wrap: wrap;
 }
 
-.kpi-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+.dash-hero-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
-@media (max-width: 1100px) { .kpi-strip { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px)  { .kpi-strip { grid-template-columns: 1fr; } }
+.dash-hero-note {
+  font-size: var(--fs-small);
+  color: var(--text-muted);
+}
+
+.dash-hero-spark { flex-shrink: 0; }
 
 .chart-card {
   background: var(--bg-surface-1);
@@ -50,10 +63,10 @@
 
 .cc-body {
   position: relative;
-  height: 280px;
+  height: var(--chart-h);
 }
 
-.cc-tall { height: 360px; }
+.cc-tall { height: var(--chart-h-tall); }
 .cc-auto { height: auto; }
 
 /* Product chart — internal vertical scroll when the canvas grows past the viewport. */
@@ -110,17 +123,16 @@
   font-style: italic;
 }
 
+/* auto-fit: 1 coluna no mobile, 2 no desktop, 3 no ultrawide (content-max 1760+) */
 .chart-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr));
   gap: 16px;
 }
 
-@media (max-width: 1100px) { .chart-grid { grid-template-columns: 1fr; } }
-
 .chart-hero-skel app-skeleton {
   display: block;
-  height: 360px;
+  height: var(--chart-h-tall);
 }
 
 .composition-body {
@@ -128,7 +140,7 @@
   grid-template-columns: 180px 1fr;
   gap: 24px;
   align-items: center;
-  height: 280px;
+  height: var(--chart-h);
 }
 
 .dough-wrap {
@@ -198,7 +210,7 @@
   }
 }
 
-@media (max-width: 700px) {
+@include bp.below(md) {
   .composition-body { grid-template-columns: 1fr; height: auto; }
 }
 
@@ -281,7 +293,7 @@
   white-space: nowrap;
 }
 
-@media (max-width: 700px) {
+@include bp.below(md) {
   .idle-item { grid-template-columns: 1fr; gap: 8px; }
   .idle-value { text-align: right; }
 }
@@ -349,14 +361,11 @@
   color: var(--text-muted);
   opacity: 0.4;
   flex-shrink: 0;
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
   padding: 0 4px;
   box-sizing: content-box;
 }
 
-@media (max-width: 800px) {
+@include bp.below(md) {
   .waterfall { flex-direction: column; }
   .wf-sep { transform: rotate(90deg); align-self: flex-start; margin-left: 16px; }
 }
