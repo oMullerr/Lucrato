@@ -1,0 +1,4 @@
+<button type="button" class="sort-btn" (click)="toggle()">
+  <span class="sort-label"><ng-content /></span>
+  <app-icon class="sort-icon" [class.sort-icon--active]="state() !== ''" [name]="icon()" [size]="14" />
+</button>

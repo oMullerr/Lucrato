@@ -1,4 +1,7 @@
 {
+  "table": {
+    "sortBy": "Ordenar por"
+  },
   "ui": {
     "select": {
       "noResults": "Nenhum resultado",
@@ -350,6 +353,7 @@
     "disclaimer": "Estimativas informativas. Teto, salário mínimo e regras mudam por lei — confirme no Portal do Empreendedor ou com seu contador."
   },
   "inventory": {
+    "sortDefault": "Padrão (status)",
     "title": "Panorama do Estoque",
     "eyebrow": "Panorama · atualizado {{time}}",
     "subtitleEmpty": "Comece cadastrando seu primeiro lote para acompanhar a saúde do seu estoque.",
@@ -497,6 +501,8 @@
     "ignoredRows": "Linhas ignoradas ({{count}}):"
   },
   "sales": {
+    "deletedUndo": "Venda {{id}} excluída",
+    "sortDefault": "Padrão (mais recentes)",
     "title": "Vendas",
     "eyebrow": "REGISTRO · {{count}} VENDAS",
     "subtitle": "Cada linha é uma venda. Receita, taxas e margem calculadas automaticamente.",
@@ -581,6 +587,8 @@
     "netMargin": "Margem Líquida"
   },
   "purchases": {
+    "deletedUndo": "Compra {{id}} excluída",
+    "sortDefault": "Padrão (mais recentes)",
     "title": "Compras",
     "eyebrow": "LOTES · {{count}}",
     "subtitle": "Cadastre cada lote comprado. Custos com frete e outros são distribuídos automaticamente.",

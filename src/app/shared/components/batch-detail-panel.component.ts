@@ -1,7 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { QuickActionsService } from '../../core/services/quick-actions.service';
@@ -11,6 +8,10 @@ import { BrlPipe } from '../pipes/brl.pipe';
 import { BrDatePipe } from '../pipes/br-date.pipe';
 import { StatusBadgeComponent } from './status-badge.component';
 import { ColorPillComponent } from './color-pill.component';
+import { ButtonComponent } from '../ui/button/button.component';
+import { IconComponent } from '../ui/icon/icon.component';
+import { IconName } from '../ui/icon/icons';
+import { TooltipDirective } from '../ui/tooltip/tooltip.directive';
 
 /**
  * Lateral detail sheet for a single purchase batch.
@@ -20,7 +21,7 @@ import { ColorPillComponent } from './color-pill.component';
   selector: 'app-batch-detail-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, MatButtonModule, MatTooltipModule, TranslateModule, BrlPipe, BrDatePipe, StatusBadgeComponent, ColorPillComponent],
+  imports: [TranslateModule, BrlPipe, BrDatePipe, StatusBadgeComponent, ColorPillComponent, ButtonComponent, IconComponent, TooltipDirective],
   templateUrl: './batch-detail-panel.component.html',
   styleUrl: './batch-detail-panel.component.scss',
 })
@@ -70,7 +71,7 @@ export class BatchDetailPanelComponent {
     if (b.status === 'Vendido') {
       return {
         tone: 'success' as const,
-        icon: 'check_circle',
+        icon: 'circle-check' as IconName,
         title: this.t.instant('batchPanel.completedTitle'),
         message: this.t.instant('batchPanel.completedMsg'),
       };
@@ -79,7 +80,7 @@ export class BatchDetailPanelComponent {
     if (b.status === 'Em trânsito') {
       return {
         tone: 'info' as const,
-        icon: 'local_shipping',
+        icon: 'truck' as IconName,
         title: this.t.instant('batchPanel.inTransitTitle'),
         message: this.t.instant('batchPanel.inTransitMsg'),
       };
@@ -89,7 +90,7 @@ export class BatchDetailPanelComponent {
       const suggestedReduction = Math.round((b.daysInStock - settings.redAlertDays) / 5 + 5);
       return {
         tone: 'danger' as const,
-        icon: 'priority_high',
+        icon: 'octagon-alert' as IconName,
         title: this.t.instant('batchPanel.staleTitle', { days: b.daysInStock }),
         message: this.t.instant('batchPanel.staleMsg', {
           value: formatCurrency(b.idleValue),
@@ -101,7 +102,7 @@ export class BatchDetailPanelComponent {
     if (b.averageMargin != null && b.averageMargin < settings.minimumMargin) {
       return {
         tone: 'warning' as const,
-        icon: 'trending_down',
+        icon: 'trending-down' as IconName,
         title: this.t.instant('batchPanel.lowMarginTitle'),
         message: this.t.instant('batchPanel.lowMarginMsg', {
           margin: (b.averageMargin * 100).toFixed(1),
@@ -113,7 +114,7 @@ export class BatchDetailPanelComponent {
     if (b.status === 'Atenção') {
       return {
         tone: 'warning' as const,
-        icon: 'schedule',
+        icon: 'clock' as IconName,
         title: this.t.instant('batchPanel.attentionTitle'),
         message: this.t.instant('batchPanel.attentionMsg', { days: b.daysInStock }),
       };

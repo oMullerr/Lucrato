@@ -5,21 +5,12 @@ import {
   effect,
   inject,
   signal,
-  viewChild,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { DialogService } from '../../shared/ui/dialog/dialog.service';
-import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
-import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { BreakpointObserver } from '@angular/cdk/layout';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { QuickActionsService } from '../../core/services/quick-actions.service';
@@ -35,20 +26,40 @@ import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 import { PurchaseFormDialogComponent } from '../purchases/purchase-form.dialog';
 import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/components/confirm-dialog.component';
+import { BreakpointService } from '../../shared/ui/breakpoint.service';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { TooltipDirective } from '../../shared/ui/tooltip/tooltip.directive';
+import { ChipComponent } from '../../shared/ui/chip/chip.component';
+import { DrawerComponent } from '../../shared/ui/drawer/drawer.component';
+import { MoneyComponent } from '../../shared/ui/money/money.component';
+import { SortDirective, SortState } from '../../shared/ui/sort/sort.directive';
+import { SortHeaderComponent } from '../../shared/ui/sort/sort-header.component';
+import { PaginatorComponent, PageChangeEvent } from '../../shared/ui/paginator/paginator.component';
+import { RecordCardComponent, RecordCardFigure } from '../../shared/ui/record-card/record-card.component';
+import { SelectComponent } from '../../shared/ui/select/select.component';
+import { OptionComponent } from '../../shared/ui/select/option.component';
 
 type FilterKey = 'all' | InventoryStatus;
+
+/** Opções do "ordenar por" compacto do mobile (chave + direção). */
+interface MobileSortOption {
+  value: string; // `${active}:${direction}` ou '' para padrão
+  labelKey: string;
+}
 
 @Component({
   selector: 'app-inventory',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    RouterLink, MatButtonModule, MatIconModule, MatSidenavModule, MatTooltipModule,
-    MatSortModule, MatPaginatorModule,
+    RouterLink, FormsModule, TranslateModule,
     PageHeaderComponent, KpiCardComponent, StatusBadgeComponent,
     EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent,
     BrlPipe, BrDatePipe, DatePipe,
-    TranslateModule,
+    ButtonComponent, IconComponent, TooltipDirective, ChipComponent, DrawerComponent,
+    MoneyComponent, SortDirective, SortHeaderComponent, PaginatorComponent,
+    RecordCardComponent, SelectComponent, OptionComponent,
   ],
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss',
@@ -58,26 +69,19 @@ export class InventoryComponent {
   private readonly dialog = inject(DialogService);
   private readonly notify = inject(NotifyService);
   private readonly quick = inject(QuickActionsService);
-  private readonly bp = inject(BreakpointObserver);
+  protected readonly bp = inject(BreakpointService);
   private readonly t = inject(TranslateService);
 
   protected readonly kpis = this.data.kpis;
 
-  /** Wide viewport (>=1600px) — detail drawer becomes a pinned side column instead of an overlay. */
-  protected readonly isWideViewport = toSignal(
-    this.bp.observe('(min-width: 1600px)').pipe(map(r => r.matches)),
-    { initialValue: globalThis.window ? globalThis.window.innerWidth >= 1600 : false }
-  );
-
   protected readonly filter = signal<FilterKey>('all');
 
-  /** Row currently expanded inline. */
+  /** Linha expandida inline (só desktop). */
   protected readonly expandedRow = signal<string | null>(null);
 
-  /** Id of the batch shown in the lateral detail panel (id, not snapshot, so it stays live). */
+  /** Id do lote no painel lateral (id, não snapshot, para refletir updates). */
   protected readonly selectedBatchId = signal<string | null>(null);
 
-  /** Resolves the selected id against the live computed list so the panel reflects updates. */
   protected readonly selectedBatch = computed<ComputedPurchase | null>(() => {
     const id = this.selectedBatchId();
     if (!id) return null;
@@ -85,42 +89,54 @@ export class InventoryComponent {
   });
   protected readonly panelOpen = computed(() => this.selectedBatch() !== null);
 
-  /** Current sort state from MatSort. Empty `active`/`direction` means use the default sort. */
-  protected readonly sortState = signal<Sort>({ active: '', direction: '' });
+  /** Estado de ordenação (shape compatível com o antigo MatSort). */
+  protected readonly sortState = signal<SortState>({ active: '', direction: '' });
 
-  /** Current paginator state. Defaults to first page, 15 items per page. */
-  protected readonly pageState = signal<PageEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
+  /** Estado de paginação (shape compatível com o antigo PageEvent). */
+  protected readonly pageState = signal<PageChangeEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
 
   protected readonly pageSizeOptions = [15, 30, 50, 100, 150];
 
-  private readonly sortRef = viewChild(MatSort);
-  private readonly paginatorRef = viewChild(MatPaginator);
+  protected readonly mobileSortOptions: MobileSortOption[] = [
+    { value: '', labelKey: 'inventory.sortDefault' },
+    { value: 'product:asc', labelKey: 'purchases.colProduct' },
+    { value: 'currentStock:desc', labelKey: 'inventory.colStock' },
+    { value: 'idleValue:desc', labelKey: 'inventory.idleCapital' },
+    { value: 'averageMargin:asc', labelKey: 'sales.colMargin' },
+  ];
+
+  protected readonly mobileSortValue = computed(() => {
+    const s = this.sortState();
+    return s.active && s.direction ? `${s.active}:${s.direction}` : '';
+  });
 
   constructor() {
-    effect((onCleanup) => {
-      const s = this.sortRef();
-      if (!s) return;
-      const sub = s.sortChange.subscribe((sort: Sort) => this.sortState.set(sort));
-      onCleanup(() => sub.unsubscribe());
-    });
-
-    effect((onCleanup) => {
-      const p = this.paginatorRef();
-      if (!p) return;
-      const sub = p.page.subscribe((evt: PageEvent) => this.pageState.set(evt));
-      onCleanup(() => sub.unsubscribe());
-    });
-
-    // Reset to first page when filter changes so we don't end up on a page that no longer exists.
+    // Volta à primeira página quando o filtro muda (a página atual pode sumir).
     effect(() => {
       this.filter();
-      this.paginatorRef()?.firstPage();
-    });
+      this.pageState.update(p => ({ ...p, pageIndex: 0 }));
+    }, { allowSignalWrites: true });
   }
 
-  /** Updated timestamp shown in the eyebrow (refreshes when data changes). */
+  protected onSortChange(sort: SortState): void {
+    this.sortState.set(sort);
+  }
+
+  protected onMobileSort(value: string): void {
+    if (!value) {
+      this.sortState.set({ active: '', direction: '' });
+      return;
+    }
+    const [active, direction] = value.split(':');
+    this.sortState.set({ active, direction: direction as SortState['direction'] });
+  }
+
+  protected onPage(evt: PageChangeEvent): void {
+    this.pageState.set(evt);
+  }
+
+  /** Timestamp do eyebrow (atualiza quando os dados mudam). */
   protected readonly updatedAt = computed(() => {
-    // Trigger recompute when data changes
     this.data.purchases();
     this.data.sales();
     return new Date();
@@ -134,7 +150,6 @@ export class InventoryComponent {
     'Vendido': 4,
   };
 
-  /** Accessors used by user-driven column sorting. Return a value comparable for the column. */
   private readonly SORT_ACCESSORS: Record<string, (row: ComputedPurchase) => string | number> = {
     id: row => row.id,
     product: row => row.product,
@@ -145,7 +160,7 @@ export class InventoryComponent {
     status: row => this.STATUS_PRIORITY[row.status] ?? 99,
   };
 
-  /** Default ordering: status priority, then lote (id) ascending as tie-break. */
+  /** Ordem padrão: prioridade de status, depois lote (id) como desempate. */
   protected readonly sortedPurchases = computed(() =>
     [...this.data.computedPurchases()].sort((a, b) => {
       const pa = this.STATUS_PRIORITY[a.status] ?? 99;
@@ -155,7 +170,6 @@ export class InventoryComponent {
     })
   );
 
-  /** Filter by status chip, applied over the default-sorted list. */
   private readonly filteredDefault = computed(() => {
     const f = this.filter();
     const list = this.sortedPurchases();
@@ -163,7 +177,7 @@ export class InventoryComponent {
     return list.filter(c => c.status === f);
   });
 
-  /** Filtered + user-driven column sort (or default order if no column is active). */
+  /** Filtrado + ordenação do usuário (ou ordem padrão sem coluna ativa). */
   protected readonly filteredPurchases = computed(() => {
     const base = this.filteredDefault();
     const s = this.sortState();
@@ -181,7 +195,7 @@ export class InventoryComponent {
     });
   });
 
-  /** Page slice of the filtered/sorted list. */
+  /** Fatia da página atual. */
   protected readonly pagedPurchases = computed(() => {
     const list = this.filteredPurchases();
     const { pageIndex, pageSize } = this.pageState();
@@ -220,13 +234,13 @@ export class InventoryComponent {
     };
   });
 
-  /** Sparkline of cumulative net profit over the last 30 days. */
+  /** Sparkline do lucro líquido acumulado nos últimos 30 dias. */
   protected readonly profitSparkline = computed(() => this.buildSparkline(s => s.netProfit));
 
-  /** Sparkline of cumulative gross revenue over the last 30 days. */
+  /** Sparkline da receita bruta acumulada nos últimos 30 dias. */
   protected readonly revenueSparkline = computed(() => this.buildSparkline(s => s.grossRevenue));
 
-  /** Margin trend — daily margin %, last 30 days. */
+  /** Tendência de margem — margem % diária, últimos 30 dias. */
   protected readonly marginSparkline = computed(() => {
     const sales = this.data.computedSales().filter(s => s.status === 'Concluída');
     if (sales.length < 2) return [];
@@ -245,7 +259,7 @@ export class InventoryComponent {
     return points;
   });
 
-  /** Idle capital — current value (single bar). Tracks the absolute capital parado. */
+  /** Capital parado — valor absoluto ao longo dos últimos 30 dias. */
   protected readonly idleSparkline = computed(() => {
     const purchases = this.data.computedPurchases();
     const days = 30;
@@ -315,7 +329,11 @@ export class InventoryComponent {
     this.selectedBatchId.set(null);
   }
 
-  /** One-click "mark as received today" from a table row (Em trânsito only). */
+  protected onDrawerOpenChange(open: boolean): void {
+    if (!open) this.closeDetail();
+  }
+
+  /** "Chegou hoje" com um clique direto da linha (só Em trânsito). */
   protected markReceived(batch: ComputedPurchase, event: Event): void {
     event.stopPropagation();
     this.quick.markReceivedToday(batch);
@@ -326,7 +344,7 @@ export class InventoryComponent {
     this.filter.set('Parado');
   }
 
-  /** Marker class for the row's edge stripe — visual signal for status. */
+  /** Classe da listra lateral da linha — sinal visual do status. */
   protected rowStripeClass(c: ComputedPurchase): string {
     switch (c.status) {
       case 'Parado': return 'stripe-danger';
@@ -334,6 +352,29 @@ export class InventoryComponent {
       case 'Em trânsito': return 'stripe-info';
       default: return '';
     }
+  }
+
+  /** Tom do dot de status do record-card mobile. */
+  protected statusKindFor(c: ComputedPurchase): string {
+    switch (c.status) {
+      case 'Parado': return 'danger';
+      case 'Atenção': return 'warning';
+      case 'Em trânsito': return 'info';
+      case 'Vendido': return 'neutral';
+      default: return 'success';
+    }
+  }
+
+  /** Valores do rodapé do record-card mobile. */
+  protected figuresFor(c: ComputedPurchase): RecordCardFigure[] {
+    return [
+      { label: this.t.instant('inventory.colStock'), text: `${c.currentStock}/${c.quantityPurchased}` },
+      { label: this.t.instant('inventory.idleCapital'), value: c.idleValue, tone: c.idleValue > 0 ? 'loss' : 'neutral' },
+      {
+        label: this.t.instant('sales.colMargin'),
+        text: c.averageMargin !== undefined ? (c.averageMargin * 100).toFixed(1) + '%' : '—',
+      },
+    ];
   }
 
   protected marginClass(margin: number | undefined): string {

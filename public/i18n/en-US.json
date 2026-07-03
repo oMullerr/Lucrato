@@ -1,4 +1,7 @@
 {
+  "table": {
+    "sortBy": "Sort by"
+  },
   "ui": {
     "select": {
       "noResults": "No results",
@@ -350,6 +353,7 @@
     "wfOtherCosts": "Other costs"
   },
   "inventory": {
+    "sortDefault": "Default (status)",
     "title": "Inventory Overview",
     "eyebrow": "Overview · updated {{time}}",
     "subtitleEmpty": "Start by recording your first batch to track the health of your inventory.",
@@ -497,6 +501,8 @@
     "ignoredRows": "Ignored rows ({{count}}):"
   },
   "sales": {
+    "deletedUndo": "Sale {{id}} deleted",
+    "sortDefault": "Default (newest first)",
     "title": "Sales",
     "eyebrow": "RECORD · {{count}} SALES",
     "subtitle": "Each row is a sale. Revenue, fees, and margin calculated automatically.",
@@ -581,6 +587,8 @@
     "netMargin": "Net Margin"
   },
   "purchases": {
+    "deletedUndo": "Purchase {{id}} deleted",
+    "sortDefault": "Default (newest first)",
     "title": "Purchases",
     "eyebrow": "BATCHES · {{count}}",
     "subtitle": "Record each purchased batch. Shipping and other costs are distributed automatically.",

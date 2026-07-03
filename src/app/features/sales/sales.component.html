@@ -3,8 +3,8 @@
   [eyebrow]="'sales.eyebrow' | translate:{ count: sales().length }"
   [subtitle]="'sales.subtitle' | translate"
 >
-  <button mat-flat-button class="primary-cta" (click)="openNew()">
-    <mat-icon>add</mat-icon>
+  <button appBtn type="button" (click)="openNew()">
+    <app-icon name="plus" [size]="16" />
     {{ 'sales.newSale' | translate }}
   </button>
 </app-page-header>
@@ -12,7 +12,7 @@
 <div class="page-content sales-body">
 
   @if (!data.loaded()) {
-    <section class="quick-stats">
+    <section class="kpi-grid">
       <app-skeleton variant="kpi" [count]="4" />
     </section>
     <app-skeleton variant="table-row" [count]="8" />
@@ -23,15 +23,15 @@
       [title]="'sales.emptyTitle' | translate"
       [description]="'sales.emptyDesc' | translate"
     >
-      <button mat-flat-button class="primary-cta" (click)="openNew()">
-        <mat-icon>add</mat-icon>
+      <button appBtn type="button" (click)="openNew()">
+        <app-icon name="plus" [size]="16" />
         {{ 'sales.registerSale' | translate }}
       </button>
     </app-empty-state>
 
   } @else {
 
-    <section class="quick-stats">
+    <section class="kpi-grid">
       <app-kpi-card
         [title]="'sales.kpiSales' | translate"
         [value]="summary().total"
@@ -57,172 +57,195 @@
     </section>
 
     <section class="filters">
-      <mat-form-field class="search" appearance="outline" subscriptSizing="dynamic">
-        <mat-icon matPrefix>search</mat-icon>
+      <app-field class="search">
+        <app-icon fieldPrefix name="search" [size]="18" />
         <input
-          matInput
+          appInput
           [placeholder]="'sales.searchPlaceholder' | translate"
           [ngModel]="textFilter()"
           (ngModelChange)="textFilter.set($event)"
         />
-      </mat-form-field>
+      </app-field>
 
-      <mat-form-field class="channel-select" appearance="outline" subscriptSizing="dynamic">
-        <mat-label>{{ 'sales.channel' | translate }}</mat-label>
-        <mat-select [ngModel]="channelFilter()" (ngModelChange)="channelFilter.set($event)">
-          <mat-option value="all">{{ 'sales.allChannels' | translate }}</mat-option>
-          @for (c of channels(); track c) {
-            <mat-option [value]="c">{{ c }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <app-select
+        class="channel-select"
+        [ngModel]="channelFilter()"
+        (ngModelChange)="channelFilter.set($event)"
+        [placeholder]="'sales.channel' | translate"
+      >
+        <app-option value="all">{{ 'sales.allChannels' | translate }}</app-option>
+        @for (c of channels(); track c) {
+          <app-option [value]="c">{{ c }}</app-option>
+        }
+      </app-select>
 
       <app-date-range-picker variant="menu" (selectionChange)="onRangeChange($event)" />
 
       <div class="quick-chips" role="tablist">
-        <button
-          type="button"
-          class="chip"
-          [class.active]="quickFilter() === 'all'"
-          (click)="setQuickFilter('all')"
-        >{{ 'sales.filterAll' | translate }} <span class="chip-count">{{ quickCounts().all }}</span></button>
-        <button
-          type="button"
-          class="chip"
-          [class.active]="quickFilter() === 'profit'"
-          (click)="setQuickFilter('profit')"
-        >
-          <span class="status-dot success" aria-hidden="true"></span>
-          {{ 'sales.filterProfit' | translate }} <span class="chip-count">{{ quickCounts().profit }}</span>
+        <button appChip [active]="quickFilter() === 'all'" [count]="quickCounts().all"
+          (click)="setQuickFilter('all')">
+          {{ 'sales.filterAll' | translate }}
         </button>
-        <button
-          type="button"
-          class="chip"
-          [class.active]="quickFilter() === 'loss'"
-          (click)="setQuickFilter('loss')"
-        >
-          <span class="status-dot danger" aria-hidden="true"></span>
-          {{ 'sales.filterLoss' | translate }} <span class="chip-count">{{ quickCounts().loss }}</span>
+        <button appChip [active]="quickFilter() === 'profit'" dot="success" [count]="quickCounts().profit"
+          (click)="setQuickFilter('profit')">
+          {{ 'sales.filterProfit' | translate }}
         </button>
-        <button
-          type="button"
-          class="chip"
-          [class.active]="quickFilter() === 'low-margin'"
-          (click)="setQuickFilter('low-margin')"
-        >
-          <span class="status-dot warning" aria-hidden="true"></span>
-          {{ 'sales.filterLowMargin' | translate }} <span class="chip-count">{{ quickCounts().lowMargin }}</span>
+        <button appChip [active]="quickFilter() === 'loss'" dot="danger" [count]="quickCounts().loss"
+          (click)="setQuickFilter('loss')">
+          {{ 'sales.filterLoss' | translate }}
+        </button>
+        <button appChip [active]="quickFilter() === 'low-margin'" dot="warning" [count]="quickCounts().lowMargin"
+          (click)="setQuickFilter('low-margin')">
+          {{ 'sales.filterLowMargin' | translate }}
         </button>
       </div>
     </section>
 
     @if (filteredSales().length > 0) {
-      <div class="table-card">
-        <div class="table-wrapper">
-          <table class="data-table" matSort>
-            <thead>
-              <tr>
-                <th class="col-edge"></th>
-                <th mat-sort-header="id">{{ 'sales.colId' | translate }}</th>
-                <th class="hide-on-mobile" mat-sort-header="batchId">{{ 'sales.colBatch' | translate }}</th>
-                <th mat-sort-header="product">{{ 'sales.colProduct' | translate }}</th>
-                <th class="hide-on-mobile" mat-sort-header="saleDate">{{ 'sales.colDate' | translate }}</th>
-                <th class="hide-on-mobile" mat-sort-header="channel">{{ 'sales.colChannel' | translate }}</th>
-                <th class="text-center" mat-sort-header="quantitySold" arrowPosition="before">{{ 'sales.colQty' | translate }}</th>
-                <th class="text-right" mat-sort-header="netProfit" arrowPosition="before">{{ 'sales.colNetProfit' | translate }}</th>
-                <th class="text-center hide-on-mobile" mat-sort-header="netMargin" arrowPosition="before">{{ 'sales.colMargin' | translate }}</th>
-                <th mat-sort-header="status">{{ 'sales.colStatus' | translate }}</th>
-                <th class="text-right col-actions"></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (v of pagedSales(); track v.id) {
-                <tr
-                  class="row"
-                  [class.expanded]="expandedRow() === v.id"
-                  (click)="toggleRow(v.id, $event)"
-                >
-                  <td class="col-edge">
-                    <span class="row-stripe" [class.stripe-danger]="v.netProfit < 0" aria-hidden="true"></span>
-                  </td>
-                  <td><span class="id-tag id-sale mono">{{ v.id }}</span></td>
-                  <td class="hide-on-mobile">
-                    <span class="id-tag mono">{{ v.batchId }}</span>
-                    @if (isOrphanBatch(v.batchId)) {
-                      <mat-icon
-                        class="text-warning orphan-warn"
-                        [matTooltip]="'sales.batchMissing' | translate:{ id: v.batchId }"
-                      >warning_amber</mat-icon>
-                    }
-                  </td>
-                  <td class="product-cell" [title]="v.product">{{ v.product }}</td>
-                  <td class="mono hide-on-mobile">{{ v.saleDate | brDate }}</td>
-                  <td class="hide-on-mobile"><app-color-pill [name]="v.channel" kind="channel" /></td>
-                  <td class="text-center mono">{{ v.quantitySold }}</td>
-                  <td
-                    class="text-right mono"
-                    [class.text-success]="v.netProfit > 0"
-                    [class.text-danger]="v.netProfit < 0"
-                  >
-                    <strong>{{ v.netProfit | brl }}</strong>
-                  </td>
-                  <td class="text-center mono hide-on-mobile" [class]="marginClass(v.netMargin)">
-                    <strong>{{ (v.netMargin * 100).toFixed(1) }}%</strong>
-                  </td>
-                  <td><app-status-badge [status]="v.status" /></td>
-                  <td class="text-right col-actions">
-                    <button
-                      mat-icon-button
-                      class="row-action"
-                      (click)="edit(v, $event)"
-                      [matTooltip]="'common.edit' | translate"
-                    >
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button
-                      mat-icon-button
-                      class="row-action danger"
-                      (click)="confirmRemove(v, $event)"
-                      [matTooltip]="'common.remove' | translate"
-                    >
-                      <mat-icon>delete_outline</mat-icon>
-                    </button>
-                  </td>
+      @if (bp.isMobile()) {
+        <!-- MOBILE: cards + ordenar por -->
+        <div class="mobile-sort">
+          <span>{{ 'table.sortBy' | translate }}</span>
+          <app-select [ngModel]="mobileSortValue()" (ngModelChange)="onMobileSort($event)">
+            @for (opt of mobileSortOptions; track opt.value) {
+              <app-option [value]="opt.value">{{ opt.labelKey | translate }}</app-option>
+            }
+          </app-select>
+        </div>
+        <div class="record-list">
+          @for (v of pagedSales(); track v.id) {
+            <app-record-card
+              [title]="v.product"
+              [code]="v.id"
+              [status]="('status.' + v.status) | translate"
+              [statusKind]="statusKindFor(v)"
+              [meta]="(v.saleDate | brDate) + ' · ' + v.channel"
+              [figures]="figuresFor(v)"
+              (pressed)="editFromCard(v)"
+            />
+          }
+        </div>
+        <app-paginator
+          [length]="filteredSales().length"
+          [pageSize]="pageState().pageSize"
+          [pageIndex]="pageState().pageIndex"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="onPage($event)"
+        />
+      } @else {
+        <!-- DESKTOP: tabela completa -->
+        <div class="table-frame">
+          <div class="table-scroll">
+            <table class="data-table" appSort
+              [appSortActive]="sortState().active"
+              [appSortDirection]="sortState().direction"
+              (appSortChange)="onSortChange($event)">
+              <thead>
+                <tr>
+                  <th class="col-edge"></th>
+                  <th app-sort-header="id">{{ 'sales.colId' | translate }}</th>
+                  <th app-sort-header="batchId">{{ 'sales.colBatch' | translate }}</th>
+                  <th app-sort-header="product">{{ 'sales.colProduct' | translate }}</th>
+                  <th app-sort-header="saleDate">{{ 'sales.colDate' | translate }}</th>
+                  <th app-sort-header="channel">{{ 'sales.colChannel' | translate }}</th>
+                  <th class="text-center" app-sort-header="quantitySold">{{ 'sales.colQty' | translate }}</th>
+                  <th class="text-right" app-sort-header="netProfit">{{ 'sales.colNetProfit' | translate }}</th>
+                  <th class="text-center" app-sort-header="netMargin">{{ 'sales.colMargin' | translate }}</th>
+                  <th app-sort-header="status">{{ 'sales.colStatus' | translate }}</th>
+                  <th class="text-right col-actions"></th>
                 </tr>
-                @if (expandedRow() === v.id) {
-                  <tr class="row-expansion" (click)="$event.stopPropagation()">
-                    <td class="col-edge"></td>
-                    <td colspan="10">
-                      <div class="expansion-grid">
-                        <div><span class="t-caption">{{ 'sales.unitPrice' | translate }}</span><strong class="mono">{{ v.unitPrice | brl }}</strong></div>
-                        <div><span class="t-caption">{{ 'sales.grossRevenue' | translate }}</span><strong class="mono">{{ v.grossRevenue | brl }}</strong></div>
-                        <div>
-                          <span class="t-caption">{{ 'sales.mlFee' | translate }}</span>
-                          <strong class="mono" [class.text-warning]="isCustomFee(v.feePercentage)">
-                            {{ (v.feePercentage * 100).toFixed(1) }}%
-                          </strong>
-                        </div>
-                        <div><span class="t-caption">{{ 'sales.feeAmount' | translate }}</span><strong class="mono">{{ v.feeAmount | brl }}</strong></div>
-                        <div><span class="t-caption">{{ 'sales.sellerShipping' | translate }}</span><strong class="mono">{{ v.sellerShipping | brl }}</strong></div>
-                        <div><span class="t-caption">{{ 'sales.discount' | translate }}</span><strong class="mono">{{ v.discount | brl }}</strong></div>
-                        <div><span class="t-caption">{{ 'sales.netRevenue' | translate }}</span><strong class="mono">{{ v.netRevenue | brl }}</strong></div>
-                        <div><span class="t-caption">{{ 'sales.proportionalCost' | translate }}</span><strong class="mono">{{ v.proportionalCost | brl }}</strong></div>
-                      </div>
+              </thead>
+              <tbody>
+                @for (v of pagedSales(); track v.id) {
+                  <tr
+                    class="row row-clickable"
+                    [class.expanded]="expandedRow() === v.id"
+                    (click)="toggleRow(v.id, $event)"
+                  >
+                    <td class="col-edge">
+                      <span class="row-stripe" [class.stripe-danger]="v.netProfit < 0" aria-hidden="true"></span>
+                    </td>
+                    <td><span class="id-tag id-sale mono">{{ v.id }}</span></td>
+                    <td>
+                      <span class="id-tag mono">{{ v.batchId }}</span>
+                      @if (isOrphanBatch(v.batchId)) {
+                        <app-icon
+                          class="text-warning orphan-warn"
+                          name="triangle-alert"
+                          [size]="15"
+                          [label]="'sales.batchMissing' | translate:{ id: v.batchId }"
+                          [appTooltip]="'sales.batchMissing' | translate:{ id: v.batchId }"
+                        />
+                      }
+                    </td>
+                    <td class="product-cell" [title]="v.product">{{ v.product }}</td>
+                    <td class="mono">{{ v.saleDate | brDate }}</td>
+                    <td><app-color-pill [name]="v.channel" kind="channel" /></td>
+                    <td class="text-center mono">{{ v.quantitySold }}</td>
+                    <td class="text-right">
+                      <app-money [value]="v.netProfit" tone="auto" variant="text" />
+                    </td>
+                    <td class="text-center mono" [class]="marginClass(v.netMargin)">
+                      <strong>{{ (v.netMargin * 100).toFixed(1) }}%</strong>
+                    </td>
+                    <td><app-status-badge [status]="v.status" /></td>
+                    <td class="text-right col-actions">
+                      <button
+                        appBtn="ghost" iconOnly size="sm" type="button"
+                        class="row-action"
+                        (click)="edit(v, $event)"
+                        [appTooltip]="'common.edit' | translate"
+                        [attr.aria-label]="'common.edit' | translate"
+                      >
+                        <app-icon name="pencil" [size]="17" />
+                      </button>
+                      <button
+                        appBtn="ghost" iconOnly size="sm" type="button"
+                        class="row-action danger"
+                        (click)="confirmRemove(v, $event)"
+                        [appTooltip]="'common.remove' | translate"
+                        [attr.aria-label]="'common.remove' | translate"
+                      >
+                        <app-icon name="trash" [size]="17" />
+                      </button>
                     </td>
                   </tr>
+                  @if (expandedRow() === v.id) {
+                    <tr class="row-expansion" (click)="$event.stopPropagation()">
+                      <td class="col-edge"></td>
+                      <td colspan="10">
+                        <div class="expansion-grid">
+                          <div><span class="t-caption">{{ 'sales.unitPrice' | translate }}</span><strong class="mono">{{ v.unitPrice | brl }}</strong></div>
+                          <div><span class="t-caption">{{ 'sales.grossRevenue' | translate }}</span><strong class="mono">{{ v.grossRevenue | brl }}</strong></div>
+                          <div>
+                            <span class="t-caption">{{ 'sales.mlFee' | translate }}</span>
+                            <strong class="mono" [class.text-warning]="isCustomFee(v.feePercentage)">
+                              {{ (v.feePercentage * 100).toFixed(1) }}%
+                            </strong>
+                          </div>
+                          <div><span class="t-caption">{{ 'sales.feeAmount' | translate }}</span><strong class="mono">{{ v.feeAmount | brl }}</strong></div>
+                          <div><span class="t-caption">{{ 'sales.sellerShipping' | translate }}</span><strong class="mono">{{ v.sellerShipping | brl }}</strong></div>
+                          <div><span class="t-caption">{{ 'sales.discount' | translate }}</span><strong class="mono">{{ v.discount | brl }}</strong></div>
+                          <div><span class="t-caption">{{ 'sales.netRevenue' | translate }}</span><strong class="mono">{{ v.netRevenue | brl }}</strong></div>
+                          <div><span class="t-caption">{{ 'sales.proportionalCost' | translate }}</span><strong class="mono">{{ v.proportionalCost | brl }}</strong></div>
+                        </div>
+                      </td>
+                    </tr>
+                  }
                 }
-              }
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
+          <app-paginator
+            [length]="filteredSales().length"
+            [pageSize]="pageState().pageSize"
+            [pageIndex]="pageState().pageIndex"
+            [pageSizeOptions]="pageSizeOptions"
+            [showFirstLast]="true"
+            (page)="onPage($event)"
+          />
         </div>
-        <mat-paginator
-          class="sal-paginator"
-          [length]="filteredSales().length"
-          [pageSize]="15"
-          [pageSizeOptions]="pageSizeOptions"
-          showFirstLastButtons
-        />
-      </div>
+      }
     } @else {
       <app-empty-state
         icon="filter-x"

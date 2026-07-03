@@ -222,14 +222,15 @@
   justify-content: flex-end;
 }
 
-.primary-cta {
-  --mdc-filled-button-container-color: var(--brand-primary);
-  --mdc-filled-button-label-text-color: #FFFFFF;
-}
-
 .receive-btn {
-  --mdc-outlined-button-label-text-color: var(--color-success);
-  --mdc-outlined-button-outline-color: color-mix(in srgb, var(--color-success) 40%, transparent);
+  color: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-success) 40%, transparent);
+
+  &:hover:not([disabled]) {
+    color: var(--color-success);
+    border-color: var(--color-success);
+    background: var(--tint-success);
+  }
 }
 
 @media (max-width: 600px) {

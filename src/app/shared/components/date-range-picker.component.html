@@ -3,13 +3,13 @@
     <button
       type="button"
       class="period-trigger"
-      [matMenuTriggerFor]="menu"
+      [appMenuTrigger]="menu"
       [attr.aria-label]="'dateRange.period' | translate"
     >
-      <mat-icon class="cal-icon">calendar_month</mat-icon>
+      <app-icon class="cal-icon" name="calendar-days" [size]="18" />
       <span class="period-label">{{ triggerLabel() }}</span>
       @if (range() === 'all') {
-        <mat-icon class="chev" aria-hidden="true">expand_more</mat-icon>
+        <app-icon class="chev" name="chevron-down" [size]="18" />
       }
     </button>
     @if (range() !== 'all') {
@@ -19,65 +19,76 @@
         (click)="clear()"
         [attr.aria-label]="'dateRange.clear' | translate"
       >
-        <mat-icon aria-hidden="true">close</mat-icon>
+        <app-icon name="x" [size]="16" />
       </button>
     }
   </div>
-  <mat-menu #menu="matMenu" class="period-menu">
+  <app-menu #menu>
     @for (r of rangeOptions; track r.key) {
-      <button type="button" mat-menu-item (click)="setRange(r.key)">
+      <button type="button" app-menu-item (click)="setRange(r.key)">
         <span class="pm-label">{{ r.labelKey | translate }}</span>
-        @if (range() === r.key) { <mat-icon class="pm-check">check</mat-icon> }
+        @if (range() === r.key) { <app-icon class="menu-check" name="check" [size]="18" /> }
       </button>
     }
-    <mat-divider />
-    <button type="button" mat-menu-item (click)="picker.open()">
-      <mat-icon>date_range</mat-icon>
-      <span class="pm-label">{{ 'dateRange.custom' | translate }}</span>
-      @if (range() === 'custom') { <mat-icon class="pm-check">check</mat-icon> }
-    </button>
-  </mat-menu>
+    <div class="menu-sep" role="separator"></div>
+    <!-- Editor embutido: clicar aqui NÃO fecha o menu (não é .menu-item) -->
+    <div class="menu-custom">
+      <span class="menu-custom-title">
+        <app-icon name="calendar-range" [size]="16" />
+        {{ 'dateRange.custom' | translate }}
+        @if (range() === 'custom') { <app-icon class="menu-check" name="check" [size]="16" /> }
+      </span>
+      <app-date-input [ngModel]="draftStart()" (ngModelChange)="draftStart.set($event)" [max]="draftEnd() ?? max()" />
+      <app-date-input [ngModel]="draftEnd()" (ngModelChange)="draftEnd.set($event)" [min]="draftStart()" [max]="max()" />
+      <button type="button" app-menu-item class="menu-apply" [class.disabled]="!draftValid()" (click)="applyCustom()">
+        {{ 'common.apply' | translate }}
+      </button>
+    </div>
+  </app-menu>
 } @else {
-  <div class="range-picker" role="tablist" [attr.aria-label]="'dateRange.period' | translate">
-    @if (showPresets()) {
-      @for (r of rangeOptions; track r.key) {
-        <button
-          type="button"
-          class="range-pill"
-          [class.active]="range() === r.key"
-          (click)="setRange(r.key)"
-          role="tab"
-          [attr.aria-selected]="range() === r.key"
-        >{{ r.labelKey | translate }}</button>
+  <div class="range-picker-wrap">
+    <div class="range-picker" role="tablist" [attr.aria-label]="'dateRange.period' | translate">
+      @if (showPresets()) {
+        @for (r of rangeOptions; track r.key) {
+          <button
+            type="button"
+            class="range-pill"
+            [class.active]="range() === r.key"
+            (click)="setRange(r.key)"
+            role="tab"
+            [attr.aria-selected]="range() === r.key"
+          >{{ r.labelKey | translate }}</button>
+        }
       }
-    }
 
-    <button
-      type="button"
-      class="range-pill range-pill-custom"
-      [class.active]="range() === 'custom'"
-      (click)="picker.open()"
-      role="tab"
-      [attr.aria-selected]="range() === 'custom'"
-      [attr.aria-label]="'dateRange.customPeriod' | translate"
-    >
-      <mat-icon class="pill-icon">calendar_month</mat-icon>
-      @if (range() === 'custom' && customStart() && customEnd()) {
-        <span class="mono">{{ customRangeLabel() }}</span>
-      } @else {
-        <span>{{ 'dateRange.custom' | translate }}</span>
-      }
-    </button>
+      <button
+        type="button"
+        class="range-pill range-pill-custom"
+        [class.active]="range() === 'custom'"
+        (click)="toggleCustomEditor()"
+        role="tab"
+        [attr.aria-selected]="range() === 'custom'"
+        [attr.aria-expanded]="customEditorOpen()"
+        [attr.aria-label]="'dateRange.customPeriod' | translate"
+      >
+        <app-icon class="pill-icon" name="calendar-days" [size]="14" />
+        @if (range() === 'custom' && customStart() && customEnd()) {
+          <span class="mono">{{ customRangeLabel() }}</span>
+        } @else {
+          <span>{{ 'dateRange.custom' | translate }}</span>
+        }
+      </button>
+    </div>
+
+    @if (customEditorOpen()) {
+      <div class="custom-editor surface-card">
+        <app-date-input [ngModel]="draftStart()" (ngModelChange)="draftStart.set($event)" [max]="draftEnd() ?? max()" />
+        <span class="custom-sep" aria-hidden="true">–</span>
+        <app-date-input [ngModel]="draftEnd()" (ngModelChange)="draftEnd.set($event)" [min]="draftStart()" [max]="max()" />
+        <button appBtn size="sm" type="button" [disabled]="!draftValid()" (click)="applyCustom()">
+          {{ 'common.apply' | translate }}
+        </button>
+      </div>
+    }
   </div>
 }
-
-<!-- Hidden calendar host — shared by both variants; #picker is reachable anywhere in the template. -->
-<div class="range-picker-host" aria-hidden="true">
-  <mat-form-field appearance="outline" subscriptSizing="dynamic">
-    <mat-date-range-input [rangePicker]="picker" [max]="max()">
-      <input matStartDate [value]="customStart()" (dateChange)="customStart.set($event.value)" />
-      <input matEndDate [value]="customEnd()" (dateChange)="customEnd.set($event.value)" />
-    </mat-date-range-input>
-    <mat-date-range-picker #picker (closed)="onPickerClosed()"></mat-date-range-picker>
-  </mat-form-field>
-</div>

@@ -73,7 +73,7 @@ export function setupComponentHarness<T>(cmp: Type<T>, db: Database): ComponentH
       { provide: ThemeService, useValue: { isDark: () => false } },
       { provide: LanguageService, useValue: { lang: signal('pt-BR'), current: () => 'pt-BR' } },
       { provide: DialogService, useValue: fakeDialog },
-      { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false, breakpoints: {} }) } },
+      { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false, breakpoints: {} }), isMatched: () => false } },
       { provide: XlsxExportService, useValue: fakeXlsx },
       { provide: QuickActionsService, useValue: fakeQuick },
     ],

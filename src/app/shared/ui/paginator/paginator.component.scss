@@ -1,0 +1,39 @@
+@use '../../../../styles/breakpoints' as bp;
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-small);
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+
+  @include bp.below(sm) {
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+}
+
+.pager-size {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  @include bp.below(sm) {
+    .pager-size-label { display: none; }
+  }
+}
+
+.pager-size-select {
+  min-width: 76px;
+}
+
+.pager-range { white-space: nowrap; }
+
+.pager-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}

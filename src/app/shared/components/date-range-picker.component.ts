@@ -1,19 +1,19 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, model, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, model, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LanguageService } from '../../core/services/language.service';
+import { IconComponent } from '../ui/icon/icon.component';
+import { MenuComponent } from '../ui/menu/menu.component';
+import { MenuItemComponent } from '../ui/menu/menu-item.component';
+import { MenuTriggerDirective } from '../ui/menu/menu-trigger.directive';
+import { DateInputComponent } from '../ui/date-input/date-input.component';
+import { ButtonComponent } from '../ui/button/button.component';
 
 export type RangeKey = '7d' | '30d' | '90d' | '12m' | 'all' | 'custom';
 
 export interface RangeBounds { start: Date; end: Date; }
 
-/** Payload emitted whenever the effective range changes. */
+/** Payload emitido sempre que o período efetivo muda. */
 export interface RangeChange { bounds: RangeBounds | null; key: RangeKey; label: string; }
 
 interface RangeOption { key: RangeKey; labelKey: string; }
@@ -27,12 +27,11 @@ const RANGE_OPTIONS: RangeOption[] = [
 ];
 
 /**
- * Reusable period selector — quick-preset pills (7d/30d/90d/12m/All) plus a
- * custom calendar range. Owns all range state; emits the effective bounds via
- * `selectionChange`. Also exposes `range`/`customStart`/`customEnd` as two-way
- * models so a host (the dashboard) can keep deriving its own labels from them.
- * (The output is NOT named `rangeChange` — that name is reserved by the `range`
- * model's two-way binding.)
+ * Seletor de período reutilizável — pills de presets (7d/30d/90d/12m/Tudo) +
+ * período personalizado com dois campos de data nativos (editor inline nas
+ * pills; embutido no painel na variante menu). Dono de todo o estado; emite os
+ * bounds efetivos via `selectionChange`. `range`/`customStart`/`customEnd` são
+ * two-way para o host (dashboard) derivar rótulos próprios.
  */
 @Component({
   selector: 'app-date-range-picker',
@@ -40,10 +39,9 @@ const RANGE_OPTIONS: RangeOption[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.variant-menu]': "variant() === 'menu'" },
   imports: [
-    FormsModule,
-    MatIconModule, MatFormFieldModule, MatInputModule, MatDatepickerModule,
-    MatMenuModule, MatDividerModule,
-    TranslateModule,
+    FormsModule, TranslateModule,
+    IconComponent, MenuComponent, MenuItemComponent, MenuTriggerDirective,
+    DateInputComponent, ButtonComponent,
   ],
   templateUrl: './date-range-picker.component.html',
   styleUrl: './date-range-picker.component.scss',
@@ -52,24 +50,36 @@ export class DateRangePickerComponent {
   private readonly t = inject(TranslateService);
   private readonly lang = inject(LanguageService);
 
-  /** Active range key. Two-way; defaults to 'all' so nothing is filtered out by default. */
+  /** Período ativo. Two-way; padrão 'all' (nada filtrado). */
   readonly range = model<RangeKey>('all');
-  /** Custom range endpoints. Two-way so a host can read/restore them. */
+  /** Extremos do período personalizado. Two-way para o host ler/restaurar. */
   readonly customStart = model<Date | null>(null);
   readonly customEnd = model<Date | null>(null);
-  /** Render the preset pills alongside the custom range. */
+  /** Renderiza as pills de preset junto com o personalizado. */
   readonly showPresets = input<boolean>(true);
-  /** Upper bound for the calendar. */
+  /** Limite superior do calendário. */
   readonly max = input<Date>(new Date());
-  /** Presentation: 'pills' (segmented, dashboard) or 'menu' (compact dropdown, listings). */
+  /** Apresentação: 'pills' (segmentado, dashboard) ou 'menu' (dropdown compacto, listagens). */
   readonly variant = input<'pills' | 'menu'>('pills');
 
-  /** Emits the effective bounds (+ key/label) whenever the selection changes. */
+  /** Emite os bounds efetivos (+ key/label) a cada mudança de seleção. */
   readonly selectionChange = output<RangeChange>();
 
   protected readonly rangeOptions = RANGE_OPTIONS;
 
-  /** Bounds [start, end] for the active range, or null for "all"/incomplete custom. */
+  /** Editor inline do período personalizado (variante pills). */
+  protected readonly customEditorOpen = signal(false);
+
+  /** Rascunho do editor — só commita no Aplicar. */
+  protected readonly draftStart = signal<Date | null>(null);
+  protected readonly draftEnd = signal<Date | null>(null);
+  protected readonly draftValid = computed(() => {
+    const s = this.draftStart();
+    const e = this.draftEnd();
+    return !!s && !!e && s.getTime() <= e.getTime();
+  });
+
+  /** Bounds [start, end] do período ativo, ou null para "tudo"/personalizado incompleto. */
   readonly rangeBounds = computed<RangeBounds | null>(() => {
     const r = this.range();
     if (r === 'custom') {
@@ -92,7 +102,7 @@ export class DateRangePickerComponent {
     return { start, end };
   });
 
-  /** Compact label for the custom pill (DD/MM – DD/MM). */
+  /** Rótulo compacto do período personalizado (DD/MM – DD/MM). */
   readonly customRangeLabel = computed(() => {
     const s = this.customStart();
     const e = this.customEnd();
@@ -101,9 +111,9 @@ export class DateRangePickerComponent {
     return `${fmt(s)} – ${fmt(e)}`;
   });
 
-  /** Uppercased label for the active range (eg. "30 DIAS", "PERSONALIZADO · 01/05 – 10/05"). */
+  /** Rótulo maiúsculo do período ativo (ex.: "30 DIAS", "PERSONALIZADO · 01/05 – 10/05"). */
   protected readonly effectiveLabel = computed(() => {
-    this.lang.lang(); // re-evaluate when the language changes
+    this.lang.lang(); // reavalia quando o idioma muda
     const r = this.range();
     if (r === 'custom' && this.customStart() && this.customEnd()) {
       return `${this.t.instant('dateRange.customUpper')} · ${this.customRangeLabel()}`;
@@ -112,9 +122,9 @@ export class DateRangePickerComponent {
     return opt ? (this.t.instant(opt.labelKey) as string).toUpperCase() : '';
   });
 
-  /** Friendly label for the compact dropdown trigger (eg. "Tudo", "30 dias", "01/05 – 10/05"). */
+  /** Rótulo amigável do gatilho compacto (ex.: "Tudo", "30 dias", "01/05 – 10/05"). */
   protected readonly triggerLabel = computed(() => {
-    this.lang.lang(); // re-evaluate when the language changes
+    this.lang.lang(); // reavalia quando o idioma muda
     const r = this.range();
     if (r === 'custom' && this.customStart() && this.customEnd()) {
       return this.customRangeLabel();
@@ -124,8 +134,7 @@ export class DateRangePickerComponent {
   });
 
   constructor() {
-    // Push the effective range to the host whenever it changes (timing-safe: runs
-    // reactively, never reads an uninitialized viewChild).
+    // Empurra o período efetivo ao host a cada mudança (reativo, sem viewChild).
     effect(() => {
       this.selectionChange.emit({
         bounds: this.rangeBounds(),
@@ -137,19 +146,32 @@ export class DateRangePickerComponent {
 
   protected setRange(r: RangeKey): void {
     this.range.set(r);
+    this.customEditorOpen.set(false);
   }
 
-  /** Clears any active period (preset or custom) — back to "all" (no date filtering). */
+  /** Limpa qualquer período ativo — volta a "tudo" (sem filtro de data). */
   protected clear(): void {
     this.customStart.set(null);
     this.customEnd.set(null);
     this.range.set('all');
+    this.customEditorOpen.set(false);
   }
 
-  /** Called when the date-range picker closes. Only commits if both dates are set. */
-  protected onPickerClosed(): void {
-    if (this.customStart() && this.customEnd()) {
-      this.range.set('custom');
+  /** Abre/fecha o editor inline, semeando o rascunho com o valor atual. */
+  protected toggleCustomEditor(): void {
+    if (!this.customEditorOpen()) {
+      this.draftStart.set(this.customStart());
+      this.draftEnd.set(this.customEnd());
     }
+    this.customEditorOpen.update(v => !v);
+  }
+
+  /** Commita o rascunho como período personalizado. */
+  protected applyCustom(): void {
+    if (!this.draftValid()) return;
+    this.customStart.set(this.draftStart());
+    this.customEnd.set(this.draftEnd());
+    this.range.set('custom');
+    this.customEditorOpen.set(false);
   }
 }

@@ -18,6 +18,7 @@ const outFile = join(root, 'src', 'app', 'shared', 'ui', 'icon', 'icons.ts');
 const NAMES = [
   // Shell e navegação
   'menu', 'globe', 'check', 'chevron-down', 'chevron-up', 'chevron-right',
+  'chevron-left', 'chevrons-left', 'chevrons-right',
   'chevrons-up-down', 'user', 'log-out', 'sun', 'moon', 'package',
   'chart-column', 'chart-spline', 'chart-no-axes-combined', 'landmark',
   'shopping-cart', 'tag', 'tags', 'sliders-horizontal', 'book-open', 'layout-grid',

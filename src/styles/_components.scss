@@ -47,6 +47,88 @@
   background: var(--bg-surface-2);
 }
 
+/* ---------- Tabela de dados (base compartilhada, fases 4–5) ----------
+   Desktop ≥ md; abaixo disso as páginas trocam para lista de app-record-card. */
+.table-frame {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-1);
+  overflow: hidden;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-body);
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--bg-surface-2);
+    border-bottom: 1px solid var(--border-default);
+    padding: 12px 14px;
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    transition: background var(--dur-fast) var(--ease-out);
+
+    &:hover { background: var(--bg-surface-2); }
+    &:last-child td { border-bottom: none; }
+  }
+
+  tbody tr.row-clickable { cursor: pointer; }
+
+  .product-cell {
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .col-actions {
+    width: 96px;
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+/* Lista de cards que substitui a tabela no mobile */
+.record-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Barra "ordenar por" compacta do mobile */
+.mobile-sort {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-small);
+  color: var(--text-muted);
+
+  app-select { flex: 1; min-width: 0; }
+}
+
 /* Grade de KPIs — auto-fit elimina o buraco de tablet (1col@560 → 2col@1100).
    Páginas adotam nas fases 4–5 substituindo suas .kpi-strip locais. */
 .kpi-grid {

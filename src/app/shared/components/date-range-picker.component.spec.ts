@@ -76,15 +76,22 @@ describe('DateRangePickerComponent (seletor de período compartilhado)', () => {
     expect(cmp.customRangeLabel()).toBe('01/05 – 10/05');
   });
 
-  it('onPickerClosed() só comita "custom" quando as duas datas existem', () => {
+  it('applyCustom() só comita "custom" quando o rascunho é válido (início ≤ fim)', () => {
     cmp.range.set('all');
-    cmp.onPickerClosed();
-    expect(cmp.range()).toBe('all'); // sem datas → não comita
+    cmp.applyCustom();
+    expect(cmp.range()).toBe('all'); // rascunho vazio → não comita
 
-    cmp.customStart.set(new Date(2026, 4, 1));
-    cmp.customEnd.set(new Date(2026, 4, 10));
-    cmp.onPickerClosed();
+    cmp.draftStart.set(new Date(2026, 4, 10));
+    cmp.draftEnd.set(new Date(2026, 4, 1));
+    cmp.applyCustom();
+    expect(cmp.range()).toBe('all'); // início > fim → não comita
+
+    cmp.draftStart.set(new Date(2026, 4, 1));
+    cmp.draftEnd.set(new Date(2026, 4, 10));
+    cmp.applyCustom();
     expect(cmp.range()).toBe('custom');
+    expect(cmp.customStart()).toEqual(new Date(2026, 4, 1));
+    expect(cmp.customEnd()).toEqual(new Date(2026, 4, 10));
   });
 
   it('variant default é "pills"', () => {

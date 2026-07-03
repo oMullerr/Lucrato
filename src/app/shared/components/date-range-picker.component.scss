@@ -2,7 +2,13 @@
   display: inline-flex;
 }
 
-/* Date range picker — preset pills + custom calendar range. */
+.range-picker-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Seletor de período — pills de preset + período personalizado. */
 .range-picker {
   display: inline-flex;
   gap: 0;
@@ -10,6 +16,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-full);
   padding: 3px;
+  flex-wrap: wrap;
 }
 
 .range-pill {
@@ -39,12 +46,7 @@
   padding-left: 10px;
   padding-right: 12px;
 
-  .pill-icon {
-    font-size: 14px;
-    width: 14px;
-    height: 14px;
-    opacity: 0.85;
-  }
+  .pill-icon { opacity: 0.85; }
 
   &.active .pill-icon {
     opacity: 1;
@@ -58,18 +60,33 @@
   }
 }
 
-/* Menu variant stretches to the filter row height so the trigger lines up with
-   the outlined search/select fields next to it (matches their height exactly). */
+/* Editor inline do período personalizado (variante pills) */
+.custom-editor {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+
+  app-date-input {
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    padding: 0 var(--space-2);
+  }
+}
+
+.custom-sep { color: var(--text-muted); }
+
+/* Variante menu estica até a altura da linha de filtros para alinhar com os
+   campos de busca/select ao lado. */
 :host(.variant-menu) {
   align-self: stretch;
 }
 
-/* Compact dropdown control (variant="menu") — outlined box matching the search
-   field, holding the menu trigger plus a clear (×) button when a period is active. */
+/* Controle compacto (variant="menu") — caixa contornada com gatilho + limpar. */
 .period-control {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 40px;
   box-sizing: border-box;
   overflow: hidden;
   background: var(--bg-surface-1);
@@ -81,11 +98,11 @@
   &:hover { border-color: var(--border-strong); }
   &:focus-within { border-color: var(--brand-primary); }
 
-  /* A real period is applied (≠ "Tudo") — subtle brand cue on the icon. */
+  /* Período real aplicado (≠ "Tudo") — sinal sutil de marca no ícone. */
   &.active .cal-icon { color: var(--brand-primary); }
 }
 
-/* Left part: calendar icon + current label; opens the menu. */
+/* Parte esquerda: ícone de calendário + rótulo atual; abre o menu. */
 .period-trigger {
   display: inline-flex;
   align-items: center;
@@ -94,31 +111,22 @@
   padding: 0 10px 0 12px;
   background: transparent;
   border: none;
+  font-family: var(--font-body);
   font-size: var(--fs-body);
   font-weight: 500;
   color: inherit;
   cursor: pointer;
 
-  .cal-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    color: var(--text-muted);
-  }
+  .cal-icon { color: var(--text-muted); }
 
   .period-label { line-height: 1; }
 
-  .chev {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-    color: var(--text-muted);
-  }
+  .chev { color: var(--text-muted); }
 
   &:focus-visible { outline: none; }
 }
 
-/* Right part: clear (×) button — only shown when a period is active. */
+/* Parte direita: limpar (×) — só com período ativo. */
 .period-clear {
   display: inline-flex;
   align-items: center;
@@ -131,27 +139,49 @@
   cursor: pointer;
   transition: color var(--dur-fast) var(--ease-out);
 
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
-
   &:hover { color: var(--text-primary); }
   &:focus-visible { outline: none; color: var(--brand-primary); }
 }
 
-/* Picker invisible host — keeps mat-date-range-picker functional without taking space */
-.range-picker-host {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-  pointer-events: none;
-  opacity: 0;
+/* Editor embutido no painel do menu (conteúdo projetado — escopo deste componente) */
+.menu-sep {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--border-subtle);
+}
 
-  mat-form-field {
-    width: 0;
-    height: 0;
+.menu-custom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-1);
+  min-width: 220px;
+}
+
+.menu-custom-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.menu-custom app-date-input {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-2);
+}
+
+.menu-apply {
+  justify-content: center;
+  color: var(--brand-primary);
+  font-weight: 600;
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
   }
 }

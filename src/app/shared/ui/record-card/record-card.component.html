@@ -1,0 +1,35 @@
+<button type="button" class="record-card" (click)="pressed.emit()">
+  <span class="record-head">
+    <span class="record-title-wrap">
+      @if (code()) {
+        <span class="record-code num">{{ code() }}</span>
+      }
+      <span class="record-title">{{ title() }}</span>
+    </span>
+    @if (status()) {
+      <span class="record-status">
+        <span class="status-dot" [class]="'status-dot ' + statusKind()" aria-hidden="true"></span>
+        {{ status() }}
+      </span>
+    }
+  </span>
+
+  @if (meta()) {
+    <span class="record-meta">{{ meta() }}</span>
+  }
+
+  @if (figures().length) {
+    <span class="record-figures">
+      @for (fig of figures(); track fig.label) {
+        <span class="record-figure">
+          <span class="record-figure-label">{{ fig.label }}</span>
+          @if (fig.value !== undefined) {
+            <app-money [value]="fig.value ?? null" [tone]="fig.tone ?? 'neutral'" variant="text" />
+          } @else {
+            <span class="record-figure-text num">{{ fig.text }}</span>
+          }
+        </span>
+      }
+    </span>
+  }
+</button>

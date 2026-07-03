@@ -29,12 +29,6 @@
   border: 0;
 }
 
-/* Esconde colunas secundárias em celulares pequenos.
-   DEPRECIADO: morre na fase 4 quando as tabelas ganham card view. */
-@media (max-width: 480px) {
-  .hide-on-mobile { display: none !important; }
-}
-
 /* Delta — indicador de tendência de KPI */
 .delta {
   display: inline-flex;

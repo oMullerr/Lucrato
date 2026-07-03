@@ -1,20 +1,5 @@
-<mat-sidenav-container class="inv-container" autosize>
-  <mat-sidenav
-    #detailSidenav
-    [mode]="isWideViewport() ? 'side' : 'over'"
-    position="end"
-    [opened]="panelOpen()"
-    (closed)="closeDetail()"
-    class="inv-detail-drawer"
-  >
-    <app-batch-detail-panel
-      [batch]="selectedBatch()"
-      (closed)="closeDetail()"
-      (editRequested)="onEditRequested($event)"
-    />
-  </mat-sidenav>
-
-  <mat-sidenav-content>
+<div class="inv-layout" [class.has-side-panel]="panelOpen() && bp.isWide()">
+  <div class="inv-main">
 
     <app-page-header
       [title]="'inventory.title' | translate"
@@ -23,12 +8,12 @@
         ? ('inventory.subtitleEmpty' | translate)
         : ('inventory.subtitleSummary' | translate:{ active: statusCounts().all, attention: alerts().length })"
     >
-      <a mat-stroked-button routerLink="/purchases">
-        <mat-icon>shopping_cart</mat-icon>
+      <a appBtn="outline" routerLink="/purchases">
+        <app-icon name="shopping-cart" [size]="16" />
         {{ 'nav.purchases' | translate }}
       </a>
-      <a mat-flat-button class="primary-cta" routerLink="/sales">
-        <mat-icon>sell</mat-icon>
+      <a appBtn routerLink="/sales">
+        <app-icon name="tag" [size]="16" />
         {{ 'sales.registerSale' | translate }}
       </a>
     </app-page-header>
@@ -48,14 +33,14 @@
         </section>
 
       } @else if (sortedPurchases().length === 0) {
-        <!-- First-time onboarding -->
+        <!-- Onboarding de primeira vez -->
         <app-empty-state
           icon="package"
           [title]="'inventory.onboardTitle' | translate"
           [description]="'inventory.onboardDesc' | translate"
         >
-          <a mat-flat-button class="primary-cta" routerLink="/purchases">
-            <mat-icon>add</mat-icon>
+          <a appBtn routerLink="/purchases">
+            <app-icon name="plus" [size]="16" />
             {{ 'inventory.onboardCta' | translate }}
           </a>
         </app-empty-state>
@@ -63,28 +48,28 @@
       } @else {
         <!-- ZONA A — PULSO -->
         <section class="hero" [attr.aria-label]="'inventory.financialSummary' | translate">
-          <article class="hero-card" data-tone="success">
+          <article class="hero-card">
             <header class="hero-head">
               <span class="eyebrow">{{ 'inventory.netProfit' | translate }}</span>
               <span class="status-dot success" aria-hidden="true"></span>
             </header>
             <div class="hero-row">
               <div class="hero-value-wrap">
-                <div class="hero-value">{{ kpis().netProfit | brl }}</div>
+                <app-money [value]="kpis().netProfit" variant="hero" tone="neutral" />
                 <div class="waterfall">
                   <span class="wf-step">
                     <span class="wf-label">{{ 'inventory.revenue' | translate }}</span>
-                    <span class="wf-num">{{ kpis().grossRevenue | brl }}</span>
+                    <span class="wf-num num">{{ kpis().grossRevenue | brl }}</span>
                   </span>
-                  <mat-icon class="wf-arrow">chevron_right</mat-icon>
-                  <span class="wf-step" [matTooltip]="'inventory.costsFeesHint' | translate">
+                  <app-icon class="wf-arrow" name="chevron-right" [size]="14" />
+                  <span class="wf-step" [appTooltip]="'inventory.costsFeesHint' | translate">
                     <span class="wf-label">{{ 'inventory.costsFees' | translate }}</span>
-                    <span class="wf-num">{{ (kpis().grossRevenue - kpis().netProfit) | brl }}</span>
+                    <span class="wf-num num">{{ (kpis().grossRevenue - kpis().netProfit) | brl }}</span>
                   </span>
-                  <mat-icon class="wf-arrow">chevron_right</mat-icon>
+                  <app-icon class="wf-arrow" name="chevron-right" [size]="14" />
                   <span class="wf-step strong">
                     <span class="wf-label">{{ 'inventory.profit' | translate }}</span>
-                    <span class="wf-num text-success">{{ kpis().netProfit | brl }}</span>
+                    <span class="wf-num num text-success">{{ kpis().netProfit | brl }}</span>
                   </span>
                 </div>
               </div>
@@ -100,7 +85,7 @@
           </article>
         </section>
 
-        <section class="kpi-strip" [attr.aria-label]="'inventory.secondaryKpis' | translate">
+        <section class="kpi-grid" [attr.aria-label]="'inventory.secondaryKpis' | translate">
           <app-kpi-card
             [title]="'inventory.grossRevenue' | translate"
             [value]="kpis().grossRevenue | brl"
@@ -148,9 +133,9 @@
                   <span class="alert-desc">{{ 'inventory.alertWatchDesc' | translate }}</span>
                 }
               </div>
-              <button mat-button class="alert-cta" (click)="scrollToAlerts()">
+              <button appBtn="ghost" type="button" class="alert-cta" (click)="scrollToAlerts()">
                 {{ 'inventory.viewBatches' | translate }}
-                <mat-icon>arrow_forward</mat-icon>
+                <app-icon name="arrow-right" [size]="16" />
               </button>
             </div>
           </section>
@@ -164,73 +149,29 @@
               <span class="t-caption">{{ 'inventory.ofBatches' | translate:{ shown: filteredPurchases().length, total: statusCounts().all } }}</span>
             </div>
             <div class="filter-chips" role="tablist">
-              <button
-                type="button"
-                class="chip"
-                [class.active]="filter() === 'all'"
-                (click)="setFilter('all')"
-                role="tab"
-                [attr.aria-selected]="filter() === 'all'"
-              >{{ 'common.all' | translate }} <span class="chip-count">{{ statusCounts().all }}</span></button>
-
-              <button
-                type="button"
-                class="chip"
-                [class.active]="filter() === 'Em Estoque'"
-                (click)="setFilter('Em Estoque')"
-                role="tab"
-                [attr.aria-selected]="filter() === 'Em Estoque'"
-              >
-                <span class="status-dot success" aria-hidden="true"></span>
-                {{ 'status.Em Estoque' | translate }} <span class="chip-count">{{ statusCounts()['Em Estoque'] }}</span>
+              <button appChip [active]="filter() === 'all'" [count]="statusCounts().all"
+                (click)="setFilter('all')" role="tab" [attr.aria-selected]="filter() === 'all'">
+                {{ 'common.all' | translate }}
               </button>
-
-              <button
-                type="button"
-                class="chip"
-                [class.active]="filter() === 'Atenção'"
-                (click)="setFilter('Atenção')"
-                role="tab"
-                [attr.aria-selected]="filter() === 'Atenção'"
-              >
-                <span class="status-dot warning" aria-hidden="true"></span>
-                {{ 'status.Atenção' | translate }} <span class="chip-count">{{ statusCounts()['Atenção'] }}</span>
+              <button appChip [active]="filter() === 'Em Estoque'" dot="success" [count]="statusCounts()['Em Estoque']"
+                (click)="setFilter('Em Estoque')" role="tab" [attr.aria-selected]="filter() === 'Em Estoque'">
+                {{ 'status.Em Estoque' | translate }}
               </button>
-
-              <button
-                type="button"
-                class="chip"
-                [class.active]="filter() === 'Parado'"
-                (click)="setFilter('Parado')"
-                role="tab"
-                [attr.aria-selected]="filter() === 'Parado'"
-              >
-                <span class="status-dot danger" aria-hidden="true"></span>
-                {{ 'status.Parado' | translate }} <span class="chip-count">{{ statusCounts()['Parado'] }}</span>
+              <button appChip [active]="filter() === 'Atenção'" dot="warning" [count]="statusCounts()['Atenção']"
+                (click)="setFilter('Atenção')" role="tab" [attr.aria-selected]="filter() === 'Atenção'">
+                {{ 'status.Atenção' | translate }}
               </button>
-
-              <button
-                type="button"
-                class="chip"
-                [class.active]="filter() === 'Em trânsito'"
-                (click)="setFilter('Em trânsito')"
-                role="tab"
-                [attr.aria-selected]="filter() === 'Em trânsito'"
-              >
-                <span class="status-dot info" aria-hidden="true"></span>
-                {{ 'status.Em trânsito' | translate }} <span class="chip-count">{{ statusCounts()['Em trânsito'] }}</span>
+              <button appChip [active]="filter() === 'Parado'" dot="danger" [count]="statusCounts()['Parado']"
+                (click)="setFilter('Parado')" role="tab" [attr.aria-selected]="filter() === 'Parado'">
+                {{ 'status.Parado' | translate }}
               </button>
-
-              <button
-                type="button"
-                class="chip"
-                [class.active]="filter() === 'Vendido'"
-                (click)="setFilter('Vendido')"
-                role="tab"
-                [attr.aria-selected]="filter() === 'Vendido'"
-              >
-                <span class="status-dot neutral" aria-hidden="true"></span>
-                {{ 'status.Vendido' | translate }} <span class="chip-count">{{ statusCounts()['Vendido'] }}</span>
+              <button appChip [active]="filter() === 'Em trânsito'" dot="info" [count]="statusCounts()['Em trânsito']"
+                (click)="setFilter('Em trânsito')" role="tab" [attr.aria-selected]="filter() === 'Em trânsito'">
+                {{ 'status.Em trânsito' | translate }}
+              </button>
+              <button appChip [active]="filter() === 'Vendido'" dot="neutral" [count]="statusCounts()['Vendido']"
+                (click)="setFilter('Vendido')" role="tab" [attr.aria-selected]="filter() === 'Vendido'">
+                {{ 'status.Vendido' | translate }}
               </button>
             </div>
           </header>
@@ -239,27 +180,61 @@
             <div class="empty-filter">
               <span class="t-caption">{{ 'inventory.noneWithStatus' | translate }}</span>
             </div>
+          } @else if (bp.isMobile()) {
+            <!-- MOBILE: lista de cards + ordenar por -->
+            <div class="mobile-sort">
+              <span>{{ 'table.sortBy' | translate }}</span>
+              <app-select [ngModel]="mobileSortValue()" (ngModelChange)="onMobileSort($event)">
+                @for (opt of mobileSortOptions; track opt.value) {
+                  <app-option [value]="opt.value">{{ opt.labelKey | translate }}</app-option>
+                }
+              </app-select>
+            </div>
+            <div class="record-list">
+              @for (c of pagedPurchases(); track c.id) {
+                <app-record-card
+                  [title]="c.product"
+                  [code]="c.id"
+                  [status]="('status.' + c.status) | translate"
+                  [statusKind]="statusKindFor(c)"
+                  [meta]="c.category"
+                  [figures]="figuresFor(c)"
+                  (pressed)="openDetail(c)"
+                />
+              }
+            </div>
+            <app-paginator
+              [length]="filteredPurchases().length"
+              [pageSize]="pageState().pageSize"
+              [pageIndex]="pageState().pageIndex"
+              [pageSizeOptions]="pageSizeOptions"
+              (page)="onPage($event)"
+            />
           } @else {
-            <div class="table-card">
-              <div class="table-wrapper">
-                <table class="data-table" matSort matSortDisableClear="false">
+            <!-- DESKTOP: tabela completa -->
+            <div class="table-frame">
+              <div class="table-scroll">
+                <table class="data-table" appSort
+                  [appSortActive]="sortState().active"
+                  [appSortDirection]="sortState().direction"
+                  (appSortChange)="onSortChange($event)">
                   <thead>
                     <tr>
                       <th class="col-edge"></th>
-                      <th mat-sort-header="id">{{ 'purchases.colId' | translate }}</th>
-                      <th mat-sort-header="product">{{ 'purchases.colProduct' | translate }}</th>
-                      <th class="hide-on-mobile" mat-sort-header="category">{{ 'purchases.colCategory' | translate }}</th>
-                      <th class="text-center" mat-sort-header="currentStock" arrowPosition="before">{{ 'inventory.colStock' | translate }}</th>
-                      <th class="text-right" mat-sort-header="idleValue" arrowPosition="before">{{ 'inventory.idleCapital' | translate }}</th>
-                      <th class="text-center hide-on-mobile" mat-sort-header="averageMargin" arrowPosition="before">{{ 'sales.colMargin' | translate }}</th>
-                      <th mat-sort-header="status">{{ 'purchases.colStatus' | translate }}</th>
+                      <th app-sort-header="id">{{ 'purchases.colId' | translate }}</th>
+                      <th app-sort-header="product">{{ 'purchases.colProduct' | translate }}</th>
+                      <th app-sort-header="category">{{ 'purchases.colCategory' | translate }}</th>
+                      <th class="text-center" app-sort-header="currentStock">{{ 'inventory.colStock' | translate }}</th>
+                      <th class="text-right" app-sort-header="idleValue">{{ 'inventory.idleCapital' | translate }}</th>
+                      <th class="text-center" app-sort-header="averageMargin">{{ 'sales.colMargin' | translate }}</th>
+                      <th app-sort-header="status">{{ 'purchases.colStatus' | translate }}</th>
                       <th class="text-right col-actions"></th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (c of pagedPurchases(); track c.id) {
                       <tr
-                        class="row"
+                        class="row row-clickable"
                         [class.expanded]="expandedRow() === c.id"
                         (click)="openDetail(c)"
                       >
@@ -268,7 +243,7 @@
                         </td>
                         <td><span class="id-tag mono">{{ c.id }}</span></td>
                         <td class="product-cell" [title]="c.product">{{ c.product }}</td>
-                        <td class="hide-on-mobile"><app-color-pill [name]="c.category" /></td>
+                        <td><app-color-pill [name]="c.category" /></td>
                         <td
                           class="text-center"
                           [class.text-muted]="c.currentStock === 0"
@@ -280,36 +255,39 @@
                         <td class="text-right mono" [class.text-warning]="c.idleValue > 0">
                           {{ c.idleValue | brl: true }}
                         </td>
-                        <td class="text-center mono hide-on-mobile" [class]="marginClass(c.averageMargin)">
+                        <td class="text-center mono" [class]="marginClass(c.averageMargin)">
                           {{ c.averageMargin !== undefined ? (c.averageMargin * 100).toFixed(1) + '%' : '—' }}
                         </td>
                         <td><app-status-badge [status]="c.status" /></td>
                         <td class="text-right col-actions">
                           @if (c.status === 'Em trânsito') {
                             <button
-                              mat-icon-button
+                              appBtn="ghost" iconOnly size="sm" type="button"
                               class="row-action success"
                               (click)="markReceived(c, $event)"
-                              [matTooltip]="'inventory.markReceivedToday' | translate"
+                              [appTooltip]="'inventory.markReceivedToday' | translate"
+                              [attr.aria-label]="'inventory.markReceivedToday' | translate"
                             >
-                              <mat-icon>move_to_inbox</mat-icon>
+                              <app-icon name="package-check" [size]="17" />
                             </button>
                           }
                           <button
-                            mat-icon-button
+                            appBtn="ghost" iconOnly size="sm" type="button"
                             class="row-action"
                             (click)="toggleRow(c.id, $event)"
-                            [matTooltip]="(expandedRow() === c.id ? 'purchases.collapse' : 'purchases.inlineDetails') | translate"
+                            [appTooltip]="(expandedRow() === c.id ? 'purchases.collapse' : 'purchases.inlineDetails') | translate"
+                            [attr.aria-label]="(expandedRow() === c.id ? 'purchases.collapse' : 'purchases.inlineDetails') | translate"
                           >
-                            <mat-icon>{{ expandedRow() === c.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+                            <app-icon [name]="expandedRow() === c.id ? 'chevron-up' : 'chevron-down'" [size]="17" />
                           </button>
                           <button
-                            mat-icon-button
+                            appBtn="ghost" iconOnly size="sm" type="button"
                             class="row-action danger"
                             (click)="confirmDelete(c, $event)"
-                            [matTooltip]="'common.delete' | translate"
+                            [appTooltip]="'common.delete' | translate"
+                            [attr.aria-label]="'common.delete' | translate"
                           >
-                            <mat-icon>delete_outline</mat-icon>
+                            <app-icon name="trash" [size]="17" />
                           </button>
                         </td>
                       </tr>
@@ -334,12 +312,13 @@
                   </tbody>
                 </table>
               </div>
-              <mat-paginator
-                class="inv-paginator"
+              <app-paginator
                 [length]="filteredPurchases().length"
-                [pageSize]="15"
+                [pageSize]="pageState().pageSize"
+                [pageIndex]="pageState().pageIndex"
                 [pageSizeOptions]="pageSizeOptions"
-                showFirstLastButtons
+                [showFirstLast]="true"
+                (page)="onPage($event)"
               />
             </div>
           }
@@ -347,6 +326,21 @@
       }
 
     </div>
+  </div>
 
-  </mat-sidenav-content>
-</mat-sidenav-container>
+  <app-drawer
+    class="inv-detail-drawer"
+    position="end"
+    [mode]="bp.isWide() ? 'side' : 'over'"
+    [width]="bp.isWide() ? 'clamp(380px, 26vw, 480px)' : 'clamp(360px, 42vw, 520px)'"
+    [open]="panelOpen()"
+    (openChange)="onDrawerOpenChange($event)"
+    [ariaLabel]="'batchPanel.statsLabel' | translate"
+  >
+    <app-batch-detail-panel
+      [batch]="selectedBatch()"
+      (closed)="closeDetail()"
+      (editRequested)="onEditRequested($event)"
+    />
+  </app-drawer>
+</div>

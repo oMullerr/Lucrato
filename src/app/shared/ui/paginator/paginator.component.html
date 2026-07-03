@@ -1,0 +1,43 @@
+<div class="pager">
+  <span class="pager-size">
+    <span class="pager-size-label">{{ 'paginator.itemsPerPage' | translate }}</span>
+    <app-select class="pager-size-select" [ngModel]="pageSize()" (ngModelChange)="changeSize($event)">
+      @for (opt of pageSizeOptions(); track opt) {
+        <app-option [value]="opt">{{ opt }}</app-option>
+      }
+    </app-select>
+  </span>
+
+  <span class="pager-range num">{{ rangeLabel() }}</span>
+
+  <span class="pager-nav">
+    @if (showFirstLast()) {
+      <button appBtn="ghost" iconOnly size="sm" type="button"
+        [disabled]="pageIndex() === 0"
+        (click)="goTo(0)"
+        [attr.aria-label]="'paginator.firstPage' | translate">
+        <app-icon name="chevrons-left" [size]="16" />
+      </button>
+    }
+    <button appBtn="ghost" iconOnly size="sm" type="button"
+      [disabled]="pageIndex() === 0"
+      (click)="goTo(pageIndex() - 1)"
+      [attr.aria-label]="'paginator.previousPage' | translate">
+      <app-icon name="chevron-left" [size]="16" />
+    </button>
+    <button appBtn="ghost" iconOnly size="sm" type="button"
+      [disabled]="pageIndex() >= lastPageIndex()"
+      (click)="goTo(pageIndex() + 1)"
+      [attr.aria-label]="'paginator.nextPage' | translate">
+      <app-icon name="chevron-right" [size]="16" />
+    </button>
+    @if (showFirstLast()) {
+      <button appBtn="ghost" iconOnly size="sm" type="button"
+        [disabled]="pageIndex() >= lastPageIndex()"
+        (click)="goTo(lastPageIndex())"
+        [attr.aria-label]="'paginator.lastPage' | translate">
+        <app-icon name="chevrons-right" [size]="16" />
+      </button>
+    }
+  </span>
+</div>

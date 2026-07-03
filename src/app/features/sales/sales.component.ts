@@ -1,15 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { DialogService } from '../../shared/ui/dialog/dialog.service';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
-import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { Sale, ComputedSale, SaleStatus } from '../../core/models/models';
@@ -24,6 +16,20 @@ import { DateRangePickerComponent, RangeBounds, RangeChange } from '../../shared
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 import { SaleFormDialogComponent } from './sale-form.dialog';
+import { BreakpointService } from '../../shared/ui/breakpoint.service';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { TooltipDirective } from '../../shared/ui/tooltip/tooltip.directive';
+import { ChipComponent } from '../../shared/ui/chip/chip.component';
+import { FieldComponent } from '../../shared/ui/field/field.component';
+import { InputDirective } from '../../shared/ui/field/input.directive';
+import { SelectComponent } from '../../shared/ui/select/select.component';
+import { OptionComponent } from '../../shared/ui/select/option.component';
+import { MoneyComponent } from '../../shared/ui/money/money.component';
+import { SortDirective, SortState } from '../../shared/ui/sort/sort.directive';
+import { SortHeaderComponent } from '../../shared/ui/sort/sort-header.component';
+import { PaginatorComponent, PageChangeEvent } from '../../shared/ui/paginator/paginator.component';
+import { RecordCardComponent, RecordCardFigure } from '../../shared/ui/record-card/record-card.component';
 
 type SaleFilter = 'all' | 'profit' | 'loss' | 'low-margin';
 
@@ -32,14 +38,13 @@ type SaleFilter = 'all' | 'profit' | 'loss' | 'low-margin';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule,
-    MatButtonModule, MatIconModule,
-    MatFormFieldModule, MatInputModule, MatSelectModule, MatTooltipModule,
-    MatSortModule, MatPaginatorModule,
+    FormsModule, TranslateModule,
     PageHeaderComponent, StatusBadgeComponent, KpiCardComponent,
     EmptyStateComponent, SkeletonComponent, ColorPillComponent, DateRangePickerComponent,
     BrlPipe, BrDatePipe,
-    TranslateModule,
+    ButtonComponent, IconComponent, TooltipDirective, ChipComponent,
+    FieldComponent, InputDirective, SelectComponent, OptionComponent,
+    MoneyComponent, SortDirective, SortHeaderComponent, PaginatorComponent, RecordCardComponent,
   ],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss',
@@ -49,6 +54,7 @@ export class SalesComponent {
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(DialogService);
   private readonly t = inject(TranslateService);
+  protected readonly bp = inject(BreakpointService);
 
   protected readonly textFilter = signal('');
   protected readonly channelFilter = signal('all');
@@ -61,12 +67,22 @@ export class SalesComponent {
   protected readonly defaultFee = computed(() => this.data.settings()?.defaultMlFee ?? 0.12);
   protected readonly minimumMargin = computed(() => this.data.settings()?.minimumMargin ?? 0.10);
 
-  protected readonly sortState = signal<Sort>({ active: '', direction: '' });
-  protected readonly pageState = signal<PageEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
+  protected readonly sortState = signal<SortState>({ active: '', direction: '' });
+  protected readonly pageState = signal<PageChangeEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
   protected readonly pageSizeOptions = [15, 30, 50, 100, 150];
 
-  private readonly sortRef = viewChild(MatSort);
-  private readonly paginatorRef = viewChild(MatPaginator);
+  protected readonly mobileSortOptions = [
+    { value: '', labelKey: 'sales.sortDefault' },
+    { value: 'product:asc', labelKey: 'sales.colProduct' },
+    { value: 'netProfit:desc', labelKey: 'sales.colNetProfit' },
+    { value: 'netMargin:asc', labelKey: 'sales.colMargin' },
+    { value: 'quantitySold:desc', labelKey: 'sales.colQty' },
+  ];
+
+  protected readonly mobileSortValue = computed(() => {
+    const s = this.sortState();
+    return s.active && s.direction ? `${s.active}:${s.direction}` : '';
+  });
 
   private readonly STATUS_PRIORITY: Record<SaleStatus, number> = {
     'Concluída': 0,
@@ -88,36 +104,39 @@ export class SalesComponent {
   };
 
   constructor() {
-    effect((onCleanup) => {
-      const s = this.sortRef();
-      if (!s) return;
-      const sub = s.sortChange.subscribe((sort: Sort) => this.sortState.set(sort));
-      onCleanup(() => sub.unsubscribe());
-    });
-
-    effect((onCleanup) => {
-      const p = this.paginatorRef();
-      if (!p) return;
-      const sub = p.page.subscribe((evt: PageEvent) => this.pageState.set(evt));
-      onCleanup(() => sub.unsubscribe());
-    });
-
-    // Reset to first page whenever any filter changes.
+    // Volta à primeira página quando qualquer filtro muda.
     effect(() => {
       this.textFilter();
       this.channelFilter();
       this.quickFilter();
       this.dateBounds();
-      this.paginatorRef()?.firstPage();
-    });
+      this.pageState.update(p => ({ ...p, pageIndex: 0 }));
+    }, { allowSignalWrites: true });
   }
 
-  /** Stores the effective date-range bounds emitted by the period picker. */
+  protected onSortChange(sort: SortState): void {
+    this.sortState.set(sort);
+  }
+
+  protected onMobileSort(value: string): void {
+    if (!value) {
+      this.sortState.set({ active: '', direction: '' });
+      return;
+    }
+    const [active, direction] = value.split(':');
+    this.sortState.set({ active, direction: direction as SortState['direction'] });
+  }
+
+  protected onPage(evt: PageChangeEvent): void {
+    this.pageState.set(evt);
+  }
+
+  /** Guarda os bounds efetivos emitidos pelo seletor de período. */
   protected onRangeChange(e: RangeChange): void {
     this.dateBounds.set(e.bounds);
   }
 
-  /** Filtered list (channel + text + quick + date range) sorted by sale date DESC — newest first (default order). */
+  /** Lista filtrada (canal + texto + rápido + período) por data DESC — mais recentes primeiro. */
   private readonly filteredBase = computed(() => {
     let vs = this.sales();
     if (this.channelFilter() !== 'all') {
@@ -150,7 +169,7 @@ export class SalesComponent {
     });
   });
 
-  /** Applies user-driven column sort on top of the filtered list, or returns the default order. */
+  /** Ordenação do usuário sobre a lista filtrada, ou ordem padrão. */
   protected readonly filteredSales = computed(() => {
     const base = this.filteredBase();
     const s = this.sortState();
@@ -168,7 +187,7 @@ export class SalesComponent {
     });
   });
 
-  /** Page slice of the filtered/sorted list. */
+  /** Fatia da página atual. */
   protected readonly pagedSales = computed(() => {
     const list = this.filteredSales();
     const { pageIndex, pageSize } = this.pageState();
@@ -230,8 +249,16 @@ export class SalesComponent {
       })
       .afterClosed()
       .subscribe(confirmed => {
-        if (confirmed) {
-          this.data.removeSale(v.id);
+        if (!confirmed) return;
+        /* Snapshot cru ANTES de remover — é ele que o desfazer restaura. */
+        const raw = this.data.findSale(v.id);
+        this.data.removeSale(v.id);
+        if (raw) {
+          this.notify.withUndo(
+            this.t.instant('sales.deletedUndo', { id: v.id }),
+            () => this.data.addSale(raw),
+          );
+        } else {
           this.notify.success(this.t.instant('sales.removed', { id: v.id }));
         }
       });
@@ -255,6 +282,30 @@ export class SalesComponent {
 
   protected setQuickFilter(f: SaleFilter): void {
     this.quickFilter.set(f);
+  }
+
+  /** Tom do dot de status do record-card mobile. */
+  protected statusKindFor(v: ComputedSale): string {
+    switch (v.status) {
+      case 'Concluída': return 'success';
+      case 'Em disputa': return 'warning';
+      case 'Devolvida': return 'danger';
+      default: return 'neutral';
+    }
+  }
+
+  /** Valores do rodapé do record-card mobile. */
+  protected figuresFor(v: ComputedSale): RecordCardFigure[] {
+    return [
+      { label: this.t.instant('sales.colQty'), text: `${v.quantitySold}×` },
+      { label: this.t.instant('sales.colNetProfit'), value: v.netProfit, tone: 'auto' },
+      { label: this.t.instant('sales.colMargin'), text: (v.netMargin * 100).toFixed(1) + '%' },
+    ];
+  }
+
+  /** Abre o formulário de edição a partir do card mobile. */
+  protected editFromCard(v: ComputedSale): void {
+    this.openForm({ ...v });
   }
 
   private openForm(sale?: Sale): void {

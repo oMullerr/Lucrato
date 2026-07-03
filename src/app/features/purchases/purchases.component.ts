@@ -5,22 +5,10 @@ import {
   effect,
   inject,
   signal,
-  viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { DialogService } from '../../shared/ui/dialog/dialog.service';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
-import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { BreakpointObserver } from '@angular/cdk/layout';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { Purchase, ComputedPurchase, InventoryStatus } from '../../core/models/models';
@@ -35,6 +23,20 @@ import { DateRangePickerComponent, RangeBounds, RangeChange } from '../../shared
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 import { PurchaseFormDialogComponent } from './purchase-form.dialog';
+import { BreakpointService } from '../../shared/ui/breakpoint.service';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { TooltipDirective } from '../../shared/ui/tooltip/tooltip.directive';
+import { ChipComponent } from '../../shared/ui/chip/chip.component';
+import { FieldComponent } from '../../shared/ui/field/field.component';
+import { InputDirective } from '../../shared/ui/field/input.directive';
+import { SelectComponent } from '../../shared/ui/select/select.component';
+import { OptionComponent } from '../../shared/ui/select/option.component';
+import { DrawerComponent } from '../../shared/ui/drawer/drawer.component';
+import { SortDirective, SortState } from '../../shared/ui/sort/sort.directive';
+import { SortHeaderComponent } from '../../shared/ui/sort/sort-header.component';
+import { PaginatorComponent, PageChangeEvent } from '../../shared/ui/paginator/paginator.component';
+import { RecordCardComponent, RecordCardFigure } from '../../shared/ui/record-card/record-card.component';
 
 type StatusFilter = 'all' | InventoryStatus;
 
@@ -43,14 +45,13 @@ type StatusFilter = 'all' | InventoryStatus;
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule,
-    MatButtonModule, MatIconModule, MatSidenavModule,
-    MatFormFieldModule, MatInputModule, MatTooltipModule,
-    MatSortModule, MatPaginatorModule,
+    FormsModule, TranslateModule,
     PageHeaderComponent, StatusBadgeComponent,
     EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent, DateRangePickerComponent,
     BrlPipe, BrDatePipe,
-    TranslateModule,
+    ButtonComponent, IconComponent, TooltipDirective, ChipComponent,
+    FieldComponent, InputDirective, SelectComponent, OptionComponent, DrawerComponent,
+    SortDirective, SortHeaderComponent, PaginatorComponent, RecordCardComponent,
   ],
   templateUrl: './purchases.component.html',
   styleUrl: './purchases.component.scss',
@@ -59,7 +60,7 @@ export class PurchasesComponent {
   protected readonly data = inject(DataService);
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(DialogService);
-  private readonly bp = inject(BreakpointObserver);
+  protected readonly bp = inject(BreakpointService);
   private readonly t = inject(TranslateService);
 
   protected readonly textFilter = signal('');
@@ -69,24 +70,28 @@ export class PurchasesComponent {
   protected readonly selectedBatch = signal<ComputedPurchase | null>(null);
   protected readonly panelOpen = computed(() => this.selectedBatch() !== null);
 
-  /** Wide viewport (>=1600px) — detail drawer becomes a pinned side column instead of an overlay. */
-  protected readonly isWideViewport = toSignal(
-    this.bp.observe('(min-width: 1600px)').pipe(map(r => r.matches)),
-    { initialValue: globalThis.window ? globalThis.window.innerWidth >= 1600 : false }
-  );
-
   protected readonly purchases = this.data.computedPurchases;
 
-  /** Current sort state from MatSort. Empty `active`/`direction` means use the default sort. */
-  protected readonly sortState = signal<Sort>({ active: '', direction: '' });
+  /** Estado de ordenação (shape compatível com o antigo MatSort). */
+  protected readonly sortState = signal<SortState>({ active: '', direction: '' });
 
-  /** Current paginator state. Defaults to first page, 15 items per page. */
-  protected readonly pageState = signal<PageEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
+  /** Estado de paginação (shape compatível com o antigo PageEvent). */
+  protected readonly pageState = signal<PageChangeEvent>({ pageIndex: 0, pageSize: 15, length: 0 });
 
   protected readonly pageSizeOptions = [15, 30, 50, 100, 150];
 
-  private readonly sortRef = viewChild(MatSort);
-  private readonly paginatorRef = viewChild(MatPaginator);
+  protected readonly mobileSortOptions = [
+    { value: '', labelKey: 'purchases.sortDefault' },
+    { value: 'product:asc', labelKey: 'purchases.colProduct' },
+    { value: 'purchaseDate:desc', labelKey: 'purchases.colDate' },
+    { value: 'totalActualCost:desc', labelKey: 'purchases.colTotalCost' },
+    { value: 'quantityPurchased:desc', labelKey: 'purchases.colQty' },
+  ];
+
+  protected readonly mobileSortValue = computed(() => {
+    const s = this.sortState();
+    return s.active && s.direction ? `${s.active}:${s.direction}` : '';
+  });
 
   private readonly STATUS_PRIORITY: Record<InventoryStatus, number> = {
     'Parado': 0,
@@ -96,7 +101,6 @@ export class PurchasesComponent {
     'Vendido': 4,
   };
 
-  /** Accessors used by user-driven column sorting. */
   private readonly SORT_ACCESSORS: Record<string, (row: ComputedPurchase) => string | number> = {
     id: row => row.id,
     product: row => row.product,
@@ -109,27 +113,30 @@ export class PurchasesComponent {
   };
 
   constructor() {
-    effect((onCleanup) => {
-      const s = this.sortRef();
-      if (!s) return;
-      const sub = s.sortChange.subscribe((sort: Sort) => this.sortState.set(sort));
-      onCleanup(() => sub.unsubscribe());
-    });
-
-    effect((onCleanup) => {
-      const p = this.paginatorRef();
-      if (!p) return;
-      const sub = p.page.subscribe((evt: PageEvent) => this.pageState.set(evt));
-      onCleanup(() => sub.unsubscribe());
-    });
-
-    // Reset to first page whenever the filter or search input changes.
+    // Volta à primeira página quando filtro/busca/período mudam.
     effect(() => {
       this.statusFilter();
       this.textFilter();
       this.dateBounds();
-      this.paginatorRef()?.firstPage();
-    });
+      this.pageState.update(p => ({ ...p, pageIndex: 0 }));
+    }, { allowSignalWrites: true });
+  }
+
+  protected onSortChange(sort: SortState): void {
+    this.sortState.set(sort);
+  }
+
+  protected onMobileSort(value: string): void {
+    if (!value) {
+      this.sortState.set({ active: '', direction: '' });
+      return;
+    }
+    const [active, direction] = value.split(':');
+    this.sortState.set({ active, direction: direction as SortState['direction'] });
+  }
+
+  protected onPage(evt: PageChangeEvent): void {
+    this.pageState.set(evt);
   }
 
   protected readonly totals = computed(() => {
@@ -144,12 +151,12 @@ export class PurchasesComponent {
     };
   });
 
-  /** Stores the effective date-range bounds emitted by the period picker. */
+  /** Guarda os bounds efetivos emitidos pelo seletor de período. */
   protected onRangeChange(e: RangeChange): void {
     this.dateBounds.set(e.bounds);
   }
 
-  /** Status + text + date range filtered list, sorted by purchase date DESC — newest first (default order). */
+  /** Status + texto + período, por data de compra DESC — mais recentes primeiro. */
   private readonly filteredBase = computed(() => {
     let cs = this.purchases();
     const status = this.statusFilter();
@@ -179,7 +186,7 @@ export class PurchasesComponent {
     });
   });
 
-  /** Applies user-driven column sort on top of the filtered list, or returns the default order. */
+  /** Ordenação do usuário sobre a lista filtrada, ou ordem padrão. */
   protected readonly filteredPurchases = computed(() => {
     const base = this.filteredBase();
     const s = this.sortState();
@@ -197,7 +204,7 @@ export class PurchasesComponent {
     });
   });
 
-  /** Page slice of the filtered/sorted list. */
+  /** Fatia da página atual. */
   protected readonly pagedPurchases = computed(() => {
     const list = this.filteredPurchases();
     const { pageIndex, pageSize } = this.pageState();
@@ -233,9 +240,33 @@ export class PurchasesComponent {
     this.selectedBatch.set(null);
   }
 
+  protected onDrawerOpenChange(open: boolean): void {
+    if (!open) this.closeDetail();
+  }
+
   protected onEditRequested(batch: ComputedPurchase): void {
     this.closeDetail();
     this.edit(batch, new Event('synthetic'));
+  }
+
+  /** Tom do dot de status do record-card mobile. */
+  protected statusKindFor(c: ComputedPurchase): string {
+    switch (c.status) {
+      case 'Parado': return 'danger';
+      case 'Atenção': return 'warning';
+      case 'Em trânsito': return 'info';
+      case 'Vendido': return 'neutral';
+      default: return 'success';
+    }
+  }
+
+  /** Valores do rodapé do record-card mobile. */
+  protected figuresFor(c: ComputedPurchase): RecordCardFigure[] {
+    return [
+      { label: this.t.instant('purchases.colQty'), text: `${c.quantityPurchased} un` },
+      { label: this.t.instant('purchases.colTotalCost'), value: c.totalActualCost, tone: 'neutral' },
+      { label: this.t.instant('batchPanel.currentStock'), text: `${c.currentStock}` },
+    ];
   }
 
   protected confirmRemove(c: ComputedPurchase, event: Event): void {
@@ -280,8 +311,16 @@ export class PurchasesComponent {
       })
       .afterClosed()
       .subscribe(confirmed => {
-        if (confirmed) {
-          this.data.removePurchase(c.id);
+        if (!confirmed) return;
+        /* Snapshot cru ANTES de remover — é ele que o desfazer restaura. */
+        const raw = this.data.findPurchase(c.id);
+        this.data.removePurchase(c.id);
+        if (raw) {
+          this.notify.withUndo(
+            this.t.instant('purchases.deletedUndo', { id: c.id }),
+            () => this.data.addPurchase(raw),
+          );
+        } else {
           this.notify.success(this.t.instant('purchases.removed', { id: c.id }));
         }
       });

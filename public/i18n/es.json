@@ -1,4 +1,7 @@
 {
+  "table": {
+    "sortBy": "Ordenar por"
+  },
   "ui": {
     "select": {
       "noResults": "Sin resultados",
@@ -350,6 +353,7 @@
     "wfOtherCosts": "Otros costos"
   },
   "inventory": {
+    "sortDefault": "Predeterminado (estado)",
     "title": "Panorama del Inventario",
     "eyebrow": "Panorama · actualizado {{time}}",
     "subtitleEmpty": "Empieza registrando tu primer lote para controlar la salud de tu inventario.",
@@ -497,6 +501,8 @@
     "ignoredRows": "Filas ignoradas ({{count}}):"
   },
   "sales": {
+    "deletedUndo": "Venta {{id}} eliminada",
+    "sortDefault": "Predeterminado (recientes)",
     "title": "Ventas",
     "eyebrow": "REGISTRO · {{count}} VENTAS",
     "subtitle": "Cada fila es una venta. Ingresos, tarifas y margen calculados automáticamente.",
@@ -581,6 +587,8 @@
     "netMargin": "Margen Neto"
   },
   "purchases": {
+    "deletedUndo": "Compra {{id}} eliminada",
+    "sortDefault": "Predeterminado (recientes)",
     "title": "Compras",
     "eyebrow": "LOTES · {{count}}",
     "subtitle": "Registra cada lote comprado. Los costos de envío y otros se distribuyen automáticamente.",
