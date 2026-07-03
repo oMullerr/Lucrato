@@ -4,11 +4,6 @@
   gap: 24px;
 }
 
-.primary-cta {
-  --mdc-filled-button-container-color: var(--brand-primary);
-  --mdc-filled-button-label-text-color: #FFFFFF;
-}
-
 /* Profile hero (avatar + name + meta) */
 .profile-hero {
   display: flex;
@@ -184,7 +179,7 @@
   max-width: 460px;
 }
 
-.form-grid mat-form-field { width: 100%; }
+.form-grid app-field { width: 100%; }
 
 .actions-row {
   display: flex;
@@ -245,7 +240,6 @@
 }
 
 .danger-btn {
-  --mat-stroked-button-state-layer-color: var(--color-danger);
   color: var(--color-danger);
   border-color: color-mix(in srgb, var(--color-danger) 40%, transparent);
 

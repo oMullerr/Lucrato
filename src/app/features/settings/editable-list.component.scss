@@ -45,11 +45,7 @@
   line-height: 32px;
   color: var(--text-muted);
 
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
+  app-icon { color: inherit; }
 
   &:disabled { opacity: 0.3; }
 }

@@ -1,10 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { Firestore, deleteDoc, doc } from '@angular/fire/firestore';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -14,6 +10,10 @@ import { LanguageService } from '../../core/services/language.service';
 import { logError } from '../../core/services/logger';
 import { validatePasswordStrength } from '../../core/services/password-validator';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { FieldComponent } from '../../shared/ui/field/field.component';
+import { InputDirective } from '../../shared/ui/field/input.directive';
 import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/components/confirm-dialog.component';
 
 type StrengthLevel = 0 | 1 | 2 | 3 | 4;
@@ -24,9 +24,8 @@ type StrengthLevel = 0 | 1 | 2 | 3 | 4;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    MatIconModule, MatButtonModule,
-    MatFormFieldModule, MatInputModule,
     PageHeaderComponent,
+    ButtonComponent, IconComponent, FieldComponent, InputDirective,
     TranslateModule,
   ],
   templateUrl: './profile.component.html',

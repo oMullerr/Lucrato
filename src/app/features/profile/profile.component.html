@@ -22,18 +22,14 @@
   <!-- Email verification banner (when not verified) -->
   @if (!emailVerified()) {
     <section class="verify-banner" aria-live="polite">
-      <mat-icon class="vb-icon">mark_email_unread</mat-icon>
+      <app-icon class="vb-icon" name="mail-warning" [size]="20" />
       <div class="vb-text">
         <strong>{{ 'profile.verifyBannerTitle' | translate }}</strong>
         <p>{{ 'profile.verifyBannerText' | translate }}</p>
       </div>
-      <button
-        mat-stroked-button
-        (click)="resendVerification()"
-        [disabled]="sendingVerification()"
-      >
-        <mat-icon>send</mat-icon>
-        {{ (sendingVerification() ? 'profile.sending' : 'profile.resend') | translate }}
+      <button appBtn="outline" type="button" (click)="resendVerification()" [loading]="sendingVerification()">
+        <app-icon name="send" [size]="16" />
+        {{ 'profile.resend' | translate }}
       </button>
     </section>
   }
@@ -45,26 +41,20 @@
       <p>{{ 'profile.identityDesc' | translate }}</p>
     </header>
     <div class="section-body form-grid">
-      <mat-form-field appearance="outline">
-        <mat-label>{{ 'auth.storeName' | translate }}</mat-label>
+      <app-field [label]="'auth.storeName' | translate">
         <input
-          matInput
+          appInput
           type="text"
           [ngModel]="storeNameInput()"
           (ngModelChange)="storeNameInput.set($event)"
           autocomplete="organization"
         />
-      </mat-form-field>
+      </app-field>
 
       <div class="actions-row">
-        <button
-          mat-flat-button
-          class="primary-cta"
-          (click)="saveStoreName()"
-          [disabled]="!canSaveStoreName() || savingStoreName()"
-        >
-          <mat-icon>save</mat-icon>
-          {{ (savingStoreName() ? 'profile.saving' : 'profile.saveName') | translate }}
+        <button appBtn type="button" (click)="saveStoreName()" [loading]="savingStoreName()" [disabled]="!canSaveStoreName()">
+          <app-icon name="save" [size]="16" />
+          {{ 'profile.saveName' | translate }}
         </button>
       </div>
     </div>
@@ -77,34 +67,32 @@
       <p>{{ 'profile.passwordDesc' | translate }}</p>
     </header>
     <div class="section-body form-grid">
-      <mat-form-field appearance="outline">
-        <mat-label>{{ 'dialogs.currentPassword' | translate }}</mat-label>
+      <app-field [label]="'dialogs.currentPassword' | translate">
         <input
-          matInput
+          appInput
           [type]="showCurrentPwd() ? 'text' : 'password'"
           [ngModel]="currentPwd()"
           (ngModelChange)="currentPwd.set($event)"
           autocomplete="current-password"
         />
-        <button type="button" mat-icon-button matSuffix (click)="showCurrentPwd.set(!showCurrentPwd())">
-          <mat-icon>{{ showCurrentPwd() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        <button fieldSuffix type="button" appBtn="ghost" iconOnly size="sm" (click)="showCurrentPwd.set(!showCurrentPwd())" [attr.aria-label]="(showCurrentPwd() ? 'auth.hidePassword' : 'auth.showPassword') | translate">
+          <app-icon [name]="showCurrentPwd() ? 'eye-off' : 'eye'" [size]="18" />
         </button>
-      </mat-form-field>
+      </app-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>{{ 'profile.newPassword' | translate }}</mat-label>
+      <app-field [label]="'profile.newPassword' | translate">
         <input
-          matInput
+          appInput
           [type]="showNewPwd() ? 'text' : 'password'"
           [ngModel]="newPwd()"
           (ngModelChange)="newPwd.set($event)"
           autocomplete="new-password"
           minlength="8"
         />
-        <button type="button" mat-icon-button matSuffix (click)="showNewPwd.set(!showNewPwd())">
-          <mat-icon>{{ showNewPwd() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        <button fieldSuffix type="button" appBtn="ghost" iconOnly size="sm" (click)="showNewPwd.set(!showNewPwd())" [attr.aria-label]="(showNewPwd() ? 'auth.hidePassword' : 'auth.showPassword') | translate">
+          <app-icon [name]="showNewPwd() ? 'eye-off' : 'eye'" [size]="18" />
         </button>
-      </mat-form-field>
+      </app-field>
 
       @if (newPwd().length > 0) {
         <div class="strength-meter" aria-live="polite">
@@ -118,29 +106,24 @@
         </div>
       }
 
-      <mat-form-field appearance="outline">
-        <mat-label>{{ 'profile.confirmNewPassword' | translate }}</mat-label>
+      <app-field
+        [label]="'profile.confirmNewPassword' | translate"
+        [error]="confirmPwd() && confirmPwd() !== newPwd() ? ('profile.passwordsDontMatch' | translate) : ''"
+        [showErrorNow]="!!confirmPwd() && confirmPwd() !== newPwd()"
+      >
         <input
-          matInput
+          appInput
           [type]="showNewPwd() ? 'text' : 'password'"
           [ngModel]="confirmPwd()"
           (ngModelChange)="confirmPwd.set($event)"
           autocomplete="new-password"
         />
-        @if (confirmPwd() && confirmPwd() !== newPwd()) {
-          <mat-error>{{ 'profile.passwordsDontMatch' | translate }}</mat-error>
-        }
-      </mat-form-field>
+      </app-field>
 
       <div class="actions-row">
-        <button
-          mat-flat-button
-          class="primary-cta"
-          (click)="changePassword()"
-          [disabled]="!canChangePassword() || changingPassword()"
-        >
-          <mat-icon>key</mat-icon>
-          {{ (changingPassword() ? 'profile.updating' : 'profile.updatePassword') | translate }}
+        <button appBtn type="button" (click)="changePassword()" [loading]="changingPassword()" [disabled]="!canChangePassword()">
+          <app-icon name="key-round" [size]="16" />
+          {{ 'profile.updatePassword' | translate }}
         </button>
       </div>
     </div>
@@ -152,9 +135,9 @@
       <h2>{{ 'profile.dangerTitle' | translate }}</h2>
     </header>
     <p>{{ 'profile.dangerText' | translate }}</p>
-    <button mat-stroked-button class="danger-btn" (click)="deleteAccount()" [disabled]="deletingAccount()">
-      <mat-icon>delete_forever</mat-icon>
-      {{ (deletingAccount() ? 'profile.deleting' : 'profile.deleteAccount') | translate }}
+    <button appBtn="outline" type="button" class="danger-btn" (click)="deleteAccount()" [loading]="deletingAccount()">
+      <app-icon name="trash-2" [size]="16" />
+      {{ 'profile.deleteAccount' | translate }}
     </button>
   </section>
 </div>

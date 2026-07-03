@@ -1,12 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTabsModule } from '@angular/material/tabs';
 import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { Firestore, doc, onSnapshot, setDoc, Unsubscribe } from '@angular/fire/firestore';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -21,6 +14,14 @@ import { PageHeaderComponent } from '../../shared/components/page-header.compone
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
 import { ImportResultDialogComponent } from './import-result-dialog.component';
 import { EditableListComponent } from './editable-list.component';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { FieldComponent } from '../../shared/ui/field/field.component';
+import { InputDirective } from '../../shared/ui/field/input.directive';
+import { SelectComponent } from '../../shared/ui/select/select.component';
+import { OptionComponent } from '../../shared/ui/select/option.component';
+import { TabsComponent } from '../../shared/ui/tabs/tabs.component';
+import { TabComponent } from '../../shared/ui/tabs/tab.component';
 
 const DEFAULT_SETTINGS: Settings = {
   defaultMlFee: 0.12,
@@ -49,8 +50,8 @@ const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    MatCardModule, MatIconModule, MatButtonModule,
-    MatFormFieldModule, MatInputModule, MatSelectModule, MatTabsModule,
+    ButtonComponent, IconComponent, FieldComponent, InputDirective,
+    SelectComponent, OptionComponent, TabsComponent, TabComponent,
     PageHeaderComponent, EditableListComponent,
     TranslateModule,
   ],

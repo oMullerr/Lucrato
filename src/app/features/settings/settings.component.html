@@ -3,24 +3,20 @@
   [eyebrow]="'settings.eyebrow' | translate"
   [subtitle]="'settings.subtitle' | translate"
 >
-  <button mat-stroked-button (click)="discard()" [disabled]="!hasChanges() || saving()">
-    <mat-icon>undo</mat-icon>
+  <button appBtn="outline" type="button" (click)="discard()" [disabled]="!hasChanges() || saving()">
+    <app-icon name="undo-2" [size]="16" />
     {{ 'settings.discard' | translate }}
   </button>
-  <button mat-flat-button class="primary-cta" (click)="save()" [disabled]="!hasChanges() || saving()">
-    <mat-icon>save</mat-icon>
+  <button appBtn type="button" (click)="save()" [loading]="saving()" [disabled]="!hasChanges()">
+    <app-icon name="save" [size]="16" />
     {{ (saving() ? 'settings.saving' : 'common.save') | translate }}
   </button>
 </app-page-header>
 
 @let s = form();
 <div class="page-content settings-body">
-  <mat-tab-group animationDuration="200ms" class="settings-tabs">
-    <mat-tab>
-      <ng-template mat-tab-label>
-        <mat-icon>tune</mat-icon>
-        {{ 'settings.tabParams' | translate }}
-      </ng-template>
+  <app-tabs class="settings-tabs">
+    <app-tab [label]="'settings.tabParams' | translate">
 
       <div class="tab-body">
         <div class="config-card">
@@ -30,10 +26,9 @@
               <p>{{ 'settings.alertsMarginsDesc' | translate }}</p>
             </div>
             <div class="form-grid">
-              <mat-form-field>
-                <mat-label>{{ 'settings.minMargin' | translate }}</mat-label>
+              <app-field [label]="'settings.minMargin' | translate" [hint]="'settings.minMarginHint' | translate">
                 <input
-                  matInput
+                  appInput
                   type="number"
                   step="0.1"
                   min="0"
@@ -41,14 +36,12 @@
                   [ngModel]="minMarginPct"
                   (ngModelChange)="minMarginPct = $event"
                 />
-                <span matSuffix class="unit-suffix">%</span>
-                <mat-hint>{{ 'settings.minMarginHint' | translate }}</mat-hint>
-              </mat-form-field>
+                <span fieldSuffix class="unit-suffix">%</span>
+              </app-field>
 
-              <mat-form-field>
-                <mat-label>{{ 'settings.defaultFee' | translate }}</mat-label>
+              <app-field [label]="'settings.defaultFee' | translate" [hint]="'settings.defaultFeeHint' | translate">
                 <input
-                  matInput
+                  appInput
                   type="number"
                   step="0.01"
                   min="0"
@@ -56,35 +49,30 @@
                   [ngModel]="feePct"
                   (ngModelChange)="feePct = $event"
                 />
-                <span matSuffix class="unit-suffix">%</span>
-                <mat-hint>{{ 'settings.defaultFeeHint' | translate }}</mat-hint>
-              </mat-form-field>
+                <span fieldSuffix class="unit-suffix">%</span>
+              </app-field>
 
-              <mat-form-field>
-                <mat-label>{{ 'settings.yellowDays' | translate }}</mat-label>
+              <app-field [label]="'settings.yellowDays' | translate" [hint]="'settings.yellowDaysHint' | translate">
                 <input
-                  matInput
+                  appInput
                   type="number"
                   min="1"
                   [ngModel]="s.yellowAlertDays"
                   (ngModelChange)="updateField('yellowAlertDays', clamp0($event))"
                 />
-                <span matSuffix class="unit-suffix">{{ 'batchPanel.days' | translate }}</span>
-                <mat-hint>{{ 'settings.yellowDaysHint' | translate }}</mat-hint>
-              </mat-form-field>
+                <span fieldSuffix class="unit-suffix">{{ 'batchPanel.days' | translate }}</span>
+              </app-field>
 
-              <mat-form-field>
-                <mat-label>{{ 'settings.redDays' | translate }}</mat-label>
+              <app-field [label]="'settings.redDays' | translate" [hint]="'settings.redDaysHint' | translate">
                 <input
-                  matInput
+                  appInput
                   type="number"
                   min="1"
                   [ngModel]="s.redAlertDays"
                   (ngModelChange)="updateField('redAlertDays', clamp0($event))"
                 />
-                <span matSuffix class="unit-suffix">{{ 'batchPanel.days' | translate }}</span>
-                <mat-hint>{{ 'settings.redDaysHint' | translate }}</mat-hint>
-              </mat-form-field>
+                <span fieldSuffix class="unit-suffix">{{ 'batchPanel.days' | translate }}</span>
+              </app-field>
             </div>
           </div>
 
@@ -94,46 +82,40 @@
               <p>{{ 'settings.defaultsDesc' | translate }}</p>
             </div>
             <div class="form-grid">
-              <mat-form-field>
-                <mat-label>{{ 'settings.defaultShipping' | translate }}</mat-label>
+              <app-field [label]="'settings.defaultShipping' | translate">
                 <input
-                  matInput
+                  appInput
                   type="number"
                   step="0.01"
                   min="0"
                   [ngModel]="s.defaultShipping"
                   (ngModelChange)="updateField('defaultShipping', clamp0($event))"
                 />
-                <span matSuffix class="unit-suffix">R$</span>
-              </mat-form-field>
+                <span fieldSuffix class="unit-suffix">R$</span>
+              </app-field>
 
-              <mat-form-field>
-                <mat-label>{{ 'settings.defaultChannel' | translate }}</mat-label>
-                <mat-select
+              <app-field [label]="'settings.defaultChannel' | translate">
+                <app-select
                   [ngModel]="s.defaultChannel"
                   (ngModelChange)="updateField('defaultChannel', $event)">
                   @for (c of s.channels; track c) {
-                    <mat-option [value]="c">{{ c }}</mat-option>
+                    <app-option [value]="c">{{ c }}</app-option>
                   }
-                </mat-select>
-              </mat-form-field>
+                </app-select>
+              </app-field>
             </div>
           </div>
         </div>
       </div>
-    </mat-tab>
+    </app-tab>
 
-    <mat-tab>
-      <ng-template mat-tab-label>
-        <mat-icon>list_alt</mat-icon>
-        {{ 'settings.tabLists' | translate }}
-      </ng-template>
+    <app-tab [label]="'settings.tabLists' | translate">
 
       <div class="tab-body">
         <div class="lists-grid">
           <div class="config-card">
             <h3 class="card-title">
-              <mat-icon>category</mat-icon>
+              <app-icon name="shapes" [size]="18" />
               {{ 'settings.categories' | translate }}
             </h3>
             <app-editable-list
@@ -148,7 +130,7 @@
 
           <div class="config-card">
             <h3 class="card-title">
-              <mat-icon>store</mat-icon>
+              <app-icon name="store" [size]="18" />
               {{ 'settings.suppliers' | translate }}
             </h3>
             <app-editable-list
@@ -163,7 +145,7 @@
 
           <div class="config-card">
             <h3 class="card-title">
-              <mat-icon>storefront</mat-icon>
+              <app-icon name="shopping-bag" [size]="18" />
               {{ 'settings.channels' | translate }}
             </h3>
             <app-editable-list
@@ -177,30 +159,26 @@
           </div>
         </div>
       </div>
-    </mat-tab>
+    </app-tab>
 
-    <mat-tab>
-      <ng-template mat-tab-label>
-        <mat-icon>upload_file</mat-icon>
-        {{ 'settings.tabImport' | translate }}
-      </ng-template>
+    <app-tab [label]="'settings.tabImport' | translate">
 
       <div class="tab-body">
         <div class="config-card import-section">
           <h3 class="card-title">
-            <mat-icon>upload_file</mat-icon>
+            <app-icon name="file-up" [size]="18" />
             {{ 'settings.bulkImport' | translate }}
           </h3>
           <p class="import-description">
             {{ 'settings.importDesc' | translate }}
           </p>
           <div class="import-actions">
-            <button mat-stroked-button (click)="downloadTemplate()">
-              <mat-icon>download</mat-icon>
+            <button appBtn="outline" type="button" (click)="downloadTemplate()">
+              <app-icon name="download" [size]="16" />
               {{ 'settings.downloadTemplate' | translate }}
             </button>
-            <button mat-flat-button color="primary" (click)="triggerImport()" [disabled]="importing()">
-              <mat-icon>{{ importing() ? 'hourglass_top' : 'upload' }}</mat-icon>
+            <button appBtn type="button" (click)="triggerImport()" [loading]="importing()">
+              <app-icon name="upload" [size]="16" />
               {{ (importing() ? 'settings.importing' : 'settings.importSheet') | translate }}
             </button>
           </div>
@@ -213,27 +191,23 @@
           />
         </div>
       </div>
-    </mat-tab>
+    </app-tab>
 
-    <mat-tab>
-      <ng-template mat-tab-label>
-        <mat-icon class="danger-tab-icon">warning</mat-icon>
-        {{ 'settings.tabDanger' | translate }}
-      </ng-template>
+    <app-tab [label]="'settings.tabDanger' | translate">
 
       <div class="tab-body">
         <div class="danger-card">
           <h3 class="card-title danger">
-            <mat-icon>warning</mat-icon>
+            <app-icon name="triangle-alert" [size]="18" />
             {{ 'settings.tabDanger' | translate }}
           </h3>
           <p>{{ 'settings.dangerDesc' | translate }}</p>
-          <button mat-stroked-button class="danger-btn" (click)="resetAll()">
-            <mat-icon>delete_forever</mat-icon>
+          <button appBtn="outline" type="button" class="danger-btn" (click)="resetAll()">
+            <app-icon name="trash-2" [size]="16" />
             {{ 'settings.resetSystem' | translate }}
           </button>
         </div>
       </div>
-    </mat-tab>
-  </mat-tab-group>
+    </app-tab>
+  </app-tabs>
 </div>

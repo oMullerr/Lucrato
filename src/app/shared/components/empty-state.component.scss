@@ -36,11 +36,7 @@
   color: var(--brand-primary);
 }
 
-.icon-wrap mat-icon {
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
-}
+.icon-wrap app-icon { color: var(--brand-primary); }
 
 .title {
   font-family: var(--font-display);

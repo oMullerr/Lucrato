@@ -4,11 +4,6 @@
   gap: 18px;
 }
 
-.primary-cta {
-  --mdc-filled-button-container-color: var(--brand-primary);
-  --mdc-filled-button-label-text-color: #FFFFFF;
-}
-
 .loading-state {
   padding: 64px 32px;
   display: flex;
@@ -21,31 +16,12 @@
   p { margin: 0; font-size: 13px; }
 }
 
-/* Tab card + Material overrides */
+/* Card das abas */
 .settings-tabs {
   background: var(--bg-surface-1);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   overflow: hidden;
-
-  ::ng-deep .mat-mdc-tab-header {
-    background: var(--bg-surface-2);
-    border-bottom: 1px solid var(--border-subtle);
-  }
-
-  ::ng-deep .mat-mdc-tab .mdc-tab__text-label {
-    display: inline-flex !important;
-    align-items: center;
-    gap: 6px;
-    color: var(--text-muted);
-    font-weight: 500;
-
-    mat-icon { font-size: 16px; width: 16px; height: 16px; }
-
-    .danger-tab-icon { color: var(--color-danger); }
-  }
-
-  ::ng-deep .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label { color: var(--brand-primary); }
 }
 
 .tab-body {
@@ -106,14 +82,9 @@
   margin: 0 0 16px;
   letter-spacing: -0.005em;
 
-  mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-    color: var(--brand-primary);
-  }
+  app-icon { color: var(--brand-primary); }
 
-  &.danger mat-icon { color: var(--color-danger); }
+  &.danger app-icon { color: var(--color-danger); }
 }
 
 .form-grid {

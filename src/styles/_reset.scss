@@ -32,6 +32,13 @@ html, body {
   border-radius: var(--radius-sm);
 }
 
+/* Transição suave entre rotas (View Transitions API). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-base);
+  animation-timing-function: var(--ease-out);
+}
+
 /* Piso de qualidade: usuário pediu menos movimento, movimento morre — global. */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -41,5 +48,11 @@ html, body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

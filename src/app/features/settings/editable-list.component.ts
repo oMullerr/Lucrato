@@ -1,19 +1,19 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { moveItemInArray } from '@angular/cdk/drag-drop';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotifyService } from '../../core/services/notify.service';
 import { DEFAULT_CATEGORY_COLOR } from '../../core/constants/app.constants';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { FieldComponent } from '../../shared/ui/field/field.component';
+import { InputDirective } from '../../shared/ui/field/input.directive';
 
 @Component({
   selector: 'app-editable-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MatIconModule, MatButtonModule, MatFormFieldModule, MatInputModule, TranslateModule],
+  imports: [FormsModule, TranslateModule, ButtonComponent, IconComponent, FieldComponent, InputDirective],
   templateUrl: './editable-list.component.html',
   styleUrl: './editable-list.component.scss',
 })

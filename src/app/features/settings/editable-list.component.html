@@ -14,33 +14,33 @@
         <span class="item-name">{{ item }}</span>
         <div class="item-actions">
           <button
-            mat-icon-button
+            appBtn="ghost" iconOnly size="sm"
             type="button"
             class="reorder-btn"
             (click)="move(i, -1)"
             [disabled]="first"
             [attr.aria-label]="'editableList.moveUp' | translate"
           >
-            <mat-icon>keyboard_arrow_up</mat-icon>
+            <app-icon name="arrow-up" [size]="16" />
           </button>
           <button
-            mat-icon-button
+            appBtn="ghost" iconOnly size="sm"
             type="button"
             class="reorder-btn"
             (click)="move(i, 1)"
             [disabled]="last"
             [attr.aria-label]="'editableList.moveDown' | translate"
           >
-            <mat-icon>keyboard_arrow_down</mat-icon>
+            <app-icon name="arrow-down" [size]="16" />
           </button>
           <button
-            mat-icon-button
+            appBtn="ghost" iconOnly size="sm"
             type="button"
             class="remove-btn"
             (click)="remove(i)"
             [attr.aria-label]="'common.remove' | translate"
           >
-            <mat-icon>close</mat-icon>
+            <app-icon name="x" [size]="16" />
           </button>
         </div>
       </li>
@@ -59,16 +59,15 @@
       [attr.aria-label]="'editableList.newColor' | translate"
     />
   }
-  <mat-form-field appearance="outline" class="add-field">
-    <mat-label>{{ addLabel() }}</mat-label>
+  <app-field class="add-field" [label]="addLabel()">
     <input
-      matInput
+      appInput
       [(ngModel)]="draft"
       [placeholder]="placeholder() || ('editableList.placeholder' | translate)"
       (keydown.enter)="$event.preventDefault(); add()"
     />
-    <button matSuffix mat-icon-button type="button" (click)="add()" [attr.aria-label]="'common.add' | translate">
-      <mat-icon>add</mat-icon>
+    <button fieldSuffix appBtn="ghost" iconOnly size="sm" type="button" (click)="add()" [attr.aria-label]="'common.add' | translate">
+      <app-icon name="plus" [size]="16" />
     </button>
-  </mat-form-field>
+  </app-field>
 </div>

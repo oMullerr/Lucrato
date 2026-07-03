@@ -43,7 +43,7 @@
   &.down  { color: var(--color-danger); }
   &.flat  { color: var(--text-muted); }
 
-  mat-icon, app-icon, .icon {
+  app-icon, .icon {
     font-size: 14px;
     width: 14px;
     height: 14px;
