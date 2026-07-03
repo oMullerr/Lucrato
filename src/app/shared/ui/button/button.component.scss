@@ -1,0 +1,132 @@
+:host {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+
+  &[disabled],
+  &[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+}
+
+.btn-content {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Loading: conteúdo invisível mas ocupando espaço → largura estável */
+.btn--loading .btn-content { visibility: hidden; }
+
+.btn-spinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Tamanhos ---------- */
+.btn--sm { height: 32px; padding: 0 var(--space-3); font-size: var(--fs-small); }
+.btn--md { height: 40px; padding: 0 var(--space-4); }
+.btn--lg { height: 48px; padding: 0 var(--space-5); font-size: var(--fs-h3); }
+
+.btn--icon-only {
+  padding: 0;
+  &.btn--sm { width: 32px; }
+  &.btn--md { width: 40px; }
+  &.btn--lg { width: 48px; }
+}
+
+/* ---------- Variantes ---------- */
+.btn--primary {
+  background: var(--brand-primary);
+  color: #ffffff;
+
+  &:hover:not([disabled]) {
+    background: color-mix(in srgb, var(--brand-primary) 88%, #000);
+    box-shadow: var(--shadow-sm);
+  }
+  &:active:not([disabled]) {
+    background: color-mix(in srgb, var(--brand-primary) 80%, #000);
+  }
+}
+
+html.dark .btn--primary {
+  color: #0b100f;
+
+  &:hover:not([disabled]) {
+    background: color-mix(in srgb, var(--brand-primary) 88%, #fff);
+  }
+  &:active:not([disabled]) {
+    background: color-mix(in srgb, var(--brand-primary) 78%, #fff);
+  }
+}
+
+.btn--tonal {
+  background: var(--tint-brand);
+  color: var(--brand-primary);
+
+  &:hover:not([disabled]) { background: color-mix(in srgb, var(--brand-primary) 18%, transparent); }
+  &:active:not([disabled]) { background: color-mix(in srgb, var(--brand-primary) 24%, transparent); }
+}
+
+.btn--outline {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+
+  &:hover:not([disabled]) {
+    border-color: var(--brand-primary);
+    color: var(--brand-primary);
+    background: var(--tint-brand);
+  }
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+
+  &:hover:not([disabled]) {
+    background: var(--bg-surface-2);
+    color: var(--text-primary);
+  }
+}
+
+.btn--danger {
+  background: var(--color-danger);
+  color: #ffffff;
+
+  &:hover:not([disabled]) {
+    background: var(--color-danger-2);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+/* FAB — flutuante (usado pelo fab-actions a partir da fase 2) */
+:host(.fab) {
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+
+  &:hover:not([disabled]) { box-shadow: var(--shadow-xl); }
+}

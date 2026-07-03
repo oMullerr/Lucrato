@@ -1,0 +1,67 @@
+/* LUCRATO · Componentes globais de layout e superfície.
+   Estilos compartilhados que hoje vivem duplicados nos SCSS das páginas
+   migram para cá conforme as fases 2–5 (kpi-grid, base de tabela, etc.). */
+
+@use './breakpoints' as bp;
+
+.page-container {
+  background: var(--bg-canvas);
+  min-height: calc(100vh - var(--topbar-height));
+}
+
+.page-content {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-7) var(--content-pad-x) var(--space-11);
+
+  @include bp.below(lg) {
+    padding-left: var(--content-pad-x-md);
+    padding-right: var(--content-pad-x-md);
+  }
+  @include bp.below(sm) {
+    padding-left: var(--content-pad-x-sm);
+    padding-right: var(--content-pad-x-sm);
+    padding-top: var(--space-5);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-container > * {
+    animation: page-fade-in var(--dur-slow) var(--ease-out) both;
+  }
+  @keyframes page-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+.surface-card {
+  background: var(--bg-surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+
+.surface-card.interactive:hover {
+  border-color: var(--border-default);
+  background: var(--bg-surface-2);
+}
+
+/* Grade de KPIs — auto-fit elimina o buraco de tablet (1col@560 → 2col@1100).
+   Páginas adotam nas fases 4–5 substituindo suas .kpi-strip locais. */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Backdrop de overlays (CDK) — sobrevive à saída do Material (fase 6),
+   pois nossos dialogs/menus continuam sobre o CDK Overlay. */
+html .cdk-overlay-backdrop {
+  background: rgba(8, 12, 11, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+html.dark .cdk-overlay-backdrop {
+  background: rgba(0, 0, 0, 0.65);
+}

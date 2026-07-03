@@ -79,7 +79,7 @@
 }
 
 .hero-value {
-  font-family: 'Geist', 'Inter', sans-serif;
+  font-family: var(--font-display);
   font-size: var(--fs-display-xl);
   font-weight: 700;
   letter-spacing: -0.035em;
@@ -113,7 +113,7 @@
   }
 
   .wf-num {
-    font-family: 'Geist', 'Inter', sans-serif;
+    font-family: var(--font-display);
     font-size: 14px;
     font-weight: 500;
     color: var(--text-primary);

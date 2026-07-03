@@ -1,0 +1,23 @@
+@switch (variant()) {
+  @case ('hero') {
+    <span class="money-hero">
+      <span class="money-hero-value num">{{ signPrefix() }}{{ displayValue() | brl }}</span>
+      <span class="money-hero-rule" aria-hidden="true"></span>
+    </span>
+    @if (deltaPct() !== null) {
+      <span class="money-hero-delta delta" [class.up]="deltaDir() === 'up'" [class.down]="deltaDir() === 'down'" [class.flat]="deltaDir() === 'flat'">
+        <app-icon [name]="deltaDir() === 'up' ? 'trending-up' : deltaDir() === 'down' ? 'trending-down' : 'minus'" [size]="14" />
+        {{ deltaText() }}
+      </span>
+    }
+  }
+  @case ('chip') {
+    <span class="money-chip num" [class]="'money-chip num tone-' + resolvedTone()">
+      <app-icon [name]="tickIcon()" [size]="13" />
+      {{ signPrefix() }}{{ value() | brl }}
+    </span>
+  }
+  @default {
+    <span class="money-text num" [class]="'money-text num tone-' + resolvedTone()">{{ signPrefix() }}{{ value() | brl }}</span>
+  }
+}

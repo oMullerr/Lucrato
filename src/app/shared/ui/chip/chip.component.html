@@ -1,0 +1,7 @@
+@if (dot()) {
+  <span class="status-dot" [class]="'status-dot ' + dot()" aria-hidden="true"></span>
+}
+<span class="chip-label"><ng-content /></span>
+@if (count() !== null) {
+  <span class="chip-count num">{{ count() }}</span>
+}

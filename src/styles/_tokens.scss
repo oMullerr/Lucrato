@@ -1,0 +1,243 @@
+/* LUCRATO · Design tokens — identidade "fintech brasileira premium".
+   Paleta "cédula petróleo + champanhe", dark-first.
+
+   Regras anti-clichê (decisão de design, não estilo pessoal):
+   - A base escura é VERDE-PETRÓLEO, nunca preto neutro (#000/#0a0a0a).
+   - Champanhe (--brand-accent) é acento pontual (dot ativo, hairline do herói,
+     eyebrow) — NUNCA preenchimento de superfície ou cor de texto corrido.
+   - Números-herói ficam em quase-branco/quase-preto; o tom de lucro/prejuízo
+     vem de chips de delta e hairlines, nunca tingindo o número inteiro. */
+
+/* ---------- Light mode ---------- */
+:root {
+  /* Brand — petróleo profundo + champanhe */
+  --brand-primary:    #0B6B59;
+  --brand-primary-2:  #0E8C77;
+  --brand-primary-3:  #2BAE96;
+  --brand-primary-4:  #5BC6B0;
+  --brand-accent:     #B08A45;
+  --brand-accent-2:   #97722F;
+
+  /* Semânticas — estritamente para dados */
+  --color-success:    #137A46;
+  --color-success-2:  #0F6239;
+  --color-danger:     #C03530;
+  --color-danger-2:   #A32B27;
+  --color-warning:    #B45309;
+  --color-warning-2:  #92400E;
+  --color-info:       #2563EB;
+  --color-info-2:     #1D4ED8;
+  --color-neutral:    #64716B;
+
+  /* Dinheiro — aliases semânticos do domínio (lidos por app-money) */
+  --color-profit:     var(--color-success);
+  --color-loss:       var(--color-danger);
+
+  /* Superfícies — papel quente, nunca estéril */
+  --bg-canvas:        #F7F7F2;
+  --bg-surface-1:     #FFFFFF;
+  --bg-surface-2:     #F1F2EC;
+  --bg-surface-3:     #E9EBE3;
+  --bg-overlay:       #FFFFFF;
+  --bg-sidebar:       #0B1210;
+  --bg-sidebar-2:     #131A17;
+
+  /* Tints de status (sutis) */
+  --tint-success:     rgba(19, 122, 70, 0.08);
+  --tint-danger:      rgba(192, 53, 48, 0.08);
+  --tint-warning:     rgba(180, 83, 9, 0.08);
+  --tint-info:        rgba(37, 99, 235, 0.08);
+  --tint-brand:       rgba(11, 107, 89, 0.08);
+  --tint-accent:      rgba(176, 138, 69, 0.12);
+
+  /* Texto */
+  --text-primary:     #0C0D0C;
+  --text-secondary:   #3D423F;
+  --text-muted:       #5F6660;
+  --text-sidebar:     rgba(240, 247, 243, 0.74);
+  --text-sidebar-muted: rgba(240, 247, 243, 0.42);
+
+  /* Bordas */
+  --border-subtle:    rgba(18, 38, 30, 0.07);
+  --border-default:   rgba(18, 38, 30, 0.11);
+  --border-strong:    rgba(18, 38, 30, 0.17);
+  --border-sidebar:   rgba(240, 247, 243, 0.06);
+
+  /* Sombras — contidas, em camadas */
+  --shadow-sm:        0 1px 2px rgba(18, 38, 30, 0.04);
+  --shadow-md:        0 4px 12px rgba(18, 38, 30, 0.06), 0 1px 3px rgba(18, 38, 30, 0.04);
+  --shadow-lg:        0 12px 32px rgba(18, 38, 30, 0.10), 0 4px 8px rgba(18, 38, 30, 0.06);
+  --shadow-xl:        0 24px 56px rgba(18, 38, 30, 0.14), 0 8px 16px rgba(18, 38, 30, 0.08);
+  --shadow-glow-brand:   0 0 0 1px rgba(11, 107, 89, 0.18), 0 8px 24px rgba(11, 107, 89, 0.18);
+  --shadow-glow-success: 0 0 0 1px rgba(19, 122, 70, 0.18), 0 8px 24px rgba(19, 122, 70, 0.12);
+  --shadow-glow-danger:  0 0 0 1px rgba(192, 53, 48, 0.18), 0 8px 24px rgba(192, 53, 48, 0.12);
+
+  --ring-focus:       0 0 0 3px color-mix(in srgb, var(--brand-primary) 35%, transparent);
+
+  /* Raios */
+  --radius-xs:        4px;
+  --radius-sm:        8px;
+  --radius-md:        10px;
+  --radius-lg:        14px;
+  --radius-xl:        20px;
+  --radius-full:      999px;
+
+  /* Espaçamento (4-8-12-16-20-24-32-40-48-56-64-80) */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-7:  32px;
+  --space-8:  40px;
+  --space-9:  48px;
+  --space-10: 56px;
+  --space-11: 64px;
+  --space-12: 80px;
+
+  /* Layout */
+  --content-max:      1480px;
+  --content-pad-x:    32px;
+  --content-pad-x-md: 20px;
+  --content-pad-x-sm: 16px;
+  --topbar-height:    60px;
+  --sidebar-width:    240px;
+  --sidebar-rail:     64px;
+
+  /* Famílias tipográficas */
+  --font-display: 'Archivo', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    'Geist Mono', 'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+
+  /* Escala de tipo */
+  --fs-hero:        clamp(2.75rem, 4.5vw + 1rem, 4.25rem);
+  --fs-display-xl:  clamp(2.5rem, 4vw + 1rem, 4rem);
+  --fs-display-lg:  clamp(1.75rem, 2vw + 0.75rem, 2.25rem);
+  --fs-display-md:  1.5rem;
+  --fs-h1:          1.375rem;
+  --fs-h2:          1.125rem;
+  --fs-h3:          1rem;
+  --fs-body:        clamp(0.855rem, 0.82rem + 0.18vw, 0.9375rem);
+  --fs-small:       0.8125rem;
+  --fs-caption:     0.6875rem;
+
+  /* Movimento */
+  --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:    cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-bounce:    cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast:       120ms;
+  --dur-base:       200ms;
+  --dur-slow:       320ms;
+
+  /* Alturas fluidas de gráfico (adotadas na fase 5) */
+  --chart-h:        clamp(240px, 30vh + 40px, 340px);
+  --chart-h-tall:   clamp(280px, 38vh, 420px);
+
+  color-scheme: light;
+}
+
+/* Ultrawide — expande o content para a página não "ilhar" no centro. */
+@media (min-width: 1920px) { :root { --content-max: 1760px; } }
+@media (min-width: 2560px) { :root { --content-max: 1920px; } }
+
+/* ---------- Dark mode (modo canônico da identidade) ---------- */
+html.dark {
+  --brand-primary:    #2BAE96;
+  --brand-primary-2:  #34C5AB;
+  --brand-primary-3:  #5BC6B0;
+  --brand-primary-4:  #88D9C6;
+  --brand-accent:     #E8C77B;
+  --brand-accent-2:   #D4B068;
+
+  --color-success:    #4BC488;
+  --color-success-2:  #38A971;
+  --color-danger:     #E8736C;
+  --color-danger-2:   #DC5A52;
+  --color-warning:    #E8B54E;
+  --color-warning-2:  #D19E33;
+  --color-info:       #6EA8DE;
+  --color-info-2:     #5590CC;
+  --color-neutral:    #93A39C;
+
+  /* Superfícies — petróleo-negro em camadas, subtom verde */
+  --bg-canvas:        #0B100F;
+  --bg-surface-1:     #101614;
+  --bg-surface-2:     #151D1A;
+  --bg-surface-3:     #1B2420;
+  --bg-overlay:       #202A26;
+  --bg-sidebar:       #080C0B;
+  --bg-sidebar-2:     #101614;
+
+  --tint-success:     rgba(75, 196, 136, 0.10);
+  --tint-danger:      rgba(232, 115, 108, 0.10);
+  --tint-warning:     rgba(232, 181, 78, 0.10);
+  --tint-info:        rgba(110, 168, 222, 0.10);
+  --tint-brand:       rgba(43, 174, 150, 0.12);
+  --tint-accent:      rgba(232, 199, 123, 0.14);
+
+  --text-primary:     #F2F7F4;
+  --text-secondary:   #A8B3AE;
+  --text-muted:       #8A948F;
+  --text-sidebar:     rgba(240, 247, 243, 0.78);
+  --text-sidebar-muted: rgba(240, 247, 243, 0.42);
+
+  /* Bordas — brancos aquecidos de verde */
+  --border-subtle:    rgba(226, 240, 234, 0.07);
+  --border-default:   rgba(226, 240, 234, 0.11);
+  --border-strong:    rgba(226, 240, 234, 0.18);
+  --border-sidebar:   rgba(226, 240, 234, 0.06);
+
+  --shadow-sm:        0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md:        0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-lg:        0 12px 32px rgba(0, 0, 0, 0.55);
+  --shadow-xl:        0 24px 56px rgba(0, 0, 0, 0.65);
+  --shadow-glow-brand:   0 0 0 1px rgba(43, 174, 150, 0.30), 0 8px 24px rgba(43, 174, 150, 0.18);
+  --shadow-glow-success: 0 0 0 1px rgba(75, 196, 136, 0.30), 0 8px 24px rgba(75, 196, 136, 0.18);
+  --shadow-glow-danger:  0 0 0 1px rgba(232, 115, 108, 0.30), 0 8px 24px rgba(232, 115, 108, 0.18);
+
+  --ring-focus:       0 0 0 3px color-mix(in srgb, var(--brand-primary) 45%, transparent);
+
+  color-scheme: dark;
+}
+
+/* ---------- Aliases legados ----------
+   Telas ainda não migradas leem estes nomes antigos. A fase 3 expurga os dois
+   últimos consumidores (forgot-password / import-result); a fase 6 deleta o
+   bloco inteiro (grep-verificar zero usos antes). */
+:root,
+html.dark {
+  --bg-base:        var(--bg-canvas);
+  --bg-surface:     var(--bg-surface-1);
+  --bg-elevated:    var(--bg-surface-2);
+  --bg-elevated-2:  var(--bg-surface-3);
+  --bg-input:       var(--bg-surface-1);
+  --bg-auto:        var(--tint-brand);
+
+  --bg-red:         var(--tint-danger);
+  --bg-amber:       var(--tint-warning);
+  --bg-green:       var(--tint-success);
+  --bg-blue:        var(--tint-info);
+  --bg-teal:        var(--tint-brand);
+  --bg-purple:      var(--tint-accent);
+  --bg-orange:      var(--tint-warning);
+
+  --txt-primary:    var(--text-primary);
+  --txt-secondary:  var(--text-secondary);
+  --txt-muted:      var(--text-muted);
+  --txt-sidebar:    var(--text-sidebar);
+  --txt-sidebar-active: #FFFFFF;
+
+  --clr-blue:       var(--color-info);
+  --clr-blue-hover: var(--color-info-2);
+  --clr-green:      var(--color-success);
+  --clr-red:        var(--color-danger);
+  --clr-amber:      var(--color-warning);
+  --clr-teal:       var(--brand-primary);
+  --clr-purple:     var(--brand-accent);
+  --clr-orange:     var(--color-warning);
+
+  --brd-default:    var(--border-subtle);
+  --brd-strong:     var(--border-strong);
+  --brd-sidebar:    var(--border-sidebar);
+}

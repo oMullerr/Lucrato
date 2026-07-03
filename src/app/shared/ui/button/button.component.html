@@ -1,0 +1,8 @@
+@if (loading()) {
+  <span class="btn-spinner">
+    <app-spinner [size]="spinnerSize()" />
+  </span>
+}
+<span class="btn-content">
+  <ng-content />
+</span>

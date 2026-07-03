@@ -1,0 +1,64 @@
+:host {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+/* ---------- Hero: a assinatura ---------- */
+.money-hero {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.money-hero-value {
+  font-family: var(--font-display);
+  font-stretch: 116%;
+  font-weight: 650;
+  font-size: var(--fs-hero);
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  /* Anti-clichê: o número fica em cor de texto plena; o tom vem do delta. */
+  color: var(--text-primary);
+}
+
+/* Hairline champanhe — o traço registrado da marca */
+.money-hero-rule {
+  display: block;
+  height: 3px;
+  width: 56px;
+  margin-top: var(--space-2);
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--brand-accent), color-mix(in srgb, var(--brand-accent) 20%, transparent));
+}
+
+.money-hero-delta {
+  font-size: var(--fs-small);
+  align-self: flex-end;
+  padding-bottom: var(--space-2);
+}
+
+/* ---------- Chip ---------- */
+.money-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  line-height: 1.4;
+
+  &.tone-profit  { background: var(--tint-success); color: var(--color-profit); }
+  &.tone-loss    { background: var(--tint-danger);  color: var(--color-loss); }
+  &.tone-neutral { background: var(--bg-surface-3); color: var(--text-muted); }
+}
+
+/* ---------- Text ---------- */
+.money-text {
+  font-weight: 600;
+
+  &.tone-profit  { color: var(--color-profit); }
+  &.tone-loss    { color: var(--color-loss); }
+  &.tone-neutral { color: var(--text-primary); }
+}

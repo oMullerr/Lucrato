@@ -1,0 +1,16 @@
+:host {
+  --icon-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

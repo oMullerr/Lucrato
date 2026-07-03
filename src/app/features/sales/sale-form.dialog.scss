@@ -2,7 +2,7 @@ h2 {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: 'Geist', 'Inter', sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: -0.015em;
 }
@@ -10,7 +10,7 @@ h2 mat-icon { color: var(--brand-primary); }
 
 .id-badge {
   margin-left: auto;
-  font-family: 'Geist', 'Inter', sans-serif;
+  font-family: var(--font-display);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -136,7 +136,7 @@ h2 mat-icon { color: var(--brand-primary); }
 }
 
 .preview-stats strong {
-  font-family: 'Geist', 'Inter', sans-serif;
+  font-family: var(--font-display);
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.015em;

@@ -1,0 +1,43 @@
+/* LUCRATO · Breakpoints — fonte única de verdade (espelhada em TS por
+   shared/ui/breakpoint.service.ts; mudou aqui, mude lá).
+
+   Uso:
+     @use '../../../styles/breakpoints' as bp;
+     .kpi-strip { @include bp.below(md) { … } }
+
+   Regra de review: `@media (max-width: NNNpx)` cru em SCSS migrado = rejeitado.
+   Exceções permitidas: prefers-reduced-motion / prefers-color-scheme e os
+   degraus de ultrawide em _tokens.scss. */
+
+@use 'sass:map';
+
+$bp: (
+  sm: 640px,   // celulares grandes / limite de dialog full-screen
+  md: 768px,   // tablet retrato / troca tabela→cards / drawer overlay
+  lg: 1024px,  // tablet paisagem / colapso do login
+  xl: 1280px,  // desktop
+  2xl: 1600px, // desktop largo / drawers side-mode
+  3xl: 1920px, // ultrawide
+);
+
+@function get($key) {
+  @if not map.has-key($bp, $key) {
+    @error 'Breakpoint desconhecido: #{$key}. Use: #{map.keys($bp)}';
+  }
+  @return map.get($bp, $key);
+}
+
+/* Abaixo de (exclusivo): mobile-first quando faz sentido inverter */
+@mixin below($key) {
+  @media (max-width: #{get($key) - 0.02px}) { @content; }
+}
+
+/* A partir de (inclusivo) */
+@mixin above($key) {
+  @media (min-width: #{get($key)}) { @content; }
+}
+
+/* Faixa [from, to) */
+@mixin between($from, $to) {
+  @media (min-width: #{get($from)}) and (max-width: #{get($to) - 0.02px}) { @content; }
+}

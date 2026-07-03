@@ -1,0 +1,128 @@
+/* LUCRATO · Tipografia — três vozes:
+   Archivo (display: títulos e números-herói, com eixo de largura),
+   Inter (corpo), Geist Mono (dados/ids). Todas self-hosted em /fonts. */
+
+$latin: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+  U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+  U+2215, U+FEFF, U+FFFD;
+$latin-ext: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+  U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1EFF, U+20A0-20AB, U+20AD-20C0,
+  U+2113, U+2C60-2C7F, U+A720-A7FF;
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-var-latin.woff2') format('woff2');
+  unicode-range: $latin;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-var-latin-ext.woff2') format('woff2');
+  unicode-range: $latin-ext;
+}
+
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url('/fonts/archivo-var-latin.woff2') format('woff2');
+  unicode-range: $latin;
+}
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url('/fonts/archivo-var-latin-ext.woff2') format('woff2');
+  unicode-range: $latin-ext;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/geist-mono-var-latin.woff2') format('woff2');
+  unicode-range: $latin;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/geist-mono-var-latin-ext.woff2') format('woff2');
+  unicode-range: $latin-ext;
+}
+
+/* ---------- Papéis tipográficos ---------- */
+
+/* Numerais tabulares em qualquer célula/valor numérico */
+.num,
+.kpi-value,
+.data-table td.text-right,
+.data-table td.text-center,
+.metric-value,
+.mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-stretch: 104%;
+  letter-spacing: -0.015em;
+}
+
+.font-mono,
+.mono {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+}
+
+.h-display {
+  font-family: var(--font-display);
+  font-stretch: 104%;
+  font-size: var(--fs-display-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  color: var(--text-primary);
+}
+
+.h-section {
+  font-family: var(--font-display);
+  font-stretch: 102%;
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.h-card {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.t-body {
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.t-caption,
+.eyebrow {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}

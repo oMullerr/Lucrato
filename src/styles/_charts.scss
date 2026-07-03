@@ -1,0 +1,15 @@
+/* LUCRATO · Gráficos — moldura compartilhada de chart cards.
+   As páginas (dashboard/fiscal/analytics) adotam na fase 5, substituindo as
+   molduras duplicadas locais. Alturas fluidas vêm de --chart-h / --chart-h-tall
+   (definidas em _tokens.scss). */
+
+.chart-frame {
+  position: relative;
+  height: var(--chart-h);
+
+  canvas { max-width: 100%; }
+}
+
+.chart-frame.tall {
+  height: var(--chart-h-tall);
+}
