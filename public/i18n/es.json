@@ -1,4 +1,10 @@
 {
+  "ui": {
+    "select": {
+      "noResults": "Sin resultados",
+      "search": "Buscar…"
+    }
+  },
   "routeTitles": {
     "login": "Iniciar sesión · Lucrato",
     "verifyEmail": "Verificar correo · Lucrato",
@@ -717,6 +723,8 @@
     "email": "Correo electrónico",
     "password": "Contraseña",
     "storeName": "Nombre de la tienda",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
     "pwdHint": "Mínimo 8 caracteres, con letra y número",
     "forgotLink": "Olvidé mi contraseña",
     "errInvalidCredentials": "Correo o contraseña incorrectos.",

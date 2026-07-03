@@ -1,18 +1,21 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
+import { A11yModule } from '@angular/cdk/a11y';
 import { TranslateModule } from '@ngx-translate/core';
 import { Purchase } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { CurrencyInputDirective } from '../../shared/directives/currency-input.directive';
+import { DialogShellComponent } from '../../shared/ui/dialog/dialog-shell.component';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { FieldComponent } from '../../shared/ui/field/field.component';
+import { InputDirective } from '../../shared/ui/field/input.directive';
+import { SelectComponent } from '../../shared/ui/select/select.component';
+import { OptionComponent } from '../../shared/ui/select/option.component';
+import { DateInputComponent } from '../../shared/ui/date-input/date-input.component';
+import { TooltipDirective } from '../../shared/ui/tooltip/tooltip.directive';
 
 export interface PurchaseDialogData {
   purchase?: Purchase;
@@ -23,17 +26,18 @@ export interface PurchaseDialogData {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
-    MatSelectModule, MatButtonModule, MatIconModule, MatDatepickerModule, MatTooltipModule, BrlPipe,
-    CurrencyInputDirective, TranslateModule,
+    FormsModule, A11yModule, TranslateModule, BrlPipe, CurrencyInputDirective,
+    DialogShellComponent, ButtonComponent, IconComponent,
+    FieldComponent, InputDirective, SelectComponent, OptionComponent,
+    DateInputComponent, TooltipDirective,
   ],
   templateUrl: './purchase-form.dialog.html',
   styleUrl: './purchase-form.dialog.scss',
 })
 export class PurchaseFormDialogComponent {
   private readonly dataService = inject(DataService);
-  protected readonly ref = inject<MatDialogRef<PurchaseFormDialogComponent, Purchase | null>>(MatDialogRef);
-  private readonly data = inject<PurchaseDialogData>(MAT_DIALOG_DATA);
+  protected readonly ref = inject<DialogRef<Purchase | null>>(DialogRef);
+  private readonly data = inject<PurchaseDialogData>(DIALOG_DATA);
 
   protected readonly isEdit = signal(!!this.data.purchase);
   protected readonly model = signal<Purchase>(this.initialModel());
@@ -66,21 +70,21 @@ export class PurchaseFormDialogComponent {
     return !y || !m || !d ? null : new Date(y, m - 1, d);
   });
 
-  /** Upper bound for the receipt-date picker — disables any date after today. */
+  /** Limite superior dos campos de data — desabilita datas futuras. */
   protected readonly today = (() => {
     const t = new Date();
     t.setHours(23, 59, 59, 999);
     return t;
   })();
 
-  /** True when the current receiptDate is strictly in the future. */
+  /** True quando o receiptDate atual está no futuro. */
   protected readonly receiptDateInFuture = computed(() => {
     const r = this.model().receiptDate;
     if (!r) return false;
     return r > this.dateAsString(new Date());
   });
 
-  /** True when the current purchaseDate is strictly in the future. */
+  /** True quando o purchaseDate atual está no futuro. */
   protected readonly purchaseDateInFuture = computed(() => {
     const p = this.model().purchaseDate;
     if (!p) return false;

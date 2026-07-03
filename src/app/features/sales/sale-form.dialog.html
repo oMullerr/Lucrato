@@ -1,141 +1,124 @@
-<h2 mat-dialog-title>
-  <mat-icon>{{ isEdit() ? 'edit' : 'sell' }}</mat-icon>
-  <span class="title-text">{{ (isEdit() ? 'saleForm.editTitle' : 'saleForm.newTitle') | translate }}</span>
-  <span class="id-badge" [matTooltip]="'purchaseForm.autoId' | translate">{{ model().id }}</span>
-</h2>
+<app-dialog-shell
+  [dialogTitle]="(isEdit() ? 'saleForm.editTitle' : 'saleForm.newTitle') | translate"
+  [icon]="isEdit() ? 'pencil' : 'tag'"
+>
+  <span dialogBadge class="id-badge num" [appTooltip]="'purchaseForm.autoId' | translate">{{ model().id }}</span>
 
-<mat-dialog-content>
-  <form #form="ngForm" class="form-grid">
-    <mat-form-field class="full">
-      <mat-label>{{ 'saleForm.batchId' | translate }}</mat-label>
-      <mat-select
+  <form class="form-grid" (submit)="$event.preventDefault(); save()">
+    <app-field
+      class="full"
+      [label]="'saleForm.batchId' | translate"
+      [required]="true"
+      [hint]="!hasBatch() ? ('saleForm.selectBatchHint' | translate) : ''"
+    >
+      <app-select
         [ngModel]="model().batchId"
         (ngModelChange)="onBatchIdChange($event)"
         name="batchId"
-        cdkFocusInitial
-        required
-        (openedChange)="onBatchPanelToggle($event)"
+        [searchable]="true"
+        [searchPlaceholder]="'saleForm.searchByProduct' | translate"
       >
-        <div class="batch-search">
-          <mat-icon>search</mat-icon>
-          <input
-            type="text"
-            [value]="batchFilter()"
-            (input)="onBatchSearch($event)"
-            (keydown)="onBatchSearchKeydown($event)"
-            [placeholder]="'saleForm.searchByProduct' | translate"
-            [attr.aria-label]="'saleForm.searchBatchByProduct' | translate"
-          />
-        </div>
-        @for (batch of filteredBatches(); track batch.id) {
-          <mat-option [value]="batch.id">
-            {{ batch.id }} — {{ batch.product }}
-            @if (batch.currentStock <= 0) {
-              {{ 'saleForm.soldOut' | translate }}
-            } @else {
-              {{ 'saleForm.available' | translate:{ count: batch.currentStock } }}
-            }
-          </mat-option>
+        @for (batch of availableBatches(); track batch.id) {
+          <app-option [value]="batch.id" [label]="batch.id + ' — ' + batch.product">
+            <span class="batch-line">
+              <strong class="num">{{ batch.id }}</strong> — {{ batch.product }}
+              @if (batch.currentStock <= 0) {
+                <span class="batch-meta">{{ 'saleForm.soldOut' | translate }}</span>
+              } @else {
+                <span class="batch-meta">{{ 'saleForm.available' | translate:{ count: batch.currentStock } }}</span>
+              }
+            </span>
+          </app-option>
         }
         @if (availableBatches().length === 0) {
-          <mat-option disabled>
+          <app-option [value]="''" [disabled]="true">
             {{ 'saleForm.noBatchAvailable' | translate }}
-          </mat-option>
-        } @else if (filteredBatches().length === 0) {
-          <mat-option disabled>{{ 'saleForm.noBatchFound' | translate:{ query: batchFilter() } }}</mat-option>
+          </app-option>
         }
-      </mat-select>
-      @if (!hasBatch()) {
-        <mat-hint>{{ 'saleForm.selectBatchHint' | translate }}</mat-hint>
-      }
-    </mat-form-field>
+      </app-select>
+    </app-field>
 
-    <mat-form-field class="full">
-      <mat-label>{{ 'purchases.colProduct' | translate }}</mat-label>
-      <input matInput [value]="model().product" name="product" readonly />
-      <mat-hint>{{ 'saleForm.autoFilledByBatch' | translate }}</mat-hint>
-    </mat-form-field>
+    <app-field
+      class="full"
+      [label]="'purchases.colProduct' | translate"
+      [hint]="'saleForm.autoFilledByBatch' | translate"
+    >
+      <input appInput [value]="model().product" name="product" readonly />
+    </app-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'saleForm.saleDate' | translate }}</mat-label>
-      <input
-        matInput
-        [matDatepicker]="pickerSale"
+    <app-field
+      [label]="'saleForm.saleDate' | translate"
+      [required]="true"
+      [error]="saleBeforePurchase() ? ('saleForm.saleBeforePurchase' | translate) : ''"
+      [showErrorNow]="saleBeforePurchase()"
+    >
+      <app-date-input
         [ngModel]="saleDateAsDate()"
         (ngModelChange)="setSaleDate($event)"
         [disabled]="!hasBatch()"
         name="saleDate"
         [min]="minSaleDate()"
-        required
       />
-      <mat-datepicker-toggle matIconSuffix [for]="pickerSale" [disabled]="!hasBatch()"></mat-datepicker-toggle>
-      <mat-datepicker #pickerSale></mat-datepicker>
-      @if (saleBeforePurchase()) {
-        <mat-hint class="error-hint">
-          {{ 'saleForm.saleBeforePurchase' | translate }}
-        </mat-hint>
-      }
-    </mat-form-field>
+    </app-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'sales.channel' | translate }}</mat-label>
-      <mat-select
+    <app-field [label]="'sales.channel' | translate" [required]="true">
+      <app-select
         [ngModel]="model().channel"
         (ngModelChange)="set('channel', $event)"
         [disabled]="!hasBatch()"
-        name="channel" required>
+        name="channel">
         @for (c of channels(); track c) {
-          <mat-option [value]="c">{{ c }}</mat-option>
+          <app-option [value]="c">{{ c }}</app-option>
         }
-      </mat-select>
-    </mat-form-field>
+      </app-select>
+    </app-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'saleForm.quantitySold' | translate }}</mat-label>
-      <input matInput type="number"
+    <app-field
+      [label]="'saleForm.quantitySold' | translate"
+      [required]="true"
+      [error]="exceedsStock() ? ('saleForm.exceedsStock' | translate:{ max: maxAvailable() }) : ''"
+      [showErrorNow]="exceedsStock()"
+      [hint]="maxAvailable() !== null ? ('saleForm.availableUnits' | translate:{ max: maxAvailable() }) : ''"
+    >
+      <input appInput type="number"
         [ngModel]="model().quantitySold"
         (ngModelChange)="setNum('quantitySold', $event)"
         [disabled]="!hasBatch()"
         name="quantitySold" min="1" required />
-      @if (exceedsStock()) {
-        <mat-hint class="error-hint">
-          {{ 'saleForm.exceedsStock' | translate:{ max: maxAvailable() } }}
-        </mat-hint>
-      } @else if (maxAvailable() !== null) {
-        <mat-hint>{{ 'saleForm.availableUnits' | translate:{ max: maxAvailable() } }}</mat-hint>
-      }
-    </mat-form-field>
+    </app-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'saleForm.unitPrice' | translate }}</mat-label>
-      <span matTextPrefix>R$&nbsp;</span>
-      <input matInput appCurrencyInput inputmode="numeric"
+    <app-field [label]="'saleForm.unitPrice' | translate" [required]="true">
+      <span fieldPrefix class="money-prefix">R$</span>
+      <input appInput appCurrencyInput inputmode="numeric"
         [ngModel]="model().unitPrice"
         (ngModelChange)="setNum('unitPrice', $event)"
         [disabled]="!hasBatch()"
         name="unitPrice" required />
-    </mat-form-field>
+    </app-field>
 
     <!-- Taxa customizada -->
     <div class="taxa-field full">
       <div class="taxa-header">
         <span class="taxa-label">
-          <mat-icon>local_offer</mat-icon>
+          <app-icon name="tags" [size]="16" />
           {{ 'saleForm.mlFeeLabel' | translate }}
         </span>
         <button
           type="button"
-          mat-icon-button
+          appBtn="ghost"
+          iconOnly
+          size="sm"
           (click)="resetFee()"
           [disabled]="!hasBatch()"
-          [matTooltip]="'saleForm.resetToDefault' | translate:{ fee: (defaultFee() * 100).toFixed(1) }"
+          [appTooltip]="'saleForm.resetToDefault' | translate:{ fee: (defaultFee() * 100).toFixed(1) }"
+          [attr.aria-label]="'saleForm.resetToDefault' | translate:{ fee: (defaultFee() * 100).toFixed(1) }"
         >
-          <mat-icon>restart_alt</mat-icon>
+          <app-icon name="rotate-ccw" [size]="16" />
         </button>
       </div>
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <app-field [hint]="'saleForm.feeHint' | translate:{ fee: (defaultFee() * 100).toFixed(1) }">
         <input
-          matInput
+          appInput
           type="number"
           step="0.01"
           min="0"
@@ -146,122 +129,113 @@
           [disabled]="!hasBatch()"
           required
         />
-        <span matSuffix class="percent-suffix">%</span>
-      </mat-form-field>
-      <small class="taxa-hint">
-        {{ 'saleForm.feeHint' | translate:{ fee: (defaultFee() * 100).toFixed(1) } }}
-      </small>
+        <span fieldSuffix class="percent-suffix">%</span>
+      </app-field>
     </div>
 
-    <!-- Shipping type toggle -->
+    <!-- Tipo de frete -->
     <div class="shipping-toggle full">
-      <mat-icon>local_shipping</mat-icon>
+      <app-icon name="truck" [size]="18" />
       <span [class.active]="!isFlexShipping()">{{ 'saleForm.shippingCorreios' | translate }}</span>
-      <mat-slide-toggle
-        [checked]="isFlexShipping()"
-        (change)="setShippingType($event.checked)"
+      <app-switch
+        [ngModel]="isFlexShipping()"
+        (ngModelChange)="setShippingType($event)"
         [disabled]="!hasBatch()"
-        color="primary"
-      ></mat-slide-toggle>
+        name="shippingType"
+      />
       <span [class.active]="isFlexShipping()">{{ 'saleForm.shippingFlex' | translate }}</span>
     </div>
 
     @if (!isFlexShipping()) {
-      <mat-form-field>
-        <mat-label>{{ 'saleForm.sellerShipping' | translate }}</mat-label>
-        <span matTextPrefix>R$&nbsp;</span>
-        <input matInput appCurrencyInput inputmode="numeric"
+      <app-field [label]="'saleForm.sellerShipping' | translate">
+        <span fieldPrefix class="money-prefix">R$</span>
+        <input appInput appCurrencyInput inputmode="numeric"
           [ngModel]="model().sellerShipping"
           (ngModelChange)="setNum('sellerShipping', $event)"
           [disabled]="!hasBatch()"
           name="sellerShipping" />
-      </mat-form-field>
+      </app-field>
     } @else {
-      <mat-form-field>
-        <mat-label>{{ 'saleForm.flexRefund' | translate }}</mat-label>
-        <span matTextPrefix>R$&nbsp;</span>
-        <input matInput appCurrencyInput inputmode="numeric"
+      <app-field [label]="'saleForm.flexRefund' | translate" [hint]="'saleForm.flexRefundHint' | translate">
+        <span fieldPrefix class="money-prefix">R$</span>
+        <input appInput appCurrencyInput inputmode="numeric"
           [ngModel]="model().flexRefund ?? 0"
           (ngModelChange)="setNum('flexRefund', $event)"
           [disabled]="!hasBatch()"
           name="flexRefund" />
-        <mat-hint>{{ 'saleForm.flexRefundHint' | translate }}</mat-hint>
-      </mat-form-field>
+      </app-field>
     }
 
-    <mat-form-field>
-      <mat-label>{{ 'saleForm.discount' | translate }}</mat-label>
-      <span matTextPrefix>R$&nbsp;</span>
-      <input matInput appCurrencyInput inputmode="numeric"
+    <app-field [label]="'saleForm.discount' | translate">
+      <span fieldPrefix class="money-prefix">R$</span>
+      <input appInput appCurrencyInput inputmode="numeric"
         [ngModel]="model().discount"
         (ngModelChange)="setNum('discount', $event)"
         [disabled]="!hasBatch()"
         name="discount" />
-    </mat-form-field>
+    </app-field>
 
-    <mat-form-field class="full">
-      <mat-label>{{ 'purchaseForm.otherCosts' | translate }}</mat-label>
-      <span matTextPrefix>R$&nbsp;</span>
-      <input matInput appCurrencyInput inputmode="numeric"
+    <app-field class="full" [label]="'purchaseForm.otherCosts' | translate">
+      <span fieldPrefix class="money-prefix">R$</span>
+      <input appInput appCurrencyInput inputmode="numeric"
         [ngModel]="model().otherCosts"
         (ngModelChange)="setNum('otherCosts', $event)"
         [disabled]="!hasBatch()"
         name="otherCosts" />
-    </mat-form-field>
+    </app-field>
 
-    <mat-form-field class="full">
-      <mat-label>{{ 'purchaseForm.notes' | translate }}</mat-label>
-      <textarea matInput rows="2"
+    <app-field class="full" [label]="'purchaseForm.notes' | translate">
+      <textarea appInput rows="2"
         [ngModel]="model().notes"
         (ngModelChange)="set('notes', $event)"
         [disabled]="!hasBatch()"
         name="notes"></textarea>
-    </mat-form-field>
+    </app-field>
   </form>
 
   <!-- Preview -->
   <div class="preview">
     <div class="preview-title">
-      <mat-icon>calculate</mat-icon>
+      <app-icon name="calculator" [size]="16" />
       {{ 'saleForm.calculatedResult' | translate }}
     </div>
     <div class="preview-stats">
       <div>
         <span>{{ 'saleForm.grossRevenue' | translate }}</span>
-        <strong class="text-info">{{ preview().grossRevenue | brl }}</strong>
+        <strong class="num text-info">{{ preview().grossRevenue | brl }}</strong>
       </div>
       <div>
         <span>{{ 'saleForm.feeShort' | translate }}</span>
-        <strong class="text-warning">- {{ preview().feeAmount | brl }}</strong>
+        <strong class="num text-warning">- {{ preview().feeAmount | brl }}</strong>
       </div>
       <div>
         <span>{{ 'saleForm.netRevenue' | translate }}</span>
-        <strong>{{ preview().netRevenue | brl }}</strong>
+        <strong class="num">{{ preview().netRevenue | brl }}</strong>
       </div>
       <div>
         <span>{{ 'saleForm.productCost' | translate }}</span>
-        <strong class="text-danger">- {{ preview().proportionalCost | brl }}</strong>
+        <strong class="num text-danger">- {{ preview().proportionalCost | brl }}</strong>
       </div>
       <div>
         <span>{{ 'saleForm.netProfit' | translate }}</span>
-        <strong [class]="profitClass()">
+        <strong class="num" [class]="'num ' + profitClass()">
           {{ preview().netProfit | brl }}
         </strong>
       </div>
       <div>
         <span>{{ 'saleForm.netMargin' | translate }}</span>
-        <strong [class]="marginClass()">
+        <strong class="num" [class]="'num ' + marginClass()">
           {{ (preview().netMargin * 100).toFixed(1) }}%
         </strong>
       </div>
     </div>
   </div>
-</mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <button mat-button (click)="ref.close()">{{ 'common.cancel' | translate }}</button>
-  <button mat-flat-button color="primary" (click)="save()" [disabled]="!isValid()">
-    <mat-icon>save</mat-icon>
-    {{ (isEdit() ? 'common.save' : 'common.add') | translate }}
-  </button>
-</mat-dialog-actions>
+  <ng-container dialogActions>
+    <button appBtn="ghost" type="button" (click)="ref.close()">{{ 'common.cancel' | translate }}</button>
+    <button appBtn type="button" (click)="save()" [disabled]="!isValid()">
+      <app-icon name="save" [size]="18" />
+      {{ (isEdit() ? 'common.save' : 'common.add') | translate }}
+    </button>
+  </ng-container>
+</app-dialog-shell>

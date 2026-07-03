@@ -28,11 +28,8 @@
   justify-content: center;
 }
 
-.icon-wrap mat-icon {
+.icon-wrap app-icon {
   color: var(--brand-primary);
-  font-size: 30px;
-  width: 30px;
-  height: 30px;
 }
 
 h1 {
@@ -68,11 +65,9 @@ h1 {
   margin-bottom: 22px;
 }
 
-.hint mat-icon {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
+.hint app-icon {
   color: var(--brand-primary);
+  flex-shrink: 0;
 }
 
 .actions {
@@ -86,11 +81,6 @@ h1 {
   height: 44px;
   font-size: 14px;
   font-weight: 500;
-}
-
-.actions button[mat-flat-button] {
-  --mdc-filled-button-container-color: var(--brand-primary);
-  --mdc-filled-button-label-text-color: #FFFFFF;
 }
 
 .logout-link {

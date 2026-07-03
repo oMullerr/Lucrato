@@ -13,7 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog } from '@angular/material/dialog';
+import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { BreakpointObserver } from '@angular/cdk/layout';
@@ -55,7 +55,7 @@ type FilterKey = 'all' | InventoryStatus;
 })
 export class InventoryComponent {
   protected readonly data = inject(DataService);
-  private readonly dialog = inject(MatDialog);
+  private readonly dialog = inject(DialogService);
   private readonly notify = inject(NotifyService);
   private readonly quick = inject(QuickActionsService);
   private readonly bp = inject(BreakpointObserver);
@@ -350,7 +350,7 @@ export class InventoryComponent {
     this.dialog
       .open<PurchaseFormDialogComponent, { purchase?: Purchase }, Purchase | null>(
         PurchaseFormDialogComponent,
-        { data: { purchase }, width: '720px', maxWidth: '95vw' },
+        { data: { purchase }, size: 'lg' },
       )
       .afterClosed()
       .subscribe(result => {
@@ -370,7 +370,7 @@ export class InventoryComponent {
     }
     this.dialog
       .open<ConfirmDialogComponent, unknown, ConfirmDialogResult>(ConfirmDialogComponent, {
-        width: '420px',
+        size: 'sm',
         data: {
           title: this.t.instant('inventory.deleteTitle'),
           message: this.t.instant('inventory.deleteMsg', { id: batch.id, product: batch.product }),

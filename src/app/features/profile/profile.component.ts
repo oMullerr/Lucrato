@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatDialog } from '@angular/material/dialog';
+import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { Firestore, deleteDoc, doc } from '@angular/fire/firestore';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
@@ -35,7 +35,7 @@ type StrengthLevel = 0 | 1 | 2 | 3 | 4;
 export class ProfileComponent {
   private readonly auth = inject(AuthService);
   private readonly notify = inject(NotifyService);
-  private readonly dialog = inject(MatDialog);
+  private readonly dialog = inject(DialogService);
   private readonly firestore = inject(Firestore);
   private readonly router = inject(Router);
   private readonly t = inject(TranslateService);
@@ -184,8 +184,7 @@ export class ProfileComponent {
           requirePassword: true,
           requirePasswordLabel: this.t.instant('dialogs.currentPassword'),
         },
-        width: '500px',
-        maxWidth: '95vw',
+        size: 'md',
       })
       .afterClosed()
       .subscribe(async result => {

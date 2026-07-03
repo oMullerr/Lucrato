@@ -1,0 +1,13 @@
+<button
+  type="button"
+  class="switch"
+  role="switch"
+  [attr.aria-checked]="checked() ? 'true' : 'false'"
+  [disabled]="isDisabled()"
+  (click)="toggle()"
+>
+  <span class="switch-track" aria-hidden="true">
+    <span class="switch-thumb"></span>
+  </span>
+  <span class="switch-label"><ng-content /></span>
+</button>

@@ -1,50 +1,52 @@
-<div class="confirm-dialog" [class.danger]="data.danger">
-  <div class="accent" aria-hidden="true"></div>
-  <div class="content-wrap">
-    <h2 mat-dialog-title>{{ data.title }}</h2>
-    <mat-dialog-content>
-      <p class="message">{{ data.message }}</p>
+<app-dialog-shell
+  [dialogTitle]="data.title"
+  [icon]="data.danger ? 'triangle-alert' : 'info'"
+  [tone]="data.danger ? 'danger' : 'brand'"
+>
+  <p class="message">{{ data.message }}</p>
 
-      @if (data.requireTextMatch) {
-        <mat-form-field class="match-field" appearance="outline">
-          <mat-label>{{ data.requireTextLabel ?? ('dialogs.typeToConfirm' | translate) }}</mat-label>
-          <input
-            matInput
-            [ngModel]="typedText()"
-            (ngModelChange)="typedText.set($event)"
-            autocomplete="off"
-          />
-          <mat-hint>{{ 'dialogs.typeExactly' | translate }} <strong>{{ data.requireTextMatch }}</strong></mat-hint>
-        </mat-form-field>
-      }
+  @if (data.requireTextMatch) {
+    <app-field
+      class="match-field"
+      [label]="data.requireTextLabel ?? ('dialogs.typeToConfirm' | translate)"
+      [hint]="('dialogs.typeExactly' | translate) + ' ' + data.requireTextMatch"
+    >
+      <input
+        appInput
+        [ngModel]="typedText()"
+        (ngModelChange)="typedText.set($event)"
+        autocomplete="off"
+      />
+    </app-field>
+  }
 
-      @if (data.requirePassword) {
-        <mat-form-field class="match-field" appearance="outline">
-          <mat-label>{{ data.requirePasswordLabel ?? ('dialogs.currentPassword' | translate) }}</mat-label>
-          <input
-            matInput
-            type="password"
-            [ngModel]="password()"
-            (ngModelChange)="password.set($event)"
-            autocomplete="current-password"
-          />
-        </mat-form-field>
-      }
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()">
-        {{ data.cancelText ?? ('common.cancel' | translate) }}
-      </button>
-      <button
-        mat-flat-button
-        class="confirm-btn"
-        [class.danger]="data.danger"
-        [disabled]="!canConfirm()"
-        (click)="confirm()"
-        cdkFocusInitial
-      >
-        {{ data.confirmText ?? ('common.confirm' | translate) }}
-      </button>
-    </mat-dialog-actions>
-  </div>
-</div>
+  @if (data.requirePassword) {
+    <app-field
+      class="match-field"
+      [label]="data.requirePasswordLabel ?? ('dialogs.currentPassword' | translate)"
+    >
+      <input
+        appInput
+        type="password"
+        [ngModel]="password()"
+        (ngModelChange)="password.set($event)"
+        autocomplete="current-password"
+      />
+    </app-field>
+  }
+
+  <ng-container dialogActions>
+    <button appBtn="ghost" type="button" (click)="cancel()">
+      {{ data.cancelText ?? ('common.cancel' | translate) }}
+    </button>
+    <button
+      [appBtn]="data.danger ? 'danger' : 'primary'"
+      type="button"
+      [disabled]="!canConfirm()"
+      (click)="confirm()"
+      cdkFocusInitial
+    >
+      {{ data.confirmText ?? ('common.confirm' | translate) }}
+    </button>
+  </ng-container>
+</app-dialog-shell>

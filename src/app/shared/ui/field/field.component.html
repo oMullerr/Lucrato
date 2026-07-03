@@ -1,0 +1,17 @@
+@if (label()) {
+  <label class="field-label" [attr.for]="fieldId">
+    {{ label() }}@if (required()) {<span class="field-required" aria-hidden="true"> *</span>}
+  </label>
+}
+
+<div class="field-box">
+  <span class="field-prefix"><ng-content select="[fieldPrefix]" /></span>
+  <ng-content />
+  <span class="field-suffix"><ng-content select="[fieldSuffix]" /></span>
+</div>
+
+@if (showError() && errorText()) {
+  <span class="field-error" [id]="fieldId + '-error'" role="alert">{{ errorText() }}</span>
+} @else if (hint()) {
+  <span class="field-hint" [id]="fieldId + '-hint'">{{ hint() }}</span>
+}

@@ -1,0 +1,81 @@
+@use '../../../../styles/breakpoints' as bp;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+  min-height: 0;
+  background: var(--bg-surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+
+  @include bp.below(sm) {
+    border-radius: 0;
+    border: none;
+    height: 100dvh;
+  }
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.dialog-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background: var(--tint-brand);
+  color: var(--brand-primary);
+  flex-shrink: 0;
+
+  &.dialog-icon--danger {
+    background: var(--tint-danger);
+    color: var(--color-danger);
+  }
+}
+
+.dialog-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-display);
+  font-stretch: 102%;
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dialog-close { flex-shrink: 0; }
+
+.dialog-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-5);
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+
+  &:empty { display: none; }
+}

@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatDialog } from '@angular/material/dialog';
+import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -58,7 +58,7 @@ type StatusFilter = 'all' | InventoryStatus;
 export class PurchasesComponent {
   protected readonly data = inject(DataService);
   private readonly notify = inject(NotifyService);
-  private readonly dialog = inject(MatDialog);
+  private readonly dialog = inject(DialogService);
   private readonly bp = inject(BreakpointObserver);
   private readonly t = inject(TranslateService);
 
@@ -256,8 +256,7 @@ export class PurchasesComponent {
             danger: true,
             confirmText: this.t.instant('purchases.removeAll'),
           },
-          width: '460px',
-          maxWidth: '95vw',
+          size: 'sm',
         })
         .afterClosed()
         .subscribe(confirmed => {
@@ -277,8 +276,7 @@ export class PurchasesComponent {
           danger: true,
           confirmText: this.t.instant('common.remove'),
         },
-        width: '420px',
-        maxWidth: '95vw',
+        size: 'sm',
       })
       .afterClosed()
       .subscribe(confirmed => {
@@ -293,7 +291,7 @@ export class PurchasesComponent {
     this.dialog
       .open<PurchaseFormDialogComponent, { purchase?: Purchase }, Purchase | null>(
         PurchaseFormDialogComponent,
-        { data: { purchase }, width: '720px', maxWidth: '95vw' }
+        { data: { purchase }, size: 'lg' }
       )
       .afterClosed()
       .subscribe(result => {

@@ -1,15 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDialog } from '@angular/material/dialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { AuthService } from '../../core/services/auth.service';
 import { validatePasswordStrength } from '../../core/services/password-validator';
 import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { FieldComponent } from '../../shared/ui/field/field.component';
+import { InputDirective } from '../../shared/ui/field/input.directive';
 
 @Component({
   selector: 'app-login',
@@ -17,16 +16,15 @@ import { ForgotPasswordDialogComponent } from './forgot-password.dialog';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    MatFormFieldModule, MatInputModule, MatButtonModule,
-    MatIconModule, MatProgressSpinnerModule,
     TranslateModule,
+    ButtonComponent, IconComponent, FieldComponent, InputDirective,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
 export class LoginComponent {
   private readonly authService = inject(AuthService);
-  private readonly dialog = inject(MatDialog);
+  private readonly dialog = inject(DialogService);
   private readonly t = inject(TranslateService);
 
   protected readonly mode = signal<'login' | 'register'>('login');
@@ -95,8 +93,7 @@ export class LoginComponent {
   openForgotPassword(): void {
     this.dialog.open(ForgotPasswordDialogComponent, {
       data: this.loginEmail || null,
-      width: '440px',
-      maxWidth: '95vw',
+      size: 'sm',
     });
   }
 

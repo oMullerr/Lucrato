@@ -1,13 +1,21 @@
-h2 { display: flex; align-items: center; gap: 10px; }
-h2 mat-icon { color: var(--clr-blue); }
-h2 mat-icon.warn { color: #f59e0b; }
-.summary { color: var(--txt-primary); margin: 0 0 12px; line-height: 1.5; }
-.errors-title { font-size: 13px; color: var(--txt-secondary); margin: 0 0 8px; font-weight: 600; }
+.summary {
+  color: var(--text-primary);
+  margin: 0 0 var(--space-3);
+  line-height: 1.5;
+}
+
+.errors-title {
+  font-size: var(--fs-small);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-2);
+  font-weight: 600;
+}
+
 .errors-list {
   margin: 0;
-  padding-left: 16px;
-  font-size: 13px;
-  color: var(--txt-secondary);
+  padding-left: var(--space-4);
+  font-size: var(--fs-small);
+  color: var(--text-secondary);
   line-height: 1.7;
   max-height: 260px;
   overflow-y: auto;

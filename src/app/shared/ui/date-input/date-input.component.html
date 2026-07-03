@@ -1,0 +1,10 @@
+<input
+  type="date"
+  class="app-input"
+  [value]="isoValue()"
+  [attr.min]="minIso() || null"
+  [attr.max]="maxIso() || null"
+  [disabled]="isDisabled()"
+  (input)="onInput($any($event.target).value)"
+  (blur)="onTouched()"
+/>

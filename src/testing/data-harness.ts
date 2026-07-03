@@ -13,7 +13,6 @@ import { Type, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
-import { MatDialog } from '@angular/material/dialog';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { Firestore } from '@angular/fire/firestore';
 import { DataService } from '../app/core/services/data.service';
@@ -24,6 +23,7 @@ import { ThemeService } from '../app/core/services/theme.service';
 import { LanguageService } from '../app/core/services/language.service';
 import { QuickActionsService } from '../app/core/services/quick-actions.service';
 import { XlsxExportService } from '../app/core/services/xlsx-export.service';
+import { DialogService } from '../app/shared/ui/dialog/dialog.service';
 import type { Database } from '../app/core/models/models';
 
 export const MONTHS_FIXTURE = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -72,7 +72,7 @@ export function setupComponentHarness<T>(cmp: Type<T>, db: Database): ComponentH
       { provide: TranslateService, useValue: fakeTranslate },
       { provide: ThemeService, useValue: { isDark: () => false } },
       { provide: LanguageService, useValue: { lang: signal('pt-BR'), current: () => 'pt-BR' } },
-      { provide: MatDialog, useValue: fakeDialog },
+      { provide: DialogService, useValue: fakeDialog },
       { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false, breakpoints: {} }) } },
       { provide: XlsxExportService, useValue: fakeXlsx },
       { provide: QuickActionsService, useValue: fakeQuick },

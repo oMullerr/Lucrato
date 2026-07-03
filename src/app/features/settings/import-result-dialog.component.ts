@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
+import { A11yModule } from '@angular/cdk/a11y';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogShellComponent } from '../../shared/ui/dialog/dialog-shell.component';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
 
 export interface ImportResultDialogData {
   purchaseCount: number;
@@ -14,11 +15,11 @@ export interface ImportResultDialogData {
   selector: 'app-import-result-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatDialogModule, MatButtonModule, MatIconModule, TranslateModule],
+  imports: [A11yModule, TranslateModule, DialogShellComponent, ButtonComponent],
   templateUrl: './import-result-dialog.component.html',
   styleUrl: './import-result-dialog.component.scss',
 })
 export class ImportResultDialogComponent {
-  readonly ref = inject(MatDialogRef);
-  readonly data = inject<ImportResultDialogData>(MAT_DIALOG_DATA);
+  readonly ref = inject(DialogRef);
+  readonly data = inject<ImportResultDialogData>(DIALOG_DATA);
 }

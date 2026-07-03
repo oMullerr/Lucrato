@@ -34,8 +34,8 @@ export class ButtonComponent {
   readonly appBtn = input<BtnVariant | ''>('');
   readonly size = input<BtnSize>('md');
   readonly iconOnly = input(false, { transform: (v: unknown) => v !== false && v !== null && v !== undefined });
-  readonly loading = input(false);
-  readonly disabled = input(false);
+  readonly loading = input(false, { transform: (v: boolean | null | undefined) => !!v });
+  readonly disabled = input(false, { transform: (v: boolean | null | undefined) => !!v });
 
   protected readonly variant = computed<BtnVariant>(() => this.appBtn() || 'primary');
   protected readonly isDisabled = computed(() => this.disabled() || this.loading());

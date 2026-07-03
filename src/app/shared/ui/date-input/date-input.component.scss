@@ -1,0 +1,10 @@
+:host {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+input {
+  width: 100%;
+  color-scheme: inherit; /* picker nativo acompanha o tema */
+}

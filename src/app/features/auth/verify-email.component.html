@@ -1,7 +1,7 @@
 <div class="verify-page">
-  <mat-card class="verify-card">
+  <div class="verify-card surface-card">
     <div class="icon-wrap">
-      <mat-icon>mark_email_unread</mat-icon>
+      <app-icon name="mail-warning" [size]="28" />
     </div>
 
     <h1>{{ 'auth.verifyTitle' | translate }}</h1>
@@ -11,41 +11,39 @@
     </p>
 
     <div class="hint">
-      <mat-icon>info</mat-icon>
+      <app-icon name="info" [size]="18" />
       <span>{{ 'auth.verifyHint' | translate }}</span>
     </div>
 
     <div class="actions">
       <button
-        mat-flat-button
-        color="primary"
+        appBtn
+        type="button"
         (click)="checkAgain()"
-        [disabled]="checking()"
+        [loading]="checking()"
       >
-        @if (checking()) {
-          <mat-spinner diameter="18" />
-        } @else {
-          <mat-icon>refresh</mat-icon>
-        }
+        <app-icon name="refresh-cw" [size]="18" />
         {{ 'auth.alreadyVerified' | translate }}
       </button>
 
       <button
-        mat-stroked-button
+        appBtn="outline"
+        type="button"
         (click)="resend()"
-        [disabled]="resending() || cooldown() > 0"
+        [loading]="resending()"
+        [disabled]="cooldown() > 0"
       >
-        <mat-icon>send</mat-icon>
+        <app-icon name="send" [size]="18" />
         @if (cooldown() > 0) {
           {{ 'auth.resendIn' | translate:{ s: cooldown() } }}
         } @else {
-          {{ (resending() ? 'auth.sending' : 'auth.resendEmail') | translate }}
+          {{ 'auth.resendEmail' | translate }}
         }
       </button>
     </div>
 
-    <button mat-button class="logout-link" (click)="logout()">
+    <button appBtn="ghost" size="sm" type="button" class="logout-link" (click)="logout()">
       {{ 'auth.logoutOther' | translate }}
     </button>
-  </mat-card>
+  </div>
 </div>

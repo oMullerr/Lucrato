@@ -1,20 +1,23 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
+import { A11yModule } from '@angular/cdk/a11y';
 import { TranslateModule } from '@ngx-translate/core';
 import { Sale } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
 import { calculateSale } from '../../core/services/calculations';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { CurrencyInputDirective } from '../../shared/directives/currency-input.directive';
+import { DialogShellComponent } from '../../shared/ui/dialog/dialog-shell.component';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { FieldComponent } from '../../shared/ui/field/field.component';
+import { InputDirective } from '../../shared/ui/field/input.directive';
+import { SelectComponent } from '../../shared/ui/select/select.component';
+import { OptionComponent } from '../../shared/ui/select/option.component';
+import { DateInputComponent } from '../../shared/ui/date-input/date-input.component';
+import { SwitchComponent } from '../../shared/ui/switch/switch.component';
+import { TooltipDirective } from '../../shared/ui/tooltip/tooltip.directive';
 
 export interface SaleDialogData {
   sale?: Sale;
@@ -25,18 +28,18 @@ export interface SaleDialogData {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
-    MatSelectModule, MatButtonModule, MatIconModule, MatTooltipModule,
-    MatDatepickerModule, MatSlideToggleModule, BrlPipe,
-    CurrencyInputDirective, TranslateModule,
+    FormsModule, A11yModule, TranslateModule, BrlPipe, CurrencyInputDirective,
+    DialogShellComponent, ButtonComponent, IconComponent,
+    FieldComponent, InputDirective, SelectComponent, OptionComponent,
+    DateInputComponent, SwitchComponent, TooltipDirective,
   ],
   templateUrl: './sale-form.dialog.html',
   styleUrl: './sale-form.dialog.scss',
 })
 export class SaleFormDialogComponent {
   private readonly dataService = inject(DataService);
-  protected readonly ref = inject<MatDialogRef<SaleFormDialogComponent, Sale | null>>(MatDialogRef);
-  private readonly data = inject<SaleDialogData>(MAT_DIALOG_DATA);
+  protected readonly ref = inject<DialogRef<Sale | null>>(DialogRef);
+  private readonly data = inject<SaleDialogData>(DIALOG_DATA);
 
   protected readonly isEdit = signal(!!this.data.sale);
   protected readonly model = signal<Sale>(this.initialModel());
@@ -64,33 +67,6 @@ export class SaleFormDialogComponent {
       return eligible || preservedForEdit;
     });
   });
-
-  /** Free-text filter for the batch select, matched against the product name. */
-  protected readonly batchFilter = signal('');
-
-  /** availableBatches() narrowed by the search term (product name, case-insensitive). */
-  protected readonly filteredBatches = computed(() => {
-    const term = this.batchFilter().trim().toLowerCase();
-    const batches = this.availableBatches();
-    if (!term) return batches;
-    return batches.filter(b => b.product.toLowerCase().includes(term));
-  });
-
-  protected onBatchSearch(event: Event): void {
-    this.batchFilter.set((event.target as HTMLInputElement).value);
-  }
-
-  /** Deixa as teclas de navegação/seleção chegarem ao mat-select; bloqueia as demais
-   *  para a digitação não disparar o type-ahead do painel. */
-  protected onBatchSearchKeydown(event: KeyboardEvent): void {
-    const passthrough = ['ArrowDown', 'ArrowUp', 'Enter', 'Escape', 'Tab'];
-    if (!passthrough.includes(event.key)) event.stopPropagation();
-  }
-
-  /** Limpa a busca ao fechar o painel para reabrir mostrando todos os lotes. */
-  protected onBatchPanelToggle(opened: boolean): void {
-    if (!opened) this.batchFilter.set('');
-  }
 
   protected readonly maxAvailable = computed(() => {
     const m = this.model();

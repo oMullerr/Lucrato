@@ -1,21 +1,18 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { logError } from '../../core/services/logger';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
 
 @Component({
   selector: 'app-verify-email',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    MatCardModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule,
-    TranslateModule,
+    TranslateModule, ButtonComponent, IconComponent,
   ],
   templateUrl: './verify-email.component.html',
   styleUrl: './verify-email.component.scss',

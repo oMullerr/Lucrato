@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, v
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog } from '@angular/material/dialog';
+import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -47,7 +47,7 @@ type SaleFilter = 'all' | 'profit' | 'loss' | 'low-margin';
 export class SalesComponent {
   protected readonly data = inject(DataService);
   private readonly notify = inject(NotifyService);
-  private readonly dialog = inject(MatDialog);
+  private readonly dialog = inject(DialogService);
   private readonly t = inject(TranslateService);
 
   protected readonly textFilter = signal('');
@@ -226,8 +226,7 @@ export class SalesComponent {
           danger: true,
           confirmText: this.t.instant('common.remove'),
         },
-        width: '420px',
-        maxWidth: '95vw',
+        size: 'sm',
       })
       .afterClosed()
       .subscribe(confirmed => {
@@ -262,7 +261,7 @@ export class SalesComponent {
     this.dialog
       .open<SaleFormDialogComponent, { sale?: Sale }, Sale | null>(
         SaleFormDialogComponent,
-        { data: { sale }, width: '820px', maxWidth: '95vw' }
+        { data: { sale }, size: 'xl' }
       )
       .afterClosed()
       .subscribe(result => {

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
+import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { Purchase, Sale } from '../models/models';
 import { SaleFormDialogComponent } from '../../features/sales/sale-form.dialog';
 import { PurchaseFormDialogComponent } from '../../features/purchases/purchase-form.dialog';
@@ -13,7 +13,7 @@ import { NotifyService } from './notify.service';
 
 @Injectable({ providedIn: 'root' })
 export class QuickActionsService {
-  private readonly dialog = inject(MatDialog);
+  private readonly dialog = inject(DialogService);
   private readonly data = inject(DataService);
   private readonly notify = inject(NotifyService);
   private readonly t = inject(TranslateService);
@@ -22,7 +22,7 @@ export class QuickActionsService {
     this.dialog
       .open<SaleFormDialogComponent, { sale?: Sale }, Sale | null>(
         SaleFormDialogComponent,
-        { data: {}, width: '820px', maxWidth: '95vw' },
+        { data: {}, size: 'xl' },
       )
       .afterClosed()
       .subscribe(result => {
@@ -40,7 +40,7 @@ export class QuickActionsService {
     this.dialog
       .open<PurchaseFormDialogComponent, { purchase?: Purchase }, Purchase | null>(
         PurchaseFormDialogComponent,
-        { data: {}, width: '720px', maxWidth: '95vw' },
+        { data: {}, size: 'lg' },
       )
       .afterClosed()
       .subscribe(result => {
@@ -64,7 +64,7 @@ export class QuickActionsService {
     const today = todayLocalISO();
     this.dialog
       .open<ConfirmDialogComponent, unknown, ConfirmDialogResult>(ConfirmDialogComponent, {
-        width: '420px',
+        size: 'sm',
         data: {
           title: this.t.instant('quick.markReceivedTitle'),
           message: this.t.instant('quick.markReceivedMsg', {

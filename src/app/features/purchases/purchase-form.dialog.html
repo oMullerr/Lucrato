@@ -1,166 +1,147 @@
-<h2 mat-dialog-title>
-  <mat-icon>{{ isEdit() ? 'edit' : 'add_circle' }}</mat-icon>
-  <span class="title-text">{{ (isEdit() ? 'purchaseForm.editTitle' : 'purchaseForm.newTitle') | translate }}</span>
-  <span class="id-badge" [matTooltip]="'purchaseForm.autoId' | translate">{{ model().id }}</span>
-</h2>
+<app-dialog-shell
+  [dialogTitle]="(isEdit() ? 'purchaseForm.editTitle' : 'purchaseForm.newTitle') | translate"
+  [icon]="isEdit() ? 'pencil' : 'circle-plus'"
+>
+  <span dialogBadge class="id-badge num" [appTooltip]="'purchaseForm.autoId' | translate">{{ model().id }}</span>
 
-<mat-dialog-content>
-  <form #form="ngForm" class="form-grid">
-    <mat-form-field class="full">
-      <mat-label>{{ 'purchases.colProduct' | translate }}</mat-label>
-      <input matInput
+  <form class="form-grid" (submit)="$event.preventDefault(); save()">
+    <app-field class="full" [label]="'purchases.colProduct' | translate" [required]="true">
+      <input appInput
         [ngModel]="model().product"
         (ngModelChange)="set('product', $event)"
         name="product" cdkFocusInitial required />
-    </mat-form-field>
+    </app-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'purchases.colCategory' | translate }}</mat-label>
-      <mat-select
+    <app-field [label]="'purchases.colCategory' | translate" [required]="true">
+      <app-select
         [ngModel]="model().category"
         (ngModelChange)="set('category', $event)"
-        name="category" required>
+        name="category">
         @for (cat of categories(); track cat) {
-          <mat-option [value]="cat">{{ cat }}</mat-option>
+          <app-option [value]="cat">{{ cat }}</app-option>
         }
-      </mat-select>
-    </mat-form-field>
+      </app-select>
+    </app-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'purchases.colSupplier' | translate }}</mat-label>
-      <mat-select
+    <app-field [label]="'purchases.colSupplier' | translate" [required]="true">
+      <app-select
         [ngModel]="model().supplier"
         (ngModelChange)="set('supplier', $event)"
-        name="supplier" required>
+        name="supplier">
         @for (s of suppliers(); track s) {
-          <mat-option [value]="s">{{ s }}</mat-option>
+          <app-option [value]="s">{{ s }}</app-option>
         }
-      </mat-select>
-    </mat-form-field>
+      </app-select>
+    </app-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'purchaseForm.purchaseDate' | translate }}</mat-label>
-      <input
-        matInput
-        [matDatepicker]="pickerPurchase"
+    <app-field
+      [label]="'purchaseForm.purchaseDate' | translate"
+      [required]="true"
+      [error]="purchaseDateInFuture() ? ('purchaseForm.purchaseDateFuture' | translate) : ''"
+      [showErrorNow]="purchaseDateInFuture()"
+    >
+      <app-date-input
         [ngModel]="purchaseDateAsDate()"
         (ngModelChange)="setPurchaseDate($event)"
         [max]="today"
         name="purchaseDate"
-        required
       />
-      <mat-datepicker-toggle matIconSuffix [for]="pickerPurchase"></mat-datepicker-toggle>
-      <mat-datepicker #pickerPurchase></mat-datepicker>
-      @if (purchaseDateInFuture()) {
-        <mat-hint class="error-hint">{{ 'purchaseForm.purchaseDateFuture' | translate }}</mat-hint>
-      }
-    </mat-form-field>
+    </app-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'purchaseForm.receiptDate' | translate }}</mat-label>
-      <input
-        matInput
-        [matDatepicker]="pickerReceipt"
+    <app-field
+      [label]="'purchaseForm.receiptDate' | translate"
+      [hint]="'purchaseForm.receiptDateHint' | translate"
+      [error]="receiptDateInFuture() ? ('purchaseForm.receiptDateFuture' | translate) : ''"
+      [showErrorNow]="receiptDateInFuture()"
+    >
+      <app-date-input
         [ngModel]="receiptDateAsDate()"
         (ngModelChange)="setReceiptDate($event)"
         [min]="purchaseDateAsDate()"
         [max]="today"
         name="receiptDate"
       />
-      <mat-datepicker-toggle matIconSuffix [for]="pickerReceipt"></mat-datepicker-toggle>
-      <mat-datepicker #pickerReceipt></mat-datepicker>
-      @if (receiptDateInFuture()) {
-        <mat-hint class="error-hint">{{ 'purchaseForm.receiptDateFuture' | translate }}</mat-hint>
-      } @else {
-        <mat-hint>{{ 'purchaseForm.receiptDateHint' | translate }}</mat-hint>
-      }
-    </mat-form-field>
+    </app-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'purchaseForm.quantity' | translate }}</mat-label>
-      <input matInput type="number" step="1" inputmode="numeric"
+    <app-field [label]="'purchaseForm.quantity' | translate" [required]="true">
+      <input appInput type="number" step="1" inputmode="numeric"
         [ngModel]="model().quantityPurchased"
         (ngModelChange)="setInt('quantityPurchased', $event, 1)"
         name="quantityPurchased" min="1" required />
-    </mat-form-field>
+    </app-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'purchaseForm.unitCost' | translate }}</mat-label>
-      <span matTextPrefix>R$&nbsp;</span>
-      <input matInput appCurrencyInput inputmode="numeric"
+    <app-field [label]="'purchaseForm.unitCost' | translate" [required]="true">
+      <span fieldPrefix class="money-prefix">R$</span>
+      <input appInput appCurrencyInput inputmode="numeric"
         [ngModel]="model().unitCost"
         (ngModelChange)="setNum('unitCost', $event)"
         name="unitCost" required />
-    </mat-form-field>
+    </app-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'purchaseForm.shipping' | translate }}</mat-label>
-      <span matTextPrefix>R$&nbsp;</span>
-      <input matInput appCurrencyInput inputmode="numeric"
+    <app-field [label]="'purchaseForm.shipping' | translate">
+      <span fieldPrefix class="money-prefix">R$</span>
+      <input appInput appCurrencyInput inputmode="numeric"
         [ngModel]="model().purchaseShipping"
         (ngModelChange)="setNum('purchaseShipping', $event)"
         name="purchaseShipping" />
-    </mat-form-field>
+    </app-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'purchaseForm.otherCosts' | translate }}</mat-label>
-      <span matTextPrefix>R$&nbsp;</span>
-      <input matInput appCurrencyInput inputmode="numeric"
+    <app-field [label]="'purchaseForm.otherCosts' | translate">
+      <span fieldPrefix class="money-prefix">R$</span>
+      <input appInput appCurrencyInput inputmode="numeric"
         [ngModel]="model().otherCosts"
         (ngModelChange)="setNum('otherCosts', $event)"
         name="otherCosts" />
-    </mat-form-field>
+    </app-field>
 
-    <mat-form-field class="full">
-      <mat-label>{{ 'purchaseForm.link' | translate }}</mat-label>
-      <input matInput type="url"
+    <app-field class="full" [label]="'purchaseForm.link' | translate">
+      <input appInput type="url"
         [ngModel]="model().link"
         (ngModelChange)="set('link', $event)"
         name="link" placeholder="https://..." />
-    </mat-form-field>
+    </app-field>
 
-    <mat-form-field class="full">
-      <mat-label>{{ 'purchaseForm.notes' | translate }}</mat-label>
-      <textarea matInput rows="2"
+    <app-field class="full" [label]="'purchaseForm.notes' | translate">
+      <textarea appInput rows="2"
         [ngModel]="model().notes"
         (ngModelChange)="set('notes', $event)"
         name="notes"></textarea>
-    </mat-form-field>
+    </app-field>
   </form>
 
   <div class="preview">
     <div class="preview-title">
-      <mat-icon>calculate</mat-icon>
+      <app-icon name="calculator" [size]="16" />
       {{ 'purchaseForm.autoCalc' | translate }}
     </div>
     <div class="preview-stats">
       <div>
         <span>{{ 'purchaseForm.totalCost' | translate }}</span>
-        <strong>{{ totalPurchaseCost() | brl }}</strong>
+        <strong class="num">{{ totalPurchaseCost() | brl }}</strong>
       </div>
       <div>
         <span>{{ 'purchaseForm.totalRealCost' | translate }}</span>
-        <strong>{{ totalActualCost() | brl }}</strong>
+        <strong class="num">{{ totalActualCost() | brl }}</strong>
       </div>
       <div>
         <span>{{ 'purchaseForm.realUnitCost' | translate }}</span>
-        <strong>{{ actualUnitCost() | brl }}</strong>
+        <strong class="num">{{ actualUnitCost() | brl }}</strong>
       </div>
     </div>
   </div>
-</mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <button mat-button (click)="ref.close()">{{ 'common.cancel' | translate }}</button>
-  <button
-    mat-flat-button
-    color="primary"
-    (click)="save()"
-    [disabled]="!isValid()"
-    [matTooltip]="isValid() ? '' : ('purchaseForm.fillRequired' | translate)"
-    matTooltipPosition="above"
-  >
-    <mat-icon>save</mat-icon>
-    {{ (isEdit() ? 'common.save' : 'common.add') | translate }}
-  </button>
-</mat-dialog-actions>
+  <ng-container dialogActions>
+    <button appBtn="ghost" type="button" (click)="ref.close()">{{ 'common.cancel' | translate }}</button>
+    <button
+      appBtn
+      type="button"
+      (click)="save()"
+      [disabled]="!isValid()"
+      [appTooltip]="isValid() ? '' : ('purchaseForm.fillRequired' | translate)"
+      tooltipPosition="above"
+    >
+      <app-icon name="save" [size]="18" />
+      {{ (isEdit() ? 'common.save' : 'common.add') | translate }}
+    </button>
+  </ng-container>
+</app-dialog-shell>

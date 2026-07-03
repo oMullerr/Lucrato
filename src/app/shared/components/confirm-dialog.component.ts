@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
+import { A11yModule } from '@angular/cdk/a11y';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogShellComponent } from '../ui/dialog/dialog-shell.component';
+import { ButtonComponent } from '../ui/button/button.component';
+import { FieldComponent } from '../ui/field/field.component';
+import { InputDirective } from '../ui/field/input.directive';
 
 export interface ConfirmDialogData {
   title: string;
@@ -29,19 +30,19 @@ export type ConfirmDialogResult =
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
+    A11yModule,
     TranslateModule,
+    DialogShellComponent,
+    ButtonComponent,
+    FieldComponent,
+    InputDirective,
   ],
   templateUrl: './confirm-dialog.component.html',
   styleUrl: './confirm-dialog.component.scss',
 })
 export class ConfirmDialogComponent {
-  readonly ref = inject<MatDialogRef<ConfirmDialogComponent, ConfirmDialogResult>>(MatDialogRef);
-  readonly data = inject<ConfirmDialogData>(MAT_DIALOG_DATA);
+  readonly ref = inject<DialogRef<ConfirmDialogResult>>(DialogRef);
+  readonly data = inject<ConfirmDialogData>(DIALOG_DATA);
 
   protected readonly typedText = signal('');
   protected readonly password = signal('');

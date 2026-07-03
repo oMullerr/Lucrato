@@ -7,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatDialog } from '@angular/material/dialog';
+import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { Firestore, doc, onSnapshot, setDoc, Unsubscribe } from '@angular/fire/firestore';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Settings } from '../../core/models/models';
@@ -63,7 +63,7 @@ export class SettingsComponent implements OnDestroy {
   private readonly dataService = inject(DataService);
   private readonly importService = inject(ImportService);
   private readonly notify = inject(NotifyService);
-  private readonly dialog = inject(MatDialog);
+  private readonly dialog = inject(DialogService);
   private readonly t = inject(TranslateService);
 
   private readonly fileInputEl = viewChild<ElementRef<HTMLInputElement>>('fileInputRef');
@@ -278,7 +278,7 @@ export class SettingsComponent implements OnDestroy {
           saleCount: result.sales.length,
           errors: result.errors,
         },
-        width: '520px',
+        size: 'md',
       });
     } catch (err) {
       logError('[Settings] Importação falhou:', err);
@@ -300,8 +300,7 @@ export class SettingsComponent implements OnDestroy {
           requireTextMatch: storeName,
           requireTextLabel: this.t.instant('profile.deleteTypeStore'),
         },
-        width: '460px',
-        maxWidth: '95vw',
+        size: 'sm',
       })
       .afterClosed()
       .subscribe(async confirmed => {

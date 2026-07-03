@@ -1,30 +1,30 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
+import { A11yModule } from '@angular/cdk/a11y';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
+import { DialogShellComponent } from '../../shared/ui/dialog/dialog-shell.component';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { FieldComponent } from '../../shared/ui/field/field.component';
+import { InputDirective } from '../../shared/ui/field/input.directive';
 
 @Component({
   selector: 'app-forgot-password-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule,
-    MatDialogModule, MatFormFieldModule, MatInputModule,
-    MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-    TranslateModule,
+    FormsModule, A11yModule, TranslateModule,
+    DialogShellComponent, ButtonComponent, IconComponent,
+    FieldComponent, InputDirective,
   ],
   templateUrl: './forgot-password.dialog.html',
   styleUrl: './forgot-password.dialog.scss',
 })
 export class ForgotPasswordDialogComponent {
-  protected readonly ref = inject<MatDialogRef<ForgotPasswordDialogComponent>>(MatDialogRef);
-  private readonly initialEmail = inject<string | null>(MAT_DIALOG_DATA, { optional: true });
+  protected readonly ref = inject<DialogRef<void>>(DialogRef);
+  private readonly initialEmail = inject<string | null>(DIALOG_DATA, { optional: true });
   private readonly auth = inject(AuthService);
 
   protected readonly email = signal(this.initialEmail ?? '');

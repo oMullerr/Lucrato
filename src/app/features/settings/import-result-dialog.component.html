@@ -1,15 +1,13 @@
-<h2 mat-dialog-title>
-  <mat-icon [class.warn]="data.errors.length > 0">
-    {{ data.errors.length ? 'warning' : 'check_circle' }}
-  </mat-icon>
-  {{ 'importResult.title' | translate }}
-</h2>
-<mat-dialog-content>
+<app-dialog-shell
+  [dialogTitle]="'importResult.title' | translate"
+  [icon]="data.errors.length ? 'triangle-alert' : 'circle-check'"
+  [tone]="data.errors.length ? 'danger' : 'brand'"
+>
   <p class="summary">
-    <strong>{{ data.purchaseCount }}</strong>
+    <strong class="num">{{ data.purchaseCount }}</strong>
     {{ (data.purchaseCount === 1 ? 'importResult.purchaseOne' : 'importResult.purchaseOther') | translate }}
     {{ 'importResult.and' | translate }}
-    <strong>{{ data.saleCount }}</strong>
+    <strong class="num">{{ data.saleCount }}</strong>
     {{ (data.saleCount === 1 ? 'importResult.saleOne' : 'importResult.saleOther') | translate }}
     {{ 'importResult.importedOk' | translate }}
   </p>
@@ -21,9 +19,10 @@
       }
     </ul>
   }
-</mat-dialog-content>
-<mat-dialog-actions align="end">
-  <button mat-flat-button color="primary" (click)="ref.close()" cdkFocusInitial>
-    {{ 'common.close' | translate }}
-  </button>
-</mat-dialog-actions>
+
+  <ng-container dialogActions>
+    <button appBtn type="button" (click)="ref.close()" cdkFocusInitial>
+      {{ 'common.close' | translate }}
+    </button>
+  </ng-container>
+</app-dialog-shell>

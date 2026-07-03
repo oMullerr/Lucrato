@@ -1,4 +1,10 @@
 {
+  "ui": {
+    "select": {
+      "noResults": "No results",
+      "search": "Search…"
+    }
+  },
   "routeTitles": {
     "login": "Login · Lucrato",
     "verifyEmail": "Verify email · Lucrato",
@@ -717,6 +723,8 @@
     "email": "Email",
     "password": "Password",
     "storeName": "Store name",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "pwdHint": "At least 8 characters, with a letter and a number",
     "forgotLink": "Forgot my password",
     "errInvalidCredentials": "Incorrect email or password.",

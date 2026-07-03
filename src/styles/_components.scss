@@ -58,6 +58,71 @@
 /* Trava o scroll do body enquanto um drawer over está aberto. */
 body.drawer-scroll-lock { overflow: hidden; }
 
+/* Painel de dialog (CDK) — tamanho por CSS, full-screen abaixo de sm. */
+.app-dialog-panel {
+  width: min(var(--dialog-w, 560px), calc(100vw - 32px));
+  max-height: min(86dvh, 900px);
+
+  @include bp.below(sm) {
+    width: 100vw !important;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+}
+
+.app-dialog--sm { --dialog-w: 420px; }
+.app-dialog--md { --dialog-w: 560px; }
+.app-dialog--lg { --dialog-w: 720px; }
+.app-dialog--xl { --dialog-w: 820px; }
+
+/* O container do CDK Dialog só hospeda; o visual vem do app-dialog-shell. */
+cdk-dialog-container {
+  display: block;
+  max-height: inherit;
+  outline: none;
+}
+
+/* Input nativo dentro de app-field (global: conteúdo projetado não recebe
+   estilos com escopo do componente projetante). */
+.app-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  height: 38px;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--text-primary);
+
+  &::placeholder { color: var(--text-muted); }
+
+  /* O anel de foco fica no .field-box (focus-within); sem anel interno. */
+  &:focus-visible { box-shadow: none; }
+}
+
+textarea.app-input {
+  height: auto;
+  min-height: 72px;
+  padding: var(--space-2) 0;
+  resize: vertical;
+}
+
+/* Inputs de data nativos: alinha o glifo do picker com a paleta. */
+input[type='date'].app-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity var(--dur-fast) var(--ease-out);
+
+  &:hover { opacity: 1; }
+}
+
+html.dark input[type='date'].app-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
 /* Painel do app-menu — global porque renderiza dentro do CDK Overlay. */
 .menu-panel {
   min-width: 200px;
@@ -88,6 +153,59 @@ body.drawer-scroll-lock { overflow: hidden; }
   border-radius: 3px;
   object-fit: cover;
   box-shadow: 0 0 0 1px var(--border-subtle);
+}
+
+/* Painel do app-select — global porque renderiza dentro do CDK Overlay. */
+.select-panel {
+  display: flex;
+  flex-direction: column;
+  max-height: 320px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-overlay);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: menu-in var(--dur-fast) var(--ease-out) both;
+}
+
+.select-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  flex-shrink: 0;
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    height: 32px;
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    color: var(--text-primary);
+
+    &::placeholder { color: var(--text-muted); }
+    &:focus-visible { box-shadow: none; }
+  }
+}
+
+.select-listbox {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px;
+  outline: none;
+}
+
+.select-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--fs-small);
 }
 
 /* Backdrop de overlays (CDK) — sobrevive à saída do Material (fase 6),

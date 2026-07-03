@@ -1,0 +1,49 @@
+<button
+  #triggerBtn
+  type="button"
+  class="select-trigger"
+  role="combobox"
+  [attr.aria-expanded]="isOpen() ? 'true' : 'false'"
+  aria-haspopup="listbox"
+  [disabled]="isDisabled()"
+  (click)="toggle()"
+  (keydown)="onTriggerKeydown($event)"
+>
+  @if (triggerLabel(); as label) {
+    <span class="select-value">{{ label }}</span>
+  } @else {
+    <span class="select-placeholder">{{ placeholder() }}</span>
+  }
+  <app-icon class="select-chevron" name="chevron-down" [size]="16" />
+</button>
+
+<ng-template #panelTpl>
+  <div class="select-panel" (keydown)="onPanelKeydown($event)">
+    @if (searchable()) {
+      <div class="select-search">
+        <app-icon name="search" [size]="16" />
+        <input
+          type="text"
+          [placeholder]="searchPlaceholder() || ('common.search' | translate)"
+          [value]="searchText()"
+          (input)="onSearch($any($event.target).value)"
+          role="combobox"
+          [attr.aria-expanded]="'true'"
+          [attr.aria-activedescendant]="activeOptionId() || null"
+          aria-autocomplete="list"
+        />
+      </div>
+    }
+    <div
+      class="select-listbox"
+      role="listbox"
+      tabindex="-1"
+      [attr.aria-activedescendant]="activeOptionId() || null"
+    >
+      <ng-content />
+      @if (!hasVisibleOptions()) {
+        <div class="select-empty">{{ 'ui.select.noResults' | translate }}</div>
+      }
+    </div>
+  </div>
+</ng-template>
