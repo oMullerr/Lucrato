@@ -4,6 +4,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
+  appearance: none;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   font-family: var(--font-body);
@@ -36,7 +37,7 @@
 }
 
 /* Loading: conteúdo invisível mas ocupando espaço → largura estável */
-.btn--loading .btn-content { visibility: hidden; }
+:host(.btn--loading) .btn-content { visibility: hidden; }
 
 .btn-spinner {
   position: absolute;
@@ -47,19 +48,17 @@
 }
 
 /* ---------- Tamanhos ---------- */
-.btn--sm { height: 32px; padding: 0 var(--space-3); font-size: var(--fs-small); }
-.btn--md { height: 40px; padding: 0 var(--space-4); }
-.btn--lg { height: 48px; padding: 0 var(--space-5); font-size: var(--fs-h3); }
+:host(.btn--sm) { height: 32px; padding: 0 var(--space-3); font-size: var(--fs-small); }
+:host(.btn--md) { height: 40px; padding: 0 var(--space-4); }
+:host(.btn--lg) { height: 48px; padding: 0 var(--space-5); font-size: var(--fs-h3); }
 
-.btn--icon-only {
-  padding: 0;
-  &.btn--sm { width: 32px; }
-  &.btn--md { width: 40px; }
-  &.btn--lg { width: 48px; }
-}
+:host(.btn--icon-only) { padding: 0; }
+:host(.btn--icon-only.btn--sm) { width: 32px; }
+:host(.btn--icon-only.btn--md) { width: 40px; }
+:host(.btn--icon-only.btn--lg) { width: 48px; }
 
 /* ---------- Variantes ---------- */
-.btn--primary {
+:host(.btn--primary) {
   background: var(--brand-primary);
   color: #ffffff;
 
@@ -72,7 +71,7 @@
   }
 }
 
-html.dark .btn--primary {
+:host-context(html.dark).btn--primary {
   color: #0b100f;
 
   &:hover:not([disabled]) {
@@ -83,7 +82,7 @@ html.dark .btn--primary {
   }
 }
 
-.btn--tonal {
+:host(.btn--tonal) {
   background: var(--tint-brand);
   color: var(--brand-primary);
 
@@ -91,7 +90,7 @@ html.dark .btn--primary {
   &:active:not([disabled]) { background: color-mix(in srgb, var(--brand-primary) 24%, transparent); }
 }
 
-.btn--outline {
+:host(.btn--outline) {
   background: transparent;
   border-color: var(--border-strong);
   color: var(--text-primary);
@@ -103,7 +102,7 @@ html.dark .btn--primary {
   }
 }
 
-.btn--ghost {
+:host(.btn--ghost) {
   background: transparent;
   color: var(--text-secondary);
 
@@ -113,7 +112,7 @@ html.dark .btn--primary {
   }
 }
 
-.btn--danger {
+:host(.btn--danger) {
   background: var(--color-danger);
   color: #ffffff;
 
