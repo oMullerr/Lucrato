@@ -6,6 +6,11 @@
     "select": {
       "noResults": "Sin resultados",
       "search": "Buscar…"
+    },
+    "date": {
+      "today": "Hoy",
+      "prevMonth": "Mes anterior",
+      "nextMonth": "Mes siguiente"
     }
   },
   "routeTitles": {

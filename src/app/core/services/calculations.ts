@@ -45,8 +45,11 @@ export function calculatePurchase(
     ? new Date(purchase.receiptDate)
     : new Date(purchase.purchaseDate);
   const now = new Date();
-  const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const endRef = (currentStock <= 0 && lastSale) ? new Date(lastSale) : todayUtc;
+  // "Hoje" no calendário LOCAL do usuário. receiptDate/purchaseDate são dias de
+  // calendário locais, então a referência precisa virar à meia-noite local — usar
+  // getUTC* aqui inflava daysInStock em 1 das 21h às 23h59 (BRT) na virada UTC.
+  const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const endRef = (currentStock <= 0 && lastSale) ? new Date(lastSale) : today;
   // Clamp em 0: receiptDate futura (erro de digitação) não pode exibir dias negativos.
   const daysInStock = Math.max(0, Math.floor((endRef.getTime() - startDate.getTime()) / MS_PER_DAY));
 

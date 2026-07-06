@@ -1,10 +1,21 @@
 /* LUCRATO · Design System — "fintech brasileira premium".
    Cédula petróleo + champanhe, números como protagonistas.
-   Orquestrador: a ordem importa (tokens → base → utilitários → material). */
+   Orquestrador: a ordem importa (tokens → base → utilitários → overlay). */
 
+@use '@angular/cdk' as cdk;
 @use './styles/tokens';
 @use './styles/typography';
 @use './styles/reset';
 @use './styles/utilities';
 @use './styles/components';
 @use './styles/charts';
+
+/* CSS estrutural do CDK Overlay/a11y — antes vinha embutido no tema do
+   Material; sem ele o container do overlay fica `position: static` e todos
+   os dialogs/menus caem no fim do <body>. `overlay()` posiciona container/
+   wrapper (flex-center dos dialogs) e a bounding-box dos menus conectados;
+   `a11y-visually-hidden()` restaura `.cdk-visually-hidden` (live announcer,
+   aria-describer do tooltip). Cores de backdrop continuam no _components
+   (regra `html .cdk-overlay-backdrop`, especificidade maior). */
+@include cdk.overlay();
+@include cdk.a11y-visually-hidden();

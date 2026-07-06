@@ -563,3 +563,54 @@ describe('calculatePurchase — endurecimento (auditoria 06/2026)', () => {
     expect(result.netProfit).toBeCloseTo(result.netRevenue, 10);
   });
 });
+
+describe('calculatePurchase — fuso horário (dias parados / alertas)', () => {
+  // As datas de negócio (receiptDate/purchaseDate) são dias de calendário LOCAL.
+  // A contagem de "hoje" precisa usar o mesmo calendário, senão a virada da data
+  // acontece à meia-noite UTC (21h BRT) e infla daysInStock em 1 durante a noite.
+  const originalTz = process.env['TZ'];
+
+  beforeAll(() => {
+    process.env['TZ'] = 'America/Sao_Paulo'; // UTC-3, sem horário de verão desde 2019
+  });
+
+  afterAll(() => {
+    process.env['TZ'] = originalTz;
+  });
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('item recebido HOJE às 21h30 BRT conta 0 dias parados (não +1 na virada UTC)', () => {
+    // 2026-07-07T00:30:00Z == 06/07/2026 21:30 em São Paulo (janela 21h–23h59).
+    const noite = new Date('2026-07-07T00:30:00Z');
+    expect(noite.getTimezoneOffset()).toBe(180); // guard: processo em UTC-3
+    jest.setSystemTime(noite);
+
+    const purchase = makePurchase({ receiptDate: '2026-07-06', quantityPurchased: 10 });
+    const settings = makeSettings({ yellowAlertDays: 30, redAlertDays: 60 });
+    const result = calculatePurchase(purchase, [], settings);
+
+    expect(result.daysInStock).toBe(0);
+    expect(result.status).toBe('Em Estoque');
+  });
+
+  it('alerta NÃO dispara 1 dia antes: 59 dias locais permanecem "Atenção", não "Parado"', () => {
+    // 06/07/2026 21:30 BRT; receiptDate 08/05/2026 = 59 dias locais (< redAlertDays 60).
+    const noite = new Date('2026-07-07T00:30:00Z');
+    expect(noite.getTimezoneOffset()).toBe(180);
+    jest.setSystemTime(noite);
+
+    const purchase = makePurchase({ receiptDate: '2026-05-08', quantityPurchased: 10 });
+    const settings = makeSettings({ yellowAlertDays: 30, redAlertDays: 60 });
+    const result = calculatePurchase(purchase, [], settings);
+
+    expect(result.daysInStock).toBe(59);
+    expect(result.status).toBe('Atenção');
+  });
+});

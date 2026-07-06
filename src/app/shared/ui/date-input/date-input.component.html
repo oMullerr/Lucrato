@@ -1,10 +1,74 @@
-<input
-  type="date"
-  class="app-input"
-  [value]="isoValue()"
-  [attr.min]="minIso() || null"
-  [attr.max]="maxIso() || null"
+<button
+  #triggerBtn
+  type="button"
+  class="date-trigger"
+  aria-haspopup="grid"
+  [attr.aria-expanded]="isOpen() ? 'true' : 'false'"
   [disabled]="isDisabled()"
-  (input)="onInput($any($event.target).value)"
+  (click)="toggle()"
+  (keydown)="onTriggerKeydown($event)"
   (blur)="onTouched()"
-/>
+>
+  @if (displayValue(); as label) {
+    <span class="date-value num">{{ label }}</span>
+  } @else {
+    <span class="date-placeholder">dd/mm/aaaa</span>
+  }
+  <app-icon class="date-icon" name="calendar" [size]="16" />
+</button>
+
+<ng-template #panelTpl>
+  <div class="date-panel" role="grid" [attr.aria-label]="monthLabel()" (keydown)="onPanelKeydown($event)">
+    <div class="date-panel-header">
+      <button
+        type="button"
+        class="date-nav"
+        [attr.aria-label]="'ui.date.prevMonth' | translate"
+        (click)="prevMonth()"
+      >
+        <app-icon name="chevron-left" [size]="16" />
+      </button>
+      <span class="date-panel-title">{{ monthLabel() }}</span>
+      <button
+        type="button"
+        class="date-nav"
+        [attr.aria-label]="'ui.date.nextMonth' | translate"
+        (click)="nextMonth()"
+      >
+        <app-icon name="chevron-right" [size]="16" />
+      </button>
+    </div>
+
+    <div class="date-weekdays" aria-hidden="true">
+      @for (w of weekdayLabels(); track $index) {
+        <span>{{ w }}</span>
+      }
+    </div>
+
+    @for (week of weeks(); track $index) {
+      <div class="date-week" role="row">
+        @for (cell of week; track cell.iso) {
+          <button
+            type="button"
+            role="gridcell"
+            class="date-cell"
+            [class.is-outside]="!cell.inMonth"
+            [class.is-today]="cell.isToday"
+            [class.is-selected]="cell.isSelected"
+            [attr.aria-selected]="cell.isSelected ? 'true' : null"
+            [attr.aria-current]="cell.isToday ? 'date' : null"
+            [attr.data-iso]="cell.iso"
+            [tabindex]="isActive(cell) ? 0 : -1"
+            [disabled]="cell.disabled"
+            (click)="pick(cell)"
+          >{{ cell.day }}</button>
+        }
+      </div>
+    }
+
+    <div class="date-panel-footer">
+      <button type="button" appBtn="ghost" size="sm" (click)="clear()">{{ 'common.clear' | translate }}</button>
+      <button type="button" appBtn="ghost" size="sm" (click)="pickToday()">{{ 'ui.date.today' | translate }}</button>
+    </div>
+  </div>
+</ng-template>

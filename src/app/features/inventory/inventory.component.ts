@@ -40,6 +40,8 @@ import { RecordCardComponent, RecordCardFigure } from '../../shared/ui/record-ca
 import { SelectComponent } from '../../shared/ui/select/select.component';
 import { OptionComponent } from '../../shared/ui/select/option.component';
 
+const MS_PER_DAY = 86_400_000;
+
 type FilterKey = 'all' | InventoryStatus;
 
 /** Opções do "ordenar por" compacto do mobile (chave + direção). */
@@ -240,69 +242,60 @@ export class InventoryComponent {
   /** Sparkline da receita bruta acumulada nos últimos 30 dias. */
   protected readonly revenueSparkline = computed(() => this.buildSparkline(s => s.grossRevenue));
 
-  /** Tendência de margem — margem % diária, últimos 30 dias. */
+  /**
+   * Régua das sparklines: meia-noite UTC de cada um dos últimos `days` dias de
+   * CALENDÁRIO LOCAL (antigo→recente). receiptDate/saleDate ('YYYY-MM-DD') são
+   * parseados como meia-noite UTC, então a régua ancora no dia local em UTC para
+   * os baldes baterem com daysInStock — misturar hora local aqui empurrava
+   * lotes/vendas para o balde do dia anterior em fusos atrás de UTC (ex.: BRT).
+   */
+  private localDayRefs(days: number): number[] {
+    const now = new Date();
+    const todayMs = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const refs: number[] = [];
+    for (let i = days - 1; i >= 0; i--) refs.push(todayMs - i * MS_PER_DAY);
+    return refs;
+  }
+
+  /** Tendência de margem — margem % acumulada por dia, últimos 30 dias. */
   protected readonly marginSparkline = computed(() => {
     const sales = this.data.computedSales().filter(s => s.status === 'Concluída');
     if (sales.length < 2) return [];
-    const days = 30;
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    const points: number[] = [];
-    for (let i = days - 1; i >= 0; i--) {
-      const end = new Date(today);
-      end.setDate(end.getDate() - i);
-      const upTo = sales.filter(s => new Date(s.saleDate) <= end);
+    return this.localDayRefs(30).map(ref => {
+      const upTo = sales.filter(s => new Date(s.saleDate).getTime() <= ref);
       const gross = upTo.reduce((acc, s) => acc + s.grossRevenue, 0);
       const profit = upTo.reduce((acc, s) => acc + s.netProfit, 0);
-      points.push(gross > 0 ? profit / gross : 0);
-    }
-    return points;
+      return gross > 0 ? profit / gross : 0;
+    });
   });
 
   /** Capital parado — valor absoluto ao longo dos últimos 30 dias. */
   protected readonly idleSparkline = computed(() => {
     const purchases = this.data.computedPurchases();
-    const days = 30;
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    const points: number[] = [];
-    for (let i = days - 1; i >= 0; i--) {
-      const ref = new Date(today);
-      ref.setDate(ref.getDate() - i);
-      const total = purchases.reduce((acc, c) => {
-        // Mesmo fallback do daysInStock: em trânsito conta como capital imobilizado
-        // desde a compra — mantém a sparkline igual ao KPI idleCapital do card.
-        const start = new Date(c.receiptDate ?? c.purchaseDate);
-        if (start > ref) return acc;
-        const soldByDate = this.data.sales()
-          .filter(s => s.batchId === c.id && s.status === 'Concluída' && new Date(s.saleDate) <= ref)
-          .reduce((sum, s) => sum + s.quantitySold, 0);
-        const remaining = Math.max(0, c.quantityPurchased - soldByDate);
-        return acc + remaining * c.actualUnitCost;
-      }, 0);
-      points.push(total);
-    }
-    return points;
+    const sales = this.data.sales();
+    return this.localDayRefs(30).map(ref => purchases.reduce((acc, c) => {
+      // Em trânsito conta como capital imobilizado desde a compra — mesma base do
+      // KPI idleCapital do card.
+      const start = new Date(c.receiptDate ?? c.purchaseDate).getTime();
+      if (start > ref) return acc;
+      const soldByDate = sales
+        .filter(s => s.batchId === c.id && s.status === 'Concluída' && new Date(s.saleDate).getTime() <= ref)
+        .reduce((sum, s) => sum + s.quantitySold, 0);
+      const remaining = Math.max(0, c.quantityPurchased - soldByDate);
+      return acc + remaining * c.actualUnitCost;
+    }, 0));
   });
 
   private buildSparkline(picker: (s: import('../../core/models/models').ComputedSale) => number): number[] {
     const sales = this.data.computedSales().filter(s => s.status === 'Concluída');
     if (sales.length < 2) return [];
-    const days = 30;
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
     const points: number[] = [];
     let acc = 0;
-    for (let i = days - 1; i >= 0; i--) {
-      const start = new Date(today);
-      start.setDate(start.getDate() - i);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(start);
-      end.setHours(23, 59, 59, 999);
+    for (const ref of this.localDayRefs(30)) {
       const dayValue = sales
         .filter(s => {
-          const d = new Date(s.saleDate);
-          return d >= start && d <= end;
+          const d = new Date(s.saleDate).getTime();
+          return d >= ref && d < ref + MS_PER_DAY;
         })
         .reduce((sum, s) => sum + picker(s), 0);
       acc += dayValue;

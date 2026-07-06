@@ -140,10 +140,14 @@
 /* Trava o scroll do body enquanto um drawer over está aberto. */
 body.drawer-scroll-lock { overflow: hidden; }
 
-/* Painel de dialog (CDK) — tamanho por CSS, full-screen abaixo de sm. */
-.app-dialog-panel {
+/* Painel de dialog (CDK) — tamanho por CSS, full-screen abaixo de sm.
+   Combinamos `.cdk-overlay-pane` para ganhar no cascade: aquela classe (emitida
+   por `cdk.overlay()`, incluído DEPOIS deste arquivo) traz `max-height:100%` na
+   mesma especificidade, então venceria por ordem e o dialog encostaria nas
+   bordas da tela em vez de respeitar o cap de 80dvh. */
+.cdk-overlay-pane.app-dialog-panel {
   width: min(var(--dialog-w, 560px), calc(100vw - 32px));
-  max-height: min(86dvh, 900px);
+  max-height: min(80dvh, 840px);
 
   @include bp.below(sm) {
     width: 100vw !important;
@@ -158,12 +162,21 @@ body.drawer-scroll-lock { overflow: hidden; }
 .app-dialog--lg { --dialog-w: 720px; }
 .app-dialog--xl { --dialog-w: 820px; }
 
-/* O container do CDK Dialog só hospeda; o visual vem do app-dialog-shell. */
-cdk-dialog-container {
-  display: block;
+/* O container do CDK Dialog e o componente de dialog projetado dentro dele são
+   só moldura: ambos precisam propagar o cap de altura (max-height do pane) até
+   o app-dialog-shell — senão o corpo cresce e o modal vaza topo/rodapé da tela.
+   O `> *` pega o host do componente (app-sale-form-dialog, app-purchase-form-
+   dialog, …) qualquer que seja a tag e o tira do `display:inline` padrão de host
+   do Angular, que sozinho ignoraria o max-height e quebraria a corrente. */
+cdk-dialog-container,
+cdk-dialog-container > * {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   max-height: inherit;
-  outline: none;
 }
+
+cdk-dialog-container { outline: none; }
 
 /* Input nativo dentro de app-field (global: conteúdo projetado não recebe
    estilos com escopo do componente projetante). */
@@ -190,19 +203,6 @@ textarea.app-input {
   min-height: 72px;
   padding: var(--space-2) 0;
   resize: vertical;
-}
-
-/* Inputs de data nativos: alinha o glifo do picker com a paleta. */
-input[type='date'].app-input::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  opacity: 0.55;
-  transition: opacity var(--dur-fast) var(--ease-out);
-
-  &:hover { opacity: 1; }
-}
-
-html.dark input[type='date'].app-input::-webkit-calendar-picker-indicator {
-  filter: invert(1);
 }
 
 /* Painel do app-menu — global porque renderiza dentro do CDK Overlay. */
@@ -237,10 +237,14 @@ html.dark input[type='date'].app-input::-webkit-calendar-picker-indicator {
   box-shadow: 0 0 0 1px var(--border-subtle);
 }
 
-/* Painel do app-select — global porque renderiza dentro do CDK Overlay. */
+/* Painel do app-select — global porque renderiza dentro do CDK Overlay.
+   `.cdk-overlay-pane` é `display:flex` (ver overlay() do CDK em styles.scss);
+   sem width:100% este painel encolhe pro conteúdo e sobra área invisível
+   no pane (que já tem a largura certa via minWidth do SelectComponent). */
 .select-panel {
   display: flex;
   flex-direction: column;
+  width: 100%;
   max-height: 320px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -291,12 +295,14 @@ html.dark input[type='date'].app-input::-webkit-calendar-picker-indicator {
 }
 
 /* Backdrop de overlays (CDK) — sobrevive à saída do Material (fase 6),
-   pois nossos dialogs/menus continuam sobre o CDK Overlay. */
-html .cdk-overlay-backdrop {
+   pois nossos dialogs/menus continuam sobre o CDK Overlay. Só os dialogs
+   escurecem: o backdrop transparente (menus/dropdowns) fica de fora, senão
+   abrir o menu da loja/idioma escureceria a página inteira. */
+html .cdk-overlay-backdrop:not(.cdk-overlay-transparent-backdrop) {
   background: rgba(8, 12, 11, 0.55);
   backdrop-filter: blur(6px);
 }
 
-html.dark .cdk-overlay-backdrop {
+html.dark .cdk-overlay-backdrop:not(.cdk-overlay-transparent-backdrop) {
   background: rgba(0, 0, 0, 0.65);
 }

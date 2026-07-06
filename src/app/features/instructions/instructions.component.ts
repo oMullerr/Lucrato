@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 
@@ -32,4 +32,19 @@ const INSTRUCTIONS: InstructionItem[] = [
 })
 export class InstructionsComponent {
   protected readonly instructions = INSTRUCTIONS;
+  private readonly host = inject(ElementRef) as ElementRef<HTMLElement>;
+
+  /**
+   * Rola suavemente até a seção clicada no índice. O conteúdo do shell rola
+   * dentro de um container interno (`.page-container` com overflow), então
+   * links `#fragment` nativos não rolam — `scrollIntoView` rola o ancestral
+   * scrollável certo e respeita o `scroll-margin-top` da seção.
+   */
+  protected scrollToSection(event: MouseEvent, index: number): void {
+    event.preventDefault();
+    const target = this.host.nativeElement.querySelector(`#sec-${index}`);
+    if (!target) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  }
 }

@@ -211,7 +211,7 @@ export class SaleFormDialogComponent {
       product: '',
       quantitySold: 1,
       unitPrice: 0,
-      saleDate: new Date().toISOString().split('T')[0]!,
+      saleDate: this.dateAsString(new Date()),
       channel: cfg?.defaultChannel ?? 'Mercado Livre',
       feePercentage: cfg?.defaultMlFee ?? 0.12,
       shippingType: 'correios',

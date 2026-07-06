@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, untracked } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
 export type ToastKind = 'success' | 'error' | 'info' | 'warning';
@@ -73,7 +73,10 @@ export class ToastService {
   }
 
   private push(toast: Toast): void {
-    this._toasts.update((list) => {
+    /* untracked: o GlobalErrorHandler pode chamar isto de dentro de um contexto
+       reativo (effect que estourou), onde escrita em signal dispararia NG0600.
+       Desanexar garante que o erro real sempre apareça, sem duplo-erro. */
+    untracked(() => this._toasts.update((list) => {
       const next = [...list, toast];
       /* Estouro: derruba os mais antigos (mantém no máx. MAX_VISIBLE). */
       while (next.length > MAX_VISIBLE) {
@@ -81,7 +84,7 @@ export class ToastService {
         this.clearTimer(dropped.id);
       }
       return next;
-    });
+    }));
     const handle = setTimeout(() => this.dismiss(toast.id), toast.durationMs);
     this.timers.set(toast.id, { handle, endsAt: Date.now() + toast.durationMs, remaining: toast.durationMs });
   }

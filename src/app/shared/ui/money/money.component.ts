@@ -102,7 +102,7 @@ export class MoneyComponent {
       };
       this.rafId = requestAnimationFrame(step);
       onCleanup(() => cancelAnimationFrame(this.rafId));
-    });
+    }, { allowSignalWrites: true });
   }
 
   private prefersReducedMotion(): boolean {

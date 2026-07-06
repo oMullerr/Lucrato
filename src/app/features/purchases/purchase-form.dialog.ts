@@ -154,7 +154,7 @@ export class PurchaseFormDialogComponent {
       category: '',
       supplier: '',
       link: '',
-      purchaseDate: new Date().toISOString().split('T')[0]!,
+      purchaseDate: this.dateAsString(new Date()),
       receiptDate: '',
       quantityPurchased: 1,
       unitCost: 0,

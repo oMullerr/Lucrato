@@ -10,7 +10,25 @@
       "PowerShell(npm run build 2>&1)",
       "PowerShell(npx jest src/app/core/services/xlsx-export.service.spec.ts --colors=false 2>&1)",
       "PowerShell(npx jest --colors=false 2>&1)",
-      "PowerShell(npm test -- --silent 2>&1)"
+      "PowerShell(npm test -- --silent 2>&1)",
+      "Bash(xargs grep -l \"app\\\\.component\")",
+      "Bash(git -C \"C:\\\\Users\\\\User\\\\Desktop\\\\Lucrato\" log --oneline -15)",
+      "Bash(python -c ' *)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,2\\)\\)\")",
+      "Bash(node -e \"console.log\\('default offset:', new Date\\('2026-07-07T00:30:00Z'\\).getTimezoneOffset\\(\\)\\); process.env.TZ='America/Sao_Paulo'; console.log\\('runtime TZ offset:', new Date\\('2026-07-07T00:30:00Z'\\).getTimezoneOffset\\(\\), 'localDate:', new Date\\('2026-07-07T00:30:00Z'\\).getDate\\(\\)\\);\")",
+      "Bash(TZ=America/Sao_Paulo node -e \"console.log\\('launch TZ offset:', new Date\\('2026-07-07T00:30:00Z'\\).getTimezoneOffset\\(\\), 'localDate:', new Date\\('2026-07-07T00:30:00Z'\\).getDate\\(\\)\\);\")",
+      "Bash(node -e ' *)",
+      "Bash(git --no-pager diff -- src/app/core/services/calculations.ts src/app/features/purchases/purchase-form.dialog.ts src/app/features/sales/sale-form.dialog.ts)",
+      "Bash(git --no-pager diff -- src/app/features/inventory/inventory.component.ts)",
+      "Bash(git status *)",
+      "Bash(git --no-pager log --oneline main..ui-overhaul)",
+      "Bash(git --no-pager log --oneline ui-overhaul..main)",
+      "Bash(git ls-files *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git --no-pager log --oneline -3)"
     ]
   }
 }

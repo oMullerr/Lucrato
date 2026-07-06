@@ -1,10 +1,177 @@
 :host {
-  display: flex;
+  display: block;
   flex: 1;
   min-width: 0;
 }
 
-input {
+.date-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   width: 100%;
-  color-scheme: inherit; /* picker nativo acompanha o tema */
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-1);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+
+  &:hover:not([disabled]) { border-color: var(--border-strong); }
+
+  &:focus-visible {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 14%, transparent);
+  }
+
+  &[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--bg-surface-2);
+  }
+}
+
+/* Dentro de um app-field o gatilho herda a moldura do field (mesmo padrão do app-select). */
+:host-context(.field-box) .date-trigger {
+  border: none;
+  padding: 0;
+  min-height: 38px;
+  background: transparent;
+
+  &:focus-visible { box-shadow: none; }
+}
+
+.date-value {
+  flex: 1;
+  min-width: 0;
+}
+
+.date-placeholder {
+  flex: 1;
+  color: var(--text-muted);
+}
+
+.date-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Painel — dentro do CDK Overlay, global pela mesma razão do .select-panel. */
+.date-panel {
+  display: flex;
+  flex-direction: column;
+  width: 296px;
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-overlay);
+  box-shadow: var(--shadow-lg);
+  animation: menu-in var(--dur-fast) var(--ease-out) both;
+}
+
+.date-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.date-panel-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-body);
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.date-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+
+  &:hover { background: var(--bg-surface-2); color: var(--text-primary); }
+  &:focus-visible { box-shadow: var(--ring-focus); }
+}
+
+.date-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+
+  span {
+    text-align: center;
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: capitalize;
+  }
+}
+
+.date-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.date-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--fs-small);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+
+  &:hover:not(:disabled) { background: var(--bg-surface-2); }
+  &:focus-visible { box-shadow: var(--ring-focus); }
+
+  /* Dias do mês adjacente — presentes só pra fechar o grid de 6 semanas. */
+  &.is-outside { color: var(--text-muted); opacity: 0.5; }
+
+  /* "Hoje": hairline de accent, nunca fill — champanhe é pontual (ver _tokens.scss). */
+  &.is-today {
+    box-shadow: inset 0 0 0 1.5px var(--brand-accent);
+    font-weight: 600;
+  }
+
+  &.is-selected {
+    background: var(--brand-primary);
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+/* Texto sobre brand-primary precisa ser escuro no dark mode (mesmo ajuste do appBtn primary). */
+html.dark .date-cell.is-selected { color: #0b100f; }
+
+.date-panel-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
 }
