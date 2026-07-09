@@ -230,6 +230,7 @@
     "proportionalTag": "Prorated · {{months}} months",
     "proportionalNote": "First year: prorated ceiling of {{ceiling}} ({{months}} months × {{monthly}}).",
     "usedOfCeiling": "{{pct}}% of ceiling used",
+    "revenueSince": "{{pct}}% of ceiling · since {{date}}",
     "ceiling": "Annual ceiling",
     "ceilingProportional": "Prorated · {{months}} months",
     "ceilingFull": "Regime ceiling",

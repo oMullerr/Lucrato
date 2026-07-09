@@ -22,19 +22,53 @@ function billableSales(sales: ComputedSale[]): ComputedSale[] {
   return sales.filter(s => s.status === 'Concluída');
 }
 
-/** Soma da receita bruta das vendas concluídas no ano informado. */
-export function annualGrossRevenue(sales: ComputedSale[], year: number): number {
+/**
+ * Timestamp (UTC) a partir do qual as vendas contam no regime, dentro do ano.
+ * `null` = sem corte (sem início, data inválida ou ano posterior → conta o ano inteiro).
+ * Só corta no ano de início: vendas anteriores à abertura do CNPJ são faturamento CPF
+ * e não entram na apuração do MEI.
+ */
+function regimeCutoff(startDate: string | undefined, year: number): number | null {
+  if (!startDate) return null;
+  const d = new Date(startDate);
+  if (Number.isNaN(d.getTime())) return null;
+  if (d.getUTCFullYear() !== year) return null;
+  return d.getTime();
+}
+
+/**
+ * Soma da receita bruta das vendas concluídas no ano informado. Com `startDate`, exclui
+ * vendas anteriores ao início no regime (faturamento CPF pré-MEI).
+ */
+export function annualGrossRevenue(
+  sales: ComputedSale[],
+  year: number,
+  startDate?: string,
+): number {
+  const cutoff = regimeCutoff(startDate, year);
   return billableSales(sales).reduce((sum, s) => {
-    return new Date(s.saleDate).getUTCFullYear() === year ? sum + s.grossRevenue : sum;
+    const d = new Date(s.saleDate);
+    if (d.getUTCFullYear() !== year) return sum;
+    if (cutoff !== null && d.getTime() < cutoff) return sum; // venda pré-regime (CPF)
+    return sum + s.grossRevenue;
   }, 0);
 }
 
-/** Receita bruta por mês (índices 0..11) das vendas concluídas no ano. */
-export function monthlyGrossRevenue(sales: ComputedSale[], year: number): FiscalMonthRevenue[] {
+/**
+ * Receita bruta por mês (índices 0..11) das vendas concluídas no ano. Com `startDate`,
+ * zera os meses anteriores ao início no regime (faturamento CPF pré-MEI).
+ */
+export function monthlyGrossRevenue(
+  sales: ComputedSale[],
+  year: number,
+  startDate?: string,
+): FiscalMonthRevenue[] {
+  const cutoff = regimeCutoff(startDate, year);
   const buckets = Array.from({ length: 12 }, (_, month) => ({ month, revenue: 0 }));
   for (const s of billableSales(sales)) {
     const d = new Date(s.saleDate);
     if (d.getUTCFullYear() !== year) continue;
+    if (cutoff !== null && d.getTime() < cutoff) continue; // venda pré-regime (CPF)
     buckets[d.getUTCMonth()].revenue += s.grossRevenue;
   }
   return buckets;
@@ -131,8 +165,8 @@ export function computeFiscalStatus(
   year: number,
   ref: Date = new Date(),
 ): FiscalStatus {
-  const revenue = annualGrossRevenue(sales, year);
-  const monthly = monthlyGrossRevenue(sales, year);
+  const revenue = annualGrossRevenue(sales, year, config.regimeStartDate);
+  const monthly = monthlyGrossRevenue(sales, year, config.regimeStartDate);
   const rule = regimeRule(config.regime);
 
   if (!rule) {

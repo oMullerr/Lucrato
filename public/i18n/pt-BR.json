@@ -302,6 +302,7 @@
     "proportionalTag": "Proporcional · {{months}} meses",
     "proportionalNote": "1º ano: teto proporcional de {{ceiling}} ({{months}} meses × {{monthly}}).",
     "usedOfCeiling": "{{pct}}% do teto utilizado",
+    "revenueSince": "{{pct}}% do teto · desde {{date}}",
     "ceiling": "Limite anual",
     "ceilingProportional": "Proporcional · {{months}} meses",
     "ceilingFull": "Teto do regime",

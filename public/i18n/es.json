@@ -230,6 +230,7 @@
     "proportionalTag": "Proporcional · {{months}} meses",
     "proportionalNote": "1.er año: techo proporcional de {{ceiling}} ({{months}} meses × {{monthly}}).",
     "usedOfCeiling": "{{pct}}% del techo usado",
+    "revenueSince": "{{pct}}% del techo · desde {{date}}",
     "ceiling": "Límite anual",
     "ceilingProportional": "Proporcional · {{months}} meses",
     "ceilingFull": "Techo del régimen",

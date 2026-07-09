@@ -68,6 +68,31 @@ describe('annualGrossRevenue', () => {
     ];
     expect(annualGrossRevenue(sales, 2026)).toBe(1000);
   });
+
+  it('com data de início, exclui vendas anteriores (CPF) e inclui a do próprio dia', () => {
+    const sales = [
+      makeComputedSale({ id: 'V1', grossRevenue: 9000, saleDate: '2026-05-01' }), // pré-MEI (CPF)
+      makeComputedSale({ id: 'V2', grossRevenue: 1000, saleDate: '2026-07-06' }), // dia da abertura
+      makeComputedSale({ id: 'V3', grossRevenue: 4000, saleDate: '2026-08-01' }), // pós-abertura
+    ];
+    expect(annualGrossRevenue(sales, 2026, '2026-07-06')).toBe(5000); // só V2 + V3
+  });
+
+  it('sem data de início mantém o comportamento antigo (ano inteiro)', () => {
+    const sales = [
+      makeComputedSale({ id: 'V1', grossRevenue: 9000, saleDate: '2026-05-01' }),
+      makeComputedSale({ id: 'V2', grossRevenue: 1000, saleDate: '2026-08-01' }),
+    ];
+    expect(annualGrossRevenue(sales, 2026)).toBe(10000);
+  });
+
+  it('não corta em ano posterior ao de início (regime já vale o ano inteiro)', () => {
+    const sales = [
+      makeComputedSale({ id: 'V1', grossRevenue: 3000, saleDate: '2027-02-01' }),
+      makeComputedSale({ id: 'V2', grossRevenue: 2000, saleDate: '2027-11-01' }),
+    ];
+    expect(annualGrossRevenue(sales, 2027, '2026-07-06')).toBe(5000);
+  });
 });
 
 describe('monthlyGrossRevenue', () => {
@@ -83,6 +108,20 @@ describe('monthlyGrossRevenue', () => {
     expect(monthly[0].revenue).toBe(1200); // janeiro
     expect(monthly[2].revenue).toBe(300); // março
     expect(monthly[5].revenue).toBe(0); // junho
+  });
+
+  it('com data de início, zera meses anteriores e mantém os do regime', () => {
+    const sales = [
+      makeComputedSale({ id: 'V1', grossRevenue: 500, saleDate: '2026-03-10' }), // pré-MEI
+      makeComputedSale({ id: 'V2', grossRevenue: 700, saleDate: '2026-06-20' }), // pré-MEI
+      makeComputedSale({ id: 'V3', grossRevenue: 900, saleDate: '2026-07-15' }), // pós-abertura
+      makeComputedSale({ id: 'V4', grossRevenue: 300, saleDate: '2026-09-01' }), // pós-abertura
+    ];
+    const monthly = monthlyGrossRevenue(sales, 2026, '2026-07-06');
+    expect(monthly[2].revenue).toBe(0); // março (zerado)
+    expect(monthly[5].revenue).toBe(0); // junho (zerado)
+    expect(monthly[6].revenue).toBe(900); // julho
+    expect(monthly[8].revenue).toBe(300); // setembro
   });
 });
 
@@ -169,12 +208,28 @@ describe('computeFiscalStatus — teto proporcional (1º ano)', () => {
   const ref = new Date('2026-12-31T00:00:00Z');
 
   it('aplica teto proporcional quando o regime inicia no ano avaliado', () => {
-    const sales = [makeComputedSale({ grossRevenue: 18_000 })];
+    // venda on/após o início — faturamento no regime (não CPF pré-abertura)
+    const sales = [makeComputedSale({ grossRevenue: 18_000, saleDate: '2026-10-15' })];
     const st = computeFiscalStatus(meiConfig({ regimeStartDate: '2026-10-01' }), sales, 2026, ref);
     expect(st.isProportional).toBe(true);
     expect(st.monthsActive).toBe(3);
     expect(st.ceiling).toBe(20_250); // 6.750 × 3
+    expect(st.revenue).toBe(18_000); // conta a venda pós-início
     expect(st.band).toBe('danger'); // 18.000 / 20.250 ≈ 89%
+  });
+
+  it('ignora faturamento CPF anterior ao início ao apurar o teto proporcional', () => {
+    const sales = [
+      makeComputedSale({ id: 'CPF', grossRevenue: 9_000, saleDate: '2026-05-01' }), // pré-MEI
+      makeComputedSale({ id: 'MEI', grossRevenue: 5_000, saleDate: '2026-08-01' }), // pós-início
+    ];
+    const st = computeFiscalStatus(meiConfig({ regimeStartDate: '2026-07-06' }), sales, 2026, ref);
+    expect(st.isProportional).toBe(true);
+    expect(st.monthsActive).toBe(6); // jul..dez
+    expect(st.ceiling).toBe(40_500); // 6.750 × 6
+    expect(st.revenue).toBe(5_000); // só a venda pós-início; CPF fora
+    expect(st.usagePct).toBeCloseTo(5_000 / 40_500, 10);
+    expect(st.band).toBe('ok');
   });
 
   it('não é proporcional em ano posterior ao de início', () => {
@@ -205,7 +260,8 @@ describe('computeFiscalStatus — projeção', () => {
 
   it('não explode quando o regime inicia hoje (multiplicador limitado aos meses ativos)', () => {
     const ref = new Date('2026-06-10T12:00:00Z'); // junho = índice 5
-    const sales = [makeComputedSale({ grossRevenue: 5_000, saleDate: '2026-06-05' })];
+    // venda no dia da abertura — conta no regime (venda anterior seria CPF)
+    const sales = [makeComputedSale({ grossRevenue: 5_000, saleDate: '2026-06-10' })];
     const st = computeFiscalStatus(meiConfig({ regimeStartDate: '2026-06-10' }), sales, 2026, ref);
 
     // meses ativos = 7 (jun..dez), meses decorridos = 1 → 5.000 × 7, nunca milhões

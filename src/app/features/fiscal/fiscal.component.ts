@@ -127,6 +127,21 @@ export class FiscalComponent {
     return { tone: 'ok', icon: 'circle-check', titleKey: 'fiscal.statusOkTitle', messageKey: 'fiscal.statusOkMsg', params: p };
   });
 
+  /**
+   * Nota do KPI de faturamento. No 1º ano parcial (teto proporcional), a receita conta só a
+   * partir do início no regime — o note deixa isso explícito com "desde DD/MM".
+   */
+  protected readonly revenueNote = computed(() => {
+    this.lang.lang();
+    const s = this.status();
+    const pct = (s.usagePct * 100).toFixed(0);
+    const iso = this.config().regimeStartDate;
+    if (s.isProportional && iso) {
+      return this.t.instant('fiscal.revenueSince', { pct, date: this.formatShortDate(iso) });
+    }
+    return this.t.instant('fiscal.usedOfCeiling', { pct });
+  });
+
   /** Variant do KPI de faturamento/disponível conforme a banda. */
   protected readonly bandVariant = computed(() => {
     switch (this.status().band) {
@@ -333,6 +348,12 @@ export class FiscalComponent {
   protected formatBrDate(iso: string): string {
     const [y, m, d] = iso.split('-');
     return `${d}/${m}/${y}`;
+  }
+
+  /** 'yyyy-MM-dd' → 'dd/MM' (compacto, para notas). */
+  protected formatShortDate(iso: string): string {
+    const [, m, d] = iso.split('-');
+    return `${d}/${m}`;
   }
 
   private brl(value: number): string {

@@ -133,7 +133,7 @@
         [value]="status().revenue | brl"
         [variant]="bandVariant()"
         icon="banknote"
-        [note]="'fiscal.usedOfCeiling' | translate:{ pct: (status().usagePct * 100).toFixed(0) }"
+        [note]="revenueNote()"
       />
       <app-kpi-card
         [title]="'fiscal.ceiling' | translate"
