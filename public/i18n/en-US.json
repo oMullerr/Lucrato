@@ -5,7 +5,8 @@
   "ui": {
     "select": {
       "noResults": "No results",
-      "search": "Search…"
+      "search": "Search…",
+      "createOption": "Use \"{{term}}\""
     },
     "date": {
       "today": "Today",
@@ -393,7 +394,17 @@
     "viewBatches": "View batches",
     "positionsLabel": "Detailed position by batch",
     "positionByBatch": "Position by batch",
+    "positionByProduct": "Position by product",
     "ofBatches": "{{shown}} of {{total}} batches",
+    "ofProducts": "{{shown}} of {{total}} products",
+    "viewMode": "View",
+    "byBatch": "By batch",
+    "byProduct": "By product",
+    "colLots": "Batches",
+    "colAvgCost": "Avg. cost",
+    "colProfit": "Profit",
+    "showLots": "Show batches",
+    "lotsCount": "{{count}} batch(es)",
     "noneWithStatus": "No batches with this status.",
     "colStock": "Stock",
     "markReceivedToday": "Mark as received (today)",
@@ -613,6 +624,7 @@
     "colStatus": "Status",
     "collapse": "Collapse",
     "inlineDetails": "Inline details",
+    "rebuy": "Buy again",
     "receivedOn": "Received on",
     "nominalUnitCost": "Nominal unit cost",
     "realUnitCost": "Real unit cost",
@@ -635,6 +647,9 @@
     "editTitle": "Edit Purchase",
     "newTitle": "New Purchase",
     "autoId": "Automatically generated ID",
+    "productPlaceholder": "Choose or type a product",
+    "productSearchPlaceholder": "Search or create a product…",
+    "productHistory": "Average cost of this product: {{avg}} · last batch: {{last}}",
     "purchaseDate": "Purchase Date",
     "purchaseDateFuture": "The purchase date cannot be later than today.",
     "receiptDate": "Receipt Date (optional)",

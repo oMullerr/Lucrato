@@ -18,7 +18,13 @@ import { DateInputComponent } from '../../shared/ui/date-input/date-input.compon
 import { TooltipDirective } from '../../shared/ui/tooltip/tooltip.directive';
 
 export interface PurchaseDialogData {
+  /** Edição de um lote existente. */
   purchase?: Purchase;
+  /**
+   * Pré-preenchimento de uma compra NOVA (ex.: ação "Recomprar"). Recebe id novo
+   * automaticamente; os campos aqui sobrescrevem os defaults. Ignorado se `purchase`.
+   */
+  prefill?: Partial<Purchase>;
 }
 
 @Component({
@@ -44,6 +50,32 @@ export class PurchaseFormDialogComponent {
 
   protected readonly categories = computed(() => this.dataService.settings()?.categories ?? []);
   protected readonly suppliers = computed(() => this.dataService.settings()?.suppliers ?? []);
+  /** Produtos já cadastrados — sugestões do picker "escolher-ou-digitar". */
+  protected readonly productNames = computed(() => this.dataService.productNames());
+
+  /**
+   * Histórico do produto atual (outros lotes): custo médio ponderado e custo do
+   * último lote. Ajuda a comparar a "promoção" na hora de recomprar. null quando
+   * é a primeira compra do produto.
+   */
+  protected readonly productHistory = computed(() => {
+    const m = this.model();
+    const key = m.product.trim();
+    if (!key) return null;
+    const lots = this.dataService.computedPurchases()
+      .filter(p => p.product.trim() === key && p.id !== m.id);
+    if (!lots.length) return null;
+    const invested = lots.reduce((s, p) => s + p.totalActualCost, 0);
+    const qty = lots.reduce((s, p) => s + p.quantityPurchased, 0);
+    const last = [...lots].sort((a, b) =>
+      a.purchaseDate.localeCompare(b.purchaseDate) ||
+      a.id.localeCompare(b.id, undefined, { numeric: true })).pop()!;
+    return {
+      avgCost: qty > 0 ? invested / qty : 0,
+      lastUnitCost: last.actualUnitCost,
+      lotCount: lots.length,
+    };
+  });
 
   protected readonly totalPurchaseCost = computed(() =>
     (this.model().quantityPurchased ?? 0) * (this.model().unitCost ?? 0)
@@ -95,6 +127,35 @@ export class PurchaseFormDialogComponent {
     this.model.update(m => ({ ...m, [field]: value }));
   }
 
+  /**
+   * Troca o produto e, numa compra nova, auto-preenche categoria/fornecedor/link
+   * VAZIOS a partir do último lote desse produto (não sobrescreve escolhas do usuário).
+   */
+  protected onProductChange(name: string): void {
+    this.model.update(m => ({ ...m, product: name }));
+    if (this.isEdit()) return;
+    const latest = this.latestLotFor(name);
+    if (!latest) return;
+    this.model.update(m => ({
+      ...m,
+      category: m.category || latest.category,
+      supplier: m.supplier || latest.supplier,
+      link: m.link || latest.link || '',
+    }));
+  }
+
+  /** Lote mais recente (maior purchaseDate) de um produto, por nome trimado. */
+  private latestLotFor(name: string): Purchase | undefined {
+    const key = name.trim();
+    if (!key) return undefined;
+    return this.dataService.purchases()
+      .filter(p => p.product.trim() === key)
+      .sort((a, b) =>
+        a.purchaseDate.localeCompare(b.purchaseDate) ||
+        a.id.localeCompare(b.id, undefined, { numeric: true }))
+      .pop();
+  }
+
   protected setNum(field: string, value: string | number | null, min = 0): void {
     const num = +(value ?? 0) || 0;
     this.model.update(m => ({ ...m, [field]: Math.max(min, num) }));
@@ -142,13 +203,14 @@ export class PurchaseFormDialogComponent {
 
   protected save(): void {
     if (!this.isValid()) return;
-    this.ref.close({ ...this.model() });
+    const m = this.model();
+    this.ref.close({ ...m, product: m.product.trim() });
   }
 
   private initialModel(): Purchase {
     if (this.data.purchase) return { ...this.data.purchase };
     const cfg = this.dataService.settings();
-    return {
+    const base: Purchase = {
       id: this.dataService.nextPurchaseId(),
       product: '',
       category: '',
@@ -162,5 +224,7 @@ export class PurchaseFormDialogComponent {
       otherCosts: 0,
       notes: '',
     };
+    // "Recomprar": aplica o prefill sobre os defaults, mas mantém o id novo.
+    return this.data.prefill ? { ...base, ...this.data.prefill, id: base.id } : base;
   }
 }

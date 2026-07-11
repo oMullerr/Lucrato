@@ -6,7 +6,7 @@ import { APP, DEFAULT_CATEGORY_COLOR } from '../constants/app.constants';
 import {
   Purchase, Sale, Settings, Database, SaleChannel
 } from '../models/models';
-import { calculatePurchase, calculateKpis, calculateSale, nextId } from './calculations';
+import { calculatePurchase, calculateKpis, calculateSale, groupByProduct, nextId } from './calculations';
 import { computeFiscalStatus } from '../fiscal/fiscal';
 import { DEFAULT_FISCAL_CONFIG } from '../fiscal/fiscal-regimes';
 import { FiscalConfig } from '../fiscal/fiscal.model';
@@ -50,6 +50,21 @@ export class DataService {
   readonly kpis = computed(() =>
     calculateKpis(this.computedPurchases(), this.computedSales())
   );
+
+  /** Consolidado por produto (lotes agrupados por nome) — visão do Estoque "por produto". */
+  readonly productGroups = computed(() =>
+    groupByProduct(this.computedPurchases(), this.computedSales())
+  );
+
+  /** Nomes de produto distintos (trimados, ordenados) — fonte do picker de produto. */
+  readonly productNames = computed(() => {
+    const names = new Set<string>();
+    for (const p of this.purchases()) {
+      const n = p.product.trim();
+      if (n) names.add(n);
+    }
+    return [...names].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  });
 
   /** Config do regime tributário, com fallback para o padrão (MEI). */
   readonly fiscalConfig = computed<FiscalConfig>(() => this.settings()?.fiscal ?? DEFAULT_FISCAL_CONFIG);

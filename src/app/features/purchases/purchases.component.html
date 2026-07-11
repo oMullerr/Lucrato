@@ -160,6 +160,15 @@
                           </button>
                           <button
                             appBtn="ghost" iconOnly size="sm" type="button"
+                            class="row-action"
+                            (click)="rebuy(c, $event)"
+                            [appTooltip]="'purchases.rebuy' | translate"
+                            [attr.aria-label]="'purchases.rebuy' | translate"
+                          >
+                            <app-icon name="shopping-bag" [size]="17" />
+                          </button>
+                          <button
+                            appBtn="ghost" iconOnly size="sm" type="button"
                             class="row-action danger"
                             (click)="confirmRemove(c, $event)"
                             [appTooltip]="'common.remove' | translate"

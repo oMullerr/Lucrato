@@ -6,10 +6,18 @@
 
   <form class="form-grid" (submit)="$event.preventDefault(); save()">
     <app-field class="full" [label]="'purchases.colProduct' | translate" [required]="true">
-      <input appInput
+      <app-select
         [ngModel]="model().product"
-        (ngModelChange)="set('product', $event)"
-        name="product" cdkFocusInitial required />
+        (ngModelChange)="onProductChange($event)"
+        name="product"
+        [searchable]="true"
+        [allowCreate]="true"
+        [placeholder]="'purchaseForm.productPlaceholder' | translate"
+        [searchPlaceholder]="'purchaseForm.productSearchPlaceholder' | translate">
+        @for (p of productNames(); track p) {
+          <app-option [value]="p">{{ p }}</app-option>
+        }
+      </app-select>
     </app-field>
 
     <app-field [label]="'purchases.colCategory' | translate" [required]="true">
@@ -128,6 +136,12 @@
         <strong class="num">{{ actualUnitCost() | brl }}</strong>
       </div>
     </div>
+    @if (productHistory(); as h) {
+      <div class="preview-history">
+        <app-icon name="info" [size]="14" />
+        <span>{{ 'purchaseForm.productHistory' | translate: { avg: (h.avgCost | brl), last: (h.lastUnitCost | brl) } }}</span>
+      </div>
+    }
   </div>
 
   <ng-container dialogActions>

@@ -145,37 +145,180 @@
         <section class="positions" id="positions-table" [attr.aria-label]="'inventory.positionsLabel' | translate">
           <header class="positions-head">
             <div class="ph-text">
-              <h2 class="h-section">{{ 'inventory.positionByBatch' | translate }}</h2>
-              <span class="t-caption">{{ 'inventory.ofBatches' | translate:{ shown: filteredPurchases().length, total: statusCounts().all } }}</span>
+              <h2 class="h-section">{{ (viewMode() === 'produto' ? 'inventory.positionByProduct' : 'inventory.positionByBatch') | translate }}</h2>
+              <span class="t-caption">
+                @if (viewMode() === 'produto') {
+                  {{ 'inventory.ofProducts' | translate:{ shown: filteredGroups().length, total: productStatusCounts().all } }}
+                } @else {
+                  {{ 'inventory.ofBatches' | translate:{ shown: filteredPurchases().length, total: statusCounts().all } }}
+                }
+              </span>
             </div>
-            <div class="filter-chips" role="tablist">
-              <button appChip [active]="filter() === 'all'" [count]="statusCounts().all"
-                (click)="setFilter('all')" role="tab" [attr.aria-selected]="filter() === 'all'">
-                {{ 'common.all' | translate }}
-              </button>
-              <button appChip [active]="filter() === 'Em Estoque'" dot="success" [count]="statusCounts()['Em Estoque']"
-                (click)="setFilter('Em Estoque')" role="tab" [attr.aria-selected]="filter() === 'Em Estoque'">
-                {{ 'status.Em Estoque' | translate }}
-              </button>
-              <button appChip [active]="filter() === 'Atenção'" dot="warning" [count]="statusCounts()['Atenção']"
-                (click)="setFilter('Atenção')" role="tab" [attr.aria-selected]="filter() === 'Atenção'">
-                {{ 'status.Atenção' | translate }}
-              </button>
-              <button appChip [active]="filter() === 'Parado'" dot="danger" [count]="statusCounts()['Parado']"
-                (click)="setFilter('Parado')" role="tab" [attr.aria-selected]="filter() === 'Parado'">
-                {{ 'status.Parado' | translate }}
-              </button>
-              <button appChip [active]="filter() === 'Em trânsito'" dot="info" [count]="statusCounts()['Em trânsito']"
-                (click)="setFilter('Em trânsito')" role="tab" [attr.aria-selected]="filter() === 'Em trânsito'">
-                {{ 'status.Em trânsito' | translate }}
-              </button>
-              <button appChip [active]="filter() === 'Vendido'" dot="neutral" [count]="statusCounts()['Vendido']"
-                (click)="setFilter('Vendido')" role="tab" [attr.aria-selected]="filter() === 'Vendido'">
-                {{ 'status.Vendido' | translate }}
-              </button>
+            <div class="ph-controls">
+              <div class="view-toggle" role="tablist" [attr.aria-label]="'inventory.viewMode' | translate">
+                <button appChip [active]="viewMode() === 'lote'"
+                  (click)="setViewMode('lote')" role="tab" [attr.aria-selected]="viewMode() === 'lote'">
+                  {{ 'inventory.byBatch' | translate }}
+                </button>
+                <button appChip [active]="viewMode() === 'produto'"
+                  (click)="setViewMode('produto')" role="tab" [attr.aria-selected]="viewMode() === 'produto'">
+                  {{ 'inventory.byProduct' | translate }}
+                </button>
+              </div>
+              <div class="filter-chips" role="tablist">
+                <button appChip [active]="filter() === 'all'" [count]="activeCounts().all"
+                  (click)="setFilter('all')" role="tab" [attr.aria-selected]="filter() === 'all'">
+                  {{ 'common.all' | translate }}
+                </button>
+                <button appChip [active]="filter() === 'Em Estoque'" dot="success" [count]="activeCounts()['Em Estoque']"
+                  (click)="setFilter('Em Estoque')" role="tab" [attr.aria-selected]="filter() === 'Em Estoque'">
+                  {{ 'status.Em Estoque' | translate }}
+                </button>
+                <button appChip [active]="filter() === 'Atenção'" dot="warning" [count]="activeCounts()['Atenção']"
+                  (click)="setFilter('Atenção')" role="tab" [attr.aria-selected]="filter() === 'Atenção'">
+                  {{ 'status.Atenção' | translate }}
+                </button>
+                <button appChip [active]="filter() === 'Parado'" dot="danger" [count]="activeCounts()['Parado']"
+                  (click)="setFilter('Parado')" role="tab" [attr.aria-selected]="filter() === 'Parado'">
+                  {{ 'status.Parado' | translate }}
+                </button>
+                <button appChip [active]="filter() === 'Em trânsito'" dot="info" [count]="activeCounts()['Em trânsito']"
+                  (click)="setFilter('Em trânsito')" role="tab" [attr.aria-selected]="filter() === 'Em trânsito'">
+                  {{ 'status.Em trânsito' | translate }}
+                </button>
+                <button appChip [active]="filter() === 'Vendido'" dot="neutral" [count]="activeCounts()['Vendido']"
+                  (click)="setFilter('Vendido')" role="tab" [attr.aria-selected]="filter() === 'Vendido'">
+                  {{ 'status.Vendido' | translate }}
+                </button>
+              </div>
             </div>
           </header>
 
+          @if (viewMode() === 'produto') {
+            <!-- MODO POR PRODUTO: consolidado (estoque, custo médio, lucro) -->
+            @if (filteredGroups().length === 0) {
+              <div class="empty-filter">
+                <span class="t-caption">{{ 'inventory.noneWithStatus' | translate }}</span>
+              </div>
+            } @else if (bp.isMobile()) {
+              <div class="record-list">
+                @for (g of pagedGroups(); track g.product) {
+                  <app-record-card
+                    [title]="g.product"
+                    [code]="'inventory.lotsCount' | translate:{ count: g.lotCount }"
+                    [status]="('status.' + g.status) | translate"
+                    [statusKind]="statusKindOf(g.status)"
+                    [meta]="g.categories.join(', ')"
+                    [figures]="groupFiguresFor(g)"
+                  />
+                }
+              </div>
+              <app-paginator
+                [length]="filteredGroups().length"
+                [pageSize]="pageState().pageSize"
+                [pageIndex]="pageState().pageIndex"
+                [pageSizeOptions]="pageSizeOptions"
+                (page)="onPage($event)"
+              />
+            } @else {
+              <div class="table-frame">
+                <div class="table-scroll">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th class="col-edge"></th>
+                        <th>{{ 'purchases.colProduct' | translate }}</th>
+                        <th class="text-center">{{ 'inventory.colLots' | translate }}</th>
+                        <th class="text-center">{{ 'inventory.colStock' | translate }}</th>
+                        <th class="text-right">{{ 'inventory.colAvgCost' | translate }}</th>
+                        <th class="text-right">{{ 'inventory.idleCapital' | translate }}</th>
+                        <th class="text-right">{{ 'inventory.colProfit' | translate }}</th>
+                        <th class="text-center">{{ 'sales.colMargin' | translate }}</th>
+                        <th>{{ 'purchases.colStatus' | translate }}</th>
+                        <th class="text-right col-actions"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (g of pagedGroups(); track g.product) {
+                        <tr
+                          class="row row-clickable"
+                          [class.expanded]="expandedProduct() === g.product"
+                          (click)="toggleProduct(g.product, $event)"
+                        >
+                          <td class="col-edge">
+                            <span class="row-stripe" [class]="rowStripeClassStatus(g.status)" aria-hidden="true"></span>
+                          </td>
+                          <td class="product-cell" [title]="g.product">{{ g.product }}</td>
+                          <td class="text-center mono">{{ g.lotCount }}</td>
+                          <td class="text-center" [class.text-muted]="g.currentStock === 0">
+                            <strong class="mono">{{ g.currentStock }}</strong>
+                            <span class="of-total mono">/ {{ g.totalPurchased }}</span>
+                          </td>
+                          <td class="text-right mono">{{ g.avgUnitCost | brl }}</td>
+                          <td class="text-right mono" [class.text-warning]="g.idleCapital > 0">
+                            {{ g.idleCapital | brl: true }}
+                          </td>
+                          <td class="text-right mono" [class]="g.totalSold > 0 ? (g.totalNetProfit < 0 ? 'text-danger' : 'text-success') : 'text-muted'">
+                            {{ g.totalSold > 0 ? (g.totalNetProfit | brl) : '—' }}
+                          </td>
+                          <td class="text-center mono" [class]="marginClass(g.avgNetMargin)">
+                            {{ g.avgNetMargin !== undefined ? (g.avgNetMargin * 100).toFixed(1) + '%' : '—' }}
+                          </td>
+                          <td><app-status-badge [status]="g.status" /></td>
+                          <td class="text-right col-actions">
+                            <button
+                              appBtn="ghost" iconOnly size="sm" type="button"
+                              class="row-action"
+                              (click)="rebuyProduct(g, $event)"
+                              [appTooltip]="'purchases.rebuy' | translate"
+                              [attr.aria-label]="'purchases.rebuy' | translate"
+                            >
+                              <app-icon name="shopping-bag" [size]="17" />
+                            </button>
+                            <button
+                              appBtn="ghost" iconOnly size="sm" type="button"
+                              class="row-action"
+                              (click)="toggleProduct(g.product, $event)"
+                              [appTooltip]="(expandedProduct() === g.product ? 'purchases.collapse' : 'inventory.showLots') | translate"
+                              [attr.aria-label]="(expandedProduct() === g.product ? 'purchases.collapse' : 'inventory.showLots') | translate"
+                            >
+                              <app-icon [name]="expandedProduct() === g.product ? 'chevron-up' : 'chevron-down'" [size]="17" />
+                            </button>
+                          </td>
+                        </tr>
+                        @if (expandedProduct() === g.product) {
+                          <tr class="row-expansion" (click)="$event.stopPropagation()">
+                            <td class="col-edge"></td>
+                            <td colspan="9">
+                              <div class="lot-list">
+                                @for (lot of g.lots; track lot.id) {
+                                  <button type="button" class="lot-line" (click)="openDetail(lot)">
+                                    <span class="id-tag mono">{{ lot.id }}</span>
+                                    <span class="lot-date mono">{{ lot.purchaseDate | brDate }}</span>
+                                    <span class="lot-fig"><span class="t-caption">{{ 'inventory.colStock' | translate }}</span><strong class="mono">{{ lot.currentStock }}/{{ lot.quantityPurchased }}</strong></span>
+                                    <span class="lot-fig"><span class="t-caption">{{ 'purchases.realUnitCost' | translate }}</span><strong class="mono">{{ lot.actualUnitCost | brl }}</strong></span>
+                                    <app-status-badge [status]="lot.status" />
+                                  </button>
+                                }
+                              </div>
+                            </td>
+                          </tr>
+                        }
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                <app-paginator
+                  [length]="filteredGroups().length"
+                  [pageSize]="pageState().pageSize"
+                  [pageIndex]="pageState().pageIndex"
+                  [pageSizeOptions]="pageSizeOptions"
+                  [showFirstLast]="true"
+                  (page)="onPage($event)"
+                />
+              </div>
+            }
+          } @else {
           @if (filteredPurchases().length === 0) {
             <div class="empty-filter">
               <span class="t-caption">{{ 'inventory.noneWithStatus' | translate }}</span>
@@ -321,6 +464,7 @@
                 (page)="onPage($event)"
               />
             </div>
+          }
           }
         </section>
       }
