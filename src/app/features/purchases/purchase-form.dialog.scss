@@ -76,19 +76,6 @@
   margin-top: 2px;
 }
 
-.preview-history {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid color-mix(in srgb, var(--brand-primary) 20%, transparent);
-  font-size: var(--fs-small);
-  color: var(--text-secondary);
-
-  app-icon { color: var(--brand-primary); flex-shrink: 0; }
-}
-
 @include bp.below(sm) {
   .form-grid { grid-template-columns: 1fr; }
   .preview-stats { grid-template-columns: 1fr; }

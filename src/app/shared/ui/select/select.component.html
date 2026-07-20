@@ -41,13 +41,7 @@
       [attr.aria-activedescendant]="activeOptionId() || null"
     >
       <ng-content />
-      @if (createCandidate(); as term) {
-        <button type="button" class="select-create" (click)="commitCustom(term)">
-          <app-icon name="plus" [size]="16" />
-          <span>{{ 'ui.select.createOption' | translate: { term: term } }}</span>
-        </button>
-      }
-      @if (!hasVisibleOptions() && !createCandidate()) {
+      @if (!hasVisibleOptions()) {
         <div class="select-empty">{{ 'ui.select.noResults' | translate }}</div>
       }
     </div>

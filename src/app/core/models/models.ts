@@ -91,41 +91,6 @@ export interface ComputedSale extends Sale {
   netMargin: number;
 }
 
-/**
- * Consolidado por produto (agrupamento dos lotes que compartilham o mesmo nome).
- * Puramente derivado — não é persistido. Mantém a precisão por lote: as vendas
- * seguem custeadas pelo seu próprio lote; aqui só somamos/mediamos para exibição.
- */
-export interface ProductGroup {
-  /** Nome do produto (chave de agrupamento, já trimado). */
-  product: string;
-  /** Lotes deste produto (compras computadas). */
-  lots: ComputedPurchase[];
-  lotCount: number;
-  /** Categorias distintas vistas nos lotes (ordenadas). */
-  categories: string[];
-  /** Fornecedores distintos vistos nos lotes (ordenados). */
-  suppliers: string[];
-  totalPurchased: number;
-  totalSold: number;
-  currentStock: number;
-  totalInvested: number;
-  idleCapital: number;
-  /** Custo unitário médio ponderado: Σ totalActualCost / Σ quantityPurchased. */
-  avgUnitCost: number;
-  totalRevenue: number;
-  totalNetProfit: number;
-  /** totalNetProfit / totalRevenue. undefined quando não houve receita. */
-  avgNetMargin?: number;
-  /** totalNetProfit / totalSold. undefined quando nada foi vendido. */
-  avgProfitPerUnit?: number;
-  /** Status agregado (pior status ativo entre os lotes). */
-  status: InventoryStatus;
-  firstPurchase?: string;
-  lastPurchase?: string;
-  lastSale?: string;
-}
-
 /** Consolidated KPIs */
 export interface KpiSummary {
   totalInvested: number;

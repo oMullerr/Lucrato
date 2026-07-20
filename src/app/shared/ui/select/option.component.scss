@@ -6,8 +6,6 @@
   color: var(--text-primary);
   cursor: pointer;
   transition: background var(--dur-fast) var(--ease-out);
-  /* Painel tem largura fixa (= campo): texto longo quebra linha em vez de esticar. */
-  overflow-wrap: anywhere;
 
   &:hover { background: var(--bg-surface-2); }
 }

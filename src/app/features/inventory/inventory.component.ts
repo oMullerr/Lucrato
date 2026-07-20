@@ -14,7 +14,7 @@ import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { QuickActionsService } from '../../core/services/quick-actions.service';
-import { ComputedPurchase, InventoryStatus, Purchase, ProductGroup } from '../../core/models/models';
+import { ComputedPurchase, InventoryStatus, Purchase } from '../../core/models/models';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { KpiCardComponent } from '../../shared/components/kpi-card.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
@@ -24,7 +24,7 @@ import { BatchDetailPanelComponent } from '../../shared/components/batch-detail-
 import { ColorPillComponent } from '../../shared/components/color-pill.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
-import { PurchaseFormDialogComponent, PurchaseDialogData } from '../purchases/purchase-form.dialog';
+import { PurchaseFormDialogComponent } from '../purchases/purchase-form.dialog';
 import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/components/confirm-dialog.component';
 import { BreakpointService } from '../../shared/ui/breakpoint.service';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
@@ -78,14 +78,8 @@ export class InventoryComponent {
 
   protected readonly filter = signal<FilterKey>('all');
 
-  /** Modo de visualização da posição: por lote (padrão) ou consolidado por produto. */
-  protected readonly viewMode = signal<'lote' | 'produto'>('lote');
-
   /** Linha expandida inline (só desktop). */
   protected readonly expandedRow = signal<string | null>(null);
-
-  /** Grupo de produto expandido inline (modo "por produto", só desktop). */
-  protected readonly expandedProduct = signal<string | null>(null);
 
   /** Id do lote no painel lateral (id, não snapshot, para refletir updates). */
   protected readonly selectedBatchId = signal<string | null>(null);
@@ -119,23 +113,11 @@ export class InventoryComponent {
   });
 
   constructor() {
-    // Volta à primeira página quando filtro ou modo mudam (a página atual pode sumir).
+    // Volta à primeira página quando o filtro muda (a página atual pode sumir).
     effect(() => {
       this.filter();
-      this.viewMode();
       this.pageState.update(p => ({ ...p, pageIndex: 0 }));
     }, { allowSignalWrites: true });
-  }
-
-  protected setViewMode(mode: 'lote' | 'produto'): void {
-    this.viewMode.set(mode);
-    this.expandedRow.set(null);
-    this.expandedProduct.set(null);
-  }
-
-  protected toggleProduct(product: string, event: Event): void {
-    event.stopPropagation();
-    this.expandedProduct.update(curr => curr === product ? null : product);
   }
 
   protected onSortChange(sort: SortState): void {
@@ -233,80 +215,6 @@ export class InventoryComponent {
     }
     return counts;
   });
-
-  /* ---------- Modo "por produto" ---------- */
-
-  /** Contagem por status agregado dos grupos de produto (para os chips no modo produto). */
-  protected readonly productStatusCounts = computed(() => {
-    const counts: Record<FilterKey, number> = {
-      all: 0, 'Em Estoque': 0, 'Atenção': 0, 'Parado': 0, 'Em trânsito': 0, 'Vendido': 0,
-    };
-    for (const g of this.data.productGroups()) {
-      counts.all++;
-      counts[g.status]++;
-    }
-    return counts;
-  });
-
-  /** Contagem ativa conforme o modo — alimenta os chips e as legendas. */
-  protected readonly activeCounts = computed(() =>
-    this.viewMode() === 'produto' ? this.productStatusCounts() : this.statusCounts()
-  );
-
-  /** Grupos filtrados pelo status agregado e ordenados (pior status primeiro, depois nome). */
-  protected readonly filteredGroups = computed(() => {
-    const f = this.filter();
-    const list = f === 'all'
-      ? this.data.productGroups()
-      : this.data.productGroups().filter(g => g.status === f);
-    return [...list].sort((a, b) => {
-      const pa = this.STATUS_PRIORITY[a.status] ?? 99;
-      const pb = this.STATUS_PRIORITY[b.status] ?? 99;
-      if (pa !== pb) return pa - pb;
-      return a.product.localeCompare(b.product, undefined, { numeric: true });
-    });
-  });
-
-  /** Fatia paginada dos grupos. */
-  protected readonly pagedGroups = computed(() => {
-    const list = this.filteredGroups();
-    const { pageIndex, pageSize } = this.pageState();
-    const start = pageIndex * pageSize;
-    return list.slice(start, start + pageSize);
-  });
-
-  /** Recomprar a partir do grupo: pré-preenche pelo lote mais recente do produto. */
-  protected rebuyProduct(group: ProductGroup, event: Event): void {
-    event.stopPropagation();
-    const latest = [...group.lots].sort((a, b) =>
-      a.purchaseDate.localeCompare(b.purchaseDate) ||
-      a.id.localeCompare(b.id, undefined, { numeric: true })).pop();
-    if (!latest) return;
-    this.dialog
-      .open<PurchaseFormDialogComponent, PurchaseDialogData, Purchase | null>(
-        PurchaseFormDialogComponent,
-        { data: { prefill: { product: latest.product, category: latest.category, supplier: latest.supplier, link: latest.link ?? '' } }, size: 'lg' },
-      )
-      .afterClosed()
-      .subscribe(result => {
-        if (!result) return;
-        if (this.data.findPurchase(result.id)) {
-          this.notify.error(this.t.instant('purchases.idExists', { id: result.id }));
-          return;
-        }
-        this.data.addPurchase(result);
-        this.notify.success(this.t.instant('purchases.added', { id: result.id }));
-      });
-  }
-
-  /** Valores do rodapé do record-card mobile de um grupo de produto. */
-  protected groupFiguresFor(g: ProductGroup): RecordCardFigure[] {
-    return [
-      { label: this.t.instant('inventory.colStock'), text: `${g.currentStock}` },
-      { label: this.t.instant('inventory.colAvgCost'), value: g.avgUnitCost, tone: 'neutral' },
-      { label: this.t.instant('inventory.colProfit'), value: g.totalNetProfit, tone: 'auto' },
-    ];
-  }
 
   protected readonly alerts = computed(() =>
     this.data.computedPurchases()
@@ -431,12 +339,7 @@ export class InventoryComponent {
 
   /** Classe da listra lateral da linha — sinal visual do status. */
   protected rowStripeClass(c: ComputedPurchase): string {
-    return this.rowStripeClassStatus(c.status);
-  }
-
-  /** Listra lateral a partir de um status (compartilhada por lotes e grupos). */
-  protected rowStripeClassStatus(status: InventoryStatus): string {
-    switch (status) {
+    switch (c.status) {
       case 'Parado': return 'stripe-danger';
       case 'Atenção': return 'stripe-warning';
       case 'Em trânsito': return 'stripe-info';
@@ -446,12 +349,7 @@ export class InventoryComponent {
 
   /** Tom do dot de status do record-card mobile. */
   protected statusKindFor(c: ComputedPurchase): string {
-    return this.statusKindOf(c.status);
-  }
-
-  /** Tom do dot a partir de um status (compartilhado por lotes e grupos). */
-  protected statusKindOf(status: InventoryStatus): string {
-    switch (status) {
+    switch (c.status) {
       case 'Parado': return 'danger';
       case 'Atenção': return 'warning';
       case 'Em trânsito': return 'info';

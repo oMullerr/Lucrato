@@ -22,7 +22,7 @@ import { ColorPillComponent } from '../../shared/components/color-pill.component
 import { DateRangePickerComponent, RangeBounds, RangeChange } from '../../shared/components/date-range-picker.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
-import { PurchaseFormDialogComponent, PurchaseDialogData } from './purchase-form.dialog';
+import { PurchaseFormDialogComponent } from './purchase-form.dialog';
 import { BreakpointService } from '../../shared/ui/breakpoint.service';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
@@ -218,25 +218,13 @@ export class PurchasesComponent {
   }
 
   protected openNew(): void {
-    this.openForm({});
+    this.openForm();
   }
 
   protected edit(c: ComputedPurchase, event: Event): void {
     event.stopPropagation();
     const { ...purchase } = c as Purchase;
-    this.openForm({ purchase });
-  }
-
-  /**
-   * "Recomprar": abre a Nova Compra já com produto/categoria/fornecedor/link deste
-   * lote (id novo, quantidade/custo/datas em branco). É o caminho rápido para o
-   * mesmo produto que voltou à promoção.
-   */
-  protected rebuy(c: ComputedPurchase, event: Event): void {
-    event.stopPropagation();
-    this.openForm({
-      prefill: { product: c.product, category: c.category, supplier: c.supplier, link: c.link ?? '' },
-    });
+    this.openForm(purchase);
   }
 
   protected toggleRow(id: string, event: Event): void {
@@ -338,12 +326,11 @@ export class PurchasesComponent {
       });
   }
 
-  private openForm(opts: { purchase?: Purchase; prefill?: Partial<Purchase> } = {}): void {
-    const { purchase, prefill } = opts;
+  private openForm(purchase?: Purchase): void {
     this.dialog
-      .open<PurchaseFormDialogComponent, PurchaseDialogData, Purchase | null>(
+      .open<PurchaseFormDialogComponent, { purchase?: Purchase }, Purchase | null>(
         PurchaseFormDialogComponent,
-        { data: { purchase, prefill }, size: 'lg' }
+        { data: { purchase }, size: 'lg' }
       )
       .afterClosed()
       .subscribe(result => {

@@ -1,6 +1,6 @@
 import {
   Purchase, Sale, Settings,
-  ComputedPurchase, ComputedSale, KpiSummary, InventoryStatus, ProductGroup
+  ComputedPurchase, ComputedSale, KpiSummary, InventoryStatus
 } from '../models/models';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -150,86 +150,6 @@ export function calculateKpis(
       ? grossRevenue / completed.length
       : 0,
   };
-}
-
-/** Prioridade de status para o agregado do grupo (0 = pior/mais urgente). */
-const STATUS_PRIORITY: Record<InventoryStatus, number> = {
-  'Parado': 0,
-  'Atenção': 1,
-  'Em trânsito': 2,
-  'Em Estoque': 3,
-  'Vendido': 4,
-};
-
-/**
- * Agrupa lotes (compras computadas) por nome de produto (trimado) e consolida
- * estoque, custo médio ponderado e lucro das vendas concluídas. Aditivo: não
- * altera nenhum cálculo por lote — só soma/media os campos já computados.
- */
-export function groupByProduct(
-  purchases: ComputedPurchase[],
-  sales: ComputedSale[],
-): ProductGroup[] {
-  const completed = sales.filter(v => v.status === 'Concluída');
-  const groups = new Map<string, ComputedPurchase[]>();
-
-  for (const lot of purchases) {
-    const key = lot.product.trim();
-    const bucket = groups.get(key);
-    if (bucket) bucket.push(lot);
-    else groups.set(key, [lot]);
-  }
-
-  const result: ProductGroup[] = [];
-
-  for (const [product, lots] of groups) {
-    const lotIds = new Set(lots.map(l => l.id));
-    const groupSales = completed.filter(v => lotIds.has(v.batchId));
-
-    const totalPurchased = lots.reduce((s, l) => s + l.quantityPurchased, 0);
-    const totalInvested = lots.reduce((s, l) => s + l.totalActualCost, 0);
-    const currentStock = lots.reduce((s, l) => s + l.currentStock, 0);
-    const idleCapital = lots.reduce((s, l) => s + l.idleValue, 0);
-
-    const totalSold = groupSales.reduce((s, v) => s + v.quantitySold, 0);
-    const totalRevenue = groupSales.reduce((s, v) => s + v.grossRevenue, 0);
-    const totalNetProfit = groupSales.reduce((s, v) => s + v.netProfit, 0);
-
-    const categories = [...new Set(lots.map(l => l.category))].sort();
-    const suppliers = [...new Set(lots.map(l => l.supplier))].sort();
-
-    const status = lots.reduce<InventoryStatus>(
-      (worst, l) => (STATUS_PRIORITY[l.status] < STATUS_PRIORITY[worst] ? l.status : worst),
-      lots[0].status,
-    );
-
-    const purchaseDates = lots.map(l => l.purchaseDate).sort();
-    const saleDates = groupSales.map(v => v.saleDate).sort();
-
-    result.push({
-      product,
-      lots,
-      lotCount: lots.length,
-      categories,
-      suppliers,
-      totalPurchased,
-      totalSold,
-      currentStock,
-      totalInvested,
-      idleCapital,
-      avgUnitCost: totalPurchased > 0 ? totalInvested / totalPurchased : 0,
-      totalRevenue,
-      totalNetProfit,
-      avgNetMargin: totalRevenue > 0 ? totalNetProfit / totalRevenue : undefined,
-      avgProfitPerUnit: totalSold > 0 ? totalNetProfit / totalSold : undefined,
-      status,
-      firstPurchase: purchaseDates[0],
-      lastPurchase: purchaseDates[purchaseDates.length - 1],
-      lastSale: saleDates[saleDates.length - 1],
-    });
-  }
-
-  return result.sort((a, b) => a.product.localeCompare(b.product, undefined, { numeric: true }));
 }
 
 /** Generates the next sequential ID for a given prefix (e.g. C, V). */

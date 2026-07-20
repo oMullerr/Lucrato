@@ -47,12 +47,6 @@ export class SelectComponent<T = unknown> implements ControlValueAccessor {
   readonly searchable = input(false);
   readonly searchPlaceholder = input('');
   readonly disabled = input(false);
-  /**
-   * Combobox "criável": quando ligado (junto com `searchable`), o texto digitado
-   * que não casa nenhuma opção pode ser comitado como valor novo (linha "＋ Usar…"
-   * ou Enter). Usado no campo Produto da Nova Compra. Não afeta selects normais.
-   */
-  readonly allowCreate = input(false);
 
   private readonly overlay = inject(Overlay);
   private readonly host = inject(ElementRef<HTMLElement>);
@@ -71,28 +65,11 @@ export class SelectComponent<T = unknown> implements ControlValueAccessor {
 
   protected readonly isDisabled = computed(() => this.disabled() || this.cvaDisabled());
 
-  /** Rótulo do gatilho: opção selecionada, valor custom (allowCreate) ou placeholder. */
+  /** Rótulo do gatilho: opção selecionada ou placeholder. */
   protected readonly triggerLabel = computed(() => {
     const current = this.value();
     const opt = this.options().find((o) => this.sameValue(o.value() as T, current));
-    if (opt) return opt.displayLabel;
-    // Valor digitado sem opção correspondente (modo criável): mostra o próprio valor.
-    if (this.allowCreate() && current != null && current !== '') return String(current);
-    return '';
-  });
-
-  /**
-   * Termo digitado que viraria um produto novo: não-vazio e sem casar nenhuma
-   * opção existente (case-insensitive). Vazio quando allowCreate está desligado.
-   */
-  protected readonly createCandidate = computed(() => {
-    if (!this.allowCreate() || !this.searchable()) return '';
-    const term = this.searchText().trim();
-    if (!term) return '';
-    const exists = this.options().some(
-      (o) => o.displayLabel.trim().toLowerCase() === term.toLowerCase(),
-    );
-    return exists ? '' : term;
+    return opt?.displayLabel ?? '';
   });
 
   private overlayRef: OverlayRef | null = null;
@@ -144,10 +121,7 @@ export class SelectComponent<T = unknown> implements ControlValueAccessor {
       scrollStrategy: this.overlay.scrollStrategies.reposition(),
       hasBackdrop: true,
       backdropClass: 'cdk-overlay-transparent-backdrop',
-      // Fixa a largura do painel na do campo (piso de 220 p/ campos estreitos).
-      // Antes era só minWidth: opções longas (ex.: nome de produto grande)
-      // esticavam o painel muito além do campo. Com width fixo, elas quebram linha.
-      width: Math.max(width, 220),
+      minWidth: Math.max(width, 220),
     });
     this.overlayRef.backdropClick().subscribe(() => this.close());
     this.overlayRef.keydownEvents().subscribe((e) => {
@@ -183,18 +157,7 @@ export class SelectComponent<T = unknown> implements ControlValueAccessor {
       const match = !t || (el.textContent ?? '').toLowerCase().includes(t);
       el.style.display = match ? '' : 'none';
     }
-    // Criável: não pré-ativa nada — digitar+Enter cria o valor novo; setas escolhem
-    // uma sugestão existente. Sem allowCreate mantém o comportamento antigo (ativa a 1ª).
-    this.setActive(!this.allowCreate() && this.visibleOptions().length ? 0 : -1);
-  }
-
-  /** Comita o texto digitado como valor novo (modo criável). */
-  protected commitCustom(term: string): void {
-    const v = term.trim();
-    if (!v) return;
-    this.value.set(v as unknown as T);
-    this.onChange(this.value());
-    this.close();
+    this.setActive(this.visibleOptions().length ? 0 : -1);
   }
 
   protected readonly hasVisibleOptions = computed(() => {
@@ -222,14 +185,7 @@ export class SelectComponent<T = unknown> implements ControlValueAccessor {
 
   protected onPanelKeydown(event: KeyboardEvent): void {
     const visible = this.visibleOptions();
-    // Sem opções visíveis: no modo criável, Enter ainda comita o texto digitado.
-    if (!visible.length) {
-      if (event.key === 'Enter' && this.createCandidate()) {
-        event.preventDefault();
-        this.commitCustom(this.createCandidate());
-      }
-      return;
-    }
+    if (!visible.length) return;
     const activeIdx = visible.findIndex((o) => o.optionId === this.activeOptionId());
     switch (event.key) {
       case 'ArrowDown':
@@ -255,7 +211,6 @@ export class SelectComponent<T = unknown> implements ControlValueAccessor {
       case 'Enter':
         event.preventDefault();
         if (activeIdx >= 0) this.selectOption(visible[activeIdx]);
-        else if (this.createCandidate()) this.commitCustom(this.createCandidate());
         break;
       case 'Tab':
         this.close();

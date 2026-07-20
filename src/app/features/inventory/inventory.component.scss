@@ -157,62 +157,6 @@
   flex-wrap: wrap;
 }
 
-.ph-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-2);
-}
-
-/* Segmentado "Por lote / Por produto". */
-.view-toggle {
-  display: flex;
-  gap: 4px;
-  padding: 3px;
-  background: var(--bg-surface-2);
-  border-radius: var(--radius-full);
-}
-
-/* Lista de lotes dentro de um grupo de produto expandido. */
-.lot-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-1) 0;
-}
-
-.lot-line {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  width: 100%;
-  padding: 8px 10px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-primary);
-  text-align: left;
-  cursor: pointer;
-  transition: background var(--dur-fast) var(--ease-out);
-
-  &:hover,
-  &:focus-visible { background: var(--bg-surface-2); }
-}
-
-.lot-line .lot-date { color: var(--text-secondary); min-width: 84px; }
-
-.lot-fig {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-
-  .t-caption { font-size: 10px; }
-}
-
-@include bp.below(md) {
-  .ph-controls { align-items: stretch; width: 100%; }
-}
-
 .empty-filter {
   padding: var(--space-8);
   text-align: center;

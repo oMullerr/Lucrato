@@ -5,8 +5,7 @@
   "ui": {
     "select": {
       "noResults": "Nenhum resultado",
-      "search": "Buscar…",
-      "createOption": "Usar \"{{term}}\""
+      "search": "Buscar…"
     },
     "date": {
       "today": "Hoje",
@@ -394,17 +393,7 @@
     "viewBatches": "Ver lotes",
     "positionsLabel": "Posição detalhada por lote",
     "positionByBatch": "Posição por lote",
-    "positionByProduct": "Posição por produto",
     "ofBatches": "{{shown}} de {{total}} lotes",
-    "ofProducts": "{{shown}} de {{total}} produtos",
-    "viewMode": "Visualização",
-    "byBatch": "Por lote",
-    "byProduct": "Por produto",
-    "colLots": "Lotes",
-    "colAvgCost": "Custo médio",
-    "colProfit": "Lucro",
-    "showLots": "Ver lotes",
-    "lotsCount": "{{count}} lote(s)",
     "noneWithStatus": "Nenhum lote com este status.",
     "colStock": "Estoque",
     "markReceivedToday": "Marcar como recebido (hoje)",
@@ -624,7 +613,6 @@
     "colStatus": "Status",
     "collapse": "Recolher",
     "inlineDetails": "Detalhes inline",
-    "rebuy": "Recomprar",
     "receivedOn": "Recebido em",
     "nominalUnitCost": "Custo unit. nominal",
     "realUnitCost": "Custo unit. real",
@@ -647,9 +635,6 @@
     "editTitle": "Editar Compra",
     "newTitle": "Nova Compra",
     "autoId": "ID gerado automaticamente",
-    "productPlaceholder": "Escolha ou digite um produto",
-    "productSearchPlaceholder": "Buscar ou criar produto…",
-    "productHistory": "Custo médio deste produto: {{avg}} · último lote: {{last}}",
     "purchaseDate": "Data da Compra",
     "purchaseDateFuture": "A data da compra não pode ser maior que hoje.",
     "receiptDate": "Data de Recebimento (opcional)",
