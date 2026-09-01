@@ -329,6 +329,58 @@ describe('calculateSale', () => {
     expect(result.netRevenue).toBe(100);
   });
 
+  it('soma estorno na receita líquida em envio Correios', () => {
+    const sale = makeSale({
+      shippingType: 'correios',
+      sellerShipping: 20,
+      estorno: 30,
+      quantitySold: 1,
+      unitPrice: 100,
+      feePercentage: 0,
+      discount: 0,
+      otherCosts: 0,
+    });
+    const result = calculateSale(sale, []);
+
+    // netRevenue = 100 - 0 - 20 + 30 - 0 - 0 = 110
+    expect(result.netRevenue).toBe(110);
+    expect(result.grossRevenue).toBe(100);
+  });
+
+  it('soma estorno na receita líquida em envio Flex (além do flexRefund)', () => {
+    const sale = makeSale({
+      shippingType: 'flex',
+      flexRefund: 15,
+      estorno: 30,
+      quantitySold: 1,
+      unitPrice: 100,
+      feePercentage: 0,
+      discount: 0,
+      otherCosts: 0,
+    });
+    const result = calculateSale(sale, []);
+
+    // netRevenue = 100 - 0 + 15 + 30 - 0 - 0 = 145
+    expect(result.netRevenue).toBe(145);
+  });
+
+  it('trata estorno ausente como 0 (vendas antigas sem o campo)', () => {
+    const base = makeSale({
+      shippingType: 'correios',
+      sellerShipping: 20,
+      quantitySold: 1,
+      unitPrice: 100,
+      feePercentage: 0,
+      discount: 0,
+      otherCosts: 0,
+    });
+    const semEstorno = calculateSale({ ...base, estorno: undefined }, []);
+    const comZero = calculateSale({ ...base, estorno: 0 }, []);
+
+    expect(semEstorno.netRevenue).toBe(80);
+    expect(semEstorno.netRevenue).toBe(comZero.netRevenue);
+  });
+
   it('subtrai sellerShipping quando shippingType != "flex"', () => {
     const sale = makeSale({
       shippingType: 'correios',

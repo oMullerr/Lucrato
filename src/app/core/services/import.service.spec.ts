@@ -454,6 +454,30 @@ describe('ImportService', () => {
       expect(result[0].flexRefund).toBeUndefined();
     });
 
+    it('lê "Estorno (R$)" da coluna 13 (índice 12)', () => {
+      const { result } = callParseSales([
+        ['h'], ['i'], ['e'],
+        ['C001', '01/06/2025', 'ML', 1, 100, 12, 5, 0, 0, 0, 'Concluída', '', 25],
+      ]);
+      expect(result[0].estorno).toBe(25);
+    });
+
+    it('estorno = 0 em planilhas antigas (sem a coluna 13)', () => {
+      const { result } = callParseSales([
+        ['h'], ['i'], ['e'],
+        ['C001', '01/06/2025', 'ML', 1, 100, 12, 5, 0, 0, 0, 'Concluída', ''],
+      ]);
+      expect(result[0].estorno).toBe(0);
+    });
+
+    it('rejeita estorno negativo', () => {
+      const { errors } = callParseSales([
+        ['h'], ['i'], ['e'],
+        ['C001', '01/06/2025', 'ML', 1, 100, 12, 0, 0, 0, 0, 'Concluída', '', -10],
+      ]);
+      expect(errors[0]).toMatch(/saleEstornoNeg/);
+    });
+
     it('usa settings.defaultMlFee quando taxa está vazia', () => {
       const settings = makeSettings({ defaultMlFee: 0.13 });
       const { result } = callParseSales([

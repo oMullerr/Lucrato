@@ -226,6 +226,9 @@
                           <div><span class="t-caption">{{ 'sales.feeAmount' | translate }}</span><strong class="mono">{{ v.feeAmount | brl }}</strong></div>
                           <div><span class="t-caption">{{ 'sales.sellerShipping' | translate }}</span><strong class="mono">{{ v.sellerShipping | brl }}</strong></div>
                           <div><span class="t-caption">{{ 'sales.discount' | translate }}</span><strong class="mono">{{ v.discount | brl }}</strong></div>
+                          @if (v.estorno) {
+                            <div><span class="t-caption">{{ 'sales.estorno' | translate }}</span><strong class="mono">{{ v.estorno | brl }}</strong></div>
+                          }
                           <div><span class="t-caption">{{ 'sales.netRevenue' | translate }}</span><strong class="mono">{{ v.netRevenue | brl }}</strong></div>
                           <div><span class="t-caption">{{ 'sales.proportionalCost' | translate }}</span><strong class="mono">{{ v.proportionalCost | brl }}</strong></div>
                         </div>

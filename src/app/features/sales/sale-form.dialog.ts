@@ -190,7 +190,7 @@ export class SaleFormDialogComponent {
 
     if (m.unitPrice < 0 || m.feePercentage < 0 ||
         m.sellerShipping < 0 || (m.flexRefund ?? 0) < 0 ||
-        m.discount < 0 || m.otherCosts < 0) {
+        (m.estorno ?? 0) < 0 || m.discount < 0 || m.otherCosts < 0) {
       return false;
     }
 
@@ -217,6 +217,7 @@ export class SaleFormDialogComponent {
       shippingType: 'correios',
       sellerShipping: 0,
       flexRefund: 0,
+      estorno: 0,
       discount: 0,
       otherCosts: 0,
       status: 'Concluída',

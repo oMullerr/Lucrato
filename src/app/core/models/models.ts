@@ -33,6 +33,7 @@ export interface Sale {
   shippingType?: 'correios' | 'flex';
   sellerShipping: number;
   flexRefund?: number;
+  estorno?: number;
   discount: number;
   otherCosts: number;
   status: SaleStatus;

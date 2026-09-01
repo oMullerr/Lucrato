@@ -122,6 +122,7 @@ Registro e gestão de cada venda realizada.
 - Data da venda, canal de venda e status (Concluída, Cancelada, Devolvida, Em disputa)
 - Taxa do marketplace (pré-preenchida com o padrão configurado, editável)
 - Tipo de frete (Correios ou Flex), frete cobrado e reembolso flex
+- Estorno da plataforma (valor devolvido em vendas promocionais — soma à receita)
 - Desconto, outros custos e observações
 - Todos os cálculos (receita, lucro, margem) aparecem em tempo real enquanto preenche
 

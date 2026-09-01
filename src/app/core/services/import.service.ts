@@ -165,6 +165,7 @@ export class ImportService {
       ['Outros Custos (R$)', false, 'Outros custos relacionados à venda. Padrão: 0.'],
       ['Status', false, 'Status da venda: Concluída, Cancelada, Devolvida, Em disputa. Padrão: Concluída.'],
       ['Observações', false, 'Anotações livres sobre a venda.'],
+      ['Estorno (R$)', false, 'Valor devolvido pela plataforma (ex: promoção). É somado à receita da venda. Padrão: 0.'],
     ];
 
     const aoa: any[][] = [];
@@ -316,8 +317,9 @@ export class ImportService {
       'Outros Custos (R$)',
       'Status',
       'Observações',
+      'Estorno (R$)',
     ];
-    const required = [true, true, false, true, true, false, false, false, false, false, false, false];
+    const required = [true, true, false, true, true, false, false, false, false, false, false, false, false];
     const example = [
       'C001',
       '20/05/2025',
@@ -331,6 +333,7 @@ export class ImportService {
       0,
       'Concluída',
       'EXEMPLO — apague esta linha antes de importar',
+      0,
     ];
     const numberFormats: Record<number, string> = {
       3: '0',
@@ -340,8 +343,9 @@ export class ImportService {
       7: 'R$ #,##0.00',
       8: 'R$ #,##0.00',
       9: 'R$ #,##0.00',
+      12: 'R$ #,##0.00',
     };
-    const colWidths = [12, 22, 16, 16, 18, 12, 18, 16, 14, 16, 14, 32];
+    const colWidths = [12, 22, 16, 16, 18, 12, 18, 16, 14, 16, 14, 32, 16];
 
     return this.buildDataSheet(headers, required, example, numberFormats, colWidths);
   }
@@ -530,6 +534,7 @@ export class ImportService {
       const otherCosts    = this.num(row[9]);
       const statusRaw     = this.str(row[10]) || 'Concluída';
       const notes         = this.str(row[11]) || undefined;
+      const estorno       = this.num(row[12]);
 
       if (notes && /EXEMPLO/i.test(notes)) continue;
 
@@ -557,6 +562,7 @@ export class ImportService {
       if (flexRefund < 0)     { errors.push(this.t.instant('importErrors.saleFlexNeg', { line: lineNum }));       continue; }
       if (discount < 0)       { errors.push(this.t.instant('importErrors.saleDiscountNeg', { line: lineNum }));   continue; }
       if (otherCosts < 0)     { errors.push(this.t.instant('importErrors.saleOtherNeg', { line: lineNum }));      continue; }
+      if (estorno < 0)        { errors.push(this.t.instant('importErrors.saleEstornoNeg', { line: lineNum }));    continue; }
 
       const saleDate = this.parseDate(saleDateRaw);
       if (!saleDate) { errors.push(this.t.instant('importErrors.saleInvalidDate', { line: lineNum, value: saleDateRaw })); continue; }
@@ -609,6 +615,7 @@ export class ImportService {
         shippingType,
         sellerShipping: shippingType === 'correios' ? sellerShipping : 0,
         flexRefund: shippingType === 'flex' ? flexRefund : undefined,
+        estorno,
         discount,
         otherCosts,
         status,

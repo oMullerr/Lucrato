@@ -181,6 +181,7 @@ users/{uid}/db/main → { purchases[], sales[], settings, metadata }
 | `shippingType` | 'correios' \| 'flex' | Tipo de frete |
 | `sellerShipping` | number | Frete cobrado do comprador |
 | `flexRefund` | number | Reembolso flex recebido |
+| `estorno` | number | Estorno da plataforma (promoção) — soma à receita |
 | `discount` | number | Desconto concedido |
 | `otherCosts` | number | Outros custos da venda |
 | `status` | SaleStatus | Status da venda |
@@ -238,7 +239,7 @@ averageMargin       = média ponderada das margens das vendas vinculadas
 ```
 grossRevenue        = quantitySold × unitPrice
 feeAmount           = grossRevenue × feePercentage
-netRevenue          = grossRevenue − feeAmount − sellerShipping + flexRefund − discount − otherCosts
+netRevenue          = grossRevenue − feeAmount − sellerShipping + flexRefund + estorno − discount − otherCosts
 actualUnitCost      = puxado do lote vinculado
 proportionalCost    = quantitySold × actualUnitCost
 grossProfit         = grossRevenue − proportionalCost

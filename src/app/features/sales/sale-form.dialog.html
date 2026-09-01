@@ -175,7 +175,16 @@
         name="discount" />
     </app-field>
 
-    <app-field class="full" [label]="'purchaseForm.otherCosts' | translate">
+    <app-field [label]="'saleForm.estorno' | translate" [hint]="'saleForm.estornoHint' | translate">
+      <span fieldPrefix class="money-prefix">R$</span>
+      <input appInput appCurrencyInput inputmode="numeric"
+        [ngModel]="model().estorno ?? 0"
+        (ngModelChange)="setNum('estorno', $event)"
+        [disabled]="!hasBatch()"
+        name="estorno" />
+    </app-field>
+
+    <app-field [label]="'purchaseForm.otherCosts' | translate">
       <span fieldPrefix class="money-prefix">R$</span>
       <input appInput appCurrencyInput inputmode="numeric"
         [ngModel]="model().otherCosts"

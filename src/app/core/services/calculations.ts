@@ -16,10 +16,11 @@ function saleShippingImpact(s: Sale): number {
   return s.shippingType === 'flex' ? (s.flexRefund ?? 0) : -s.sellerShipping;
 }
 
-/** Net revenue of a single sale (channel fees, shipping/flex, discount, other costs). */
+/** Net revenue of a single sale (channel fees, shipping/flex, estorno, discount, other costs). */
 function saleNetRevenue(s: Sale): number {
   const grossRevenue = s.quantitySold * s.unitPrice;
-  return grossRevenue - grossRevenue * s.feePercentage + saleShippingImpact(s) - s.discount - s.otherCosts;
+  return grossRevenue - grossRevenue * s.feePercentage + saleShippingImpact(s)
+    + (s.estorno ?? 0) - s.discount - s.otherCosts;
 }
 
 /** Calculates derived fields for a purchase batch. */
