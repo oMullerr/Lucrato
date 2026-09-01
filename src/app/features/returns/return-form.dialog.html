@@ -1,0 +1,265 @@
+<app-dialog-shell
+  [dialogTitle]="(isEdit() ? 'returnForm.editTitle' : 'returnForm.newTitle') | translate"
+  [icon]="isEdit() ? 'pencil' : 'rotate-ccw'"
+>
+  <span dialogBadge class="id-badge num" [appTooltip]="'purchaseForm.autoId' | translate">{{ model().id }}</span>
+
+  <form class="form-grid" (submit)="$event.preventDefault(); save()">
+
+    <!-- Venda devolvida -->
+    <app-field
+      class="full"
+      [label]="'returnForm.sale' | translate"
+      [required]="true"
+      [hint]="'returnForm.saleHint' | translate:{ days: returnWindowDays() }"
+    >
+      <app-select
+        [ngModel]="model().saleId"
+        (ngModelChange)="onSaleChange($event)"
+        name="saleId"
+        [searchable]="true"
+        [placeholder]="'returnForm.salePlaceholder' | translate"
+        [searchPlaceholder]="'saleForm.searchByProduct' | translate"
+      >
+        @for (s of availableSales(); track s.id) {
+          <app-option [value]="s.id" [label]="s.id + ' — ' + s.product">
+            <span class="sale-line">
+              <strong class="num">{{ s.id }}</strong> — {{ s.product }}
+              <span class="sale-meta num">
+                {{ s.saleDate | brDate }} · {{ s.unitPrice | brl }}
+              </span>
+            </span>
+          </app-option>
+        }
+        @if (availableSales().length === 0) {
+          <app-option [value]="''" [disabled]="true">
+            {{ 'returnForm.noEligible' | translate:{ days: returnWindowDays() } }}
+          </app-option>
+        }
+      </app-select>
+    </app-field>
+
+    <!-- Quantidade -->
+    <app-field
+      [label]="'returnForm.quantity' | translate"
+      [required]="true"
+      [error]="exceedsQuantity() ? ('returnForm.valQtyExceeds' | translate:{ max: maxQuantity() }) : ''"
+      [showErrorNow]="exceedsQuantity()"
+      [hint]="maxQuantity() !== null ? ('returnForm.quantityHint' | translate:{ max: maxQuantity() }) : ''"
+    >
+      <input
+        appInput
+        type="number"
+        min="1"
+        [ngModel]="model().quantity"
+        (ngModelChange)="onQuantityChange($event)"
+        [disabled]="!hasSale()"
+        name="quantity"
+        required
+      />
+    </app-field>
+
+    <!-- Destino -->
+    <app-field
+      [label]="'returnForm.destination' | translate"
+      [required]="true"
+      [hint]="(model().destination === 'Estoque'
+                ? 'returnForm.destinationEstoqueHint'
+                : 'returnForm.destinationOtherHint') | translate"
+    >
+      <app-select
+        [ngModel]="model().destination"
+        (ngModelChange)="onDestinationChange($event)"
+        [disabled]="!hasSale()"
+        name="destination"
+      >
+        @for (d of destinations; track d) {
+          <app-option [value]="d" [label]="'returns.destination.' + d | translate">
+            {{ 'returns.destination.' + d | translate }}
+          </app-option>
+        }
+      </app-select>
+    </app-field>
+
+    <!-- Datas -->
+    <app-field
+      [label]="'returnForm.requestDate' | translate"
+      [required]="true"
+      [error]="requestBeforeSale()
+        ? ('returnForm.valRequestBeforeSale' | translate:{ date: selectedSale()?.saleDate | brDate })
+        : ''"
+      [showErrorNow]="requestBeforeSale()"
+    >
+      <app-date-input
+        [ngModel]="requestDateAsDate()"
+        (ngModelChange)="setRequestDate($event)"
+        [disabled]="!hasSale()"
+        [max]="maxDate"
+        name="requestDate"
+      />
+    </app-field>
+
+    <app-field
+      [label]="'returnForm.arrivalDate' | translate"
+      [hint]="'returnForm.arrivalDateHint' | translate"
+      [error]="arrivalBeforeRequest()
+        ? ('returnForm.valArrivalBeforeRequest' | translate)
+        : (arrivalInFuture() ? ('returnForm.valArrivalFuture' | translate) : '')"
+      [showErrorNow]="arrivalBeforeRequest() || arrivalInFuture()"
+    >
+      <app-date-input
+        [ngModel]="arrivalDateAsDate()"
+        (ngModelChange)="setArrivalDate($event)"
+        [disabled]="!hasSale()"
+        [min]="requestDateAsDate()"
+        [max]="maxDate"
+        name="arrivalDate"
+      />
+    </app-field>
+
+    <!-- Dinheiro -->
+    <app-field
+      [label]="'returnForm.returnShipping' | translate"
+      [hint]="'returnForm.returnShippingHint' | translate"
+    >
+      <span fieldPrefix class="money-prefix">R$</span>
+      <input
+        appInput
+        appCurrencyInput
+        inputmode="numeric"
+        [ngModel]="model().returnShipping"
+        (ngModelChange)="setNum('returnShipping', $event)"
+        [disabled]="!hasSale()"
+        name="returnShipping"
+      />
+    </app-field>
+
+    @if (showRefund()) {
+      <app-field
+        [label]="'returnForm.refundedAmount' | translate"
+        [hint]="'returnForm.refundedHint' | translate"
+      >
+        <span fieldPrefix class="money-prefix">R$</span>
+        <input
+          appInput
+          appCurrencyInput
+          inputmode="numeric"
+          [ngModel]="model().refundedAmount ?? 0"
+          (ngModelChange)="onRefundChange($event)"
+          [disabled]="!hasSale()"
+          name="refundedAmount"
+        />
+      </app-field>
+    }
+
+    <!-- Motivo -->
+    <app-field class="full" [label]="'returnForm.reason' | translate" [required]="true">
+      <app-select
+        [ngModel]="model().reason"
+        (ngModelChange)="set('reason', $event)"
+        [disabled]="!hasSale()"
+        name="reason"
+      >
+        @for (r of reasons; track r) {
+          <app-option [value]="r" [label]="'returns.reason.' + r | translate">
+            {{ 'returns.reason.' + r | translate }}
+          </app-option>
+        }
+      </app-select>
+    </app-field>
+
+    <app-field class="full" [label]="'returnForm.customerReason' | translate">
+      <textarea appInput rows="2"
+        [ngModel]="model().customerReason"
+        (ngModelChange)="set('customerReason', $event)"
+        [disabled]="!hasSale()"
+        [placeholder]="'returnForm.customerReasonPlaceholder' | translate"
+        name="customerReason"></textarea>
+    </app-field>
+
+    <app-field class="full" [label]="'returnForm.resolution' | translate">
+      <textarea appInput rows="2"
+        [ngModel]="model().resolution"
+        (ngModelChange)="set('resolution', $event)"
+        [disabled]="!hasSale()"
+        [placeholder]="'returnForm.resolutionPlaceholder' | translate"
+        name="resolution"></textarea>
+    </app-field>
+
+    <app-field class="full" [label]="'purchaseForm.notes' | translate">
+      <textarea appInput rows="2"
+        [ngModel]="model().notes"
+        (ngModelChange)="set('notes', $event)"
+        [disabled]="!hasSale()"
+        name="notes"></textarea>
+    </app-field>
+  </form>
+
+  <!-- Preview do impacto -->
+  @if (preview(); as p) {
+    <div class="preview" [class.preview--pending]="!isFinalized()">
+      <div class="preview-title">
+        <app-icon [name]="isFinalized() ? 'calculator' : 'clock'" [size]="16" />
+        {{ 'returnForm.previewTitle' | translate }}
+      </div>
+
+      @if (isFinalized()) {
+        <div class="preview-stats">
+          <div>
+            <span>{{ 'returnForm.previewBefore' | translate }}</span>
+            <strong class="num" [class]="'num ' + profitClass(p.before.netProfit)">
+              {{ p.before.netProfit | brl }}
+            </strong>
+          </div>
+          <div>
+            <span>{{ 'returnForm.previewAfter' | translate }}</span>
+            <strong class="num" [class]="'num ' + profitClass(p.after.netProfit)">
+              {{ p.after.netProfit | brl }}
+            </strong>
+          </div>
+          <div class="preview-headline">
+            <span>
+              {{ (p.loss >= 0 ? 'returnForm.previewLoss' : 'returnForm.previewGain') | translate }}
+            </span>
+            <strong class="num" [class]="'num ' + lossClass()">
+              {{ (p.loss >= 0 ? p.loss : -p.loss) | brl }}
+            </strong>
+          </div>
+        </div>
+      } @else {
+        <div class="preview-stats">
+          <div class="preview-headline">
+            <span>{{ 'returnForm.previewAtRisk' | translate }}</span>
+            <strong class="num text-warning">{{ p.atRisk | brl }}</strong>
+          </div>
+        </div>
+        <p class="preview-note">{{ 'returnForm.previewPendingNote' | translate }}</p>
+      }
+
+      <div class="preview-lines">
+        <span>
+          <app-icon [name]="p.stockBack ? 'package-check' : 'ban'" [size]="14" />
+          @if (p.stockBack) {
+            {{ 'returnForm.previewStockBack' | translate:{ qty: model().quantity, batch: model().batchId } }}
+          } @else {
+            {{ 'returnForm.previewStockKept' | translate }}
+          }
+        </span>
+        @if (isFinalized() && p.detail.retainedFee > 0) {
+          <span>
+            <app-icon name="triangle-alert" [size]="14" />
+            {{ 'returnForm.previewRetainedFee' | translate }}: {{ p.detail.retainedFee | brl }}
+          </span>
+        }
+      </div>
+    </div>
+  }
+
+  <ng-container dialogActions>
+    <button appBtn="ghost" type="button" (click)="ref.close()">{{ 'common.cancel' | translate }}</button>
+    <button appBtn type="button" (click)="save()" [disabled]="!isValid()">
+      <app-icon name="save" [size]="18" />
+      {{ (isEdit() ? 'common.save' : 'common.add') | translate }}
+    </button>
+  </ng-container>
+</app-dialog-shell>

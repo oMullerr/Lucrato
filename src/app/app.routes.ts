@@ -35,6 +35,12 @@ export const routes: Routes = [
     title: 'routeTitles.sales',
   },
   {
+    path: 'returns',
+    loadComponent: () => import('./features/returns/returns.component').then(m => m.ReturnsComponent),
+    canActivate: [authGuard],
+    title: 'routeTitles.returns',
+  },
+  {
     path: 'dashboard',
     loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
     canActivate: [authGuard],

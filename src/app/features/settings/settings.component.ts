@@ -345,6 +345,8 @@ export class SettingsComponent implements OnDestroy {
       return this.t.instant('settings.valLowStock');
     if (!Number.isFinite(s.defaultShipping) || s.defaultShipping < 0)
       return this.t.instant('settings.valShipping');
+    if (!Number.isInteger(s.returnWindowDays) || s.returnWindowDays <= 0)
+      return this.t.instant('settings.valReturnWindow');
     return null;
   }
 }

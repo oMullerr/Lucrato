@@ -1,0 +1,132 @@
+@use '../../../styles/breakpoints' as bp;
+
+.id-badge {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 4px 12px;
+  flex-shrink: 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.form-grid .full { grid-column: 1 / -1; }
+
+.money-prefix {
+  font-size: var(--fs-small);
+  font-weight: 500;
+}
+
+.sale-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sale-meta {
+  margin-left: auto;
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.preview {
+  margin-top: var(--space-4);
+  padding: 18px;
+  background: linear-gradient(135deg, var(--bg-surface-2) 0%, var(--tint-brand) 100%);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 25%, transparent);
+  border-radius: var(--radius-lg);
+}
+
+/* Solicitada: nada foi descontado ainda — o cartão sinaliza provisoriedade. */
+.preview--pending {
+  background: linear-gradient(135deg, var(--bg-surface-2) 0%, var(--tint-warning) 100%);
+  border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+
+  .preview-title { color: var(--color-warning); }
+}
+
+.preview-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  margin-bottom: 14px;
+}
+
+.preview-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.preview-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.preview-stats span {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.preview-stats strong {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+/* O número que o usuário veio buscar ganha peso extra. */
+.preview-headline strong { font-size: 20px; }
+
+.preview-note {
+  margin: 12px 0 0;
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+}
+
+.preview-lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--fs-caption);
+    color: var(--text-secondary);
+  }
+
+  app-icon { color: var(--text-muted); }
+}
+
+@include bp.below(sm) {
+  .form-grid { grid-template-columns: 1fr; }
+  .preview-stats { grid-template-columns: 1fr; }
+}

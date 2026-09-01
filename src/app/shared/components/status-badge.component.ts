@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
-import { InventoryStatus, SaleStatus } from '../../core/models/models';
+import { InventoryStatus, SaleStatus, ReturnStatus } from '../../core/models/models';
 
-type StatusType = InventoryStatus | SaleStatus;
+type StatusType = InventoryStatus | SaleStatus | ReturnStatus;
 type Variant = 'success' | 'info' | 'warning' | 'danger' | 'neutral';
 
 /** Maps each status value to its badge color. The label is the status value
@@ -19,6 +19,9 @@ const STATUS_VARIANT: Record<StatusType, Variant> = {
   'Cancelada':   'danger',
   'Devolvida':   'warning',
   'Em disputa':  'info',
+  // Devolução
+  'Solicitado':  'warning',
+  'Finalizado':  'success',
 };
 
 @Component({

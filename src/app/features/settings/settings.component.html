@@ -73,6 +73,20 @@
                 />
                 <span fieldSuffix class="unit-suffix">{{ 'batchPanel.days' | translate }}</span>
               </app-field>
+
+              <app-field
+                [label]="'settings.returnWindow' | translate"
+                [hint]="'settings.returnWindowHint' | translate"
+              >
+                <input
+                  appInput
+                  type="number"
+                  min="1"
+                  [ngModel]="s.returnWindowDays"
+                  (ngModelChange)="updateField('returnWindowDays', clamp0($event))"
+                />
+                <span fieldSuffix class="unit-suffix">{{ 'batchPanel.days' | translate }}</span>
+              </app-field>
             </div>
           </div>
 

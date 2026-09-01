@@ -1,0 +1,314 @@
+<app-page-header
+  [title]="'returns.title' | translate"
+  [eyebrow]="'returns.eyebrow' | translate:{ count: returns().length }"
+  [subtitle]="'returns.subtitle' | translate"
+>
+  <button appBtn type="button" (click)="openNew()">
+    <app-icon name="plus" [size]="16" />
+    {{ 'returns.new' | translate }}
+  </button>
+</app-page-header>
+
+<div class="page-content returns-body">
+
+  @if (!data.loaded()) {
+    <section class="kpi-grid">
+      <app-skeleton variant="kpi" [count]="4" />
+    </section>
+    <app-skeleton variant="table-row" [count]="8" />
+
+  } @else if (returns().length === 0) {
+    <app-empty-state
+      icon="rotate-ccw"
+      [title]="'returns.emptyTitle' | translate"
+      [description]="'returns.emptyDesc' | translate"
+    >
+      <button appBtn type="button" (click)="openNew()">
+        <app-icon name="plus" [size]="16" />
+        {{ 'returns.new' | translate }}
+      </button>
+    </app-empty-state>
+
+  } @else {
+
+    <section class="kpi-grid">
+      <app-kpi-card
+        [title]="'returns.kpiLoss' | translate"
+        [value]="summary().loss | brl"
+        [variant]="summary().loss > 0 ? 'danger' : 'success'"
+        [note]="'returns.kpiLossNote' | translate"
+      />
+      <app-kpi-card
+        [title]="'returns.kpiRate' | translate"
+        [value]="(returnRate() * 100).toFixed(1) + '%'"
+        variant="warning"
+        [note]="'returns.kpiRateNote' | translate:{ total: grossUnitsSold() }"
+      />
+      <app-kpi-card
+        [title]="'returns.kpiCount' | translate"
+        [value]="summary().total"
+        variant="neutral"
+        [note]="'returns.kpiCountNote' | translate:{ pending: summary().pending }"
+      />
+      @if (summary().atRisk > 0) {
+        <app-kpi-card
+          [title]="'returns.kpiAtRisk' | translate"
+          [value]="summary().atRisk | brl"
+          variant="warning"
+          [note]="'returns.kpiAtRiskNote' | translate"
+        />
+      } @else {
+        <app-kpi-card
+          [title]="'returns.kpiShipping' | translate"
+          [value]="summary().shipping | brl"
+          variant="neutral"
+          [note]="'dashboard.kpiReturnShippingNote' | translate"
+        />
+      }
+    </section>
+
+    <section class="filters">
+      <app-field class="search">
+        <app-icon fieldPrefix name="search" [size]="18" />
+        <input
+          appInput
+          [placeholder]="'sales.searchPlaceholder' | translate"
+          [ngModel]="textFilter()"
+          (ngModelChange)="textFilter.set($event)"
+        />
+      </app-field>
+
+      <app-select
+        class="channel-select"
+        [ngModel]="destinationFilter()"
+        (ngModelChange)="destinationFilter.set($event)"
+        [placeholder]="'returns.colDestination' | translate"
+      >
+        <app-option value="all">{{ 'returns.filterAll' | translate }}</app-option>
+        @for (d of destinations; track d) {
+          <app-option [value]="d">{{ 'returns.destination.' + d | translate }}</app-option>
+        }
+      </app-select>
+
+      <app-date-range-picker variant="menu" (selectionChange)="onRangeChange($event)" />
+
+      <div class="quick-chips" role="tablist">
+        <button appChip [active]="quickFilter() === 'all'" [count]="quickCounts().all"
+          (click)="setQuickFilter('all')">
+          {{ 'returns.filterAll' | translate }}
+        </button>
+        <button appChip [active]="quickFilter() === 'pending'" dot="warning" [count]="quickCounts().pending"
+          (click)="setQuickFilter('pending')">
+          {{ 'returns.filterPending' | translate }}
+        </button>
+        <button appChip [active]="quickFilter() === 'finished'" dot="success" [count]="quickCounts().finished"
+          (click)="setQuickFilter('finished')">
+          {{ 'returns.filterFinished' | translate }}
+        </button>
+        <button appChip [active]="quickFilter() === 'loss'" dot="danger" [count]="quickCounts().loss"
+          (click)="setQuickFilter('loss')">
+          {{ 'returns.filterLoss' | translate }}
+        </button>
+      </div>
+    </section>
+
+    @if (filteredReturns().length > 0) {
+      @if (bp.isMobile()) {
+        <!-- MOBILE: cards + ordenar por -->
+        <div class="mobile-sort">
+          <span>{{ 'table.sortBy' | translate }}</span>
+          <app-select [ngModel]="mobileSortValue()" (ngModelChange)="onMobileSort($event)">
+            @for (opt of mobileSortOptions; track opt.value) {
+              <app-option [value]="opt.value">{{ opt.labelKey | translate }}</app-option>
+            }
+          </app-select>
+        </div>
+        <div class="record-list">
+          @for (r of pagedReturns(); track r.id) {
+            <app-record-card
+              [title]="r.product"
+              [code]="r.id"
+              [status]="('status.' + r.status) | translate"
+              [statusKind]="statusKindFor(r)"
+              [meta]="(r.requestDate | brDate) + ' · ' + r.saleId"
+              [figures]="figuresFor(r)"
+              (pressed)="editFromCard(r)"
+            />
+          }
+        </div>
+        <app-paginator
+          [length]="filteredReturns().length"
+          [pageSize]="pageState().pageSize"
+          [pageIndex]="pageState().pageIndex"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="onPage($event)"
+        />
+      } @else {
+        <!-- DESKTOP: tabela completa -->
+        <div class="table-frame">
+          <div class="table-scroll">
+            <table class="data-table" appSort
+              [appSortActive]="sortState().active"
+              [appSortDirection]="sortState().direction"
+              (appSortChange)="onSortChange($event)">
+              <thead>
+                <tr>
+                  <th class="col-edge"></th>
+                  <th app-sort-header="id">{{ 'returns.colId' | translate }}</th>
+                  <th app-sort-header="saleId">{{ 'returns.colSale' | translate }}</th>
+                  <th app-sort-header="product">{{ 'returns.colProduct' | translate }}</th>
+                  <th app-sort-header="requestDate">{{ 'returns.colRequestDate' | translate }}</th>
+                  <th app-sort-header="arrivalDate">{{ 'returns.colArrivalDate' | translate }}</th>
+                  <th class="text-center" app-sort-header="quantity">{{ 'returns.colQty' | translate }}</th>
+                  <th app-sort-header="destination">{{ 'returns.colDestination' | translate }}</th>
+                  <th class="text-right" app-sort-header="lossAmount">{{ 'returns.colLoss' | translate }}</th>
+                  <th app-sort-header="status">{{ 'returns.colStatus' | translate }}</th>
+                  <th class="text-right col-actions"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of pagedReturns(); track r.id) {
+                  <tr
+                    class="row row-clickable"
+                    [class.expanded]="expandedRow() === r.id"
+                    (click)="toggleRow(r.id, $event)"
+                  >
+                    <td class="col-edge">
+                      <span class="row-stripe"
+                        [class.stripe-danger]="r.status === 'Finalizado' && r.lossAmount > 0"
+                        [class.stripe-warning]="r.status === 'Solicitado'"
+                        aria-hidden="true"></span>
+                    </td>
+                    <td><span class="id-tag id-return mono">{{ r.id }}</span></td>
+                    <td>
+                      <span class="id-tag id-sale mono">{{ r.saleId }}</span>
+                      @if (r.orphan) {
+                        <app-icon
+                          class="text-warning orphan-warn"
+                          name="triangle-alert"
+                          [size]="15"
+                          [label]="'returns.saleMissing' | translate"
+                          [appTooltip]="'returns.saleMissingHint' | translate"
+                        />
+                      }
+                    </td>
+                    <td class="product-cell" [title]="r.product">{{ r.product }}</td>
+                    <td class="mono">{{ r.requestDate | brDate }}</td>
+                    <td class="mono">
+                      @if (r.arrivalDate) {
+                        {{ r.arrivalDate | brDate }}
+                        @if (r.resolutionDays !== null) {
+                          <span class="turnaround">{{ 'returns.days' | translate:{ days: r.resolutionDays } }}</span>
+                        }
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+                    <td class="text-center mono">{{ r.quantity }}</td>
+                    <td>{{ 'returns.destination.' + r.destination | translate }}</td>
+                    <td class="text-right">
+                      @if (r.status === 'Finalizado') {
+                        <app-money [value]="-r.lossAmount" tone="auto" variant="text" />
+                      } @else {
+                        <span class="text-muted mono">—</span>
+                      }
+                    </td>
+                    <td><app-status-badge [status]="r.status" /></td>
+                    <td class="text-right col-actions">
+                      <button
+                        appBtn="ghost" iconOnly size="sm" type="button"
+                        class="row-action"
+                        (click)="edit(r, $event)"
+                        [appTooltip]="'common.edit' | translate"
+                        [attr.aria-label]="'common.edit' | translate"
+                      >
+                        <app-icon name="pencil" [size]="17" />
+                      </button>
+                      <button
+                        appBtn="ghost" iconOnly size="sm" type="button"
+                        class="row-action danger"
+                        (click)="confirmRemove(r, $event)"
+                        [appTooltip]="'common.remove' | translate"
+                        [attr.aria-label]="'common.remove' | translate"
+                      >
+                        <app-icon name="trash" [size]="17" />
+                      </button>
+                    </td>
+                  </tr>
+                  @if (expandedRow() === r.id) {
+                    <tr class="row-expansion" (click)="$event.stopPropagation()">
+                      <td class="col-edge"></td>
+                      <td colspan="10">
+                        <div class="expansion-grid">
+                          <div>
+                            <span class="t-caption">{{ 'returns.colChannel' | translate }}</span>
+                            <app-color-pill [name]="r.channel" kind="channel" />
+                          </div>
+                          <div><span class="t-caption">{{ 'returns.colReason' | translate }}</span><strong>{{ 'returns.reason.' + r.reason | translate }}</strong></div>
+                          <div><span class="t-caption">{{ 'sales.unitPrice' | translate }}</span><strong class="mono">{{ r.saleUnitPrice | brl }}</strong></div>
+                          <div><span class="t-caption">{{ 'returns.colReturnShipping' | translate }}</span><strong class="mono">{{ r.returnShipping | brl }}</strong></div>
+                          @if (r.refundedAmount) {
+                            <div><span class="t-caption">{{ 'returns.colRefunded' | translate }}</span><strong class="mono text-success">{{ r.refundedAmount | brl }}</strong></div>
+                          }
+                          @if (r.status === 'Finalizado') {
+                            <div>
+                              <span class="t-caption">{{ 'returnForm.previewRetainedFee' | translate }}</span>
+                              <strong class="mono text-warning">{{ r.retainedFee | brl }}</strong>
+                            </div>
+                            <div>
+                              <span class="t-caption">{{ 'returnForm.previewStockKept' | translate }}</span>
+                              <strong class="mono">
+                                {{ r.costReleased > 0 ? (r.costReleased | brl) : ('common.no' | translate) }}
+                              </strong>
+                            </div>
+                          } @else {
+                            <div>
+                              <span class="t-caption">{{ 'returns.kpiAtRisk' | translate }}</span>
+                              <strong class="mono text-warning">{{ r.returnedRevenue | brl }}</strong>
+                            </div>
+                            @if (r.pendingDays !== null) {
+                              <div>
+                                <span class="t-caption">{{ 'returns.colResolutionDays' | translate }}</span>
+                                <strong class="mono">{{ 'returns.pendingDays' | translate:{ days: r.pendingDays } }}</strong>
+                              </div>
+                            }
+                          }
+                          @if (r.customerReason) {
+                            <div class="expansion-wide">
+                              <span class="t-caption">{{ 'returnForm.customerReason' | translate }}</span>
+                              <strong>{{ r.customerReason }}</strong>
+                            </div>
+                          }
+                          @if (r.resolution) {
+                            <div class="expansion-wide">
+                              <span class="t-caption">{{ 'returnForm.resolution' | translate }}</span>
+                              <strong>{{ r.resolution }}</strong>
+                            </div>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+          <app-paginator
+            [length]="filteredReturns().length"
+            [pageSize]="pageState().pageSize"
+            [pageIndex]="pageState().pageIndex"
+            [pageSizeOptions]="pageSizeOptions"
+            [showFirstLast]="true"
+            (page)="onPage($event)"
+          />
+        </div>
+      }
+    } @else {
+      <app-empty-state
+        icon="filter-x"
+        [title]="'returns.noneFoundTitle' | translate"
+        [description]="'returns.noneFoundDesc' | translate"
+      />
+    }
+  }
+</div>
