@@ -159,9 +159,9 @@ export class SalesComponent {
     }
     const qf = this.quickFilter();
     // Lucro/prejuízo só fazem sentido em vendas concluídas — cancelada não realizou resultado.
-    if (qf === 'loss') vs = vs.filter(v => v.netProfit < 0 && v.status === 'Concluída');
-    else if (qf === 'profit') vs = vs.filter(v => v.netProfit > 0 && v.status === 'Concluída');
-    else if (qf === 'low-margin') vs = vs.filter(v => v.netMargin < this.minimumMargin() && v.status === 'Concluída');
+    if (qf === 'loss') vs = vs.filter(v => v.netProfit < 0 && v.countsAsRevenue);
+    else if (qf === 'profit') vs = vs.filter(v => v.netProfit > 0 && v.countsAsRevenue);
+    else if (qf === 'low-margin') vs = vs.filter(v => v.netMargin < this.minimumMargin() && v.countsAsRevenue);
     return [...vs].sort((a, b) => {
       const byDate = b.saleDate.localeCompare(a.saleDate);
       if (byDate !== 0) return byDate;
@@ -196,7 +196,7 @@ export class SalesComponent {
   });
 
   protected readonly summary = computed(() => {
-    const completed = this.filteredSales().filter(v => v.status === 'Concluída');
+    const completed = this.filteredSales().filter(v => v.countsAsRevenue);
     const revenue = completed.reduce((s, v) => s + v.grossRevenue, 0);
     const profit = completed.reduce((s, v) => s + v.netProfit, 0);
     return {
@@ -209,7 +209,7 @@ export class SalesComponent {
 
   protected readonly quickCounts = computed(() => {
     const all = this.sales();
-    const completed = all.filter(v => v.status === 'Concluída');
+    const completed = all.filter(v => v.countsAsRevenue);
     const min = this.minimumMargin();
     return {
       all: all.length,

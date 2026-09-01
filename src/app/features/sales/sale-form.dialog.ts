@@ -5,7 +5,7 @@ import { A11yModule } from '@angular/cdk/a11y';
 import { TranslateModule } from '@ngx-translate/core';
 import { Sale } from '../../core/models/models';
 import { DataService } from '../../core/services/data.service';
-import { calculateSale } from '../../core/services/calculations';
+import { calculateSale, countsAsRevenue } from '../../core/services/calculations';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { CurrencyInputDirective } from '../../shared/directives/currency-input.directive';
 import { DialogShellComponent } from '../../shared/ui/dialog/dialog-shell.component';
@@ -75,11 +75,23 @@ export class SaleFormDialogComponent {
     if (!batch) return null;
 
     const editingSaleId = this.isEdit() ? (this.data.sale?.id ?? null) : null;
+    const returns = this.dataService.returns();
+    // Unidades devolvidas ao estoque voltam a ficar disponíveis, então o consumo
+    // real de cada venda é quantitySold menos o que retornou vendável.
     const usedByOthers = this.dataService.sales()
       .filter(s => s.batchId === m.batchId
-                && s.status === 'Concluída'
+                && countsAsRevenue(s, returns)
                 && s.id !== editingSaleId)
-      .reduce((sum, s) => sum + s.quantitySold, 0);
+      .reduce((sum, s) => {
+        const backToStock = returns.reduce(
+          (q, r) =>
+            r.saleId === s.id && r.destination === 'Estoque' && r.arrivalDate
+              ? q + r.quantity
+              : q,
+          0,
+        );
+        return sum + Math.max(0, s.quantitySold - backToStock);
+      }, 0);
 
     return batch.quantityPurchased - usedByOthers;
   });

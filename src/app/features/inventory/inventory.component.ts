@@ -15,6 +15,7 @@ import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { QuickActionsService } from '../../core/services/quick-actions.service';
 import { ComputedPurchase, InventoryStatus, Purchase } from '../../core/models/models';
+import { countsAsRevenue } from '../../core/services/calculations';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { KpiCardComponent } from '../../shared/components/kpi-card.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
@@ -259,7 +260,7 @@ export class InventoryComponent {
 
   /** Tendência de margem — margem % acumulada por dia, últimos 30 dias. */
   protected readonly marginSparkline = computed(() => {
-    const sales = this.data.computedSales().filter(s => s.status === 'Concluída');
+    const sales = this.data.computedSales().filter(s => s.countsAsRevenue);
     if (sales.length < 2) return [];
     return this.localDayRefs(30).map(ref => {
       const upTo = sales.filter(s => new Date(s.saleDate).getTime() <= ref);
@@ -269,25 +270,42 @@ export class InventoryComponent {
     });
   });
 
-  /** Capital parado — valor absoluto ao longo dos últimos 30 dias. */
+  /**
+   * Capital parado — valor absoluto ao longo dos últimos 30 dias.
+   *
+   * ÚNICA exceção à regra "devolução é atribuída ao mês da venda original": esta
+   * é uma SÉRIE HISTÓRICA de estoque, e a unidade reentra fisicamente na
+   * prateleira na data de CHEGADA, não na data da venda. Usar a data da venda
+   * reescreveria a curva de capital retroativamente. Só o destino 'Estoque'
+   * devolve a unidade; os demais continuam consumindo o lote.
+   */
   protected readonly idleSparkline = computed(() => {
     const purchases = this.data.computedPurchases();
     const sales = this.data.sales();
+    const returns = this.data.returns();
+    const saleBatch = new Map(sales.map(s => [s.id, s.batchId]));
     return this.localDayRefs(30).map(ref => purchases.reduce((acc, c) => {
       // Em trânsito conta como capital imobilizado desde a compra — mesma base do
       // KPI idleCapital do card.
       const start = new Date(c.receiptDate ?? c.purchaseDate).getTime();
       if (start > ref) return acc;
       const soldByDate = sales
-        .filter(s => s.batchId === c.id && s.status === 'Concluída' && new Date(s.saleDate).getTime() <= ref)
+        .filter(s => s.batchId === c.id && countsAsRevenue(s, returns) && new Date(s.saleDate).getTime() <= ref)
         .reduce((sum, s) => sum + s.quantitySold, 0);
-      const remaining = Math.max(0, c.quantityPurchased - soldByDate);
+      const backByDate = returns
+        .filter(r =>
+          r.destination === 'Estoque'
+          && !!r.arrivalDate
+          && new Date(r.arrivalDate).getTime() <= ref
+          && saleBatch.get(r.saleId) === c.id)
+        .reduce((sum, r) => sum + r.quantity, 0);
+      const remaining = Math.max(0, c.quantityPurchased - soldByDate + backByDate);
       return acc + remaining * c.actualUnitCost;
     }, 0));
   });
 
   private buildSparkline(picker: (s: import('../../core/models/models').ComputedSale) => number): number[] {
-    const sales = this.data.computedSales().filter(s => s.status === 'Concluída');
+    const sales = this.data.computedSales().filter(s => s.countsAsRevenue);
     if (sales.length < 2) return [];
     const points: number[] = [];
     let acc = 0;

@@ -99,7 +99,7 @@ export class AnalyticsComponent {
 
   // Raw stats (un-sorted)
   private readonly productRankingRaw = computed<ProductStat[]>(() => {
-    const completed = this.data.computedSales().filter(v => v.status === 'Concluída');
+    const completed = this.data.computedSales().filter(v => v.countsAsRevenue);
     const map = new Map<string, ProductStat>();
 
     for (const v of completed) {
@@ -127,7 +127,7 @@ export class AnalyticsComponent {
 
   private readonly categoryStatsRaw = computed<CategoryStat[]>(() => {
     const purchases = this.data.computedPurchases();
-    const completed = this.data.computedSales().filter(v => v.status === 'Concluída');
+    const completed = this.data.computedSales().filter(v => v.countsAsRevenue);
     const map = new Map<string, CategoryStat>();
 
     for (const c of purchases) {
@@ -161,7 +161,7 @@ export class AnalyticsComponent {
 
   private readonly monthlyStatsRaw = computed<MonthStat[]>(() => {
     this.lang.lang(); // re-evaluate month labels when the language changes
-    const completed = this.data.computedSales().filter(v => v.status === 'Concluída');
+    const completed = this.data.computedSales().filter(v => v.countsAsRevenue);
     const map = new Map<string, MonthStat>();
 
     for (const v of completed) {

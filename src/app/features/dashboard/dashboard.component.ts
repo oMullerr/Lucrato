@@ -64,7 +64,7 @@ export class DashboardComponent {
 
   /** All completed sales — unfiltered base. */
   private readonly allSales = computed(() =>
-    this.dataService.computedSales().filter(s => s.status === 'Concluída')
+    this.dataService.computedSales().filter(s => s.countsAsRevenue)
   );
 
   /** Bounds [start, end] for the active range, or null for "all" or incomplete custom. */
