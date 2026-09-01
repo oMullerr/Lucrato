@@ -162,6 +162,117 @@
       </article>
     </section>
 
+    <!-- ─── Devoluções (só aparece quando há alguma no período) ─── -->
+    @if (hasReturns()) {
+      <section class="returns-section" [attr.aria-label]="'dashboard.returnsTitle' | translate">
+        <header class="section-head">
+          <h2 class="h-section">{{ 'dashboard.returnsTitle' | translate }}</h2>
+          <p>{{ 'dashboard.returnsSubtitle' | translate }}</p>
+        </header>
+
+        @if (periodKpis().pendingReturnCount > 0) {
+          <a class="returns-banner" routerLink="/returns">
+            <app-icon name="clock" [size]="18" />
+            <span>
+              {{ 'dashboard.pendingReturns' | translate:{
+                   count: periodKpis().pendingReturnCount,
+                   value: (periodKpis().pendingReturnValue | brl) } }}
+            </span>
+            <app-icon name="arrow-right" [size]="16" />
+          </a>
+        }
+
+        <div class="kpi-grid">
+          <app-kpi-card
+            [title]="'dashboard.kpiReturnLoss' | translate"
+            [value]="periodKpis().returnLoss | brl"
+            [variant]="periodKpis().returnLoss > 0 ? 'danger' : 'success'"
+            [note]="'dashboard.kpiReturnLossNote' | translate"
+            [sparkline]="returnLossSpark()"
+          />
+          <app-kpi-card
+            [title]="'dashboard.kpiReturnRate' | translate"
+            [value]="(periodKpis().returnRate * 100).toFixed(1) + '%'"
+            [variant]="returnRateVariant()"
+            [note]="'dashboard.kpiReturnRateNote' | translate:{
+                      count: periodKpis().returnCount,
+                      units: periodKpis().returnedUnits }"
+          />
+          <app-kpi-card
+            [title]="'dashboard.kpiReturnShipping' | translate"
+            [value]="periodKpis().returnShippingCost | brl"
+            variant="warning"
+            [note]="'dashboard.kpiReturnShippingNote' | translate"
+          />
+          <app-kpi-card
+            [title]="'returns.kpiUnits' | translate"
+            [value]="periodKpis().returnedUnits"
+            variant="neutral"
+            [note]="'returns.kpiRateNote' | translate:{ total: periodKpis().grossUnitsSold }"
+          />
+        </div>
+
+        <div class="chart-grid">
+          <article class="chart-card">
+            <header class="cc-head">
+              <div class="cc-title">
+                <h3 class="h-section">{{ 'dashboard.returnsByReasonTitle' | translate }}</h3>
+                <p>{{ 'dashboard.returnsByReasonSubtitle' | translate }}</p>
+              </div>
+            </header>
+            <div class="cc-body">
+              @if (reasonCount() > 0) {
+                <div class="product-chart-canvas" [style.height.px]="reasonChartHeight()">
+                  <canvas baseChart
+                    [data]="returnsByReasonChart()"
+                    [options]="horizontalBarOptions()"
+                    type="bar"></canvas>
+                </div>
+              } @else {
+                <div class="no-data">{{ 'dashboard.noReturns' | translate }}</div>
+              }
+            </div>
+          </article>
+
+          <article class="chart-card">
+            <header class="cc-head">
+              <div class="cc-title">
+                <h3 class="h-section">{{ 'dashboard.topReturnedTitle' | translate }}</h3>
+                <p>{{ 'dashboard.topReturnedSubtitle' | translate }}</p>
+              </div>
+            </header>
+            <div class="cc-body">
+              @if (topReturnedProducts().length > 0) {
+                <div class="idle-scroll">
+                  <ol class="idle-list">
+                    @for (p of topReturnedProducts(); track p.product) {
+                      <li class="idle-item">
+                        <div class="idle-info">
+                          <span class="idle-product">{{ p.product }}</span>
+                          <span class="idle-meta">
+                            {{ 'returns.kpiUnits' | translate }}: {{ p.units }}
+                          </span>
+                        </div>
+                        <div class="idle-bar-wrap">
+                          <div class="idle-bar idle-bar--danger"
+                            [style.width.%]="maxReturnLoss() > 0 ? (absLoss(p.loss) / maxReturnLoss()) * 100 : 0"></div>
+                        </div>
+                        <span class="idle-value mono" [class.text-danger]="p.loss > 0" [class.text-success]="p.loss < 0">
+                          {{ p.loss | brl }}
+                        </span>
+                      </li>
+                    }
+                  </ol>
+                </div>
+              } @else {
+                <div class="no-data">{{ 'dashboard.noReturns' | translate }}</div>
+              }
+            </div>
+          </article>
+        </div>
+      </section>
+    }
+
     <!-- Idle capital ranking table -->
     <section class="chart-card" [attr.aria-label]="'dashboard.idleByBatch' | translate">
       <header class="cc-head">

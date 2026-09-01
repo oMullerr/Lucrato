@@ -14,7 +14,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { DateRangePickerComponent, RangeKey } from '../../shared/components/date-range-picker.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
-import { ComputedSale } from '../../core/models/models';
+import { ComputedSale, ComputedReturn, ReturnReason } from '../../core/models/models';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { MoneyComponent } from '../../shared/ui/money/money.component';
@@ -124,16 +124,34 @@ export class DashboardComponent {
     const proportionalCost = sales.reduce((s, v) => s + v.proportionalCost, 0);
     const totalShipping = sales.reduce((s, v) => s + (v.shippingType === 'flex' ? 0 : v.sellerShipping), 0);
     const totalFlexRefund = sales.reduce((s, v) => s + (v.shippingType === 'flex' ? (v.flexRefund ?? 0) : 0), 0);
-    const totalDiscounts = sales.reduce((s, v) => s + v.discount, 0);
+    const totalDiscounts = sales.reduce((s, v) => s + v.discountEffective, 0);
     const totalOtherCosts = sales.reduce((s, v) => s + v.otherCosts, 0);
-    const totalSold = sales.reduce((s, v) => s + v.quantitySold, 0);
+    const totalEstorno = sales.reduce((s, v) => s + v.estornoEffective, 0);
+    // Unidades LIQUIDAS de devolucao; grossUnitsSold guarda o bruto (denominador da taxa).
+    const totalSold = sales.reduce((s, v) => s + v.effectiveQuantity, 0);
+    const grossUnitsSold = sales.reduce((s, v) => s + v.quantitySold, 0);
+    const returnedUnits = sales.reduce((s, v) => s + v.returnedQuantity, 0);
     const netMargin = grossRevenue > 0 ? netProfit / grossRevenue : 0;
-    const averageTicket = sales.length > 0 ? grossRevenue / sales.length : 0;
+    // Venda 100% devolvida tem ticket 0 e nao representa uma venda real.
+    const ticketSales = sales.filter(v => v.grossRevenue > 0);
+    const averageTicket = ticketSales.length > 0 ? grossRevenue / ticketSales.length : 0;
     return {
       grossRevenue, netRevenue, totalFees, netProfit, grossProfit,
       proportionalCost, totalShipping, totalFlexRefund, totalDiscounts, totalOtherCosts,
-      totalSold, netMargin, averageTicket,
+      totalEstorno, totalSold, netMargin, averageTicket,
       salesCount: sales.length,
+      // ── devolucoes (atribuidas ao periodo da VENDA original) ──
+      grossUnitsSold,
+      returnedUnits,
+      returnRate: grossUnitsSold > 0 ? returnedUnits / grossUnitsSold : 0,
+      returnCount: sales.reduce((s, v) => s + v.returnCount, 0),
+      // Nunca clampar: ressarcimento integral pode deixar o saldo positivo.
+      returnLoss: sales.reduce((s, v) => s + v.returnLoss, 0),
+      returnedRevenue: sales.reduce((s, v) => s + (v.originalGrossRevenue - v.grossRevenue), 0),
+      returnShippingCost: sales.reduce((s, v) => s + v.returnShippingTotal, 0),
+      returnRefunds: sales.reduce((s, v) => s + v.returnRefundTotal, 0),
+      pendingReturnValue: sales.reduce((s, v) => s + v.pendingReturnValue, 0),
+      pendingReturnCount: sales.filter(v => v.pendingReturnQuantity > 0).length,
     };
   });
 
@@ -145,6 +163,7 @@ export class DashboardComponent {
   protected readonly profitSpark = computed(() => this.buildSparkline(s => s.netProfit));
   protected readonly revenueSpark = computed(() => this.buildSparkline(s => s.grossRevenue));
   protected readonly feesSpark = computed(() => this.buildSparkline(s => s.feeAmount));
+  protected readonly returnLossSpark = computed(() => this.buildSparkline(s => s.returnLoss));
   protected readonly marginSpark = computed(() => {
     const sales = this.periodSales();
     if (sales.length < 2) return [];
@@ -271,25 +290,37 @@ export class DashboardComponent {
     this.lang.lang(); // re-evaluate labels when the language changes
     const k = this.periodKpis();
     const c = this.palette();
+    const labels = [
+      this.t.instant('dashboard.compNetProfit'),
+      this.t.instant('dashboard.compFees'),
+      this.t.instant('dashboard.compShipping'),
+      this.t.instant('dashboard.compDiscounts'),
+      this.t.instant('dashboard.compOtherCosts'),
+    ];
+    const data = [
+      Math.max(0, k.netProfit),
+      k.totalFees,
+      k.totalShipping,
+      k.totalDiscounts,
+      k.totalOtherCosts,
+    ];
+    const colors = [c.success, c.warning, c.info, c.danger, c.neutral];
+    // Só entra quando existe: sem devoluções o gráfico continua idêntico.
+    // O returnLoss NÃO entra aqui — é um delta contrafactual que se sobrepõe à
+    // receita já revertida, e somá-lo seria contagem dupla.
+    if (k.returnShippingCost > 0) {
+      labels.push(this.t.instant('dashboard.compReturnShipping'));
+      data.push(k.returnShippingCost);
+      colors.push(c.warning);
+    }
+    labels.push(this.t.instant('dashboard.compProductCost'));
+    data.push(Math.max(0, k.proportionalCost));
+    colors.push(c.brand);
     return {
-      labels: [
-        this.t.instant('dashboard.compNetProfit'),
-        this.t.instant('dashboard.compFees'),
-        this.t.instant('dashboard.compShipping'),
-        this.t.instant('dashboard.compDiscounts'),
-        this.t.instant('dashboard.compOtherCosts'),
-        this.t.instant('dashboard.compProductCost'),
-      ],
+      labels,
       datasets: [{
-        data: [
-          Math.max(0, k.netProfit),
-          k.totalFees,
-          k.totalShipping,
-          k.totalDiscounts,
-          k.totalOtherCosts,
-          Math.max(0, k.proportionalCost),
-        ],
-        backgroundColor: [c.success, c.warning, c.info, c.danger, c.neutral, c.brand],
+        data,
+        backgroundColor: colors,
         borderColor: c.surface,
         borderWidth: 3,
         spacing: 2,
@@ -303,6 +334,80 @@ export class DashboardComponent {
       .filter(c => c.idleValue > 0)
       .sort((a, b) => b.idleValue - a.idleValue)
   );
+
+  /**
+   * Devoluções FINALIZADAS cuja VENDA-MÃE cai no período selecionado.
+   * A atribuição por período segue a venda original (mesma regra do resto do
+   * app), não a data de chegada da devolução.
+   */
+  protected readonly periodReturns = computed<ComputedReturn[]>(() => {
+    const saleIds = new Set(this.periodSales().map(s => s.id));
+    return this.dataService.computedReturns()
+      .filter(r => r.status === 'Finalizado' && saleIds.has(r.saleId));
+  });
+
+  /** A seção de devoluções só aparece quando existe algo a mostrar. */
+  protected readonly hasReturns = computed(() =>
+    this.periodReturns().length > 0 || this.periodKpis().pendingReturnCount > 0
+  );
+
+  /** Tom do card de taxa de devolução — abaixo de 3% é saudável. */
+  protected readonly returnRateVariant = computed(() => {
+    const rate = this.periodKpis().returnRate;
+    if (rate < 0.03) return 'success';
+    if (rate < 0.08) return 'warning';
+    return 'danger';
+  });
+
+  /** Prejuízo acumulado por motivo — mostra qual causa mais queima dinheiro. */
+  protected readonly returnsByReasonChart = computed<ChartConfiguration<'bar'>['data']>(() => {
+    this.lang.lang(); // re-evaluate labels when the language changes
+    const c = this.palette();
+    const byReason = new Map<ReturnReason, number>();
+    for (const r of this.periodReturns()) {
+      byReason.set(r.reason, (byReason.get(r.reason) ?? 0) + r.lossAmount);
+    }
+    const entries = [...byReason.entries()].sort((a, b) => b[1] - a[1]);
+    return {
+      labels: entries.map(([reason]) => this.t.instant('returns.reason.' + reason)),
+      datasets: [{
+        label: this.t.instant('dashboard.kpiReturnLoss'),
+        data: entries.map(([, value]) => value),
+        backgroundColor: c.danger,
+        borderRadius: 6,
+        borderSkipped: false,
+      }],
+    };
+  });
+
+  protected readonly reasonCount = computed(() => this.returnsByReasonChart().labels?.length ?? 0);
+
+  protected readonly reasonChartHeight = computed(() =>
+    Math.max(220, this.reasonCount() * 36 + 50)
+  );
+
+  /** Ranking de produtos por prejuízo com devolução. */
+  protected readonly topReturnedProducts = computed(() => {
+    const byProduct = new Map<string, { product: string; units: number; loss: number }>();
+    for (const r of this.periodReturns()) {
+      const cur = byProduct.get(r.product) ?? { product: r.product, units: 0, loss: 0 };
+      cur.units += r.quantity;
+      cur.loss += r.lossAmount;
+      byProduct.set(r.product, cur);
+    }
+    return [...byProduct.values()].sort((a, b) => b.loss - a.loss);
+  });
+
+  /** Largura da barra usa o módulo: prejuízo negativo (ganho) também tem barra. */
+  protected absLoss(value: number): number {
+    return Math.abs(value);
+  }
+
+  protected readonly maxReturnLoss = computed(() => {
+    const list = this.topReturnedProducts();
+    if (list.length === 0) return 0;
+    return Math.max(...list.map(p => Math.abs(p.loss)));
+  });
 
   protected readonly maxIdle = computed(() => {
     const list = this.idleRanking();
@@ -324,9 +429,20 @@ export class DashboardComponent {
     if (k.totalFlexRefund > 0) {
       steps.push({ label: this.t.instant('dashboard.wfFlexRefund'), value: k.totalFlexRefund, tone: 'success', kind: 'gain' });
     }
+    // Estorno faltava aqui: sem este passo a soma da cascata nao fecha com a
+    // receita liquida em vendas promocionais.
+    if (k.totalEstorno > 0) {
+      steps.push({ label: this.t.instant('dashboard.wfEstorno'), value: k.totalEstorno, tone: 'success', kind: 'gain' });
+    }
     steps.push({ label: this.t.instant('dashboard.compDiscounts'), value: -k.totalDiscounts, tone: 'warning', kind: 'cost' });
     if (k.totalOtherCosts > 0) {
       steps.push({ label: this.t.instant('dashboard.wfOtherCosts'), value: -k.totalOtherCosts, tone: 'warning', kind: 'cost' });
+    }
+    if (k.returnShippingCost > 0) {
+      steps.push({ label: this.t.instant('dashboard.wfReturnShipping'), value: -k.returnShippingCost, tone: 'warning', kind: 'cost' });
+    }
+    if (k.returnRefunds > 0) {
+      steps.push({ label: this.t.instant('dashboard.wfReturnRefund'), value: k.returnRefunds, tone: 'success', kind: 'gain' });
     }
     steps.push(
       { label: this.t.instant('dashboard.wfNetRevenue'),   value: k.netRevenue,        tone: 'brand',  kind: 'subtotal' },
@@ -430,13 +546,17 @@ export class DashboardComponent {
     this.lang.lang(); // re-evaluate labels when the language changes
     const k = this.periodKpis();
     const c = this.palette();
-    const total = Math.max(0, k.netProfit) + k.totalFees + k.totalShipping + k.totalDiscounts + k.totalOtherCosts + Math.max(0, k.proportionalCost);
+    const total = Math.max(0, k.netProfit) + k.totalFees + k.totalShipping + k.totalDiscounts
+      + k.totalOtherCosts + k.returnShippingCost + Math.max(0, k.proportionalCost);
     const items = [
       { label: this.t.instant('dashboard.wfNetProfit'),    value: Math.max(0, k.netProfit),        color: c.success },
       { label: this.t.instant('dashboard.compFees'),       value: k.totalFees,                     color: c.warning },
       { label: this.t.instant('dashboard.compShipping'),   value: k.totalShipping,                 color: c.info },
       { label: this.t.instant('dashboard.compDiscounts'),  value: k.totalDiscounts,                color: c.danger },
       { label: this.t.instant('dashboard.wfOtherCosts'),   value: k.totalOtherCosts,               color: c.neutral },
+      ...(k.returnShippingCost > 0
+        ? [{ label: this.t.instant('dashboard.compReturnShipping'), value: k.returnShippingCost, color: c.warning }]
+        : []),
       { label: this.t.instant('dashboard.wfProductCost'),  value: Math.max(0, k.proportionalCost), color: c.brand },
     ];
     return items.map(it => ({ ...it, pct: total > 0 ? (it.value / total) * 100 : 0 }));

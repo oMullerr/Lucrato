@@ -98,6 +98,10 @@
                       <th class="text-right"><button class="sort-btn" (click)="sortProduct('cost')">{{ 'analytics.hCost' | translate }} <app-icon [name]="sortIcon(productSort(), 'cost')" [size]="14" /></button></th>
                       <th class="text-right"><button class="sort-btn" (click)="sortProduct('netProfit')">{{ 'analytics.hNetProfit' | translate }} <app-icon [name]="sortIcon(productSort(), 'netProfit')" [size]="14" /></button></th>
                       <th class="text-center"><button class="sort-btn" (click)="sortProduct('margin')">{{ 'sales.colMargin' | translate }} <app-icon [name]="sortIcon(productSort(), 'margin')" [size]="14" /></button></th>
+                      @if (finalizedReturns().length > 0) {
+                        <th class="text-center"><button class="sort-btn" (click)="sortProduct('returnRate')">{{ 'analytics.colReturnRate' | translate }} <app-icon [name]="sortIcon(productSort(), 'returnRate')" [size]="14" /></button></th>
+                        <th class="text-right"><button class="sort-btn" (click)="sortProduct('returnLoss')">{{ 'analytics.colReturnLoss' | translate }} <app-icon [name]="sortIcon(productSort(), 'returnLoss')" [size]="14" /></button></th>
+                      }
                     </tr>
                   </thead>
                   <tbody>
@@ -117,6 +121,16 @@
                         <td class="text-center mono" [class]="marginClass(p.margin)">
                           <strong>{{ (p.margin * 100).toFixed(1) }}%</strong>
                         </td>
+                        @if (finalizedReturns().length > 0) {
+                          <td class="text-center mono" [class.text-warning]="p.returnRate > 0">
+                            {{ p.returnedQty > 0 ? (p.returnRate * 100).toFixed(1) + '%' : '—' }}
+                          </td>
+                          <td class="text-right mono"
+                              [class.text-danger]="p.returnLoss > 0"
+                              [class.text-success]="p.returnLoss < 0">
+                            {{ p.returnLoss !== 0 ? (p.returnLoss | brl) : '—' }}
+                          </td>
+                        }
                       </tr>
                     }
                   </tbody>

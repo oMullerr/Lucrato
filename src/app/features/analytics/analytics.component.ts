@@ -5,7 +5,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { LanguageService } from '../../core/services/language.service';
 import { XlsxExportService, SheetSpec, ResumoSpec, Tone } from '../../core/services/xlsx-export.service';
-import { ComputedPurchase, InventoryStatus } from '../../core/models/models';
+import { ComputedPurchase, ComputedReturn, InventoryStatus } from '../../core/models/models';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
@@ -29,6 +29,12 @@ interface ProductStat {
   grossProfit: number;
   netProfit: number;
   margin: number;
+  /** Unidades devolvidas (devoluções finalizadas). */
+  returnedQty: number;
+  /** returnedQty / unidades brutas vendidas. */
+  returnRate: number;
+  /** Lucro que as devoluções tiraram deste produto. Pode ser negativo. */
+  returnLoss: number;
 }
 
 interface CategoryStat {
@@ -106,17 +112,26 @@ export class AnalyticsComponent {
       const e = map.get(v.product) ?? {
         product: v.product, qty: 0, revenue: 0, netRevenue: 0,
         cost: 0, grossProfit: 0, netProfit: 0, margin: 0,
+        returnedQty: 0, returnRate: 0, returnLoss: 0,
       };
-      e.qty += v.quantitySold;
+      // Unidades LÍQUIDAS de devolução, coerente com a receita já reduzida.
+      e.qty += v.effectiveQuantity;
       e.revenue += v.grossRevenue;
       e.netRevenue += v.netRevenue;
       e.cost += v.proportionalCost;
       e.grossProfit += v.grossProfit;
       e.netProfit += v.netProfit;
+      e.returnedQty += v.returnedQuantity;
+      e.returnLoss += v.returnLoss;
       map.set(v.product, e);
     }
 
-    return [...map.values()].map(e => ({ ...e, margin: e.revenue > 0 ? e.netProfit / e.revenue : 0 }));
+    return [...map.values()].map(e => ({
+      ...e,
+      margin: e.revenue > 0 ? e.netProfit / e.revenue : 0,
+      // Denominador é o bruto vendido: líquidas + devolvidas.
+      returnRate: e.qty + e.returnedQty > 0 ? e.returnedQty / (e.qty + e.returnedQty) : 0,
+    }));
   });
 
   protected readonly productRanking = computed<ProductStat[]>(() => {
@@ -251,6 +266,17 @@ export class AnalyticsComponent {
           { label: tr('analytics.netMargin'),      value: k.netMargin,      tone: 'success' as const, kind: 'percent' as const, emphasis: true },
         ],
       },
+      {
+        title: tr('analytics.resReturns'),
+        icon: 'rotate-ccw' as IconName,
+        rows: [
+          { label: tr('returns.kpiCount'),  value: k.returnCount,        tone: 'neutral' as const, kind: 'count' as const },
+          { label: tr('returns.kpiUnits'),  value: k.returnedUnits,      tone: 'neutral' as const, kind: 'count' as const },
+          { label: tr('returns.kpiRate'),   value: k.returnRate,         tone: 'warning' as const, kind: 'percent' as const },
+          { label: tr('returns.kpiShipping'), value: k.returnShippingCost, tone: 'warning' as const, prefix: '' },
+          { label: tr('dashboard.kpiReturnLoss'), value: k.returnLoss,   tone: 'danger' as const,  prefix: '', emphasis: true },
+        ],
+      },
     ];
   });
 
@@ -312,9 +338,43 @@ export class AnalyticsComponent {
         this.categoriesSheetSpec(),
         this.monthlySheetSpec(),
         this.idleSheetSpec(),
+        // Só entra quando existe: sem devoluções o arquivo fica idêntico ao de antes.
+        ...(this.finalizedReturns().length > 0 ? [this.returnsSheetSpec()] : []),
       ],
       this.resumoSpec(),
     );
+  }
+
+  /**
+   * Só finalizadas: as solicitadas ainda não moveram nenhum valor, e somar a
+   * projeção delas faria o total da aba divergir do card do dashboard.
+   */
+  protected readonly finalizedReturns = computed<ComputedReturn[]>(() =>
+    this.data.computedReturns().filter(r => r.status === 'Finalizado')
+  );
+
+  private returnsSheetSpec(): SheetSpec<ComputedReturn> {
+    const tr = (key: string) => this.t.instant(key);
+    return {
+      name: tr('analytics.sheetReturns'),
+      title: tr('returns.title'),
+      columns: [
+        { header: tr('returns.colId'),             key: 'id',             type: 'text' },
+        { header: tr('returns.colSale'),           key: 'saleId',         type: 'text' },
+        { header: tr('returns.colProduct'),        key: 'product',        type: 'text' },
+        { header: tr('returns.colChannel'),        key: 'channel',        type: 'text' },
+        { header: tr('returns.colRequestDate'),    key: 'requestDate',    type: 'text' },
+        { header: tr('returns.colArrivalDate'),    key: 'arrivalDate',    type: 'text' },
+        { header: tr('returns.colQty'),            key: 'quantity',       type: 'int',  total: 'sum' },
+        { header: tr('returns.colDestination'),    key: 'destination',    type: 'text' },
+        { header: tr('returns.colReason'),         key: 'reason',         type: 'text' },
+        { header: tr('returns.colReturnShipping'), key: 'returnShipping', type: 'brl',  total: 'sum' },
+        { header: tr('returns.colRefunded'),       key: 'refundedAmount', type: 'brl',  total: 'sum' },
+        { header: tr('returns.colLoss'),           key: 'lossAmount',     type: 'brl',  total: 'sum' },
+        { header: tr('returns.colStatus'),         key: 'status',         type: 'text' },
+      ],
+      rows: this.finalizedReturns(),
+    };
   }
 
   private productsSheetSpec(): SheetSpec<ProductStat> {
@@ -336,6 +396,8 @@ export class AnalyticsComponent {
           total: 'weightedAvg', numKey: 'netProfit', denKey: 'revenue',
           toneFn: r => marginTone(r.margin),
         },
+        { header: tr('analytics.colReturnedQty'), key: 'returnedQty', type: 'int', total: 'sum' },
+        { header: tr('analytics.colReturnLoss'),  key: 'returnLoss',  type: 'brl', total: 'sum' },
       ],
       rows: this.productRanking(),
     };

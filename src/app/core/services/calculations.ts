@@ -100,6 +100,8 @@ interface SaleFinancials {
   grossRevenue: number;
   originalGrossRevenue: number;
   feeAmount: number;
+  discountEffective: number;
+  estornoEffective: number;
   netRevenue: number;
   proportionalCost: number;
   grossProfit: number;
@@ -193,6 +195,8 @@ function saleFinancials(sale: Sale, actualUnitCost: number, returns: Return[]): 
     grossRevenue,
     originalGrossRevenue,
     feeAmount,
+    discountEffective: discountEff,
+    estornoEffective: estornoEff,
     netRevenue,
     proportionalCost,
     grossProfit,
@@ -302,6 +306,8 @@ export function calculateSale(
     grossRevenue: f.grossRevenue,
     originalGrossRevenue: f.originalGrossRevenue,
     feeAmount: f.feeAmount,
+    discountEffective: f.discountEffective,
+    estornoEffective: f.estornoEffective,
     netRevenue: f.netRevenue,
     actualUnitCost,
     proportionalCost: f.proportionalCost,
@@ -385,7 +391,10 @@ export function calculateKpis(
   const totalFees = completed.reduce((s, v) => s + v.feeAmount, 0);
   const totalShipping = completed.reduce((s, v) => s + (v.shippingType === 'flex' ? 0 : v.sellerShipping), 0);
   const totalFlexRefund = completed.reduce((s, v) => s + (v.shippingType === 'flex' ? (v.flexRefund ?? 0) : 0), 0);
-  const totalDiscounts = completed.reduce((s, v) => s + v.discount, 0);
+  // EFETIVOS: precisam casar com netRevenue, senão a cascata do dashboard não
+  // fecha quando há devolução (o desconto revertido sumiria da conta).
+  const totalDiscounts = completed.reduce((s, v) => s + v.discountEffective, 0);
+  const totalEstorno = completed.reduce((s, v) => s + v.estornoEffective, 0);
   const totalOtherCosts = completed.reduce((s, v) => s + v.otherCosts, 0);
   const netRevenue = completed.reduce((s, v) => s + v.netRevenue, 0);
   const grossProfit = completed.reduce((s, v) => s + v.grossProfit, 0);
@@ -408,6 +417,7 @@ export function calculateKpis(
     totalShipping,
     totalFlexRefund,
     totalDiscounts,
+    totalEstorno,
     totalOtherCosts,
     grossProfit,
     netProfit,

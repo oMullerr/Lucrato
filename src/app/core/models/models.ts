@@ -161,6 +161,10 @@ export interface ComputedSale extends Sale {
   netMargin: number;
 
   // ── devoluções ─────────────────────────────────────────────────────────
+  /** Desconto após reversão proporcional das devoluções. */
+  discountEffective: number;
+  /** Estorno após reversão proporcional das devoluções. */
+  estornoEffective: number;
   /** Unidades devolvidas em devoluções FINALIZADAS (clampado em quantitySold). */
   returnedQuantity: number;
   /** Subconjunto de returnedQuantity com destino 'Estoque'. */
@@ -217,7 +221,10 @@ export interface KpiSummary {
   totalFees: number;
   totalShipping: number;
   totalFlexRefund: number;
+  /** Descontos EFETIVOS (já revertidos proporcionalmente). */
   totalDiscounts: number;
+  /** Estornos EFETIVOS (já revertidos proporcionalmente). */
+  totalEstorno: number;
   totalOtherCosts: number;
   grossProfit: number;
   netProfit: number;

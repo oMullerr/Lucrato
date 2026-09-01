@@ -478,6 +478,8 @@ describe('calculateKpis', () => {
       grossProfit: 95,
       netProfit: 55,
       netMargin: 0.275,
+      discountEffective: overrides.discount ?? 0,
+      estornoEffective: overrides.estorno ?? 0,
       returnedQuantity: 0,
       returnedToStockQuantity: 0,
       pendingReturnQuantity: 0,
