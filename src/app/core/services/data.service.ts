@@ -4,9 +4,9 @@ import type { Unsubscribe } from '@angular/fire/firestore';
 import { TranslateService } from '@ngx-translate/core';
 import { APP, DEFAULT_CATEGORY_COLOR } from '../constants/app.constants';
 import {
-  Purchase, Sale, Settings, Database, SaleChannel
+  Purchase, Sale, Settings, Database, SaleChannel, SaleStatus, Return
 } from '../models/models';
-import { calculatePurchase, calculateKpis, calculateSale, nextId } from './calculations';
+import { calculatePurchase, calculateKpis, calculateSale, computeReturn, nextId } from './calculations';
 import { computeFiscalStatus } from '../fiscal/fiscal';
 import { DEFAULT_FISCAL_CONFIG } from '../fiscal/fiscal-regimes';
 import { FiscalConfig } from '../fiscal/fiscal.model';
@@ -35,16 +35,21 @@ export class DataService {
   readonly loaded = computed(() => this.db() !== null);
   readonly purchases = computed(() => this.db()?.purchases ?? []);
   readonly sales = computed(() => this.db()?.sales ?? []);
+  readonly returns = computed(() => this.db()?.returns ?? []);
   readonly settings = computed(() => this.db()?.settings ?? null);
 
   readonly computedPurchases = computed(() => {
     const cfg = this.settings();
     if (!cfg) return [];
-    return this.purchases().map(c => calculatePurchase(c, this.sales(), cfg));
+    return this.purchases().map(c => calculatePurchase(c, this.sales(), cfg, this.returns()));
   });
 
   readonly computedSales = computed(() =>
-    this.sales().map(v => calculateSale(v, this.purchases()))
+    this.sales().map(v => calculateSale(v, this.purchases(), this.returns()))
+  );
+
+  readonly computedReturns = computed(() =>
+    this.returns().map(r => computeReturn(r, this.sales(), this.purchases()))
   );
 
   readonly kpis = computed(() =>
@@ -157,6 +162,7 @@ export class DataService {
     const payload = {
       purchases: JSON.parse(JSON.stringify(current.purchases)),
       sales: JSON.parse(JSON.stringify(current.sales)),
+      returns: JSON.parse(JSON.stringify(current.returns)),
       metadata: {
         versao: current.metadata.versao,
         ultimaAtualizacao: new Date().toISOString(),
@@ -177,6 +183,7 @@ export class DataService {
     const zeroed: Database = {
       purchases: [],
       sales: [],
+      returns: [],
       settings: {
         defaultMlFee: 0,
         yellowAlertDays: 0,
@@ -184,6 +191,9 @@ export class DataService {
         minimumMargin: 0,
         lowStockAlert: 0,
         defaultShipping: 0,
+        // Mantém o padrão em vez de zerar: validate() exige >= 1 e um 0 travaria
+        // o próximo save da tela de Configurações.
+        returnWindowDays: 30,
         defaultChannel: '' as SaleChannel,
         categories: [],
         categoryColors: {},
@@ -306,8 +316,14 @@ export class DataService {
 
   removePurchaseWithSales(purchaseId: string): void {
     this.update(d => {
+      // Coleta os ids ANTES de filtrar — as devoluções apontam para a venda,
+      // não para o lote, então sem isso elas virariam órfãs permanentes.
+      const removedSaleIds = new Set(
+        d.sales.filter(v => v.batchId === purchaseId).map(v => v.id),
+      );
       d.purchases = d.purchases.filter(c => c.id !== purchaseId);
       d.sales     = d.sales.filter(v => v.batchId !== purchaseId);
+      d.returns   = d.returns.filter(r => !removedSaleIds.has(r.saleId));
     });
   }
 
@@ -331,7 +347,22 @@ export class DataService {
   }
 
   removeSale(id: string): void {
-    this.update(d => { d.sales = d.sales.filter(v => v.id !== id); });
+    this.update(d => {
+      d.sales = d.sales.filter(v => v.id !== id);
+      d.returns = d.returns.filter(r => r.saleId !== id);
+    });
+  }
+
+  /**
+   * Restaura uma venda junto com as devoluções que a cascata apagou.
+   * Numa única mutação para que o undo seja atômico (um persist, um rollback).
+   */
+  restoreSale(sale: Sale, returns: Return[] = []): void {
+    this.update(d => {
+      d.sales.push({ ...sale });
+      if (returns.length) d.returns.push(...returns.map(r => ({ ...r })));
+      this.syncSaleStatus(d, sale.id);
+    });
   }
 
   async bulkImport(purchases: Purchase[], sales: Sale[]): Promise<void> {
@@ -340,6 +371,74 @@ export class DataService {
       if (purchases.length) d.purchases.push(...purchases);
       if (sales.length) d.sales.push(...sales);
     });
+  }
+
+  /* ─────────────────────────── Devoluções ─────────────────────────── */
+
+  nextReturnId(): string {
+    return nextId(this.returns().map(r => r.id), 'D');
+  }
+
+  findReturn(id: string): Return | undefined {
+    return this.returns().find(r => r.id === id);
+  }
+
+  /** Devoluções ligadas a uma venda (todos os status). */
+  returnsForSale(saleId: string): Return[] {
+    return this.returns().filter(r => r.saleId === saleId);
+  }
+
+  addReturn(ret: Return): void {
+    this.update(d => {
+      d.returns.push({ ...ret });
+      this.syncSaleStatus(d, ret.saleId);
+    });
+  }
+
+  updateReturn(id: string, data: Partial<Return>): void {
+    this.update(d => {
+      const idx = d.returns.findIndex(r => r.id === id);
+      if (idx === -1) return;
+      const previousSaleId = d.returns[idx]!.saleId;
+      d.returns[idx] = { ...d.returns[idx]!, ...data };
+      this.syncSaleStatus(d, previousSaleId);
+      // Se a devolução foi remanejada para outra venda, as duas precisam ressincronizar.
+      if (d.returns[idx]!.saleId !== previousSaleId) {
+        this.syncSaleStatus(d, d.returns[idx]!.saleId);
+      }
+    });
+  }
+
+  removeReturn(id: string): void {
+    this.update(d => {
+      const gone = d.returns.find(r => r.id === id);
+      if (!gone) return;
+      d.returns = d.returns.filter(r => r.id !== id);
+      this.syncSaleStatus(d, gone.saleId);
+    });
+  }
+
+  /**
+   * Mantém `Sale.status` coerente com as devoluções finalizadas.
+   * Alterna APENAS o par Concluída ↔ Devolvida — 'Cancelada' e 'Em disputa' são
+   * escolhas do usuário e nunca podem ser sobrescritas.
+   *
+   * Este campo é conveniência de exibição/ordenação: nenhum cálculo de dinheiro
+   * depende dele (countsAsRevenue lê o array de devoluções e a UI renderiza
+   * ComputedSale.effectiveStatus), então uma escrita perdida deixa no máximo um
+   * badge desatualizado, jamais um número errado.
+   */
+  private syncSaleStatus(d: Database, saleId: string): void {
+    const sale = d.sales.find(v => v.id === saleId);
+    if (!sale) return;
+    if (sale.status === 'Cancelada' || sale.status === 'Em disputa') return;
+    const returned = d.returns.reduce(
+      (sum, r) => (r.saleId === saleId && r.arrivalDate ? sum + r.quantity : sum),
+      0,
+    );
+    const next: SaleStatus =
+      returned > 0 && returned >= sale.quantitySold ? 'Devolvida' : 'Concluída';
+    if (sale.status !== next) sale.status = next;
   }
 
   private update(mutator: (db: Database) => void): Promise<void> {
@@ -365,6 +464,7 @@ export class DataService {
       minimumMargin: cfg.minimumMargin ?? defaults.minimumMargin,
       lowStockAlert: cfg.lowStockAlert ?? defaults.lowStockAlert,
       defaultShipping: cfg.defaultShipping ?? defaults.defaultShipping,
+      returnWindowDays: cfg.returnWindowDays ?? defaults.returnWindowDays,
       defaultChannel: cfg.defaultChannel ?? defaults.defaultChannel,
       categories: cfg.categories ?? defaults.categories,
       categoryColors: cfg.categoryColors ?? defaults.categoryColors,
@@ -380,6 +480,7 @@ export class DataService {
     return {
       purchases: data.purchases ?? [],
       sales: data.sales ?? [],
+      returns: data.returns ?? [],
       settings: mergedSettings,
       metadata: data.metadata ?? { versao: APP.version, ultimaAtualizacao: new Date().toISOString() },
     };
@@ -393,6 +494,7 @@ export class DataService {
       minimumMargin: 0.10,
       lowStockAlert: 1,
       defaultShipping: 0,
+      returnWindowDays: 30,
       defaultChannel: 'Mercado Livre',
       categories: ['Eletrônicos', 'Outros'],
       categoryColors: {},
@@ -410,6 +512,7 @@ export class DataService {
     return {
       purchases: [],
       sales: [],
+      returns: [],
       settings: this.defaultSettings(),
       metadata: { versao: APP.version, ultimaAtualizacao: new Date().toISOString() },
     };
