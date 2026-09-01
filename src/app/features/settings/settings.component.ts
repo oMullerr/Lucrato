@@ -262,6 +262,7 @@ export class SettingsComponent implements OnDestroy {
         this.dataService.purchases(),
         this.dataService.sales(),
         this.form(),
+        this.dataService.returns(),
       );
 
       if (result.purchases.length || result.sales.length) {

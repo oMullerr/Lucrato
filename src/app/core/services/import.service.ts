@@ -12,8 +12,8 @@ import {
   type WorkBook as ReadWorkBook,
   type WorkSheet as ReadWorkSheet,
 } from 'xlsx';
-import { Purchase, Sale, Settings, SaleChannel, SaleStatus } from '../models/models';
-import { calculatePurchase } from './calculations';
+import { Purchase, Sale, Settings, SaleChannel, SaleStatus, Return } from '../models/models';
+import { calculatePurchase, countsAsRevenue } from './calculations';
 import { logError } from './logger';
 
 export interface ImportResult {
@@ -382,6 +382,7 @@ export class ImportService {
     currentPurchases: Purchase[],
     currentSales: Sale[],
     settings: Settings,
+    currentReturns: Return[] = [],
   ): Promise<ImportResult> {
     const errors: string[] = [];
 
@@ -407,6 +408,7 @@ export class ImportService {
         currentSales,
         settings,
         errors,
+        currentReturns,
       );
 
       return { purchases: newPurchases, sales: newSales, errors };
@@ -492,6 +494,7 @@ export class ImportService {
     existingSales: Sale[],
     settings: Settings,
     errors: string[],
+    existingReturns: Return[] = [],
   ): Sale[] {
     if (!ws) return [];
 
@@ -511,10 +514,21 @@ export class ImportService {
 
     const validStatuses: SaleStatus[] = ['Concluída', 'Cancelada', 'Devolvida', 'Em disputa'];
 
+    // Consumo real do lote: desconta as unidades que voltaram ao estoque por
+    // devolução finalizada, senão o import subestimaria o disponível e
+    // rejeitaria vendas válidas.
     const usedByBatch = new Map<string, number>();
     for (const s of existingSales) {
-      if (s.status !== 'Concluída') continue;
-      usedByBatch.set(s.batchId, (usedByBatch.get(s.batchId) ?? 0) + s.quantitySold);
+      if (!countsAsRevenue(s, existingReturns)) continue;
+      const backToStock = existingReturns.reduce(
+        (q, r) =>
+          r.saleId === s.id && r.destination === 'Estoque' && r.arrivalDate
+            ? q + r.quantity
+            : q,
+        0,
+      );
+      const consumed = Math.max(0, s.quantitySold - backToStock);
+      usedByBatch.set(s.batchId, (usedByBatch.get(s.batchId) ?? 0) + consumed);
     }
 
     for (let i = 3; i < rows.length; i++) {
@@ -543,7 +557,7 @@ export class ImportService {
 
       const batch = allPurchases.find(p => p.id === batchId);
       if (batch) {
-        const computed = calculatePurchase(batch, existingSales, settings);
+        const computed = calculatePurchase(batch, existingSales, settings, existingReturns);
         if (computed.status === 'Em trânsito') {
           errors.push(this.t.instant('importErrors.saleBatchInTransit', { line: lineNum, batchId }));
           continue;

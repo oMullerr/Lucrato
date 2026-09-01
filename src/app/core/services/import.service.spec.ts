@@ -346,14 +346,70 @@ describe('ImportService', () => {
       newPurchases: Purchase[] = [],
       existingSales: Sale[] = [],
       settings: Settings = makeSettings(),
+      existingReturns: any[] = [],
     ): { result: Sale[]; errors: string[] } {
       (XLSXRead.utils.sheet_to_json as jest.Mock).mockReturnValue(rows);
       const errors: string[] = [];
       const result = (service as any).parseSales(
-        {}, existingPurchases, newPurchases, existingSales, settings, errors,
+        {}, existingPurchases, newPurchases, existingSales, settings, errors, existingReturns,
       ) as Sale[];
       return { result, errors };
     }
+
+    /**
+     * Estoque disponível precisa creditar as unidades que voltaram por
+     * devolução finalizada ao Estoque, senão o import subestima o disponível e
+     * rejeita vendas válidas.
+     */
+    describe('estoque disponível com devoluções', () => {
+      const batch = () => makePurchase({ id: 'C001', quantityPurchased: 5 });
+      const soldAll = (): Sale[] => [{
+        id: 'V001', batchId: 'C001', product: 'P', quantitySold: 5, unitPrice: 100,
+        saleDate: '2025-05-01', channel: 'Mercado Livre', feePercentage: 0.1,
+        shippingType: 'correios', sellerShipping: 0, discount: 0,
+        otherCosts: 0, status: 'Concluída',
+      }];
+      const row = (qty: number) =>
+        [['h'], ['i'], ['e'], ['C001', '01/06/2025', 'ML', qty, 100, 12, 0, 0, 0, 0, 'Concluída', '']];
+      const ret = (over: Record<string, unknown>) => [{
+        id: 'D001', saleId: 'V001', batchId: 'C001', product: 'P',
+        channel: 'Mercado Livre', quantity: 2, requestDate: '2025-05-10',
+        returnShipping: 0, destination: 'Estoque', reason: 'Defeito', ...over,
+      }];
+      // Lote esgotado é barrado antes da checagem de quantidade.
+      const REJECTED = /saleExceedsStock|saleBatchSoldOut/;
+
+      it('sem devolução, lote esgotado rejeita nova venda', () => {
+        const { errors } = callParseSales(row(1), [batch()], [], soldAll());
+        expect(errors[0]).toMatch(REJECTED);
+      });
+
+      it('devolução ao Estoque libera a unidade e a venda passa', () => {
+        const { result, errors } = callParseSales(
+          row(2), [batch()], [], soldAll(), makeSettings(), ret({ arrivalDate: '2025-05-15' }));
+        expect(errors).toEqual([]);
+        expect(result).toHaveLength(1);
+      });
+
+      it('não libera MAIS do que voltou', () => {
+        const { errors } = callParseSales(
+          row(3), [batch()], [], soldAll(), makeSettings(), ret({ arrivalDate: '2025-05-15' }));
+        expect(errors[0]).toMatch(REJECTED);
+      });
+
+      it('destino Perda não libera estoque', () => {
+        const { errors } = callParseSales(
+          row(1), [batch()], [], soldAll(), makeSettings(),
+          ret({ arrivalDate: '2025-05-15', destination: 'Perda' }));
+        expect(errors[0]).toMatch(REJECTED);
+      });
+
+      it('devolução ainda Solicitada não libera estoque', () => {
+        const { errors } = callParseSales(
+          row(1), [batch()], [], soldAll(), makeSettings(), ret({}));
+        expect(errors[0]).toMatch(REJECTED);
+      });
+    });
 
     it('retorna [] quando ws é undefined', () => {
       const errors: string[] = [];
