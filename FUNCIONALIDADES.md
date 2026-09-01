@@ -112,6 +112,7 @@ Registro e gestão de cada venda realizada.
 - Registrar uma nova venda
 - Editar uma venda existente
 - Excluir uma venda
+- Registrar uma devolução a partir da venda (a ação fica desabilitada quando todas as unidades já foram devolvidas)
 - Filtrar e buscar vendas
 - Visualizar a margem de cada venda com indicação de cor (verde = saudável, amarelo = abaixo do mínimo, vermelho = negativo)
 
@@ -128,7 +129,43 @@ Registro e gestão de cada venda realizada.
 
 ---
 
-## 5. Dashboard
+## 5. Devoluções
+
+Controle das devoluções solicitadas pelos compradores e do quanto cada uma custou.
+
+**O usuário vê:**
+- KPIs no topo: prejuízo total, taxa de devolução, quantidade de devoluções (com quantas aguardam chegada) e valor em risco ou frete de devolução pago
+- Lista com: ID da devolução, ID da venda, produto, data da solicitação, data de chegada (com o prazo de resolução), quantidade, destino, impacto no lucro e status
+- Busca por produto, ID da devolução ou ID da venda
+- Filtros por destino, por período e chips rápidos (todas, solicitadas, finalizadas, com prejuízo)
+- Ao clicar na linha, um detalhamento com canal, motivo, preço unitário, frete, ressarcimento, taxa não estornada, justificativa do cliente e resolução
+
+**O usuário pode:**
+- Registrar uma nova devolução (também pela ação de linha na tela de Vendas, pelo botão flutuante no celular ou pela tecla `d`)
+- Editar e excluir devoluções, com desfazer
+
+**Ao cadastrar ou editar uma devolução, o usuário preenche:**
+- Venda devolvida — a lista mostra apenas vendas dentro da janela configurada em Configurações e que ainda tenham unidades devolvíveis
+- Quantidade devolvida (permite devolução parcial e mais de uma devolução na mesma venda)
+- Destino do produto: retornou ao estoque, perda/avariado, devolvido ao fornecedor ou ressarcido pela plataforma
+- Data da solicitação (já vem com a data de hoje) e data de chegada
+- Frete da devolução e, exceto quando o produto volta ao estoque, o valor ressarcido
+- Motivo, justificativa do cliente, resolução e observações
+- Um resumo em tempo real mostra o lucro antes, o lucro depois e **quanto você deixa de ganhar**, além de dizer se a unidade volta ao estoque
+
+**Como a devolução afeta os números:**
+- **Só ao finalizar.** Enquanto não houver data de chegada, a devolução aparece apenas como valor em risco e nenhum número muda.
+- O faturamento, o desconto e o estorno daquela venda caem **proporcionalmente** à quantidade devolvida.
+- A **taxa da plataforma e o frete original continuam** como prejuízo — eles não voltam para você.
+- O frete da devolução é somado como custo; o valor ressarcido é somado como recuperação.
+- Só o destino "retornou ao estoque" devolve a unidade ao lote e tira o custo dela do resultado.
+- O impacto é lançado no **mês da venda original**, não no da devolução, então relatórios passados passam a refletir a realidade.
+- O faturamento do MEI também é reduzido.
+- Quando a devolução cobre a venda inteira, a venda passa a aparecer como "Devolvida"; devolução parcial ganha um selo com a quantidade.
+
+---
+
+## 6. Dashboard
 
 Painel visual com gráficos para acompanhar o desempenho do negócio.
 
@@ -147,7 +184,7 @@ Painel visual com gráficos para acompanhar o desempenho do negócio.
 
 ---
 
-## 6. Análises
+## 7. Análises
 
 Relatórios detalhados com 4 abas de análise.
 
@@ -165,7 +202,7 @@ Relatórios detalhados com 4 abas de análise.
 
 ---
 
-## 7. Configurações
+## 8. Configurações
 
 Personalização dos parâmetros e dados do sistema.
 
@@ -181,6 +218,7 @@ Personalização dos parâmetros e dados do sistema.
 - Definir a taxa padrão do marketplace (ex: 12%)
 - Definir a margem mínima desejada (ex: 10%)
 - Configurar quantos dias sem venda acionam o alerta amarelo e o alerta vermelho
+- Definir por quantos dias após a venda um produto ainda aceita devolução (define quais vendas aparecem ao registrar uma devolução)
 - Definir o frete padrão de compra
 - Definir o canal de venda padrão
 
@@ -200,7 +238,7 @@ Personalização dos parâmetros e dados do sistema.
 
 ---
 
-## 8. Instruções
+## 9. Instruções
 
 Guia de uso completo do sistema.
 
