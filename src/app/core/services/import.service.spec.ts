@@ -38,6 +38,7 @@ function makeSettings(overrides: Partial<Settings> = {}): Settings {
     minimumMargin: 0.10,
     lowStockAlert: 1,
     defaultShipping: 0,
+    returnWindowDays: 30,
     defaultChannel: 'Mercado Livre',
     categories: ['Eletrônicos'],
     categoryColors: {},

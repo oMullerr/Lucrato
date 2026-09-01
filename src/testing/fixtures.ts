@@ -2,7 +2,7 @@
  * Builders de domínio para testes — defaults mínimos e realistas.
  * Specs antigos têm builders locais próprios; specs novos importam daqui.
  */
-import type { Purchase, Sale } from '../app/core/models/models';
+import type { Purchase, Sale, Return } from '../app/core/models/models';
 
 export function makePurchase(overrides: Partial<Purchase> = {}): Purchase {
   return {
@@ -35,6 +35,22 @@ export function makeSale(overrides: Partial<Sale> = {}): Sale {
     discount: 0,
     otherCosts: 0,
     status: 'Concluída',
+    ...overrides,
+  };
+}
+
+export function makeReturn(overrides: Partial<Return> = {}): Return {
+  return {
+    id: 'D001',
+    saleId: 'V001',
+    batchId: 'C001',
+    product: 'Produto',
+    channel: 'Mercado Livre',
+    quantity: 1,
+    requestDate: '2026-02-05',
+    returnShipping: 0,
+    destination: 'Estoque',
+    reason: 'Defeito',
     ...overrides,
   };
 }

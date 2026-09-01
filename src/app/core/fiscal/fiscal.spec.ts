@@ -18,6 +18,8 @@ import { ComputedSale, SaleStatus } from '../models/models';
 
 function makeComputedSale(overrides: Partial<ComputedSale> = {}): ComputedSale {
   const grossRevenue = overrides.grossRevenue ?? 1000;
+  const status = overrides.status ?? ('Concluída' as SaleStatus);
+  const quantitySold = overrides.quantitySold ?? 1;
   return {
     id: 'V001',
     batchId: 'C001',
@@ -40,6 +42,19 @@ function makeComputedSale(overrides: Partial<ComputedSale> = {}): ComputedSale {
     grossProfit: grossRevenue,
     netProfit: grossRevenue,
     netMargin: 1,
+    originalGrossRevenue: grossRevenue,
+    returnedQuantity: 0,
+    returnedToStockQuantity: 0,
+    pendingReturnQuantity: 0,
+    effectiveQuantity: quantitySold,
+    costedQuantity: quantitySold,
+    returnShippingTotal: 0,
+    returnRefundTotal: 0,
+    returnLoss: 0,
+    pendingReturnValue: 0,
+    returnCount: 0,
+    countsAsRevenue: status === 'Concluída',
+    effectiveStatus: status,
     ...overrides,
   };
 }

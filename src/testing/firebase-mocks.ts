@@ -42,6 +42,7 @@ export function makeFakeDatabase(overrides: Partial<Database> = {}): Database {
   return {
     purchases: [],
     sales: [],
+    returns: [],
     settings: {
       defaultMlFee: 0.12,
       yellowAlertDays: 25,
@@ -49,6 +50,7 @@ export function makeFakeDatabase(overrides: Partial<Database> = {}): Database {
       minimumMargin: 0.10,
       lowStockAlert: 1,
       defaultShipping: 0,
+      returnWindowDays: 30,
       defaultChannel: 'Mercado Livre',
       categories: ['Eletrônicos', 'Outros'],
       categoryColors: {},

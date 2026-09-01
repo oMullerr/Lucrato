@@ -55,6 +55,7 @@ function makeSettings(overrides: Partial<Settings> = {}): Settings {
     minimumMargin: 0.1,
     lowStockAlert: 2,
     defaultShipping: 0,
+    returnWindowDays: 30,
     defaultChannel: 'Mercado Livre',
     categories: [],
     categoryColors: {},
@@ -451,6 +452,8 @@ describe('calculateKpis', () => {
       totalActualCost: 1050,
       actualUnitCost: 105,
       quantitySold: 0,
+      returnedToStock: 0,
+      quantityConsumed: overrides.quantitySold ?? 0,
       currentStock: 10,
       idleValue: 1050,
       daysInStock: 0,
@@ -460,9 +463,14 @@ describe('calculateKpis', () => {
   }
 
   function makeComputedSale(overrides: Partial<ComputedSale> = {}): ComputedSale {
+    const base = makeSale();
+    const status = overrides.status ?? base.status;
+    const quantitySold = overrides.quantitySold ?? base.quantitySold;
+    const grossRevenue = overrides.grossRevenue ?? 200;
     return {
-      ...makeSale(),
-      grossRevenue: 200,
+      ...base,
+      grossRevenue,
+      originalGrossRevenue: grossRevenue,
       feeAmount: 20,
       netRevenue: 160,
       actualUnitCost: 105,
@@ -470,6 +478,18 @@ describe('calculateKpis', () => {
       grossProfit: 95,
       netProfit: 55,
       netMargin: 0.275,
+      returnedQuantity: 0,
+      returnedToStockQuantity: 0,
+      pendingReturnQuantity: 0,
+      effectiveQuantity: quantitySold,
+      costedQuantity: quantitySold,
+      returnShippingTotal: 0,
+      returnRefundTotal: 0,
+      returnLoss: 0,
+      pendingReturnValue: 0,
+      returnCount: 0,
+      countsAsRevenue: status === 'Concluída',
+      effectiveStatus: status,
       ...overrides,
     };
   }
