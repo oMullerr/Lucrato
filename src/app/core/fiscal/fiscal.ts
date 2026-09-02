@@ -17,9 +17,14 @@ function toIsoDate(d: Date): string {
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
 }
 
-/** Vendas que contam como faturamento: concluídas (mesma base de Dashboard/Análises). */
+/**
+ * Vendas que contam como faturamento (mesma base de Dashboard/Análises).
+ * `countsAsRevenue` já embute devoluções: uma venda 100% devolvida continua
+ * na base mas com `grossRevenue` zerado, reduzindo o teto do MEI em vez de
+ * ser descartada silenciosamente.
+ */
 function billableSales(sales: ComputedSale[]): ComputedSale[] {
-  return sales.filter(s => s.status === 'Concluída');
+  return sales.filter(s => s.countsAsRevenue);
 }
 
 /**

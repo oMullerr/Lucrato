@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../shared/ui/dialog/dialog.service';
-import { Purchase, Sale } from '../models/models';
+import { Purchase, Sale, Return } from '../models/models';
 import { SaleFormDialogComponent } from '../../features/sales/sale-form.dialog';
+import { ReturnFormDialogComponent, ReturnDialogData } from '../../features/returns/return-form.dialog';
 import { PurchaseFormDialogComponent } from '../../features/purchases/purchase-form.dialog';
 import {
   ConfirmDialogComponent,
@@ -33,6 +34,25 @@ export class QuickActionsService {
         }
         this.data.addSale(result);
         this.notify.success(this.t.instant('sales.registered', { id: result.id }));
+      });
+  }
+
+  /** @param saleId pré-seleciona a venda (ação de linha da tela de Vendas). */
+  openNewReturn(saleId?: string): void {
+    this.dialog
+      .open<ReturnFormDialogComponent, ReturnDialogData, Return | null>(
+        ReturnFormDialogComponent,
+        { data: { saleId }, size: 'xl' },
+      )
+      .afterClosed()
+      .subscribe(result => {
+        if (!result) return;
+        if (this.data.findReturn(result.id)) {
+          this.notify.error(this.t.instant('returns.idExists', { id: result.id }));
+          return;
+        }
+        this.data.addReturn(result);
+        this.notify.success(this.t.instant('returns.registered', { id: result.id }));
       });
   }
 

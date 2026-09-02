@@ -30,6 +30,7 @@ const DEFAULT_SETTINGS: Settings = {
   minimumMargin: 0.10,
   lowStockAlert: 1,
   defaultShipping: 0,
+  returnWindowDays: 30,
   defaultChannel: 'Mercado Livre',
   categories: [],
   categoryColors: {},
@@ -130,6 +131,7 @@ export class SettingsComponent implements OnDestroy {
           minimumMargin: raw?.minimumMargin ?? DEFAULT_SETTINGS.minimumMargin,
           lowStockAlert: raw?.lowStockAlert ?? DEFAULT_SETTINGS.lowStockAlert,
           defaultShipping: raw?.defaultShipping ?? DEFAULT_SETTINGS.defaultShipping,
+          returnWindowDays: raw?.returnWindowDays ?? DEFAULT_SETTINGS.returnWindowDays,
           defaultChannel: raw?.defaultChannel ?? DEFAULT_SETTINGS.defaultChannel,
           categories: raw?.categories ?? DEFAULT_SETTINGS.categories,
           categoryColors: raw?.categoryColors ?? DEFAULT_SETTINGS.categoryColors,
@@ -260,6 +262,7 @@ export class SettingsComponent implements OnDestroy {
         this.dataService.purchases(),
         this.dataService.sales(),
         this.form(),
+        this.dataService.returns(),
       );
 
       if (result.purchases.length || result.sales.length) {
@@ -343,6 +346,8 @@ export class SettingsComponent implements OnDestroy {
       return this.t.instant('settings.valLowStock');
     if (!Number.isFinite(s.defaultShipping) || s.defaultShipping < 0)
       return this.t.instant('settings.valShipping');
+    if (!Number.isInteger(s.returnWindowDays) || s.returnWindowDays <= 0)
+      return this.t.instant('settings.valReturnWindow');
     return null;
   }
 }

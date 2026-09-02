@@ -17,4 +17,8 @@
     <app-icon class="text-brand" name="shopping-cart" [size]="18" />
     <span>{{ 'quick.newPurchase' | translate }}</span>
   </button>
+  <button app-menu-item (click)="quick.openNewReturn()">
+    <app-icon class="text-warning" name="rotate-ccw" [size]="18" />
+    <span>{{ 'quick.newReturn' | translate }}</span>
+  </button>
 </app-menu>

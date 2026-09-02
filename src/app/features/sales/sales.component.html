@@ -188,8 +188,32 @@
                     <td class="text-center mono" [class]="marginClass(v.netMargin)">
                       <strong>{{ (v.netMargin * 100).toFixed(1) }}%</strong>
                     </td>
-                    <td><app-status-badge [status]="v.status" /></td>
+                    <td>
+                      <app-status-badge [status]="v.effectiveStatus" />
+                      @if (v.returnedQuantity > 0 && v.effectiveStatus !== 'Devolvida') {
+                        <span class="return-chip"
+                          [appTooltip]="'sales.returnedOf' | translate:{ qty: v.returnedQuantity, total: v.quantitySold }">
+                          <app-icon name="rotate-ccw" [size]="12" />{{ v.returnedQuantity }}
+                        </span>
+                      }
+                      @if (v.pendingReturnQuantity > 0) {
+                        <span class="return-chip return-chip--pending"
+                          [appTooltip]="'returns.pendingHint' | translate">
+                          <app-icon name="clock" [size]="12" />{{ v.pendingReturnQuantity }}
+                        </span>
+                      }
+                    </td>
                     <td class="text-right col-actions">
+                      <button
+                        appBtn="ghost" iconOnly size="sm" type="button"
+                        class="row-action"
+                        [disabled]="!canRegisterReturn(v)"
+                        (click)="registerReturn(v, $event)"
+                        [appTooltip]="(canRegisterReturn(v) ? 'sales.registerReturn' : 'sales.noReturnableQty') | translate"
+                        [attr.aria-label]="'sales.registerReturn' | translate"
+                      >
+                        <app-icon name="rotate-ccw" [size]="17" />
+                      </button>
                       <button
                         appBtn="ghost" iconOnly size="sm" type="button"
                         class="row-action"
@@ -231,6 +255,24 @@
                           }
                           <div><span class="t-caption">{{ 'sales.netRevenue' | translate }}</span><strong class="mono">{{ v.netRevenue | brl }}</strong></div>
                           <div><span class="t-caption">{{ 'sales.proportionalCost' | translate }}</span><strong class="mono">{{ v.proportionalCost | brl }}</strong></div>
+                          @if (v.returnedQuantity > 0) {
+                            <div>
+                              <span class="t-caption">{{ 'returns.title' | translate }}</span>
+                              <strong class="mono">{{ 'sales.returnedOf' | translate:{ qty: v.returnedQuantity, total: v.quantitySold } }}</strong>
+                            </div>
+                            <div>
+                              <span class="t-caption">{{ 'sales.returnLoss' | translate }}</span>
+                              <strong class="mono" [class.text-danger]="v.returnLoss > 0" [class.text-success]="v.returnLoss < 0">
+                                {{ v.returnLoss | brl }}
+                              </strong>
+                            </div>
+                            @if (v.returnShippingTotal > 0) {
+                              <div><span class="t-caption">{{ 'sales.returnShipping' | translate }}</span><strong class="mono">{{ v.returnShippingTotal | brl }}</strong></div>
+                            }
+                            @if (v.returnRefundTotal > 0) {
+                              <div><span class="t-caption">{{ 'sales.refunded' | translate }}</span><strong class="mono text-success">{{ v.returnRefundTotal | brl }}</strong></div>
+                            }
+                          }
                         </div>
                       </td>
                     </tr>

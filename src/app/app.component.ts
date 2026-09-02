@@ -50,6 +50,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { path: '/purchases', label: 'nav.purchases', icon: 'shopping-cart', title: 'nav.purchases' },
       { path: '/sales',     label: 'nav.sales',     icon: 'tag',           title: 'nav.sales' },
+      { path: '/returns',   label: 'nav.returns',   icon: 'rotate-ccw',    title: 'nav.returns' },
     ],
   },
   {
@@ -187,6 +188,9 @@ export class AppComponent {
     } else if (key === 'n' && !event.shiftKey) {
       event.preventDefault();
       this.quick.openNewSale();
+    } else if (key === 'd') {
+      event.preventDefault();
+      this.quick.openNewReturn();
     }
   }
 }

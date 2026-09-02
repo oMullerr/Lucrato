@@ -1,6 +1,6 @@
 @use '../../../styles/breakpoints' as bp;
 
-.sales-body {
+.returns-body {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -20,7 +20,7 @@
 }
 
 .filters .channel-select {
-  min-width: 180px;
+  min-width: 200px;
 }
 
 .quick-chips {
@@ -42,6 +42,8 @@
   width: 3px;
 
   &.stripe-danger { background: var(--color-danger); }
+  /* Solicitada: ainda aguardando o produto chegar. */
+  &.stripe-warning { background: var(--color-warning); }
 }
 
 .id-tag {
@@ -52,10 +54,18 @@
 }
 
 .id-tag.id-sale { color: var(--brand-primary); }
+.id-tag.id-return { color: var(--color-warning); }
 
 .orphan-warn {
   vertical-align: middle;
   margin-left: 4px;
+}
+
+/* Prazo de resolução ao lado da data de chegada. */
+.turnaround {
+  margin-left: 6px;
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
 }
 
 .row-action.danger:hover { color: var(--color-danger); }
@@ -73,27 +83,19 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
+  }
+
+  /* Textos livres (justificativa e resolução) ocupam a linha inteira. */
+  .expansion-wide {
+    grid-column: 1 / -1;
+
+    strong {
+      font-weight: 500;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+    }
   }
 
   @include bp.below(lg) { grid-template-columns: repeat(2, 1fr); }
-}
-
-/* Selo de devolução na coluna de status (parcial ou pendente). */
-.return-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  margin-left: 6px;
-  padding: 1px 7px;
-  font-size: var(--fs-caption);
-  font-weight: 600;
-  color: var(--color-danger);
-  background: var(--tint-danger);
-  border-radius: var(--radius-full);
-  vertical-align: middle;
-
-  &--pending {
-    color: var(--color-warning);
-    background: var(--tint-warning);
-  }
 }

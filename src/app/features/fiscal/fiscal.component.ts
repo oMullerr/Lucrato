@@ -76,7 +76,7 @@ export class FiscalComponent {
   protected readonly years = computed(() => availableYears(this.data.computedSales()));
 
   protected readonly completedCount = computed(() =>
-    this.data.computedSales().filter(s => s.status === 'Concluída').length
+    this.data.computedSales().filter(s => s.countsAsRevenue).length
   );
   protected readonly hasData = computed(() => this.completedCount() > 0);
 

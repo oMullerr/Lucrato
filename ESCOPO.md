@@ -123,7 +123,7 @@ Firestore (nuvem)
 Cada usuário possui um único documento:
 
 ```
-users/{uid}/db/main → { purchases[], sales[], settings, metadata }
+users/{uid}/db/main → { purchases[], sales[], returns[], settings, metadata }
 ```
 
 ---
@@ -187,6 +187,46 @@ users/{uid}/db/main → { purchases[], sales[], settings, metadata }
 | `status` | SaleStatus | Status da venda |
 | `notes` | string | Observações |
 
+### `Return` — Devolução
+
+Devolução total ou parcial de uma venda. **Só afeta dinheiro e estoque quando
+FINALIZADA** (`arrivalDate` preenchida); enquanto `Solicitado`, aparece apenas
+como "valor em risco".
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | string | ID único (ex: D001) |
+| `saleId` | string | ID da venda devolvida |
+| `batchId` | string | Lote (denormalizado da venda) |
+| `product` | string | Produto (denormalizado da venda) |
+| `channel` | SaleChannel | Canal (denormalizado) — habilita taxa por canal |
+| `quantity` | number | Unidades devolvidas |
+| `requestDate` | string | Data da solicitação (ISO) |
+| `arrivalDate` | string? | Data de chegada; ausente ⇒ status `Solicitado` |
+| `returnShipping` | number | Frete da devolução pago pelo vendedor |
+| `destination` | ReturnDestination | Destino físico do produto |
+| `refundedAmount` | number? | Valor recuperado (plataforma ou fornecedor) |
+| `reason` | ReturnReason | Motivo categorizado |
+| `customerReason` | string? | Justificativa livre do comprador |
+| `resolution` | string? | Resolução dada pelo vendedor |
+| `notes` | string? | Observações |
+
+**`ReturnDestination`** — decide **apenas** se a unidade volta ao estoque vendável.
+A recuperação de dinheiro fica inteiramente em `refundedAmount`, então nunca há
+compensação dupla.
+
+| Destino | Volta ao estoque | CMV |
+|---------|------------------|-----|
+| `'Estoque'` | ✅ | Liberado |
+| `'Perda'` | ❌ | Continua como prejuízo |
+| `'Fornecedor'` | ❌ | Continua (compensar via `refundedAmount`) |
+| `'Ressarcido'` | ❌ | Continua (compensar via `refundedAmount`) |
+
+**`ReturnReason`** — `'Defeito'` | `'Não conforme'` | `'Arrependimento'` |
+`'Avaria no transporte'` | `'Atraso na entrega'` | `'Erro de envio'` | `'Outro'`
+
+**`ReturnStatus`** (derivado, nunca persistido) — `'Solicitado'` | `'Finalizado'`
+
 ### `Settings` — Configurações
 
 | Campo | Tipo | Padrão | Descrição |
@@ -197,6 +237,7 @@ users/{uid}/db/main → { purchases[], sales[], settings, metadata }
 | `minimumMargin` | number | 0.10 | Margem mínima desejada |
 | `lowStockAlert` | number | 1 | Limiar de estoque baixo |
 | `defaultShipping` | number | 0 | Frete padrão de compra |
+| `returnWindowDays` | number | 30 | Dias após a venda em que ainda se aceita devolução |
 | `defaultChannel` | string | 'Mercado Livre' | Canal padrão de venda |
 | `categories` | string[] | [] | Lista de categorias |
 | `suppliers` | string[] | [] | Lista de fornecedores |
@@ -236,16 +277,48 @@ averageMargin       = média ponderada das margens das vendas vinculadas
 
 ### Por Venda (`ComputedSale`)
 
+Sendo `Q = quantitySold`, `P = unitPrice` e considerando apenas devoluções
+**finalizadas** da venda:
+
 ```
-grossRevenue        = quantitySold × unitPrice
-feeAmount           = grossRevenue × feePercentage
-netRevenue          = grossRevenue − feeAmount − sellerShipping + flexRefund + estorno − discount − otherCosts
+qr        = min(Q, Σ quantidades devolvidas)
+qrStock   = Σ quantidades com destino 'Estoque'
+r         = Q > 0 ? qr / Q : 0
+effQty    = Q − qr          costedQty = Q − qrStock
+
+grossRevenue        = effQty × P                     ← revertido proporcionalmente
+discountEffective   = discount × (1 − r)             ← revertido proporcionalmente
+estornoEffective    = estorno  × (1 − r)             ← revertido proporcionalmente
+feeAmount           = (Q × P) × feePercentage        ← RETIDO (plataforma não estorna)
+shippingImpact      = flex ? flexRefund : −sellerShipping   ← RETIDO
+otherCosts          = otherCosts                     ← RETIDO
+netRevenue          = grossRevenue − feeAmount + shippingImpact + estornoEffective
+                      − discountEffective − otherCosts − Σ returnShipping + Σ refundedAmount
 actualUnitCost      = puxado do lote vinculado
-proportionalCost    = quantitySold × actualUnitCost
+proportionalCost    = costedQty × actualUnitCost     ← só 'Estoque' libera o CMV
 grossProfit         = grossRevenue − proportionalCost
 netProfit           = netRevenue − proportionalCost
-netMargin           = netProfit / grossRevenue
+netMargin           = netProfit / (grossRevenue > 0 ? grossRevenue : Q × P)
 ```
+
+**Prejuízo da devolução** (contrafactual — quanto a venda deixou de gerar):
+
+```
+baselineNetProfit = (venda sem NENHUMA devolução).netProfit
+returnLoss        = baselineNetProfit − netProfit        ← PODE SER NEGATIVO
+```
+
+`returnLoss` fica negativo quando o ressarcimento supera o que a venda renderia
+(ex.: plataforma devolve o valor cheio e o desconto concedido também é revertido).
+**Nunca clampar em zero** em nenhum ponto do pipeline.
+
+Cada devolução tem sua parcela exata (`ComputedReturn.lossAmount`), e a soma das
+parcelas de uma venda é idêntica ao `returnLoss` dela — é o que faz
+"por devolução → por venda → KPI do dashboard" fechar no centavo. A taxa retida
+**não** entra nessa conta: ela é cobrada nos dois cenários e cancela na diferença.
+
+**Sem devoluções** (`qr = 0`, `r = 0`) todas as fórmulas colapsam exatamente nas
+anteriores — dado existente não muda de valor.
 
 ### KPIs Consolidados (`KpiSummary`)
 
@@ -258,9 +331,21 @@ totalFees           = soma feeAmount de vendas Concluídas
 grossProfit         = soma grossProfit de vendas Concluídas
 netProfit           = soma netProfit de vendas Concluídas
 netMargin           = netProfit / grossRevenue
-totalSold           = soma quantitySold de vendas Concluídas
-averageTicket       = grossRevenue / totalSold
+totalSold           = soma effectiveQuantity (LÍQUIDA de devoluções)
+grossUnitsSold      = soma quantitySold (bruta — denominador da taxa)
+returnedUnits       = soma returnedQuantity
+returnRate          = returnedUnits / grossUnitsSold
+returnLoss          = soma returnLoss (pode ser negativo)
+returnShippingCost  = soma dos fretes de devolução pagos
+returnRefunds       = soma dos valores ressarcidos
+pendingReturnValue  = valor bruto das devoluções ainda Solicitadas
+averageTicket       = grossRevenue / nº de vendas com grossRevenue > 0
 ```
+
+A base de agregação deixou de ser `status === 'Concluída'` e passou a ser o
+predicado `countsAsRevenue`, que inclui vendas `Devolvida` **com** devolução
+vinculada (contribuindo receita 0 e seus custos retidos) e mantém excluídas as
+`Cancelada`, `Em disputa` e as `Devolvida` legadas marcadas à mão.
 
 ---
 

@@ -4,6 +4,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
+import { QuickActionsService } from '../../core/services/quick-actions.service';
+import { remainingReturnable } from '../../core/services/calculations';
 import { Sale, ComputedSale, SaleStatus } from '../../core/models/models';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
@@ -54,6 +56,7 @@ export class SalesComponent {
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(DialogService);
   private readonly t = inject(TranslateService);
+  private readonly quick = inject(QuickActionsService);
   protected readonly bp = inject(BreakpointService);
 
   protected readonly textFilter = signal('');
@@ -77,6 +80,7 @@ export class SalesComponent {
     { value: 'netProfit:desc', labelKey: 'sales.colNetProfit' },
     { value: 'netMargin:asc', labelKey: 'sales.colMargin' },
     { value: 'quantitySold:desc', labelKey: 'sales.colQty' },
+    { value: 'returnLoss:desc', labelKey: 'sales.colReturnLoss' },
   ];
 
   protected readonly mobileSortValue = computed(() => {
@@ -100,7 +104,8 @@ export class SalesComponent {
     quantitySold: row => row.quantitySold,
     netProfit: row => row.netProfit,
     netMargin: row => row.netMargin,
-    status: row => this.STATUS_PRIORITY[row.status] ?? 99,
+    status: row => this.STATUS_PRIORITY[row.effectiveStatus] ?? 99,
+    returnLoss: row => row.returnLoss,
   };
 
   constructor() {
@@ -159,9 +164,9 @@ export class SalesComponent {
     }
     const qf = this.quickFilter();
     // Lucro/prejuízo só fazem sentido em vendas concluídas — cancelada não realizou resultado.
-    if (qf === 'loss') vs = vs.filter(v => v.netProfit < 0 && v.status === 'Concluída');
-    else if (qf === 'profit') vs = vs.filter(v => v.netProfit > 0 && v.status === 'Concluída');
-    else if (qf === 'low-margin') vs = vs.filter(v => v.netMargin < this.minimumMargin() && v.status === 'Concluída');
+    if (qf === 'loss') vs = vs.filter(v => v.netProfit < 0 && v.countsAsRevenue);
+    else if (qf === 'profit') vs = vs.filter(v => v.netProfit > 0 && v.countsAsRevenue);
+    else if (qf === 'low-margin') vs = vs.filter(v => v.netMargin < this.minimumMargin() && v.countsAsRevenue);
     return [...vs].sort((a, b) => {
       const byDate = b.saleDate.localeCompare(a.saleDate);
       if (byDate !== 0) return byDate;
@@ -196,7 +201,7 @@ export class SalesComponent {
   });
 
   protected readonly summary = computed(() => {
-    const completed = this.filteredSales().filter(v => v.status === 'Concluída');
+    const completed = this.filteredSales().filter(v => v.countsAsRevenue);
     const revenue = completed.reduce((s, v) => s + v.grossRevenue, 0);
     const profit = completed.reduce((s, v) => s + v.netProfit, 0);
     return {
@@ -209,7 +214,7 @@ export class SalesComponent {
 
   protected readonly quickCounts = computed(() => {
     const all = this.sales();
-    const completed = all.filter(v => v.status === 'Concluída');
+    const completed = all.filter(v => v.countsAsRevenue);
     const min = this.minimumMargin();
     return {
       all: all.length,
@@ -228,6 +233,20 @@ export class SalesComponent {
 
   protected openNew(): void {
     this.openForm();
+  }
+
+  /** Unidades ainda devolvíveis — 0 desabilita a ação de registrar devolução. */
+  protected remainingReturnable(v: ComputedSale): number {
+    return remainingReturnable(v, this.data.returns());
+  }
+
+  protected canRegisterReturn(v: ComputedSale): boolean {
+    return v.countsAsRevenue && this.remainingReturnable(v) > 0;
+  }
+
+  protected registerReturn(v: ComputedSale, event: Event): void {
+    event.stopPropagation();
+    this.quick.openNewReturn(v.id);
   }
 
   protected edit(v: ComputedSale, event: Event): void {
@@ -250,13 +269,15 @@ export class SalesComponent {
       .afterClosed()
       .subscribe(confirmed => {
         if (!confirmed) return;
-        /* Snapshot cru ANTES de remover — é ele que o desfazer restaura. */
+        /* Snapshot cru ANTES de remover — é ele que o desfazer restaura.
+           Inclui as devoluções, que saem em cascata junto com a venda. */
         const raw = this.data.findSale(v.id);
+        const rawReturns = this.data.returnsForSale(v.id);
         this.data.removeSale(v.id);
         if (raw) {
           this.notify.withUndo(
             this.t.instant('sales.deletedUndo', { id: v.id }),
-            () => this.data.addSale(raw),
+            () => this.data.restoreSale(raw, rawReturns),
           );
         } else {
           this.notify.success(this.t.instant('sales.removed', { id: v.id }));
@@ -286,7 +307,7 @@ export class SalesComponent {
 
   /** Tom do dot de status do record-card mobile. */
   protected statusKindFor(v: ComputedSale): string {
-    switch (v.status) {
+    switch (v.effectiveStatus) {
       case 'Concluída': return 'success';
       case 'Em disputa': return 'warning';
       case 'Devolvida': return 'danger';
