@@ -122,10 +122,12 @@ export class DashboardComponent {
     const netProfit = sales.reduce((s, v) => s + v.netProfit, 0);
     const grossProfit = sales.reduce((s, v) => s + v.grossProfit, 0);
     const proportionalCost = sales.reduce((s, v) => s + v.proportionalCost, 0);
-    const totalShipping = sales.reduce((s, v) => s + (v.shippingType === 'flex' ? 0 : v.sellerShipping), 0);
-    const totalFlexRefund = sales.reduce((s, v) => s + (v.shippingType === 'flex' ? (v.flexRefund ?? 0) : 0), 0);
+    // EFETIVOS em todos os componentes: sao eles que somam para netRevenue, e a
+    // cascata do waterfall so fecha se o passo usar a mesma parcela revertida.
+    const totalShipping = sales.reduce((s, v) => s + (v.shippingType === 'flex' ? 0 : -v.shippingEffective), 0);
+    const totalFlexRefund = sales.reduce((s, v) => s + (v.shippingType === 'flex' ? v.shippingEffective : 0), 0);
     const totalDiscounts = sales.reduce((s, v) => s + v.discountEffective, 0);
-    const totalOtherCosts = sales.reduce((s, v) => s + v.otherCosts, 0);
+    const totalOtherCosts = sales.reduce((s, v) => s + v.otherCostsEffective, 0);
     const totalEstorno = sales.reduce((s, v) => s + v.estornoEffective, 0);
     // Unidades LIQUIDAS de devolucao; grossUnitsSold guarda o bruto (denominador da taxa).
     const totalSold = sales.reduce((s, v) => s + v.effectiveQuantity, 0);
@@ -139,7 +141,8 @@ export class DashboardComponent {
       grossRevenue, netRevenue, totalFees, netProfit, grossProfit,
       proportionalCost, totalShipping, totalFlexRefund, totalDiscounts, totalOtherCosts,
       totalEstorno, totalSold, netMargin, averageTicket,
-      salesCount: sales.length,
+      // Venda 100% devolvida deixa de contar como venda, igual ao ticket médio.
+      salesCount: sales.filter(v => v.effectiveQuantity > 0).length,
       // ── devolucoes (atribuidas ao periodo da VENDA original) ──
       grossUnitsSold,
       returnedUnits,

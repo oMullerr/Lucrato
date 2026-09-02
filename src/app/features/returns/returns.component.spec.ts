@@ -47,7 +47,7 @@ describe('ReturnsComponent (tela Devoluções)', () => {
   describe('summary() — KPIs do cabeçalho', () => {
     it('soma prejuízo apenas das finalizadas', () => {
       expect(cmp.summary().loss).toBeCloseTo(EXPECTED_RETURNS.kpis.returnLoss, 10);
-      expect(cmp.summary().loss).toBeCloseTo(76.5, 10);
+      expect(cmp.summary().loss).toBeCloseTo(46.6 + 2 / 3, 10);
     });
 
     it('conta unidades, pendentes, frete e ressarcimento', () => {

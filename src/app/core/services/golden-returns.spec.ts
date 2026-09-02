@@ -94,10 +94,11 @@ describe('golden overlay — com devoluções', () => {
 
   describe('KPIs consolidados', () => {
     it.each([
+      // O 2/3 vem do rateio de 1/3 sobre o Flex (4) e os outros custos (2) da V002.
       ['grossRevenue', 490],
-      ['netRevenue', 447.5],
-      ['netProfit', 112.5],
-      ['returnLoss', 76.5],
+      ['netRevenue', 477.4 - 2 / 3],
+      ['netProfit', 142.4 - 2 / 3],
+      ['returnLoss', 46.6 + 2 / 3],
     ] as const)('%s = %d', (key, value) => {
       expect(kpis[key] as number).toBeCloseTo(value, 10);
       expect(E.kpis[key] as number).toBeCloseTo(value, 10);

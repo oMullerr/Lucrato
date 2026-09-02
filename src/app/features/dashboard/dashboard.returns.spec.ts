@@ -100,12 +100,13 @@ describe('DashboardComponent — devoluções', () => {
   describe('ranking de produtos devolvidos', () => {
     it('soma unidades e prejuízo por produto, do pior para o melhor', () => {
       const list = cmp.topReturnedProducts();
-      // Fone BT acumula D001 (49,00) e D003 (−2,50): 2 unidades, 46,50 de perda.
-      expect(list[0].product).toBe('Fone BT');
-      expect(list[0].units).toBe(2);
-      expect(list[0].loss).toBeCloseTo(EXPECTED_RETURNS.loss.D001 + EXPECTED_RETURNS.loss.D003, 10);
-      expect(list[1].product).toBe('Caneca');
-      expect(list[1].loss).toBeCloseTo(EXPECTED_RETURNS.loss.D002, 10);
+      // Caneca perde 28,40 numa devolução só; Fone BT acumula D001 (38,87) com o
+      // ganho de D003 (−20,00) e fica em 18,87 — logo Caneca lidera o ranking.
+      expect(list[0].product).toBe('Caneca');
+      expect(list[0].loss).toBeCloseTo(EXPECTED_RETURNS.loss.D002, 10);
+      expect(list[1].product).toBe('Fone BT');
+      expect(list[1].units).toBe(2);
+      expect(list[1].loss).toBeCloseTo(EXPECTED_RETURNS.loss.D001 + EXPECTED_RETURNS.loss.D003, 10);
       const soma = list.reduce((a: number, p: any) => a + p.loss, 0);
       expect(soma).toBeCloseTo(EXPECTED_RETURNS.kpis.returnLoss, 10);
     });

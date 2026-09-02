@@ -10,9 +10,9 @@
  * motor numa base só. Cada número abaixo foi calculado à mão.
  *
  * ── Devoluções ───────────────────────────────────────────────────────────────
- *  D001 → V002  q=1  'Estoque'     FINALIZADA  frete 12  ressarc. —    perda  49,00
- *  D002 → V003  q=1  'Perda'       FINALIZADA  frete  0  ressarc. 0    perda  30,00  (V003 → Devolvida)
- *  D003 → V001  q=1  'Ressarcido'  FINALIZADA  frete  0  ressarc. 100  perda  −2,50
+ *  D001 → V002  q=1  'Estoque'     FINALIZADA  frete 12  ressarc. —    perda  38,87
+ *  D002 → V003  q=1  'Perda'       FINALIZADA  frete  0  ressarc. 0    perda  28,40  (V003 → Devolvida)
+ *  D003 → V001  q=1  'Ressarcido'  FINALIZADA  frete  0  ressarc. 100  perda  −20,00
  *  D004 → V002  q=1  'Fornecedor'  SOLICITADA  frete  8  ressarc. —    perda   0 (em risco 90)
  */
 import type { Database, Return } from '../app/core/models/models';
@@ -53,12 +53,15 @@ const unit = EXPECTED.unit;
 
 /** Prejuízo por devolução (decomposição aditiva). */
 const loss = {
-  // 90 (receita devolvida) + 12 (frete) − 53 (custo liberado ao estoque)
-  D001: 1 * 90 + 12 - unit.C001,
-  // 30 (receita devolvida); destino Perda não libera custo
-  D002: 1 * 30,
-  // 100 (receita devolvida) − 2,5 (metade do desconto de 5) − 100 (ressarcimento)
-  D003: 1 * 100 - (1 / 2) * 5 - 100,
+  // 90 (receita devolvida) − 10,80 (taxa estornada) + 1,33 (1/3 do Flex que some)
+  //   − 0,67 (1/3 dos outros custos revertidos) + 12 (frete) − 53 (custo ao estoque)
+  D001: 1 * 90 - 1 * 90 * 0.12 + (1 / 3) * 4 - (1 / 3) * 2 + 12 - unit.C001,
+  // 30 (receita devolvida) − 3,60 (taxa estornada) + 2 (Flex que some);
+  // destino Perda não libera custo
+  D002: 1 * 30 - 1 * 30 * 0.12 + 2,
+  // 100 (receita) − 10 (taxa estornada) − 7,50 (metade do frete que volta)
+  //   − 2,50 (metade do desconto) − 100 (ressarcimento)
+  D003: 1 * 100 - 1 * 100 * 0.10 - (1 / 2) * 15 - (1 / 2) * 5 - 100,
 };
 
 export const EXPECTED_RETURNS = {
@@ -74,11 +77,12 @@ export const EXPECTED_RETURNS = {
   kpis: {
     // 710 − (100 + 90 + 30)
     grossRevenue: EXPECTED.kpis.grossRevenue - (100 + 90 + 30),
-    // 577 + 2,5 (V001) − 102 (V002) − 30 (V003)
-    netRevenue: EXPECTED.kpis.netRevenue + 2.5 - 102 - 30,
+    // Δ receita líquida = −(lossAmount + custo liberado): o CMV sai do LUCRO,
+    // não da receita, então só D001 precisa somar o custo de volta.
+    netRevenue: EXPECTED.kpis.netRevenue - (loss.D001 + unit.C001) - loss.D002 - loss.D003,
     // 388 − 53: só D001 (destino Estoque) libera custo
     proportionalCost: EXPECTED.kpis.proportionalCost - unit.C001,
-    // 189 − 49 − 30 + 2,5
+    // 189 − 38,87 − 28,40 + 20
     netProfit: EXPECTED.kpis.netProfit - loss.D001 - loss.D002 - loss.D003,
     returnLoss: loss.D001 + loss.D002 + loss.D003,
 

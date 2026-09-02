@@ -151,7 +151,7 @@ export interface ComputedSale extends Sale {
   grossRevenue: number;
   /** Receita bruta da venda original (quantitySold × unitPrice). */
   originalGrossRevenue: number;
-  /** Taxa sobre a venda ORIGINAL — plataforma não estorna comissão. */
+  /** Taxa sobre a receita EFETIVA — a comissão da parcela devolvida é estornada. */
   feeAmount: number;
   netRevenue: number;
   actualUnitCost: number;
@@ -165,6 +165,10 @@ export interface ComputedSale extends Sale {
   discountEffective: number;
   /** Estorno após reversão proporcional das devoluções. */
   estornoEffective: number;
+  /** Impacto do frete original após reversão proporcional. Negativo = custo do vendedor. */
+  shippingEffective: number;
+  /** Outros custos após reversão proporcional das devoluções. */
+  otherCostsEffective: number;
   /** Unidades devolvidas em devoluções FINALIZADAS (clampado em quantitySold). */
   returnedQuantity: number;
   /** Subconjunto de returnedQuantity com destino 'Estoque'. */
@@ -202,8 +206,10 @@ export interface ComputedReturn extends Return {
   actualUnitCost: number;
   /** quantity × saleUnitPrice */
   returnedRevenue: number;
-  /** Taxa não estornada desta parcela — INFORMATIVO, não entra em lossAmount. */
-  retainedFee: number;
+  /** Taxa estornada pela plataforma nesta parcela — já embutida em lossAmount. */
+  refundedFee: number;
+  /** Frete, outros custos, desconto e estorno revertidos com a parcela devolvida. */
+  revertedSellingCosts: number;
   /** Custo liberado do CMV ('Estoque' apenas). */
   costReleased: number;
   /** Parcela exata desta devolução no returnLoss da venda. PODE SER NEGATIVA. */

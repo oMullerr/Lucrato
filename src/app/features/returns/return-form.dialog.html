@@ -226,6 +226,45 @@
             </strong>
           </div>
         </div>
+
+        <dl class="preview-breakdown">
+          <div>
+            <dt>{{ 'returnForm.breakdownRevenue' | translate }}</dt>
+            <dd class="mono text-danger">−{{ p.detail.returnedRevenue | brl }}</dd>
+          </div>
+          @if (p.detail.refundedFee > 0) {
+            <div>
+              <dt>{{ 'returnForm.breakdownFee' | translate }}</dt>
+              <dd class="mono text-success">+{{ p.detail.refundedFee | brl }}</dd>
+            </div>
+          }
+          @if (p.detail.revertedSellingCosts !== 0) {
+            <div>
+              <dt>{{ 'returnForm.breakdownSellingCosts' | translate }}</dt>
+              <dd class="mono" [class.text-success]="p.detail.revertedSellingCosts > 0">
+                {{ (p.detail.revertedSellingCosts > 0 ? '+' : '−') }}{{ (p.detail.revertedSellingCosts > 0 ? p.detail.revertedSellingCosts : -p.detail.revertedSellingCosts) | brl }}
+              </dd>
+            </div>
+          }
+          @if (p.detail.costReleased > 0) {
+            <div>
+              <dt>{{ 'returnForm.breakdownCost' | translate }}</dt>
+              <dd class="mono text-success">+{{ p.detail.costReleased | brl }}</dd>
+            </div>
+          }
+          @if (p.detail.returnShipping > 0) {
+            <div>
+              <dt>{{ 'returnForm.breakdownReturnShipping' | translate }}</dt>
+              <dd class="mono text-danger">−{{ p.detail.returnShipping | brl }}</dd>
+            </div>
+          }
+          @if (p.detail.refundedAmount) {
+            <div>
+              <dt>{{ 'returnForm.breakdownRefund' | translate }}</dt>
+              <dd class="mono text-success">+{{ p.detail.refundedAmount | brl }}</dd>
+            </div>
+          }
+        </dl>
       } @else {
         <div class="preview-stats">
           <div class="preview-headline">
@@ -245,10 +284,10 @@
             {{ 'returnForm.previewStockKept' | translate }}
           }
         </span>
-        @if (isFinalized() && p.detail.retainedFee > 0) {
+        @if (isFinalized() && p.detail.refundedFee > 0) {
           <span>
-            <app-icon name="triangle-alert" [size]="14" />
-            {{ 'returnForm.previewRetainedFee' | translate }}: {{ p.detail.retainedFee | brl }}
+            <app-icon name="rotate-ccw" [size]="14" />
+            {{ 'returnForm.previewRefundedFee' | translate }}: {{ p.detail.refundedFee | brl }}
           </span>
         }
       </div>

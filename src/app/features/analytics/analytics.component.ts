@@ -190,7 +190,9 @@ export class AnalyticsComponent {
         month: displayMonth, sortKey, qty: 0, revenue: 0, fees: 0,
         netRevenue: 0, cost: 0, profit: 0, margin: 0,
       };
-      e.qty += v.quantitySold;
+      // EFETIVA: coerente com o ranking de produtos e com KpiSummary.totalSold —
+      // uma unidade devolvida não conta como vendida no mês.
+      e.qty += v.effectiveQuantity;
       e.revenue += v.grossRevenue;
       e.fees += v.feeAmount;
       e.netRevenue += v.netRevenue;

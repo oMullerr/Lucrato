@@ -233,8 +233,8 @@ describe('ReturnFormDialogComponent', () => {
       cmp.setArrivalDate(new Date(2026, 5, 2));
       const p = cmp.preview();
       expect(p.before.netProfit).toBeCloseTo(80.6, 10);
-      expect(p.after.netProfit).toBeCloseTo(31.6, 10);
-      expect(p.loss).toBeCloseTo(49, 10);
+      expect(p.after.netProfit).toBeCloseTo(40.4 + 4 / 3, 10);
+      expect(p.loss).toBeCloseTo(38.2 + 2 / 3, 10);
       expect(p.stockBack).toBe(true);
     });
 
@@ -248,28 +248,28 @@ describe('ReturnFormDialogComponent', () => {
       expect(cmp.isFinalized()).toBe(false);
     });
 
-    it('ressarcimento integral deixa o vendedor exatamente quite', () => {
+    it('ressarcimento integral deixa o vendedor à frente pela taxa estornada', () => {
       const { cmp } = build({ saleId: 'V002' }, goldenReturnsDb({ returns: [] }));
       cmp.setRequestDate(new Date(2026, 4, 25));
       cmp.onDestinationChange('Ressarcido'); // pré-preenche 90
       cmp.setArrivalDate(new Date(2026, 5, 2));
       const p = cmp.preview();
-      // Perde 90 de receita e recupera 90. O custo da unidade continua cobrado,
-      // mas ele TAMBÉM era cobrado no cenário sem devolução — cancela na
-      // diferença. Resultado: impacto zero.
-      expect(p.loss).toBeCloseTo(0, 10);
-      expect(p.after.netProfit).toBeCloseTo(p.before.netProfit, 10);
+      // Perde 90 de receita e recupera 90, mas a taxa de 10,80 também é estornada;
+      // só 2/3 disso escapa pelo Flex e outros custos que somem junto. O custo da
+      // unidade continua cobrado nos dois cenários e cancela na diferença.
+      expect(p.loss).toBeCloseTo(-(10.8 - 2 / 3), 10);
+      expect(p.after.netProfit).toBeGreaterThan(p.before.netProfit);
       expect(p.stockBack).toBe(false);
-      expect(cmp.lossClass()).toBe('');
+      expect(cmp.lossClass()).toBe('text-success');
     });
 
-    it('com ressarcimento integral, o prejuízo é exatamente o frete da devolução', () => {
+    it('com ressarcimento integral, o frete da devolução supera a taxa estornada', () => {
       const { cmp } = build({ saleId: 'V002' }, goldenReturnsDb({ returns: [] }));
       cmp.setRequestDate(new Date(2026, 4, 25));
       cmp.onDestinationChange('Ressarcido');
       cmp.setNum('returnShipping', 18);
       cmp.setArrivalDate(new Date(2026, 5, 2));
-      expect(cmp.preview().loss).toBeCloseTo(18, 10);
+      expect(cmp.preview().loss).toBeCloseTo(18 - (10.8 - 2 / 3), 10);
       expect(cmp.lossClass()).toBe('text-danger');
     });
 

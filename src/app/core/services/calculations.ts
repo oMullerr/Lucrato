@@ -102,6 +102,8 @@ interface SaleFinancials {
   feeAmount: number;
   discountEffective: number;
   estornoEffective: number;
+  shippingEffective: number;
+  otherCostsEffective: number;
   netRevenue: number;
   proportionalCost: number;
   grossProfit: number;
@@ -125,9 +127,11 @@ interface SaleFinancials {
  * com devoluções viraria risco de divergência.
  *
  * Regras (travadas com o usuário):
- *  - receita bruta, desconto e estorno são revertidos PROPORCIONALMENTE;
- *  - taxa da plataforma, frete original e outros custos são RETIDOS integralmente;
- *  - só o destino 'Estoque' libera o custo da mercadoria (CMV).
+ *  - TUDO que escala com a quantidade vendida é revertido PROPORCIONALMENTE:
+ *    receita bruta, taxa da plataforma, frete original, outros custos, desconto
+ *    e estorno. Uma devolução total deixa a venda como se nunca tivesse existido;
+ *  - só o destino 'Estoque' libera o custo da mercadoria (CMV);
+ *  - frete DA devolução e ressarcimento são caixa novo: entram por inteiro.
  */
 function saleFinancials(sale: Sale, actualUnitCost: number, returns: Return[]): SaleFinancials {
   const linked = returns.filter(r => r.saleId === sale.id);
@@ -153,34 +157,39 @@ function saleFinancials(sale: Sale, actualUnitCost: number, returns: Return[]): 
 
   const originalGrossRevenue = Q * P;
   const grossRevenue = effectiveQuantity * P;
-  // Taxa NÃO é estornada pela plataforma — incide sobre a venda original.
-  const feeAmount = originalGrossRevenue * sale.feePercentage;
-  // Frete original também não volta: mantido integral nos dois cenários.
-  const shippingImpact = saleShippingImpact(sale);
+  // Taxa incide sobre a receita EFETIVA: a plataforma estorna a comissão da
+  // parcela devolvida. O valor integral fica reservado para o contrafactual.
+  const originalFeeAmount = originalGrossRevenue * sale.feePercentage;
+  const feeAmount = grossRevenue * sale.feePercentage;
+  // Frete original e outros custos voltam junto com a receita — a venda
+  // devolvida não pode deixar custo de venda para trás.
+  const fullShippingImpact = saleShippingImpact(sale);
+  const shippingEff = fullShippingImpact * (1 - ratio);
+  const otherCostsEff = sale.otherCosts * (1 - ratio);
   const discountEff = sale.discount * (1 - ratio);
   const estornoEff = (sale.estorno ?? 0) * (1 - ratio);
 
   const returnShippingTotal = finalized.reduce((s, r) => s + r.returnShipping, 0);
   const returnRefundTotal = finalized.reduce((s, r) => s + (r.refundedAmount ?? 0), 0);
 
-  const netRevenue = grossRevenue - feeAmount + shippingImpact + estornoEff
-    - discountEff - sale.otherCosts - returnShippingTotal + returnRefundTotal;
+  const netRevenue = grossRevenue - feeAmount + shippingEff + estornoEff
+    - discountEff - otherCostsEff - returnShippingTotal + returnRefundTotal;
 
   const proportionalCost = costedQuantity * actualUnitCost;
   const grossProfit = grossRevenue - proportionalCost;
   const netProfit = netRevenue - proportionalCost;
 
-  // Contrafactual: o que a venda teria dado sem NENHUMA devolução.
-  const baselineNetRevenue = originalGrossRevenue - feeAmount + shippingImpact
+  // Contrafactual: o que a venda teria dado sem NENHUMA devolução. Usa os
+  // valores ÍNTEGROS — é a única coisa que não pode enxergar a reversão.
+  const baselineNetRevenue = originalGrossRevenue - originalFeeAmount + fullShippingImpact
     + (sale.estorno ?? 0) - sale.discount - sale.otherCosts;
   const baselineNetProfit = baselineNetRevenue - Q * actualUnitCost;
   // PODE SER NEGATIVO (ressarcimento integral + desconto não concedido deixam
   // o vendedor à frente). Nunca aplicar Math.max(0, ...) aqui nem a jusante.
   //
-  // Note que a taxa retida NÃO aparece nesta diferença: ela é cobrada tanto no
-  // cenário real quanto no contrafactual, então cancela. Ela é exibida como
-  // linha informativa separada (ComputedReturn.retainedFee) — somá-la aqui
-  // seria contagem dupla.
+  // Numa devolução 100% com destino 'Estoque', sem frete nem ressarcimento,
+  // netProfit zera e returnLoss vira exatamente baselineNetProfit: você deixa
+  // de ganhar o lucro da venda, nada além disso.
   const returnLoss = baselineNetProfit - netProfit;
 
   // Quando a venda foi 100% devolvida, grossRevenue = 0 e a margem seria 0/0.
@@ -197,6 +206,8 @@ function saleFinancials(sale: Sale, actualUnitCost: number, returns: Return[]): 
     feeAmount,
     discountEffective: discountEff,
     estornoEffective: estornoEff,
+    shippingEffective: shippingEff,
+    otherCostsEffective: otherCostsEff,
     netRevenue,
     proportionalCost,
     grossProfit,
@@ -308,6 +319,8 @@ export function calculateSale(
     feeAmount: f.feeAmount,
     discountEffective: f.discountEffective,
     estornoEffective: f.estornoEffective,
+    shippingEffective: f.shippingEffective,
+    otherCostsEffective: f.otherCostsEffective,
     netRevenue: f.netRevenue,
     actualUnitCost,
     proportionalCost: f.proportionalCost,
@@ -346,16 +359,24 @@ export function computeReturn(
 
   const returnedRevenue = ret.quantity * P;
   const costReleased = ret.destination === 'Estoque' ? ret.quantity * actualUnitCost : 0;
+  const refundedFee = returnedRevenue * (sale?.feePercentage ?? 0);
+  // Frete original, outros custos, desconto e estorno da parcela devolvida,
+  // agrupados com o sinal "quanto você recupera". Fecha a conta do painel:
+  // lossAmount = receita − taxa − custos de venda + frete devol. − ressarc. − CMV
+  const revertedSellingCosts = sale
+    ? -share * saleShippingImpact(sale) + share * sale.otherCosts
+      + share * sale.discount - share * (sale.estorno ?? 0)
+    : 0;
 
   // Decomposição ADITIVA exata do returnLoss da venda: somando lossAmount sobre
   // as devoluções finalizadas de uma venda obtém-se exatamente
   // `baselineNetProfit − netProfit`. É o que faz a reconciliação
   // "por devolução → por venda → KPI do dashboard" fechar no centavo.
-  // A taxa retida NÃO entra aqui de propósito (cancela no contrafactual).
+  // Cada termo é a parcela devolvida do componente correspondente da venda.
   const lossAmount = sale
     ? returnedRevenue
-      + share * (sale.estorno ?? 0)
-      - share * sale.discount
+      - refundedFee
+      - revertedSellingCosts
       + ret.returnShipping
       - (ret.refundedAmount ?? 0)
       - costReleased
@@ -371,7 +392,8 @@ export function computeReturn(
     saleQuantity: Q,
     actualUnitCost,
     returnedRevenue,
-    retainedFee: returnedRevenue * (sale?.feePercentage ?? 0),
+    refundedFee,
+    revertedSellingCosts,
     costReleased,
     lossAmount,
     orphan: !sale,
@@ -389,13 +411,15 @@ export function calculateKpis(
   const idleCapital = computedPurchases.reduce((s, c) => s + c.idleValue, 0);
   const grossRevenue = completed.reduce((s, v) => s + v.grossRevenue, 0);
   const totalFees = completed.reduce((s, v) => s + v.feeAmount, 0);
-  const totalShipping = completed.reduce((s, v) => s + (v.shippingType === 'flex' ? 0 : v.sellerShipping), 0);
-  const totalFlexRefund = completed.reduce((s, v) => s + (v.shippingType === 'flex' ? (v.flexRefund ?? 0) : 0), 0);
   // EFETIVOS: precisam casar com netRevenue, senão a cascata do dashboard não
-  // fecha quando há devolução (o desconto revertido sumiria da conta).
+  // fecha quando há devolução (o componente revertido sumiria da conta).
+  // shippingEffective já é o impacto com sinal: negativo custeia o frete do
+  // vendedor, positivo é reembolso do Flex.
+  const totalShipping = completed.reduce((s, v) => s + (v.shippingType === 'flex' ? 0 : -v.shippingEffective), 0);
+  const totalFlexRefund = completed.reduce((s, v) => s + (v.shippingType === 'flex' ? v.shippingEffective : 0), 0);
   const totalDiscounts = completed.reduce((s, v) => s + v.discountEffective, 0);
   const totalEstorno = completed.reduce((s, v) => s + v.estornoEffective, 0);
-  const totalOtherCosts = completed.reduce((s, v) => s + v.otherCosts, 0);
+  const totalOtherCosts = completed.reduce((s, v) => s + v.otherCostsEffective, 0);
   const netRevenue = completed.reduce((s, v) => s + v.netRevenue, 0);
   const grossProfit = completed.reduce((s, v) => s + v.grossProfit, 0);
   const netProfit = completed.reduce((s, v) => s + v.netProfit, 0);

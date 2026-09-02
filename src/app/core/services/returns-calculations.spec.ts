@@ -6,8 +6,8 @@
  * que uma quebra aponte QUAL termo mudou, nunca um decimal solto.
  *
  * Regras travadas com o usuário:
- *  - receita bruta, desconto e estorno revertem PROPORCIONALMENTE;
- *  - taxa da plataforma, frete original e outros custos são RETIDOS;
+ *  - receita bruta, taxa, frete original, outros custos, desconto e estorno
+ *    revertem PROPORCIONALMENTE — a parcela devolvida some da venda;
  *  - só o destino 'Estoque' devolve a unidade ao lote e libera o CMV;
  *  - devolução 'Solicitado' (sem data de chegada) não move NENHUM valor.
  */
@@ -67,27 +67,27 @@ describe('devoluções — cenário (a) destino Estoque, parcial', () => {
   });
   const sale = calculateSale(SALE_A, [BATCH_53], [ret]);
 
-  it('reverte a receita proporcionalmente e retém a taxa integral', () => {
+  it('reverte receita e taxa proporcionalmente', () => {
     expect(sale.effectiveQuantity).toBe(3 - 1);
     expect(sale.grossRevenue).toBe(2 * 90);
     expect(sale.originalGrossRevenue).toBe(3 * 90);
-    // Taxa incide sobre a venda ORIGINAL — a plataforma não estorna comissão.
-    expect(sale.feeAmount).toBeCloseTo(3 * 90 * 0.12, 10);
+    // Taxa incide sobre a receita EFETIVA — a comissão da unidade devolvida volta.
+    expect(sale.feeAmount).toBeCloseTo(2 * 90 * 0.12, 10);
   });
 
   it('calcula receita líquida, custo e lucro', () => {
-    // 180 − 32,4 + 4 (flex) − 2 (outros) − 12 (frete devolução)
-    expect(sale.netRevenue).toBeCloseTo(180 - 32.4 + 4 - 2 - 12, 10);
+    // 180 − 21,6 + 8/3 (flex de 2 un.) − 4/3 (outros de 2 un.) − 12 (frete devolução)
+    expect(sale.netRevenue).toBeCloseTo(180 - 21.6 + (2 / 3) * 4 - (2 / 3) * 2 - 12, 10);
     expect(sale.costedQuantity).toBe(3 - 1);
     expect(sale.proportionalCost).toBe(2 * 53);
-    expect(sale.netProfit).toBeCloseTo(137.6 - 106, 10);
+    expect(sale.netProfit).toBeCloseTo(40.4 + 4 / 3, 10);
   });
 
   it('mede o lucro perdido contra o contrafactual sem devolução', () => {
     const baseline = calculateSale(SALE_A, [BATCH_53]);
     expect(baseline.netProfit).toBeCloseTo(80.6, 10);
-    expect(sale.returnLoss).toBeCloseTo(80.6 - 31.6, 10);
-    expect(sale.returnLoss).toBeCloseTo(49, 10);
+    expect(sale.returnLoss).toBeCloseTo(80.6 - (40.4 + 4 / 3), 10);
+    expect(sale.returnLoss).toBeCloseTo(38.2 + 2 / 3, 10);
   });
 
   it('devolve a unidade ao estoque do lote', () => {
@@ -99,10 +99,37 @@ describe('devoluções — cenário (a) destino Estoque, parcial', () => {
 
   it('decompõe o prejuízo por devolução de forma aditiva exata', () => {
     const [computed] = [ret].map(r => computeReturn(r, [SALE_A], [BATCH_53]));
-    // 90 (receita devolvida) + 12 (frete) − 53 (custo liberado)
-    expect(computed!.lossAmount).toBeCloseTo(90 + 12 - 53, 10);
+    // 90 (receita) − 10,80 (taxa estornada) + 4/3 (flex que some) − 2/3 (outros
+    // custos revertidos) + 12 (frete devolução) − 53 (custo liberado)
+    expect(computed!.lossAmount).toBeCloseTo(90 - 10.8 + (1 / 3) * 4 - (1 / 3) * 2 + 12 - 53, 10);
     expect(computed!.lossAmount).toBeCloseTo(sale.returnLoss, 10);
     expect(computed!.costReleased).toBe(53);
+  });
+});
+
+describe('devoluções — devolução total ao estoque anula a venda', () => {
+  const ret = finalized({
+    id: 'D009', saleId: 'V001', batchId: 'C001', quantity: 2,
+    destination: 'Estoque', returnShipping: 0,
+  });
+  const sale = calculateSale(SALE_C, [BATCH_53], [ret]);
+  const baseline = calculateSale(SALE_C, [BATCH_53]);
+
+  it('não deixa NENHUM resíduo de dinheiro na venda', () => {
+    expect(sale.grossRevenue).toBe(0);
+    expect(sale.feeAmount).toBe(0);
+    expect(sale.shippingEffective).toBeCloseTo(0, 10);
+    expect(sale.otherCostsEffective).toBeCloseTo(0, 10);
+    expect(sale.discountEffective).toBeCloseTo(0, 10);
+    expect(sale.proportionalCost).toBe(0);
+    expect(sale.netRevenue).toBeCloseTo(0, 10);
+    expect(sale.netProfit).toBeCloseTo(0, 10);
+  });
+
+  it('perde exatamente o lucro que a venda geraria, nada além', () => {
+    expect(baseline.netProfit).toBeCloseTo(54, 10);
+    expect(sale.returnLoss).toBeCloseTo(baseline.netProfit, 10);
+    expect(computeReturn(ret, [SALE_C], [BATCH_53]).lossAmount).toBeCloseTo(54, 10);
   });
 });
 
@@ -113,21 +140,21 @@ describe('devoluções — cenário (b) destino Perda, total', () => {
   });
   const sale = calculateSale(SALE_B, [BATCH_10], [ret]);
 
-  it('zera o faturamento mas mantém taxa e frete como prejuízo', () => {
+  it('zera receita, taxa e frete — sobra só a mercadoria perdida', () => {
     expect(sale.grossRevenue).toBe(0);
-    expect(sale.feeAmount).toBeCloseTo(30 * 0.12, 10);
-    expect(sale.netRevenue).toBeCloseTo(0 - 3.6 + 2, 10);
+    expect(sale.feeAmount).toBe(0);
+    expect(sale.netRevenue).toBe(0);
   });
 
   it('mantém o custo da mercadoria — o produto não volta vendável', () => {
     expect(sale.costedQuantity).toBe(1);
     expect(sale.proportionalCost).toBe(10);
-    expect(sale.netProfit).toBeCloseTo(-1.6 - 10, 10);
+    expect(sale.netProfit).toBeCloseTo(-10, 10);
   });
 
   it('usa o bruto original como base da margem quando a venda foi 100% devolvida', () => {
     // Sem o fallback isto seria 0/0 → 0%, escondendo o prejuízo.
-    expect(sale.netMargin).toBeCloseTo(-11.6 / 30, 10);
+    expect(sale.netMargin).toBeCloseTo(-10 / 30, 10);
   });
 
   it('marca a venda como Devolvida e a mantém nos agregados', () => {
@@ -145,7 +172,8 @@ describe('devoluções — cenário (b) destino Perda, total', () => {
   it('reconcilia a decomposição', () => {
     const computed = computeReturn(ret, [SALE_B], [BATCH_10]);
     expect(computed.costReleased).toBe(0);
-    expect(computed.lossAmount).toBeCloseTo(30, 10);
+    // 30 (receita) − 3,60 (taxa estornada) + 2 (flex que some)
+    expect(computed.lossAmount).toBeCloseTo(30 - 3.6 + 2, 10);
     expect(computed.lossAmount).toBeCloseTo(sale.returnLoss, 10);
   });
 });
@@ -158,36 +186,37 @@ describe('devoluções — cenário (c) destino Ressarcido: returnLoss NEGATIVO'
   const sale = calculateSale(SALE_C, [BATCH_53], [ret]);
 
   it('reverte o desconto proporcionalmente', () => {
-    // Desconto de 5 numa venda de 2 un., devolvendo 1 ⇒ metade some.
-    expect(sale.netRevenue).toBeCloseTo(100 - 20 - 15 - 2.5 + 100, 10);
+    // Devolvendo 1 de 2 un., metade de cada componente some: taxa, frete e desconto.
+    expect(sale.netRevenue).toBeCloseTo(100 - 10 - 7.5 - 2.5 + 100, 10);
   });
 
   it('mantém o custo e deixa a compensação por conta do valor ressarcido', () => {
     expect(sale.costedQuantity).toBe(2);
     expect(sale.proportionalCost).toBe(2 * 53);
-    expect(sale.netProfit).toBeCloseTo(162.5 - 106, 10);
+    expect(sale.netProfit).toBeCloseTo(180 - 106, 10);
   });
 
   it('produz prejuízo NEGATIVO — o vendedor sai à frente e nada pode clampar isso', () => {
     const baseline = calculateSale(SALE_C, [BATCH_53]);
     expect(baseline.netProfit).toBeCloseTo(54, 10);
-    expect(sale.returnLoss).toBeCloseTo(54 - 56.5, 10);
+    expect(sale.returnLoss).toBeCloseTo(54 - 74, 10);
     expect(sale.returnLoss).toBeLessThan(0);
-    expect(sale.returnLoss).toBeCloseTo(-2.5, 10);
+    expect(sale.returnLoss).toBeCloseTo(-20, 10);
   });
 
   it('reconcilia a decomposição, inclusive negativa', () => {
     const computed = computeReturn(ret, [SALE_C], [BATCH_53]);
-    // 100 (receita devolvida) − 2,5 (desconto revertido) − 100 (ressarcimento)
-    expect(computed.lossAmount).toBeCloseTo(100 - 2.5 - 100, 10);
+    // 100 (receita) − 10 (taxa estornada) − 7,5 (metade do frete que volta)
+    //   − 2,5 (desconto revertido) − 100 (ressarcimento)
+    expect(computed.lossAmount).toBeCloseTo(100 - 10 - 7.5 - 2.5 - 100, 10);
     expect(computed.lossAmount).toBeCloseTo(sale.returnLoss, 10);
   });
 
-  it('expõe a taxa retida como informativo, fora do prejuízo', () => {
+  it('expõe a taxa estornada, já embutida no prejuízo', () => {
     const computed = computeReturn(ret, [SALE_C], [BATCH_53]);
-    expect(computed.retainedFee).toBeCloseTo(100 * 0.10, 10);
-    // A taxa cancela no contrafactual — somá-la ao lossAmount seria contagem dupla.
-    expect(computed.lossAmount).not.toBeCloseTo(computed.lossAmount + computed.retainedFee, 10);
+    expect(computed.refundedFee).toBeCloseTo(100 * 0.10, 10);
+    // A comissão volta junto com a receita: descontá-la de novo seria dupla contagem.
+    expect(computed.revertedSellingCosts).toBeCloseTo(7.5 + 2.5, 10);
   });
 });
 
@@ -206,9 +235,11 @@ describe('devoluções — cenário (d) destino Fornecedor', () => {
     expect(batch.returnedToStock).toBe(0);
   });
 
-  it('com ressarcimento igual à receita devolvida, sobra o frete menos o desconto revertido', () => {
+  it('com ressarcimento integral, a reversão de taxa e frete deixa o saldo negativo', () => {
     const computed = computeReturn(ret, [SALE_C], [BATCH_53]);
-    expect(computed.lossAmount).toBeCloseTo(100 - 2.5 + 7 - 100, 10);
+    // 100 (receita) − 10 (taxa) − 7,5 (metade do frete) − 2,5 (metade do desconto)
+    //   + 7 (frete devolução) − 100 (ressarcimento)
+    expect(computed.lossAmount).toBeCloseTo(100 - 10 - 7.5 - 2.5 + 7 - 100, 10);
   });
 });
 
@@ -236,7 +267,7 @@ describe('devoluções — cenário (e) duas devoluções na mesma venda', () =>
     const sale = calculateSale(withAdjustments, [BATCH_53], returns);
     const baseline = calculateSale(withAdjustments, [BATCH_53]);
     // ratio = 2/3 ⇒ sobra 1/3 de cada: desconto 10, estorno 20.
-    const expectedNet = 1 * 90 - 3 * 90 * 0.12 + 4 + 20 - 10 - 2 - 15;
+    const expectedNet = 1 * 90 - 1 * 90 * 0.12 + (1 / 3) * 4 + 20 - 10 - (1 / 3) * 2 - 15;
     expect(sale.netRevenue).toBeCloseTo(expectedNet, 10);
     expect(baseline.netRevenue).toBeCloseTo(270 - 32.4 + 4 + 60 - 30 - 2, 10);
   });
@@ -407,7 +438,7 @@ describe('(k) identidade de reconciliação por venda e por KPI', () => {
       .reduce((a, b) => a + b, 0);
     const somaPorVenda = computedSales.reduce((a, s) => a + s.returnLoss, 0);
 
-    expect(somaPorDevolucao).toBeCloseTo(49 + 30 - 2.5, 10);
+    expect(somaPorDevolucao).toBeCloseTo((38.2 + 2 / 3) + 28.4 - 20, 10);
     expect(somaPorVenda).toBeCloseTo(somaPorDevolucao, 10);
     expect(kpis.returnLoss).toBeCloseTo(somaPorVenda, 10);
   });

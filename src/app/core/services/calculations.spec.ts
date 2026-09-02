@@ -467,6 +467,11 @@ describe('calculateKpis', () => {
     const status = overrides.status ?? base.status;
     const quantitySold = overrides.quantitySold ?? base.quantitySold;
     const grossRevenue = overrides.grossRevenue ?? 200;
+    // Sem devolução, o efetivo é o íntegro — mas precisa acompanhar os overrides,
+    // senão os KPIs de frete/outros custos leem sempre zero.
+    const shippingType = overrides.shippingType ?? base.shippingType;
+    const sellerShipping = overrides.sellerShipping ?? base.sellerShipping;
+    const flexRefund = overrides.flexRefund ?? base.flexRefund;
     return {
       ...base,
       grossRevenue,
@@ -480,6 +485,8 @@ describe('calculateKpis', () => {
       netMargin: 0.275,
       discountEffective: overrides.discount ?? 0,
       estornoEffective: overrides.estorno ?? 0,
+      shippingEffective: shippingType === 'flex' ? (flexRefund ?? 0) : -sellerShipping,
+      otherCostsEffective: overrides.otherCosts ?? base.otherCosts,
       returnedQuantity: 0,
       returnedToStockQuantity: 0,
       pendingReturnQuantity: 0,
