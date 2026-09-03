@@ -25,7 +25,8 @@
     "settings": "Configuración · Lucrato",
     "profile": "Perfil · Lucrato",
     "instructions": "Instrucciones · Lucrato",
-    "returns": "Devoluciones · Lucrato"
+    "returns": "Devoluciones · Lucrato",
+    "integrations": "Integraciones · Lucrato"
   },
   "common": {
     "save": "Guardar",
@@ -67,7 +68,8 @@
     "profile": "Perfil",
     "mainNav": "Navegación principal",
     "tagline": "Gestión Mercado Livre",
-    "returns": "Devoluciones"
+    "returns": "Devoluciones",
+    "integrations": "Integraciones"
   },
   "topbar": {
     "openMenu": "Abrir menú",
@@ -998,5 +1000,36 @@
     "valRequestBeforeSale": "La solicitud no puede ser anterior a la venta ({{date}}).",
     "valArrivalBeforeRequest": "La llegada no puede ser anterior a la solicitud.",
     "valArrivalFuture": "La fecha de llegada no puede estar en el futuro."
+  },
+  "integrations": {
+    "title": "Integraciones",
+    "eyebrow": "Conexiones",
+    "subtitle": "Conectá tu cuenta de Mercado Libre para traer las ventas solas, con comisión y envío reales.",
+    "offTitle": "Mercado Libre no conectado",
+    "offMsg": "Tus ventas se siguen cargando a mano. Conectá la cuenta y Lucrato busca los pedidos por vos.",
+    "connectedTitle": "Mercado Libre conectado",
+    "connectedMsg": "Estamos siguiendo tu cuenta. Las ventas nuevas llegan solas, incluso con la app cerrada.",
+    "reconnectTitle": "Hay que reconectar",
+    "reconnectMsg": "La autorización perdió validez — suele pasar tras un cambio de contraseña o una revocación. Reconectá para volver a sincronizar.",
+    "account": "Cuenta",
+    "since": "Conectada el",
+    "lastSync": "Última sincronización",
+    "never": "Todavía no",
+    "connect": "Conectar Mercado Libre",
+    "reconnect": "Reconectar",
+    "disconnect": "Desconectar",
+    "disconnectTitle": "¿Desconectar Mercado Libre?",
+    "disconnectMsg": "Dejamos de buscar ventas nuevas y borramos las credenciales. Lo ya importado sigue en Lucrato.",
+    "disconnected": "Mercado Libre desconectado.",
+    "disconnectError": "No se pudo desconectar. Probá de nuevo.",
+    "connectError": "No se pudo iniciar la conexión. Probá de nuevo.",
+    "readsTitle": "Qué lee Lucrato de tu cuenta",
+    "readOnly": "Solo lectura: Lucrato nunca cambia precios ni stock, ni publica anuncios.",
+    "reads": {
+      "sales": "Pedidos, con la comisión que Mercado Libre cobró de verdad",
+      "shipping": "Envío que pagaste en cada despacho",
+      "returns": "Devoluciones y reclamos, con su costo real",
+      "listings": "Tus publicaciones: título, SKU, precio y stock"
+    }
   }
 }

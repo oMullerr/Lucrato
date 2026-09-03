@@ -26,4 +26,4 @@ export const mlHealth = onCall({ enforceAppCheck: false }, (request) => {
   return { ok: true as const, uid: request.auth.uid, ts: new Date().toISOString() };
 });
 
-export { mlAuthUrl, mlAuthCallback } from './ml/oauth';
+export { mlAuthUrl, mlAuthCallback, mlDisconnect } from './ml/oauth';

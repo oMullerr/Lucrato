@@ -17,6 +17,7 @@ import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 import { provideFirestore } from '@angular/fire/firestore';
 import { provideAppCheck, initializeAppCheck, ReCaptchaEnterpriseProvider } from '@angular/fire/app-check';
+import { provideFunctions, getFunctions } from '@angular/fire/functions';
 import { initializeFirestore, memoryLocalCache, persistentLocalCache } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
 
@@ -70,6 +71,8 @@ export const appConfig: ApplicationConfig = {
     provideFirestore(() => initializeFirestore(getApp(), {
       localCache: typeof indexedDB !== 'undefined' ? persistentLocalCache() : memoryLocalCache(),
     })),
+    /* Mesma regiao das functions (ver functions/src/config.ts). */
+    provideFunctions(() => getFunctions(getApp(), 'southamerica-east1')),
     ...appCheckProvider,
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
     { provide: LOCALE_ID, useValue: 'pt-BR' },

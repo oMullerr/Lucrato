@@ -192,3 +192,42 @@ export const mlAuthCallback = onRequest(
     }
   },
 );
+
+/**
+ * Desconecta a conta: apaga os tokens, tira o índice usado pelo webhook e
+ * marca o documento público. A partir daí o Mercado Livre pode até continuar
+ * mandando notificação, mas nada mais é aceito para este usuário.
+ */
+export const mlDisconnect = onCall({ enforceAppCheck: false }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Faça login para desconectar.');
+  }
+  const uid = request.auth.uid;
+
+  const secret = db().doc(`users/${uid}/secret/ml`);
+  const snap = await secret.get();
+  const mlUserId = snap.exists ? Number(snap.get('mlUserId')) : 0;
+
+  if (mlUserId) {
+    const indice = db().doc(`mlIndex/${mlUserId}`);
+    const atual = await indice.get();
+    // Só remove o índice se ele ainda aponta para este usuário.
+    if (atual.exists && atual.get('uid') === uid) await indice.delete();
+  }
+
+  await secret.delete();
+  await db().doc(`users/${uid}/db/ml`).set(
+    {
+      connected: false,
+      status: 'disconnected',
+      nickname: null,
+      mlUserId: null,
+      lastError: null,
+      updatedAt: Timestamp.now(),
+    },
+    { merge: true },
+  );
+
+  logger.info('Conta do Mercado Livre desconectada', { uid, mlUserId });
+  return { ok: true as const };
+});

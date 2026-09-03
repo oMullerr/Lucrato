@@ -25,7 +25,8 @@
     "settings": "Configurações · Lucrato",
     "profile": "Perfil · Lucrato",
     "instructions": "Instruções · Lucrato",
-    "returns": "Devoluções · Lucrato"
+    "returns": "Devoluções · Lucrato",
+    "integrations": "Integrações · Lucrato"
   },
   "common": {
     "save": "Salvar",
@@ -67,7 +68,8 @@
     "profile": "Perfil",
     "mainNav": "Navegação principal",
     "tagline": "Gestão Mercado Livre",
-    "returns": "Devoluções"
+    "returns": "Devoluções",
+    "integrations": "Integrações"
   },
   "topbar": {
     "openMenu": "Abrir menu",
@@ -998,5 +1000,36 @@
     "valRequestBeforeSale": "A solicitação não pode ser anterior à venda ({{date}}).",
     "valArrivalBeforeRequest": "A chegada não pode ser anterior à solicitação.",
     "valArrivalFuture": "A data de chegada não pode estar no futuro."
+  },
+  "integrations": {
+    "title": "Integrações",
+    "eyebrow": "Conexões",
+    "subtitle": "Conecte sua conta do Mercado Livre para trazer as vendas sozinho, com taxa e frete reais.",
+    "offTitle": "Mercado Livre não conectado",
+    "offMsg": "Suas vendas continuam sendo lançadas à mão. Conecte a conta para o Lucrato buscar os pedidos por você.",
+    "connectedTitle": "Mercado Livre conectado",
+    "connectedMsg": "Estamos acompanhando sua conta. Novas vendas chegam sozinhas, mesmo com o app fechado.",
+    "reconnectTitle": "Precisa reconectar",
+    "reconnectMsg": "A autorização perdeu a validade — costuma acontecer após troca de senha ou revogação de acesso. Reconecte para voltar a sincronizar.",
+    "account": "Conta",
+    "since": "Conectada em",
+    "lastSync": "Última sincronização",
+    "never": "Ainda não",
+    "connect": "Conectar Mercado Livre",
+    "reconnect": "Reconectar",
+    "disconnect": "Desconectar",
+    "disconnectTitle": "Desconectar o Mercado Livre?",
+    "disconnectMsg": "Paramos de buscar vendas novas e apagamos as credenciais. O que já foi importado continua no Lucrato.",
+    "disconnected": "Mercado Livre desconectado.",
+    "disconnectError": "Não deu para desconectar. Tente de novo.",
+    "connectError": "Não deu para iniciar a conexão. Tente de novo.",
+    "readsTitle": "O que o Lucrato lê da sua conta",
+    "readOnly": "Somente leitura: o Lucrato nunca altera preço, estoque nem publica anúncios.",
+    "reads": {
+      "sales": "Pedidos, com a comissão que o Mercado Livre realmente cobrou",
+      "shipping": "Frete pago por você em cada envio",
+      "returns": "Devoluções e reclamações, com o custo real",
+      "listings": "Seus anúncios: título, SKU, preço e estoque"
+    }
   }
 }

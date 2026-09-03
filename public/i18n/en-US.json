@@ -25,7 +25,8 @@
     "settings": "Settings · Lucrato",
     "profile": "Profile · Lucrato",
     "instructions": "Instructions · Lucrato",
-    "returns": "Returns · Lucrato"
+    "returns": "Returns · Lucrato",
+    "integrations": "Integrations · Lucrato"
   },
   "common": {
     "save": "Save",
@@ -67,7 +68,8 @@
     "profile": "Profile",
     "mainNav": "Main navigation",
     "tagline": "Mercado Livre Management",
-    "returns": "Returns"
+    "returns": "Returns",
+    "integrations": "Integrations"
   },
   "topbar": {
     "openMenu": "Open menu",
@@ -998,5 +1000,36 @@
     "valRequestBeforeSale": "The request cannot precede the sale ({{date}}).",
     "valArrivalBeforeRequest": "Arrival cannot precede the request.",
     "valArrivalFuture": "The arrival date cannot be in the future."
+  },
+  "integrations": {
+    "title": "Integrations",
+    "eyebrow": "Connections",
+    "subtitle": "Connect your Mercado Livre account to import sales automatically, with real fees and shipping.",
+    "offTitle": "Mercado Livre not connected",
+    "offMsg": "Your sales are still entered by hand. Connect the account and Lucrato fetches the orders for you.",
+    "connectedTitle": "Mercado Livre connected",
+    "connectedMsg": "We are watching your account. New sales arrive on their own, even with the app closed.",
+    "reconnectTitle": "Reconnection needed",
+    "reconnectMsg": "The authorization is no longer valid — usually after a password change or revoked access. Reconnect to resume syncing.",
+    "account": "Account",
+    "since": "Connected on",
+    "lastSync": "Last sync",
+    "never": "Not yet",
+    "connect": "Connect Mercado Livre",
+    "reconnect": "Reconnect",
+    "disconnect": "Disconnect",
+    "disconnectTitle": "Disconnect Mercado Livre?",
+    "disconnectMsg": "We stop fetching new sales and delete the credentials. Whatever was already imported stays in Lucrato.",
+    "disconnected": "Mercado Livre disconnected.",
+    "disconnectError": "Could not disconnect. Please try again.",
+    "connectError": "Could not start the connection. Please try again.",
+    "readsTitle": "What Lucrato reads from your account",
+    "readOnly": "Read-only: Lucrato never changes prices, stock, or publishes listings.",
+    "reads": {
+      "sales": "Orders, with the commission Mercado Livre actually charged",
+      "shipping": "Shipping you paid on each delivery",
+      "returns": "Returns and claims, with their real cost",
+      "listings": "Your listings: title, SKU, price and stock"
+    }
   }
 }

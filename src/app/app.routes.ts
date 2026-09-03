@@ -66,6 +66,12 @@ export const routes: Routes = [
     title: 'routeTitles.settings',
   },
   {
+    path: 'integracoes',
+    loadComponent: () => import('./features/integrations/integrations.component').then(m => m.IntegrationsComponent),
+    canActivate: [authGuard],
+    title: 'routeTitles.integrations',
+  },
+  {
     path: 'profile',
     loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
     canActivate: [authGuard],

@@ -1,0 +1,73 @@
+<app-page-header
+  [title]="'integrations.title' | translate"
+  [eyebrow]="'integrations.eyebrow' | translate"
+  [subtitle]="'integrations.subtitle' | translate"
+></app-page-header>
+
+<div class="page-content integrations-body">
+
+  @if (!ml.loaded()) {
+    <app-skeleton variant="card" />
+  } @else {
+    <section class="status-card" [class]="'tone-' + view().tone" aria-live="polite">
+      <div class="status-head">
+        <span class="status-icon"><app-icon [name]="view().icon" /></span>
+        <div class="status-text">
+          <h2>{{ view().titleKey | translate }}</h2>
+          <p>{{ view().messageKey | translate }}</p>
+        </div>
+      </div>
+
+      @if (ml.connected() || ml.needsReconnect()) {
+        <dl class="status-meta">
+          @if (ml.nickname()) {
+            <div>
+              <dt>{{ 'integrations.account' | translate }}</dt>
+              <dd>{{ ml.nickname() }}</dd>
+            </div>
+          }
+          @if (ml.state()?.connectedAt) {
+            <div>
+              <dt>{{ 'integrations.since' | translate }}</dt>
+              <dd>{{ formatarQuando(ml.state()!.connectedAt) }}</dd>
+            </div>
+          }
+          <div>
+            <dt>{{ 'integrations.lastSync' | translate }}</dt>
+            <dd>{{ formatarQuando(ml.state()?.lastSyncAt) }}</dd>
+          </div>
+        </dl>
+      }
+
+      <div class="status-actions">
+        @if (ml.connected()) {
+          <button appBtn="danger" [disabled]="ml.working()" (click)="confirmDisconnect()">
+            {{ 'integrations.disconnect' | translate }}
+          </button>
+        } @else {
+          <button appBtn="primary" [disabled]="ml.working()" (click)="connect()">
+            <app-icon name="store" />
+            {{ (ml.needsReconnect() ? 'integrations.reconnect' : 'integrations.connect') | translate }}
+          </button>
+        }
+      </div>
+    </section>
+
+    <!-- O que a integração faz, em português claro -->
+    <section class="info-card">
+      <h3>{{ 'integrations.readsTitle' | translate }}</h3>
+      <ul class="reads">
+        @for (item of leituras; track item.key) {
+          <li>
+            <app-icon [name]="item.icon" />
+            <span>{{ 'integrations.reads.' + item.key | translate }}</span>
+          </li>
+        }
+      </ul>
+      <p class="readonly-note">
+        <app-icon name="lock-open" />
+        {{ 'integrations.readOnly' | translate }}
+      </p>
+    </section>
+  }
+</div>

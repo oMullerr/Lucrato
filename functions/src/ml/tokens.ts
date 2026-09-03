@@ -15,7 +15,7 @@ import { logger } from 'firebase-functions/v2';
 import { ML_API } from '../config';
 
 /** Estado da conexão exposto ao app (sem nada sensível). */
-export type MlStatus = 'connected' | 'reconnect_required';
+export type MlStatus = 'connected' | 'reconnect_required' | 'disconnected';
 
 export interface MlTokens {
   accessToken: string;
