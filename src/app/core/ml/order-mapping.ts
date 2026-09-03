@@ -145,9 +145,13 @@ function descontoDoItem(item: MlOrderItem): number {
 /**
  * Um rascunho por item do pedido.
  *
- * Regra do Flex: `senders[].cost` positivo é custo do vendedor; negativo é
- * crédito a favor dele, que no Lucrato entra como estorno do frete
- * (`flexRefund`). Vale conferir contra um pedido Flex real antes de confiar.
+ * **O frete segue o sinal do dinheiro, não o tipo de logística.**
+ * O Lucrato só tem dois modos e eles são excludentes: `correios` subtrai
+ * `sellerShipping` e `flex` soma `flexRefund`. Como pedidos Flex reais chegam
+ * com `senders[].cost` POSITIVO (a conta do vendedor), classificar por tipo de
+ * logística faria esse valor sumir do lucro. Então: valor a pagar entra como
+ * custo, valor a receber entra como estorno, e o fato de ter sido Flex fica
+ * registrado nas observações.
  */
 export function mapearPedido(order: MlOrderNormalizada): RascunhoVenda[] {
   const data = diaLocalDeISO(order.dateClosed || order.dateCreated);
@@ -163,6 +167,8 @@ export function mapearPedido(order: MlOrderNormalizada): RascunhoVenda[] {
     const custoFrete = frete > 0 ? frete : 0;
     const creditoFrete = frete < 0 ? Math.abs(frete) : 0;
     const estorno = estornos[i] ?? 0;
+    // Crédito (custo negativo) é o único caso que o Lucrato trata como 'flex'.
+    const ehCredito = creditoFrete > 0;
 
     return {
       externalId: [order.orderId, item.itemId, item.variationId].filter(Boolean).join(':'),
@@ -177,13 +183,15 @@ export function mapearPedido(order: MlOrderNormalizada): RascunhoVenda[] {
       unitPrice: item.unitPrice,
       saleDate: data,
       feePercentage: fracaoDaComissao(item.saleFee, item.unitPrice, item.quantity),
-      shippingType: ehFlex ? 'flex' : 'correios',
-      sellerShipping: ehFlex ? 0 : custoFrete,
-      ...(ehFlex ? { flexRefund: creditoFrete } : {}),
+      shippingType: ehCredito ? 'flex' : 'correios',
+      sellerShipping: ehCredito ? 0 : custoFrete,
+      ...(ehCredito ? { flexRefund: creditoFrete } : {}),
       discount: descontoDoItem(item),
       ...(estorno > 0 ? { estorno: Math.round(estorno * 100) / 100 } : {}),
       status,
-      notes: `Mercado Livre · pedido ${order.orderId}`,
+      notes: ehFlex
+        ? `Mercado Livre · pedido ${order.orderId} · envio Flex`
+        : `Mercado Livre · pedido ${order.orderId}`,
     };
   });
 }

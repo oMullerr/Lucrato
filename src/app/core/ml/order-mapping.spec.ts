@@ -132,17 +132,35 @@ describe('frete', () => {
     expect(v.flexRefund).toBeUndefined();
   });
 
-  it('Flex nao cobra frete do vendedor', () => {
-    const [v] = mapearPedido(pedido({ logisticType: 'self_service', shippingCostSeller: 0 }));
-    expect(v.shippingType).toBe('flex');
-    expect(v.sellerShipping).toBe(0);
-    expect(v.flexRefund).toBe(0);
+  /**
+   * Pedidos Flex reais chegam com custo POSITIVO (medido na conta de teste:
+   * 8,01 / 7,19 / 8,09). Classificar pelo tipo de logística faria esse valor
+   * sumir do lucro, porque no Lucrato 'flex' só soma crédito.
+   */
+  it('Flex com custo real e cobrado como custo, nao descartado', () => {
+    const [v] = mapearPedido(pedido({ logisticType: 'self_service', shippingCostSeller: 8.01 }));
+    expect(v.sellerShipping).toBe(8.01);
+    expect(v.shippingType).toBe('correios');
+    expect(v.flexRefund).toBeUndefined();
   });
 
-  it('credito no Flex vira estorno de frete', () => {
+  it('marca nas observacoes que o envio foi Flex', () => {
+    const [v] = mapearPedido(pedido({ logisticType: 'self_service', shippingCostSeller: 8.01 }));
+    expect(v.notes).toContain('Flex');
+  });
+
+  it('credito vira estorno de frete, seja qual for a logistica', () => {
     const [v] = mapearPedido(pedido({ logisticType: 'self_service', shippingCostSeller: -8.5 }));
+    expect(v.shippingType).toBe('flex');
     expect(v.flexRefund).toBe(8.5);
     expect(v.sellerShipping).toBe(0);
+  });
+
+  it('frete zero nao vira credito', () => {
+    const [v] = mapearPedido(pedido({ logisticType: 'self_service', shippingCostSeller: 0 }));
+    expect(v.shippingType).toBe('correios');
+    expect(v.sellerShipping).toBe(0);
+    expect(v.flexRefund).toBeUndefined();
   });
 
   it('rateia o frete entre os itens, proporcional ao valor', () => {
