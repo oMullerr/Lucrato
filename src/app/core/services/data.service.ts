@@ -475,6 +475,8 @@ export class DataService {
       fiscal: cfg.fiscal ?? defaults.fiscal,
       dasPaidMonths: cfg.dasPaidMonths ?? defaults.dasPaidMonths,
       dasnDeclaredYears: cfg.dasnDeclaredYears ?? defaults.dasnDeclaredYears,
+      mlAutoApply: cfg.mlAutoApply ?? defaults.mlAutoApply,
+      taxPercentage: cfg.taxPercentage ?? defaults.taxPercentage,
     };
 
     return {
@@ -505,6 +507,8 @@ export class DataService {
       fiscal: DEFAULT_FISCAL_CONFIG,
       dasPaidMonths: [],
       dasnDeclaredYears: [],
+      mlAutoApply: true,
+      taxPercentage: 0,
     };
   }
 

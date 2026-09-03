@@ -26,6 +26,12 @@ export type ReturnReason =
   | 'Erro de envio'
   | 'Outro';
 
+/**
+ * Origem do registro. Ausente ⇒ tratado como 'manual' (bases antigas).
+ * Registros com origem 'mercadolivre' sao alimentados pela integracao.
+ */
+export type RecordSource = 'manual' | 'mercadolivre';
+
 /** Purchase batch */
 export interface Purchase {
   id: string;
@@ -40,6 +46,8 @@ export interface Purchase {
   purchaseShipping: number;
   otherCosts: number;
   notes?: string;
+  /** SKU do vendedor. Casa com o `seller_sku` do anuncio no Mercado Livre. */
+  sku?: string;
 }
 
 /** Individual sale */
@@ -60,6 +68,25 @@ export interface Sale {
   otherCosts: number;
   status: SaleStatus;
   notes?: string;
+
+  // --- Integracao com o Mercado Livre (ausentes em vendas digitadas a mao) ---
+  /** Origem do registro. Ausente ⇒ 'manual'. */
+  source?: RecordSource;
+  /**
+   * Chave de idempotencia da ingestao: `${orderId}:${itemId}:${fatia}`.
+   * A fatia existe porque uma venda pode ser dividida entre lotes (FIFO).
+   */
+  externalId?: string;
+  /** ID da order no Mercado Livre. Agrupa as fatias de uma mesma venda. */
+  mlOrderId?: string;
+  /** Anuncio (MLB...) que originou a venda. */
+  mlItemId?: string;
+  /** Variacao do anuncio, quando houver. */
+  mlVariationId?: string;
+  /** Carrinho: varias orders dividem um frete. */
+  mlPackId?: string;
+  /** Envio associado, de onde vem o frete real do vendedor. */
+  mlShipmentId?: string;
 }
 
 /**
@@ -92,6 +119,11 @@ export interface Return {
   /** Resolução dada pelo vendedor. */
   resolution?: string;
   notes?: string;
+
+  /** Origem do registro. Ausente ⇒ 'manual'. */
+  source?: RecordSource;
+  /** claim_id da reclamacao no Mercado Livre. Chave de idempotencia. */
+  externalId?: string;
 }
 
 export interface Settings {
@@ -119,6 +151,13 @@ export interface Settings {
   dasPaidMonths?: string[];
   /** Anos-base com DASN-SIMEI já entregue. */
   dasnDeclaredYears?: number[];
+  /**
+   * Aplicar sozinho no razao as vendas do Mercado Livre cujo anuncio ja esta
+   * vinculado a um produto com estoque. Ausente ⇒ true.
+   */
+  mlAutoApply?: boolean;
+  /** Percentual de imposto usado como padrao na calculadora. Ausente ⇒ 0. */
+  taxPercentage?: number;
 }
 
 /** Purchase with derived computed fields */
