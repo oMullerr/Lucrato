@@ -1067,6 +1067,21 @@
       "closed": "encerrado",
       "under_review": "em revisão",
       "inactive": "inativo"
-    }
+    },
+    "filters": "Filtros",
+    "searchLabel": "Buscar",
+    "searchPlaceholder": "Título, SKU ou código do anúncio",
+    "priceMin": "Preço mín.",
+    "priceMax": "Preço máx.",
+    "stockMin": "Estoque mín.",
+    "stockMax": "Estoque máx.",
+    "linkFilter": "Vínculo",
+    "filterAll": "Todos",
+    "filterUnlinked": "Sem produto",
+    "filterLinked": "Com produto",
+    "clearFilters": "Limpar filtros",
+    "summaryFiltered": "Mostrando {{shown}} de {{total}} anúncio(s), {{semVinculo}} ainda sem produto.",
+    "noMatchTitle": "Nenhum anúncio com esses filtros",
+    "noMatchMsg": "Afrouxe a busca ou as faixas de preço e estoque."
   }
 }

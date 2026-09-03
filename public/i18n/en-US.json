@@ -1067,6 +1067,21 @@
       "closed": "closed",
       "under_review": "under review",
       "inactive": "inactive"
-    }
+    },
+    "filters": "Filters",
+    "searchLabel": "Search",
+    "searchPlaceholder": "Title, SKU or listing id",
+    "priceMin": "Min price",
+    "priceMax": "Max price",
+    "stockMin": "Min stock",
+    "stockMax": "Max stock",
+    "linkFilter": "Link",
+    "filterAll": "All",
+    "filterUnlinked": "Without product",
+    "filterLinked": "With product",
+    "clearFilters": "Clear filters",
+    "summaryFiltered": "Showing {{shown}} of {{total}} listing(s), {{semVinculo}} still without a product.",
+    "noMatchTitle": "No listing matches these filters",
+    "noMatchMsg": "Loosen the search or the price and stock ranges."
   }
 }

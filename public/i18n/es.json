@@ -1067,6 +1067,21 @@
       "closed": "cerrada",
       "under_review": "en revisión",
       "inactive": "inactiva"
-    }
+    },
+    "filters": "Filtros",
+    "searchLabel": "Buscar",
+    "searchPlaceholder": "Título, SKU o código de la publicación",
+    "priceMin": "Precio mín.",
+    "priceMax": "Precio máx.",
+    "stockMin": "Stock mín.",
+    "stockMax": "Stock máx.",
+    "linkFilter": "Vínculo",
+    "filterAll": "Todos",
+    "filterUnlinked": "Sin producto",
+    "filterLinked": "Con producto",
+    "clearFilters": "Limpiar filtros",
+    "summaryFiltered": "Mostrando {{shown}} de {{total}} publicación(es), {{semVinculo}} sin producto todavía.",
+    "noMatchTitle": "Ninguna publicación con esos filtros",
+    "noMatchMsg": "Aflojá la búsqueda o los rangos de precio y stock."
   }
 }

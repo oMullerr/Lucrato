@@ -92,14 +92,33 @@ function montar(db: Database, itens: MlItem[], vinculos: MlLink[] = []) {
 
   const data = TestBed.inject(DataService);
   (data as unknown as { db: { set: (d: Database) => void } }).db.set(db);
+  type Linha = {
+    item: MlItem;
+    escolha: string;
+    salvo: string;
+    sugestao: string | null;
+    estoqueLucrato: number | null;
+  };
   const component = TestBed.inject(ListingsComponent) as unknown as {
-    linhas: () => { item: MlItem; escolha: string; salvo: string; sugestao: string | null; estoqueLucrato: number | null }[];
+    linhas: () => Linha[];
+    filtradas: () => Linha[];
+    visiveis: () => Linha[];
     pendentes: () => unknown[];
     semVinculo: () => number;
+    temFiltro: () => boolean;
     nomesDeProdutos: () => string[];
     divergente: (l: { item: MlItem; escolha: string; estoqueLucrato: number | null }) => boolean;
     escolher: (id: string, produto: string) => void;
     salvar: () => Promise<void>;
+    limparFiltros: () => void;
+    numeroOuNulo: (v: string) => number | null;
+    busca: { set: (v: string) => void };
+    precoMin: { set: (v: number | null) => void };
+    precoMax: { set: (v: number | null) => void };
+    estoqueMin: { set: (v: number | null) => void };
+    estoqueMax: { set: (v: number | null) => void };
+    filtroVinculo: { set: (v: 'todos' | 'sem' | 'com') => void };
+    pagina: { set: (v: { pageIndex: number; pageSize: number; length: number }) => void };
   };
   return { component, mlFake };
 }
@@ -224,6 +243,129 @@ describe('estoque divergente', () => {
     const l = component.linhas()[0];
     expect(l.estoqueLucrato).toBeNull();
     expect(component.divergente(l)).toBe(false);
+  });
+});
+
+describe('ordenacao', () => {
+  it('ativos vem antes dos pausados, cada grupo em ordem alfabetica', () => {
+    const { component } = montar(baseDb(), [
+      anuncio({ id: 'A', title: 'Zebra ativa', status: 'active' }),
+      anuncio({ id: 'B', title: 'Aparador pausado', status: 'paused' }),
+      anuncio({ id: 'C', title: 'Abajur ativo', status: 'active' }),
+      anuncio({ id: 'D', title: 'Zzz pausado', status: 'paused' }),
+    ]);
+    expect(component.linhas().map(l => l.item.id)).toEqual(['C', 'A', 'B', 'D']);
+  });
+
+  it('ordena respeitando acento do portugues', () => {
+    const { component } = montar(baseDb(), [
+      anuncio({ id: 'A', title: 'Óculos de sol' }),
+      anuncio({ id: 'B', title: 'Abajur' }),
+    ]);
+    expect(component.linhas().map(l => l.item.id)).toEqual(['B', 'A']);
+  });
+});
+
+describe('filtros', () => {
+  const itens = [
+    anuncio({ id: 'MLB1', title: 'Fone Bluetooth JBL Tune 510', sku: 'JBL-510', price: 199, availableQuantity: 5 }),
+    anuncio({ id: 'MLB2', title: 'Cadeira Gamer Preta', sku: 'CAD-01', price: 899, availableQuantity: 0 }),
+    anuncio({ id: 'MLB3', title: 'Pneu aro 15', sku: null, price: 450, availableQuantity: 12 }),
+  ];
+
+  it('sem filtro, mostra tudo', () => {
+    const { component } = montar(baseDb(), itens);
+    expect(component.filtradas()).toHaveLength(3);
+    expect(component.temFiltro()).toBe(false);
+  });
+
+  it('busca pelo titulo, ignorando acento e caixa', () => {
+    const { component } = montar(baseDb(), itens);
+    component.busca.set('CADEIRA');
+    expect(component.filtradas().map(l => l.item.id)).toEqual(['MLB2']);
+  });
+
+  it('busca pelo SKU', () => {
+    const { component } = montar(baseDb(), itens);
+    component.busca.set('jbl-510');
+    expect(component.filtradas().map(l => l.item.id)).toEqual(['MLB1']);
+  });
+
+  it('busca pelo codigo do anuncio', () => {
+    const { component } = montar(baseDb(), itens);
+    component.busca.set('MLB3');
+    expect(component.filtradas().map(l => l.item.id)).toEqual(['MLB3']);
+  });
+
+  it('faixa de preco corta nas duas pontas', () => {
+    const { component } = montar(baseDb(), itens);
+    component.precoMin.set(200);
+    component.precoMax.set(500);
+    expect(component.filtradas().map(l => l.item.id)).toEqual(['MLB3']);
+  });
+
+  it('faixa de estoque inclui zero quando o minimo e zero', () => {
+    const { component } = montar(baseDb(), itens);
+    component.estoqueMin.set(0);
+    component.estoqueMax.set(0);
+    expect(component.filtradas().map(l => l.item.id)).toEqual(['MLB2']);
+  });
+
+  it('filtra os que ainda nao tem produto', () => {
+    const { component } = montar(baseDb(), itens);
+    component.filtroVinculo.set('sem');
+    // Fone e Cadeira casam com os lotes; o pneu nao.
+    expect(component.filtradas().map(l => l.item.id)).toEqual(['MLB3']);
+  });
+
+  it('filtra os que ja tem produto', () => {
+    const { component } = montar(baseDb(), itens);
+    component.filtroVinculo.set('com');
+    expect(component.filtradas().map(l => l.item.id).sort()).toEqual(['MLB1', 'MLB2']);
+  });
+
+  it('limpar devolve a lista inteira', () => {
+    const { component } = montar(baseDb(), itens);
+    component.busca.set('cadeira');
+    component.precoMin.set(800);
+    expect(component.temFiltro()).toBe(true);
+
+    component.limparFiltros();
+    expect(component.temFiltro()).toBe(false);
+    expect(component.filtradas()).toHaveLength(3);
+  });
+
+  it('campo numerico vazio nao vira zero', () => {
+    const { component } = montar(baseDb(), itens);
+    expect(component.numeroOuNulo('')).toBeNull();
+    expect(component.numeroOuNulo('  ')).toBeNull();
+    expect(component.numeroOuNulo('0')).toBe(0);
+    expect(component.numeroOuNulo('12.5')).toBe(12.5);
+  });
+
+  it('filtro nao interfere no que sera salvo', () => {
+    const { component } = montar(baseDb(), itens);
+    const pendentesAntes = component.pendentes().length;
+    component.busca.set('cadeira');
+    expect(component.pendentes()).toHaveLength(pendentesAntes);
+  });
+});
+
+describe('paginacao', () => {
+  const muitos = Array.from({ length: 30 }, (_, i) =>
+    anuncio({ id: `MLB${i}`, title: `Produto ${String(i).padStart(2, '0')}` }),
+  );
+
+  it('mostra so a primeira pagina', () => {
+    const { component } = montar(baseDb(), muitos);
+    expect(component.filtradas()).toHaveLength(30);
+    expect(component.visiveis()).toHaveLength(25);
+  });
+
+  it('avanca de pagina', () => {
+    const { component } = montar(baseDb(), muitos);
+    component.pagina.set({ pageIndex: 1, pageSize: 25, length: 30 });
+    expect(component.visiveis()).toHaveLength(5);
   });
 });
 

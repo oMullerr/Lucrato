@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -18,7 +18,10 @@ import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { SelectComponent } from '../../shared/ui/select/select.component';
 import { OptionComponent } from '../../shared/ui/select/option.component';
+import { FieldComponent } from '../../shared/ui/field/field.component';
+import { InputDirective } from '../../shared/ui/field/input.directive';
 import { TooltipDirective } from '../../shared/ui/tooltip/tooltip.directive';
+import { PaginatorComponent, PageChangeEvent } from '../../shared/ui/paginator/paginator.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 
 /** Uma linha da tela: anúncio + o que sabemos sobre o vínculo dele. */
@@ -34,6 +37,11 @@ export interface LinhaAnuncio {
   estoqueLucrato: number | null;
 }
 
+/** Filtro de vínculo aplicado à lista. */
+export type FiltroVinculo = 'todos' | 'sem' | 'com';
+
+const TAMANHOS_DE_PAGINA = [25, 50, 100];
+
 @Component({
   selector: 'app-listings',
   standalone: true,
@@ -41,7 +49,8 @@ export interface LinhaAnuncio {
   imports: [
     FormsModule, RouterLink,
     PageHeaderComponent, EmptyStateComponent, SkeletonComponent,
-    ButtonComponent, IconComponent, SelectComponent, OptionComponent, TooltipDirective,
+    ButtonComponent, IconComponent, SelectComponent, OptionComponent,
+    FieldComponent, InputDirective, TooltipDirective, PaginatorComponent,
     BrlPipe, TranslateModule,
   ],
   templateUrl: './listings.component.html',
@@ -56,6 +65,32 @@ export class ListingsComponent {
   /** Escolhas mexidas pelo usuário nesta sessão, por id de anúncio. */
   private readonly escolhas = signal<Record<string, string>>({});
   protected readonly salvando = signal(false);
+
+  /* ---------- filtros ---------- */
+  protected readonly busca = signal('');
+  protected readonly precoMin = signal<number | null>(null);
+  protected readonly precoMax = signal<number | null>(null);
+  protected readonly estoqueMin = signal<number | null>(null);
+  protected readonly estoqueMax = signal<number | null>(null);
+  protected readonly filtroVinculo = signal<FiltroVinculo>('todos');
+
+  protected readonly pagina = signal<PageChangeEvent>({
+    pageIndex: 0,
+    pageSize: TAMANHOS_DE_PAGINA[0],
+    length: 0,
+  });
+  protected readonly tamanhosDePagina = TAMANHOS_DE_PAGINA;
+
+  constructor() {
+    // Mudou o filtro e a página atual deixou de existir: volta para a primeira.
+    effect(() => {
+      const total = this.filtradas().length;
+      const p = this.pagina();
+      if (p.pageIndex > 0 && p.pageIndex * p.pageSize >= total) {
+        this.pagina.set({ ...p, pageIndex: 0, length: total });
+      }
+    }, { allowSignalWrites: true });
+  }
 
   /** Produtos disponíveis para vincular: nomes distintos vindos das compras. */
   protected readonly produtos = computed<ProdutoCandidato[]>(() => {
@@ -91,7 +126,7 @@ export class ListingsComponent {
     const candidatos = this.produtos();
     const estoques = this.estoquePorChave();
 
-    return itens.map(item => {
+    const linhas = itens.map(item => {
       const salvo = vinculos.get(item.id)?.produto ?? '';
       let escolha = salvo;
       let sugestao: 'sku' | 'titulo' | null = null;
@@ -114,7 +149,54 @@ export class ListingsComponent {
         estoqueLucrato: chave ? estoques.get(chave) ?? 0 : null,
       };
     });
+
+    // Ativos primeiro — é neles que se mexe — e dentro de cada grupo, alfabético.
+    return linhas.sort((a, b) => {
+      const ativoA = a.item.status === 'active' ? 0 : 1;
+      const ativoB = b.item.status === 'active' ? 0 : 1;
+      if (ativoA !== ativoB) return ativoA - ativoB;
+      return (a.item.title ?? '').localeCompare(b.item.title ?? '', 'pt-BR');
+    });
   });
+
+  protected readonly filtradas = computed<LinhaAnuncio[]>(() => {
+    const termo = normalizarChaveProduto(this.busca());
+    const pMin = this.precoMin();
+    const pMax = this.precoMax();
+    const eMin = this.estoqueMin();
+    const eMax = this.estoqueMax();
+    const vinculo = this.filtroVinculo();
+
+    return this.linhas().filter(l => {
+      if (termo) {
+        // Busca no título, no SKU e no id — é por um dos três que se procura.
+        const alvo = normalizarChaveProduto(
+          `${l.item.title} ${l.item.sku ?? ''} ${l.item.id}`,
+        );
+        if (!alvo.includes(termo)) return false;
+      }
+      if (pMin !== null && l.item.price < pMin) return false;
+      if (pMax !== null && l.item.price > pMax) return false;
+      if (eMin !== null && l.item.availableQuantity < eMin) return false;
+      if (eMax !== null && l.item.availableQuantity > eMax) return false;
+      if (vinculo === 'sem' && l.escolha) return false;
+      if (vinculo === 'com' && !l.escolha) return false;
+      return true;
+    });
+  });
+
+  protected readonly visiveis = computed<LinhaAnuncio[]>(() => {
+    const { pageIndex, pageSize } = this.pagina();
+    const inicio = pageIndex * pageSize;
+    return this.filtradas().slice(inicio, inicio + pageSize);
+  });
+
+  protected readonly temFiltro = computed(() =>
+    this.busca().trim() !== '' ||
+    this.precoMin() !== null || this.precoMax() !== null ||
+    this.estoqueMin() !== null || this.estoqueMax() !== null ||
+    this.filtroVinculo() !== 'todos',
+  );
 
   /** O que ainda não está gravado — é o que o botão salvar envia. */
   protected readonly pendentes = computed(() =>
@@ -132,6 +214,21 @@ export class ListingsComponent {
 
   protected escolher(itemId: string, produto: string): void {
     this.escolhas.update(m => ({ ...m, [itemId]: produto ?? '' }));
+  }
+
+  /** Campos numéricos ficam nulos quando vazios, para não filtrar por zero. */
+  protected numeroOuNulo(valor: string): number | null {
+    const n = Number(valor);
+    return valor.trim() === '' || !isFinite(n) ? null : n;
+  }
+
+  protected limparFiltros(): void {
+    this.busca.set('');
+    this.precoMin.set(null);
+    this.precoMax.set(null);
+    this.estoqueMin.set(null);
+    this.estoqueMax.set(null);
+    this.filtroVinculo.set('todos');
   }
 
   protected async sincronizar(): Promise<void> {

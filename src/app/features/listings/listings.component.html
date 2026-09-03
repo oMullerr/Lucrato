@@ -35,9 +35,60 @@
     </app-empty-state>
   } @else {
 
+    <section class="filtros" [attr.aria-label]="'listings.filters' | translate">
+      <app-field class="f-busca" [label]="'listings.searchLabel' | translate">
+        <input
+          appInput
+          type="search"
+          [placeholder]="'listings.searchPlaceholder' | translate"
+          [ngModel]="busca()"
+          (ngModelChange)="busca.set($event)"
+        />
+      </app-field>
+
+      <app-field class="f-num" [label]="'listings.priceMin' | translate">
+        <input appInput type="number" min="0" step="0.01" inputmode="decimal"
+          [ngModel]="precoMin()" (ngModelChange)="precoMin.set(numeroOuNulo($event))" />
+      </app-field>
+
+      <app-field class="f-num" [label]="'listings.priceMax' | translate">
+        <input appInput type="number" min="0" step="0.01" inputmode="decimal"
+          [ngModel]="precoMax()" (ngModelChange)="precoMax.set(numeroOuNulo($event))" />
+      </app-field>
+
+      <app-field class="f-num" [label]="'listings.stockMin' | translate">
+        <input appInput type="number" min="0" step="1" inputmode="numeric"
+          [ngModel]="estoqueMin()" (ngModelChange)="estoqueMin.set(numeroOuNulo($event))" />
+      </app-field>
+
+      <app-field class="f-num" [label]="'listings.stockMax' | translate">
+        <input appInput type="number" min="0" step="1" inputmode="numeric"
+          [ngModel]="estoqueMax()" (ngModelChange)="estoqueMax.set(numeroOuNulo($event))" />
+      </app-field>
+
+      <app-field class="f-vinculo" [label]="'listings.linkFilter' | translate">
+        <app-select [ngModel]="filtroVinculo()" (ngModelChange)="filtroVinculo.set($event)">
+          <app-option [value]="'todos'">{{ 'listings.filterAll' | translate }}</app-option>
+          <app-option [value]="'sem'">{{ 'listings.filterUnlinked' | translate }}</app-option>
+          <app-option [value]="'com'">{{ 'listings.filterLinked' | translate }}</app-option>
+        </app-select>
+      </app-field>
+
+      @if (temFiltro()) {
+        <button appBtn="ghost" class="f-limpar" (click)="limparFiltros()">
+          <app-icon name="filter-x" />
+          {{ 'listings.clearFilters' | translate }}
+        </button>
+      }
+    </section>
+
     <div class="toolbar">
       <p class="resumo">
-        {{ 'listings.summary' | translate:{ total: linhas().length, semVinculo: semVinculo() } }}
+        @if (temFiltro()) {
+          {{ 'listings.summaryFiltered' | translate:{ shown: filtradas().length, total: linhas().length, semVinculo: semVinculo() } }}
+        } @else {
+          {{ 'listings.summary' | translate:{ total: linhas().length, semVinculo: semVinculo() } }}
+        }
       </p>
       @if (pendentes().length > 0) {
         <button appBtn="primary" [disabled]="salvando()" (click)="salvar()">
@@ -46,72 +97,94 @@
       }
     </div>
 
-    <div class="tabela-wrap">
-      <table class="tabela">
-        <thead>
-          <tr>
-            <th scope="col">{{ 'listings.colItem' | translate }}</th>
-            <th scope="col" class="num">{{ 'listings.colPrice' | translate }}</th>
-            <th scope="col" class="num">{{ 'listings.colStock' | translate }}</th>
-            <th scope="col">{{ 'listings.colProduct' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (l of linhas(); track l.item.id) {
-            <tr [class.pendente]="l.escolha !== l.salvo">
-              <td class="anuncio">
-                @if (l.item.thumbnail) {
-                  <img [src]="l.item.thumbnail" [alt]="l.item.title" loading="lazy" width="40" height="40" />
-                }
-                <div class="anuncio-texto">
-                  <a [href]="l.item.permalink" target="_blank" rel="noopener noreferrer">{{ l.item.title }}</a>
-                  <small>
-                    {{ l.item.id }}
-                    @if (l.item.sku) { · {{ 'listings.sku' | translate }} {{ l.item.sku }} }
-                    @if (l.item.status !== 'active') { · {{ 'listings.status.' + l.item.status | translate }} }
-                  </small>
-                </div>
-              </td>
-
-              <td class="num">{{ l.item.price | brl }}</td>
-
-              <td class="num">
-                <span
-                  [class.divergente]="divergente(l)"
-                  [appTooltip]="divergente(l)
-                    ? ('listings.stockMismatch' | translate:{ ml: l.item.availableQuantity, lucrato: l.estoqueLucrato })
-                    : ''"
-                >
-                  {{ l.item.availableQuantity }}
-                  @if (divergente(l)) { <app-icon name="triangle-alert" /> }
-                </span>
-              </td>
-
-              <td class="vinculo">
-                <app-select
-                  [ngModel]="l.escolha"
-                  (ngModelChange)="escolher(l.item.id, $event)"
-                  [placeholder]="'listings.pickProduct' | translate"
-                  [searchable]="true"
-                  [searchPlaceholder]="'listings.searchProduct' | translate"
-                >
-                  <app-option [value]="''" [label]="'listings.noLink' | translate" />
-                  @for (nome of nomesDeProdutos(); track nome) {
-                    <app-option [value]="nome" [label]="nome" />
-                  }
-                </app-select>
-
-                @if (l.sugestao) {
-                  <small class="sugestao">
-                    {{ (l.sugestao === 'sku' ? 'listings.bySku' : 'listings.byTitle') | translate }}
-                  </small>
-                }
-              </td>
+    @if (filtradas().length === 0) {
+      <app-empty-state
+        icon="filter-x"
+        [title]="'listings.noMatchTitle' | translate"
+        [description]="'listings.noMatchMsg' | translate"
+      >
+        <button appBtn="outline" (click)="limparFiltros()">{{ 'listings.clearFilters' | translate }}</button>
+      </app-empty-state>
+    } @else {
+      <div class="tabela-wrap">
+        <table class="tabela">
+          <thead>
+            <tr>
+              <th scope="col">{{ 'listings.colItem' | translate }}</th>
+              <th scope="col" class="num">{{ 'listings.colPrice' | translate }}</th>
+              <th scope="col" class="num">{{ 'listings.colStock' | translate }}</th>
+              <th scope="col">{{ 'listings.colProduct' | translate }}</th>
             </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            @for (l of visiveis(); track l.item.id) {
+              <tr [class.pendente]="l.escolha !== l.salvo">
+                <td class="anuncio">
+                  @if (l.item.thumbnail) {
+                    <img [src]="l.item.thumbnail" [alt]="l.item.title" loading="lazy" width="40" height="40" />
+                  }
+                  <div class="anuncio-texto">
+                    <a [href]="l.item.permalink" target="_blank" rel="noopener noreferrer">{{ l.item.title }}</a>
+                    <small>
+                      {{ l.item.id }}
+                      @if (l.item.sku) { · {{ 'listings.sku' | translate }} {{ l.item.sku }} }
+                      @if (l.item.status !== 'active') { · {{ 'listings.status.' + l.item.status | translate }} }
+                    </small>
+                  </div>
+                </td>
+
+                <td class="num">{{ l.item.price | brl }}</td>
+
+                <td class="num">
+                  <span
+                    [class.divergente]="divergente(l)"
+                    [appTooltip]="divergente(l)
+                      ? ('listings.stockMismatch' | translate:{ ml: l.item.availableQuantity, lucrato: l.estoqueLucrato })
+                      : ''"
+                  >
+                    {{ l.item.availableQuantity }}
+                    @if (divergente(l)) { <app-icon name="triangle-alert" /> }
+                  </span>
+                </td>
+
+                <td class="vinculo">
+                  <app-select
+                    [ngModel]="l.escolha"
+                    (ngModelChange)="escolher(l.item.id, $event)"
+                    [placeholder]="'listings.pickProduct' | translate"
+                    [searchable]="true"
+                    [searchPlaceholder]="'listings.searchProduct' | translate"
+                  >
+                    <app-option [value]="''">{{ 'listings.noLink' | translate }}</app-option>
+                    @for (nome of nomesDeProdutos(); track nome) {
+                      <app-option [value]="nome">{{ nome }}</app-option>
+                    }
+                  </app-select>
+
+                  <!-- Altura reservada sempre, para a linha não pular quando há sugestão. -->
+                  <small class="sugestao">
+                    @if (l.sugestao) {
+                      {{ (l.sugestao === 'sku' ? 'listings.bySku' : 'listings.byTitle') | translate }}
+                    }
+                  </small>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (filtradas().length > tamanhosDePagina[0]) {
+        <app-paginator
+          [length]="filtradas().length"
+          [pageSize]="pagina().pageSize"
+          [pageIndex]="pagina().pageIndex"
+          [pageSizeOptions]="tamanhosDePagina"
+          [showFirstLast]="true"
+          (page)="pagina.set($event)"
+        />
+      }
+    }
 
     <p class="rodape">
       <app-icon name="info" />
