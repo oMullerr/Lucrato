@@ -1,0 +1,108 @@
+@use '../../../styles/breakpoints' as bp;
+
+.inbox-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 900px;
+}
+
+.resumo {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.resumo strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.grupo {
+  background: var(--bg-surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.grupo > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.grupo > header > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.grupo h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.grupo header p {
+  margin: 2px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.itens {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.itens li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.itens li:last-child {
+  border-bottom: 0;
+}
+
+.info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.produto {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.info small {
+  color: var(--text-tertiary);
+  font-size: 0.78rem;
+}
+
+.valor {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rodape {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 0.88rem;
+}
+
+@include bp.below(md) {
+  .grupo > header {
+    flex-wrap: wrap;
+  }
+
+  .itens li {
+    flex-wrap: wrap;
+  }
+}

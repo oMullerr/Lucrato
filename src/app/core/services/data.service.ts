@@ -8,6 +8,7 @@ import {
 } from '../models/models';
 import { calculatePurchase, calculateKpis, calculateSale, computeReturn, nextId } from './calculations';
 import { computeFiscalStatus } from '../fiscal/fiscal';
+import { ItemDaCaixa, PlanoDeAplicacao, planejarAplicacao } from '../ml/inbox-apply';
 import { DEFAULT_FISCAL_CONFIG } from '../fiscal/fiscal-regimes';
 import { FiscalConfig } from '../fiscal/fiscal.model';
 import { AuthService } from './auth.service';
@@ -452,6 +453,29 @@ export class DataService {
       this.db.set(prev);
       throw err;
     });
+  }
+
+  /**
+   * Aplica no razão o que veio do Mercado Livre.
+   *
+   * A decisão (lote por FIFO, divisão entre lotes, idempotência) fica no módulo
+   * puro `core/ml/inbox-apply`; aqui só se grava, pelo mesmo caminho de escrita
+   * das vendas digitadas à mão. Devolve o plano para quem chamou avisar o
+   * servidor do que foi aplicado.
+   */
+  async applyMlInbox(itens: readonly ItemDaCaixa[]): Promise<PlanoDeAplicacao> {
+    const plano = planejarAplicacao(itens, this.computedPurchases(), this.sales());
+    if (plano.novas.length === 0 && plano.atualizadas.length === 0) return plano;
+
+    await this.update(d => {
+      for (const venda of plano.novas) d.sales.push(venda);
+      for (const atualizada of plano.atualizadas) {
+        const i = d.sales.findIndex(v => v.id === atualizada.id);
+        if (i >= 0) d.sales[i] = atualizada;
+      }
+    });
+
+    return plano;
   }
 
   private migrateDatabase(data: any): Database {

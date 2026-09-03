@@ -78,6 +78,12 @@ export const routes: Routes = [
     title: 'routeTitles.listings',
   },
   {
+    path: 'caixa-ml',
+    loadComponent: () => import('./features/ml-inbox/ml-inbox.component').then(m => m.MlInboxComponent),
+    canActivate: [authGuard],
+    title: 'routeTitles.mlInbox',
+  },
+  {
     path: 'profile',
     loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
     canActivate: [authGuard],

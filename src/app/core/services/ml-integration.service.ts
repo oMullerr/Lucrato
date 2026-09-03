@@ -4,6 +4,7 @@ import type { Unsubscribe } from '@angular/fire/firestore';
 import { Functions, httpsCallable } from '@angular/fire/functions';
 import { AuthService } from './auth.service';
 import { logError } from './logger';
+import type { ItemDaCaixa } from '../ml/inbox-apply';
 
 /** Anúncio sincronizado do Mercado Livre (`users/{uid}/mlItems`). */
 export interface MlItem {
@@ -77,9 +78,11 @@ export class MlIntegrationService {
   private readonly _state = signal<MlIntegrationState | null>(null);
   private readonly _items = signal<MlItem[] | null>(null);
   private readonly _links = signal<MlLink[] | null>(null);
+  private readonly _inbox = signal<ItemDaCaixa[] | null>(null);
   private _unsub?: Unsubscribe;
   private _unsubItems?: Unsubscribe;
   private _unsubLinks?: Unsubscribe;
+  private _unsubInbox?: Unsubscribe;
 
   /** `null` enquanto o documento ainda não chegou. */
   readonly state = this._state.asReadonly();
@@ -98,6 +101,15 @@ export class MlIntegrationService {
     for (const l of this._links() ?? []) mapa.set(l.itemId, l);
     return mapa;
   });
+
+  /** Caixa de entrada inteira. `null` antes da primeira leitura. */
+  readonly inbox = computed(() => this._inbox());
+  readonly inboxLoaded = computed(() => this._inbox() !== null);
+
+  /** Só o que ainda espera decisão — é o que o app tenta aplicar. */
+  readonly inboxPendentes = computed(() =>
+    (this._inbox() ?? []).filter(i => i.estado === 'pendente'),
+  );
 
   /** Em andamento: trava o botão e evita disparar dois fluxos ao mesmo tempo. */
   readonly working = signal(false);
@@ -166,18 +178,31 @@ export class MlIntegrationService {
         this._links.set([]);
       },
     );
+
+    this._unsubInbox?.();
+    this._unsubInbox = onSnapshot(
+      collection(this.firestore, `users/${uid}/mlInbox`),
+      snap => this._inbox.set(snap.docs.map(d => d.data() as ItemDaCaixa)),
+      err => {
+        logError('[MlIntegration] mlInbox falhou:', err);
+        this._inbox.set([]);
+      },
+    );
   }
 
   private stop(): void {
     this._unsub?.();
     this._unsubItems?.();
     this._unsubLinks?.();
+    this._unsubInbox?.();
     this._unsub = undefined;
     this._unsubItems = undefined;
     this._unsubLinks = undefined;
+    this._unsubInbox = undefined;
     this._state.set(null);
     this._items.set(null);
     this._links.set(null);
+    this._inbox.set(null);
   }
 
   /**
@@ -231,6 +256,21 @@ export class MlIntegrationService {
       { vinculados: number; desfeitos: number }
     >(this.functions, 'mlSetLinks');
     await chamar({ links });
+  }
+
+  /**
+   * Avisa o servidor o que aconteceu com itens da caixa.
+   *
+   * O documento da caixa é só do servidor: assim o navegador não consegue
+   * marcar como aplicado algo que nunca entrou no razão.
+   */
+  async markInbox(externalIds: readonly string[], estado: 'aplicado' | 'ignorado' | 'pendente'): Promise<void> {
+    if (externalIds.length === 0) return;
+    const chamar = httpsCallable<
+      { externalIds: readonly string[]; estado: string },
+      { total: number }
+    >(this.functions, 'mlMarkInbox');
+    await chamar({ externalIds, estado });
   }
 
   /** Apaga tokens e índice no servidor. Não mexe em nada já importado. */

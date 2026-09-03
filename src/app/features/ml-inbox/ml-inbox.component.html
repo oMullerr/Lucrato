@@ -1,0 +1,106 @@
+<app-page-header
+  [title]="'mlInbox.title' | translate"
+  [eyebrow]="'mlInbox.eyebrow' | translate"
+  [subtitle]="'mlInbox.subtitle' | translate"
+>
+  @if (pendentes().length > 0) {
+    <button appBtn="primary" [disabled]="aplicando()" (click)="aplicarAgora()">
+      <app-icon name="refresh-cw" />
+      {{ 'mlInbox.applyNow' | translate }}
+    </button>
+  }
+</app-page-header>
+
+<div class="page-content inbox-body">
+
+  @if (!ml.connected()) {
+    <app-empty-state
+      icon="store"
+      [title]="'mlInbox.notConnected' | translate"
+      [description]="'mlInbox.notConnectedMsg' | translate"
+    >
+      <a appBtn="primary" routerLink="/integracoes">{{ 'mlInbox.goToIntegrations' | translate }}</a>
+    </app-empty-state>
+  } @else if (!ml.inboxLoaded()) {
+    <app-skeleton variant="table-row" [count]="4" />
+  } @else if (pendentes().length === 0) {
+    <app-empty-state
+      icon="circle-check"
+      [title]="'mlInbox.emptyTitle' | translate"
+      [description]="'mlInbox.emptyMsg' | translate"
+    >
+      <a appBtn="outline" routerLink="/sales">{{ 'mlInbox.goToSales' | translate }}</a>
+    </app-empty-state>
+  } @else {
+
+    <p class="resumo">
+      {{ 'mlInbox.summary' | translate:{ total: pendentes().length } }}
+      <strong>{{ valorPendente() | brl }}</strong>
+    </p>
+
+    @if (semVinculo().length > 0) {
+      <section class="grupo">
+        <header>
+          <app-icon [name]="icone['sem_vinculo']" />
+          <div>
+            <h2>{{ 'mlInbox.groupNoLinkTitle' | translate:{ total: semVinculo().length } }}</h2>
+            <p>{{ 'mlInbox.groupNoLinkMsg' | translate }}</p>
+          </div>
+          <a appBtn="outline" routerLink="/anuncios">{{ 'mlInbox.linkNow' | translate }}</a>
+        </header>
+
+        <ul class="itens">
+          @for (p of semVinculo(); track p.item.externalId) {
+            <li>
+              <div class="info">
+                <span class="produto">{{ p.item.produto }}</span>
+                <small>
+                  {{ p.item.saleDate | brDate }} ·
+                  {{ 'mlInbox.qty' | translate:{ qty: p.item.quantitySold } }} ·
+                  {{ p.item.mlItemId }}
+                </small>
+              </div>
+              <span class="valor">{{ p.item.unitPrice * p.item.quantitySold | brl }}</span>
+              <button appBtn="ghost" (click)="ignorar(p.item)">{{ 'mlInbox.ignore' | translate }}</button>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (semEstoque().length > 0) {
+      <section class="grupo">
+        <header>
+          <app-icon [name]="icone['sem_estoque']" />
+          <div>
+            <h2>{{ 'mlInbox.groupNoStockTitle' | translate:{ total: semEstoque().length } }}</h2>
+            <p>{{ 'mlInbox.groupNoStockMsg' | translate }}</p>
+          </div>
+          <a appBtn="outline" routerLink="/purchases">{{ 'mlInbox.addPurchase' | translate }}</a>
+        </header>
+
+        <ul class="itens">
+          @for (p of semEstoque(); track p.item.externalId) {
+            <li>
+              <div class="info">
+                <span class="produto">{{ p.item.produto }}</span>
+                <small>
+                  {{ p.item.saleDate | brDate }} ·
+                  {{ 'mlInbox.qty' | translate:{ qty: p.item.quantitySold } }} ·
+                  {{ p.item.mlItemId }}
+                </small>
+              </div>
+              <span class="valor">{{ p.item.unitPrice * p.item.quantitySold | brl }}</span>
+              <button appBtn="ghost" (click)="ignorar(p.item)">{{ 'mlInbox.ignore' | translate }}</button>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <p class="rodape">
+      <app-icon name="info" />
+      {{ 'mlInbox.autoNote' | translate }}
+    </p>
+  }
+</div>

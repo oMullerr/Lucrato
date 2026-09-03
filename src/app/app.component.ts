@@ -9,6 +9,7 @@ import { DataService } from './core/services/data.service';
 import { AuthService } from './core/services/auth.service';
 import { QuickActionsService } from './core/services/quick-actions.service';
 import { NotifyService } from './core/services/notify.service';
+import { MlAutoApplyService } from './core/services/ml-auto-apply.service';
 import { FabActionsComponent } from './shared/components/fab-actions.component';
 import { ConnectionBannerComponent } from './shared/components/connection-banner.component';
 import { isChunkLoadError } from './core/services/firestore-errors';
@@ -52,6 +53,7 @@ const NAV_GROUPS: NavGroup[] = [
       { path: '/sales',     label: 'nav.sales',     icon: 'tag',           title: 'nav.sales' },
       { path: '/returns',   label: 'nav.returns',   icon: 'rotate-ccw',    title: 'nav.returns' },
       { path: '/anuncios',  label: 'nav.listings',  icon: 'tags',          title: 'nav.listings' },
+      { path: '/caixa-ml',  label: 'nav.mlInbox',   icon: 'download',      title: 'nav.mlInbox' },
     ],
   },
   {
@@ -91,6 +93,9 @@ export class AppComponent {
   protected readonly navGroups = NAV_GROUPS;
   private readonly router = inject(Router);
   private readonly notify = inject(NotifyService);
+  /* Injetado aqui de proposito: e o que faz o lancamento automatico das
+     vendas do Mercado Livre rodar assim que o app abre. */
+  private readonly mlAutoApply = inject(MlAutoApplyService);
   private readonly t = inject(TranslateService);
 
   protected readonly sidebarOpen = signal(true);

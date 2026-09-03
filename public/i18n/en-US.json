@@ -27,7 +27,8 @@
     "instructions": "Instructions · Lucrato",
     "returns": "Returns · Lucrato",
     "integrations": "Integrations · Lucrato",
-    "listings": "Listings · Lucrato"
+    "listings": "Listings · Lucrato",
+    "mlInbox": "Mercado Livre inbox · Lucrato"
   },
   "common": {
     "save": "Save",
@@ -71,7 +72,8 @@
     "tagline": "Mercado Livre Management",
     "returns": "Returns",
     "integrations": "Integrations",
-    "listings": "Listings"
+    "listings": "Listings",
+    "mlInbox": "ML inbox"
   },
   "topbar": {
     "openMenu": "Open menu",
@@ -1083,5 +1085,32 @@
     "summaryFiltered": "Showing {{shown}} of {{total}} listing(s), {{semVinculo}} still without a product.",
     "noMatchTitle": "No listing matches these filters",
     "noMatchMsg": "Loosen the search or the price and stock ranges."
+  },
+  "mlInbox": {
+    "title": "Mercado Livre inbox",
+    "eyebrow": "Automatic sales",
+    "subtitle": "Sales that arrived from Mercado Livre and could not be posted on their own yet.",
+    "applyNow": "Try to apply now",
+    "autoApplied": "{{total}} Mercado Livre sale(s) posted.",
+    "nothingApplied": "Nothing could be applied yet.",
+    "applyError": "Could not apply right now. Please try again.",
+    "notConnected": "Connect Mercado Livre first",
+    "notConnectedMsg": "Sales show up here once the account is connected.",
+    "goToIntegrations": "Go to Integrations",
+    "emptyTitle": "Nothing waiting",
+    "emptyMsg": "Every sale that arrived is already posted.",
+    "goToSales": "View sales",
+    "summary": "{{total}} sale(s) waiting, totaling",
+    "groupNoLinkTitle": "No linked product ({{total}})",
+    "groupNoLinkMsg": "The listing does not point to one of your products yet. Link it and these post automatically.",
+    "linkNow": "Link listings",
+    "groupNoStockTitle": "No stock in the batch ({{total}})",
+    "groupNoStockMsg": "Not enough units in that product batches. Register the missing purchase.",
+    "addPurchase": "Register purchase",
+    "qty": "{{qty}} pcs",
+    "ignore": "Ignore",
+    "ignored": "Sale ignored.",
+    "ignoreError": "Could not ignore it. Please try again.",
+    "autoNote": "Anything with a linked product and stock posts on its own, without stopping here."
   }
 }

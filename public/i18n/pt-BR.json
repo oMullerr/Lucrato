@@ -27,7 +27,8 @@
     "instructions": "Instruções · Lucrato",
     "returns": "Devoluções · Lucrato",
     "integrations": "Integrações · Lucrato",
-    "listings": "Anúncios · Lucrato"
+    "listings": "Anúncios · Lucrato",
+    "mlInbox": "Caixa de entrada do ML · Lucrato"
   },
   "common": {
     "save": "Salvar",
@@ -71,7 +72,8 @@
     "tagline": "Gestão Mercado Livre",
     "returns": "Devoluções",
     "integrations": "Integrações",
-    "listings": "Anúncios"
+    "listings": "Anúncios",
+    "mlInbox": "Caixa do ML"
   },
   "topbar": {
     "openMenu": "Abrir menu",
@@ -1083,5 +1085,32 @@
     "summaryFiltered": "Mostrando {{shown}} de {{total}} anúncio(s), {{semVinculo}} ainda sem produto.",
     "noMatchTitle": "Nenhum anúncio com esses filtros",
     "noMatchMsg": "Afrouxe a busca ou as faixas de preço e estoque."
+  },
+  "mlInbox": {
+    "title": "Caixa de entrada do Mercado Livre",
+    "eyebrow": "Vendas automáticas",
+    "subtitle": "Vendas que chegaram do Mercado Livre e ainda não puderam entrar sozinhas.",
+    "applyNow": "Tentar aplicar agora",
+    "autoApplied": "{{total}} venda(s) do Mercado Livre lançada(s).",
+    "nothingApplied": "Nada pôde ser aplicado ainda.",
+    "applyError": "Não deu para aplicar agora. Tente de novo.",
+    "notConnected": "Conecte o Mercado Livre primeiro",
+    "notConnectedMsg": "As vendas aparecem aqui depois que a conta estiver conectada.",
+    "goToIntegrations": "Ir para Integrações",
+    "emptyTitle": "Nada esperando",
+    "emptyMsg": "Toda venda que chegou já entrou no razão.",
+    "goToSales": "Ver vendas",
+    "summary": "{{total}} venda(s) esperando, somando",
+    "groupNoLinkTitle": "Sem produto vinculado ({{total}})",
+    "groupNoLinkMsg": "O anúncio ainda não aponta para um produto seu. Vincule e elas entram sozinhas.",
+    "linkNow": "Vincular anúncios",
+    "groupNoStockTitle": "Sem estoque no lote ({{total}})",
+    "groupNoStockMsg": "Não há unidades suficientes nos lotes desse produto. Registre a compra que faltou.",
+    "addPurchase": "Registrar compra",
+    "qty": "{{qty}} un.",
+    "ignore": "Ignorar",
+    "ignored": "Venda ignorada.",
+    "ignoreError": "Não deu para ignorar. Tente de novo.",
+    "autoNote": "O que tem produto vinculado e estoque entra sozinho, sem passar por aqui."
   }
 }

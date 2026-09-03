@@ -27,7 +27,8 @@
     "instructions": "Instrucciones · Lucrato",
     "returns": "Devoluciones · Lucrato",
     "integrations": "Integraciones · Lucrato",
-    "listings": "Publicaciones · Lucrato"
+    "listings": "Publicaciones · Lucrato",
+    "mlInbox": "Bandeja de Mercado Libre · Lucrato"
   },
   "common": {
     "save": "Guardar",
@@ -71,7 +72,8 @@
     "tagline": "Gestión Mercado Livre",
     "returns": "Devoluciones",
     "integrations": "Integraciones",
-    "listings": "Publicaciones"
+    "listings": "Publicaciones",
+    "mlInbox": "Bandeja ML"
   },
   "topbar": {
     "openMenu": "Abrir menú",
@@ -1083,5 +1085,32 @@
     "summaryFiltered": "Mostrando {{shown}} de {{total}} publicación(es), {{semVinculo}} sin producto todavía.",
     "noMatchTitle": "Ninguna publicación con esos filtros",
     "noMatchMsg": "Aflojá la búsqueda o los rangos de precio y stock."
+  },
+  "mlInbox": {
+    "title": "Bandeja de Mercado Libre",
+    "eyebrow": "Ventas automáticas",
+    "subtitle": "Ventas que llegaron de Mercado Libre y todavía no pudieron entrar solas.",
+    "applyNow": "Intentar aplicar ahora",
+    "autoApplied": "{{total}} venta(s) de Mercado Libre cargada(s).",
+    "nothingApplied": "Todavía no se pudo aplicar nada.",
+    "applyError": "No se pudo aplicar ahora. Probá de nuevo.",
+    "notConnected": "Conectá Mercado Libre primero",
+    "notConnectedMsg": "Las ventas aparecen acá cuando la cuenta esté conectada.",
+    "goToIntegrations": "Ir a Integraciones",
+    "emptyTitle": "Nada esperando",
+    "emptyMsg": "Toda venta que llegó ya está cargada.",
+    "goToSales": "Ver ventas",
+    "summary": "{{total}} venta(s) esperando, sumando",
+    "groupNoLinkTitle": "Sin producto vinculado ({{total}})",
+    "groupNoLinkMsg": "La publicación todavía no apunta a un producto tuyo. Vinculála y entran solas.",
+    "linkNow": "Vincular publicaciones",
+    "groupNoStockTitle": "Sin stock en el lote ({{total}})",
+    "groupNoStockMsg": "No hay unidades suficientes en los lotes de ese producto. Registrá la compra que falta.",
+    "addPurchase": "Registrar compra",
+    "qty": "{{qty}} un.",
+    "ignore": "Ignorar",
+    "ignored": "Venta ignorada.",
+    "ignoreError": "No se pudo ignorar. Probá de nuevo.",
+    "autoNote": "Lo que tiene producto vinculado y stock entra solo, sin pasar por acá."
   }
 }

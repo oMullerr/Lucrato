@@ -21,7 +21,8 @@
     "src/**/*.ts",
     "../src/app/core/models/models.ts",
     "../src/app/core/fiscal/fiscal.model.ts",
-    "../src/app/core/ml/matching.ts"
+    "../src/app/core/ml/matching.ts",
+    "../src/app/core/ml/order-mapping.ts"
   ],
   "exclude": [
     "lib",
