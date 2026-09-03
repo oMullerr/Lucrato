@@ -4,6 +4,10 @@
   [subtitle]="'listings.subtitle' | translate"
 >
   @if (ml.connected()) {
+    <button appBtn="ghost" [disabled]="ml.working() || medindo()" (click)="atualizarMetricas()">
+      <app-icon name="chart-spline" />
+      {{ 'listings.updateMetrics' | translate }}
+    </button>
     <button appBtn="outline" [disabled]="ml.working()" (click)="sincronizar()">
       <app-icon name="refresh-cw" />
       {{ 'listings.sync' | translate }}
@@ -34,6 +38,23 @@
       </button>
     </app-empty-state>
   } @else {
+
+    @if (alertas().length > 0) {
+      <section class="alertas" [attr.aria-label]="'listings.alertsTitle' | translate">
+        <h2>
+          <app-icon name="triangle-alert" />
+          {{ 'listings.alertsTitle' | translate:{ total: alertas().length } }}
+        </h2>
+        <ul>
+          @for (a of alertas(); track a.tipo + a.itemId) {
+            <li [class]="'sev-' + a.severidade">
+              <span class="produto">{{ a.titulo }}</span>
+              <span class="motivo">{{ 'listings.alert.' + a.tipo | translate:a.dados }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
 
     <section class="filtros" [attr.aria-label]="'listings.filters' | translate">
       <app-field class="f-busca" [label]="'listings.searchLabel' | translate">
@@ -113,6 +134,8 @@
               <th scope="col">{{ 'listings.colItem' | translate }}</th>
               <th scope="col" class="num">{{ 'listings.colPrice' | translate }}</th>
               <th scope="col" class="num">{{ 'listings.colStock' | translate }}</th>
+              <th scope="col" class="num">{{ 'listings.colVisits' | translate }}</th>
+              <th scope="col" class="num">{{ 'listings.colConversion' | translate }}</th>
               <th scope="col">{{ 'listings.colProduct' | translate }}</th>
             </tr>
           </thead>
@@ -145,6 +168,18 @@
                     {{ l.item.availableQuantity }}
                     @if (divergente(l)) { <app-icon name="triangle-alert" /> }
                   </span>
+                </td>
+
+                <td class="num">
+                  {{ l.item.visits30d === undefined ? '—' : l.item.visits30d }}
+                </td>
+
+                <td class="num">
+                  @if (conversao(l.item.id, l.item.visits30d); as taxa) {
+                    {{ (taxa * 100).toFixed(1) }}%
+                  } @else {
+                    —
+                  }
                 </td>
 
                 <td class="vinculo">

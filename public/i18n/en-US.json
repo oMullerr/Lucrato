@@ -1086,7 +1086,19 @@
     "clearFilters": "Clear filters",
     "summaryFiltered": "Showing {{shown}} of {{total}} listing(s), {{semVinculo}} still without a product.",
     "noMatchTitle": "No listing matches these filters",
-    "noMatchMsg": "Loosen the search or the price and stock ranges."
+    "noMatchMsg": "Loosen the search or the price and stock ranges.",
+    "updateMetrics": "Update metrics",
+    "metricsUpdated": "Metrics updated for {{total}} listing(s).",
+    "metricsError": "Could not update the metrics. Please try again.",
+    "colVisits": "Visits 30d",
+    "colConversion": "Conversion",
+    "alertsTitle": "Needs your attention ({{total}})",
+    "alert": {
+      "ativo_sem_estoque": "live with no stock on Mercado Livre",
+      "pausado_com_estoque": "paused with {{estoque}} units sitting in stock",
+      "margem_baixa": "{{margem}}% margin, below your {{minima}}% target",
+      "sem_conversao": "{{visitas}} visits and no sale in 30 days"
+    }
   },
   "mlInbox": {
     "title": "Mercado Livre inbox",

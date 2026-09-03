@@ -36,6 +36,56 @@
   }
 }
 
+.alertas {
+  background: var(--bg-surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+}
+
+.alertas h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+}
+
+.alertas ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alertas li {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding-left: 10px;
+  border-left: 3px solid var(--border-subtle);
+}
+
+/* A cor da barra é o que separa "resolva agora" de "quando puder". */
+.alertas .sev-alta { border-left-color: var(--danger, #e5484d); }
+.alertas .sev-media { border-left-color: var(--warning, #f5a524); }
+
+.alertas .produto {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alertas .motivo {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
 .toolbar {
   display: flex;
   align-items: center;

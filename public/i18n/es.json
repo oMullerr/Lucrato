@@ -1086,7 +1086,19 @@
     "clearFilters": "Limpiar filtros",
     "summaryFiltered": "Mostrando {{shown}} de {{total}} publicación(es), {{semVinculo}} sin producto todavía.",
     "noMatchTitle": "Ninguna publicación con esos filtros",
-    "noMatchMsg": "Aflojá la búsqueda o los rangos de precio y stock."
+    "noMatchMsg": "Aflojá la búsqueda o los rangos de precio y stock.",
+    "updateMetrics": "Actualizar métricas",
+    "metricsUpdated": "Métricas de {{total}} publicación(es) actualizadas.",
+    "metricsError": "No se pudieron actualizar las métricas. Probá de nuevo.",
+    "colVisits": "Visitas 30d",
+    "colConversion": "Conversión",
+    "alertsTitle": "Necesita tu atención ({{total}})",
+    "alert": {
+      "ativo_sem_estoque": "publicada sin stock en Mercado Libre",
+      "pausado_com_estoque": "pausada con {{estoque}} en stock parado",
+      "margem_baixa": "margen de {{margem}}%, por debajo de tu meta de {{minima}}%",
+      "sem_conversao": "{{visitas}} visitas y ninguna venta en 30 días"
+    }
   },
   "mlInbox": {
     "title": "Bandeja de Mercado Libre",

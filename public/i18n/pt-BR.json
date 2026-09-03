@@ -1086,7 +1086,19 @@
     "clearFilters": "Limpar filtros",
     "summaryFiltered": "Mostrando {{shown}} de {{total}} anúncio(s), {{semVinculo}} ainda sem produto.",
     "noMatchTitle": "Nenhum anúncio com esses filtros",
-    "noMatchMsg": "Afrouxe a busca ou as faixas de preço e estoque."
+    "noMatchMsg": "Afrouxe a busca ou as faixas de preço e estoque.",
+    "updateMetrics": "Atualizar métricas",
+    "metricsUpdated": "Métricas de {{total}} anúncio(s) atualizadas.",
+    "metricsError": "Não deu para atualizar as métricas. Tente de novo.",
+    "colVisits": "Visitas 30d",
+    "colConversion": "Conversão",
+    "alertsTitle": "Precisa da sua atenção ({{total}})",
+    "alert": {
+      "ativo_sem_estoque": "no ar sem estoque no Mercado Livre",
+      "pausado_com_estoque": "pausado com {{estoque}} em estoque parado",
+      "margem_baixa": "margem de {{margem}}%, abaixo da sua meta de {{minima}}%",
+      "sem_conversao": "{{visitas}} visitas e nenhuma venda em 30 dias"
+    }
   },
   "mlInbox": {
     "title": "Caixa de entrada do Mercado Livre",

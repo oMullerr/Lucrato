@@ -11,6 +11,7 @@ import {
   normalizarChaveProduto,
   sugerirProduto,
 } from '../../core/ml/matching';
+import { Alerta, JANELA_DIAS, gerarAlertas } from '../../core/ml/alerts';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
@@ -65,6 +66,7 @@ export class ListingsComponent {
   /** Escolhas mexidas pelo usuário nesta sessão, por id de anúncio. */
   private readonly escolhas = signal<Record<string, string>>({});
   protected readonly salvando = signal(false);
+  protected readonly medindo = signal(false);
 
   /* ---------- filtros ---------- */
   protected readonly busca = signal('');
@@ -90,6 +92,54 @@ export class ListingsComponent {
         this.pagina.set({ ...p, pageIndex: 0, length: total });
       }
     }, { allowSignalWrites: true });
+  }
+
+  /**
+   * Unidades vendidas por anúncio na janela, para calcular conversão.
+   * A venda é do Lucrato e a visita é do Mercado Livre: é o cruzamento das
+   * duas fontes que responde se o anúncio vende pouco por falta de audiência
+   * ou por falta de conversão.
+   */
+  private readonly vendasPorAnuncio = computed(() => {
+    const limite = new Date();
+    limite.setDate(limite.getDate() - JANELA_DIAS);
+    const desde = limite.toISOString().slice(0, 10);
+
+    const mapa = new Map<string, number>();
+    for (const v of this.data.computedSales()) {
+      if (!v.mlItemId || !v.countsAsRevenue || v.saleDate < desde) continue;
+      mapa.set(v.mlItemId, (mapa.get(v.mlItemId) ?? 0) + v.effectiveQuantity);
+    }
+    return mapa;
+  });
+
+  protected readonly alertas = computed<Alerta[]>(() =>
+    gerarAlertas(
+      this.ml.items() ?? [],
+      new Map([...this.ml.linksByItem()].map(([id, l]) => [id, { produto: l.produto }])),
+      this.data.computedSales(),
+      this.data.computedPurchases(),
+      this.data.settings(),
+    ),
+  );
+
+  /** Conversão do anúncio: unidades vendidas sobre visitas. */
+  protected conversao(itemId: string, visitas: number | undefined): number | null {
+    if (!visitas || visitas <= 0) return null;
+    return (this.vendasPorAnuncio().get(itemId) ?? 0) / visitas;
+  }
+
+  protected async atualizarMetricas(): Promise<void> {
+    this.medindo.set(true);
+    try {
+      const total = await this.ml.syncMetrics();
+      this.notify.success(this.t.instant('listings.metricsUpdated', { total }));
+    } catch (err) {
+      logError('[Listings] metricas falharam:', err);
+      this.notify.error(this.t.instant('listings.metricsError'));
+    } finally {
+      this.medindo.set(false);
+    }
   }
 
   /** Produtos disponíveis para vincular: nomes distintos vindos das compras. */

@@ -51,6 +51,8 @@ export interface MlItem {
   thumbnail: string;
   logisticType: string;
   freeShipping: boolean;
+  /** Visitas dos últimos 30 dias, quando as métricas já foram sincronizadas. */
+  visits30d?: number;
 }
 
 /** Vínculo confirmado entre um anúncio e um produto (`users/{uid}/mlLinks`). */
@@ -63,6 +65,16 @@ export interface MlLink {
 /** Estado da conexão, espelhado pelo servidor em `users/{uid}/db/ml`. */
 export type MlStatus = 'disconnected' | 'connected' | 'reconnect_required';
 
+/** Reputação do vendedor, como o Mercado Livre informa. */
+export interface ReputacaoDoMl {
+  levelId: string;
+  powerSellerStatus: string;
+  completed: number;
+  canceled: number;
+  claimsRate: number;
+  delayedRate: number;
+}
+
 export interface MlIntegrationState {
   connected: boolean;
   status: MlStatus;
@@ -72,6 +84,7 @@ export interface MlIntegrationState {
   connectedAt: Date | null;
   lastSyncAt: Date | null;
   lastError: string | null;
+  reputation: ReputacaoDoMl | null;
 }
 
 const DESCONECTADO: MlIntegrationState = {
@@ -82,6 +95,7 @@ const DESCONECTADO: MlIntegrationState = {
   connectedAt: null,
   lastSyncAt: null,
   lastError: null,
+  reputation: null,
 };
 
 /** Firestore devolve Timestamp; o resto do app trabalha com Date. */
@@ -182,6 +196,7 @@ export class MlIntegrationService {
           connectedAt: toDate(d['connectedAt']),
           lastSyncAt: toDate(d['lastSyncAt']),
           lastError: (d['lastError'] as string) ?? null,
+          reputation: (d['reputation'] as ReputacaoDoMl) ?? null,
         });
       },
       err => {
@@ -289,6 +304,24 @@ export class MlIntegrationService {
     this.working.set(true);
     try {
       const chamar = httpsCallable<void, { total: number }>(this.functions, 'mlSyncItems');
+      const { data } = await chamar();
+      return data.total;
+    } finally {
+      this.working.set(false);
+    }
+  }
+
+  /**
+   * Atualiza visitas e reputação.
+   *
+   * A API de visitas não tem multiget, então é uma chamada por anúncio ativo —
+   * pode demorar em contas grandes. Também roda sozinho, uma vez por dia.
+   */
+  async syncMetrics(): Promise<number> {
+    if (this.working()) return 0;
+    this.working.set(true);
+    try {
+      const chamar = httpsCallable<void, { total: number }>(this.functions, 'mlSyncMetrics');
       const { data } = await chamar();
       return data.total;
     } finally {
