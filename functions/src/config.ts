@@ -12,6 +12,9 @@ export const REGION = 'southamerica-east1';
 /** Base da API do Mercado Livre (a mesma para todos os países). */
 export const ML_API = 'https://api.mercadolibre.com';
 
+/** Host de autorizacao do vendedor (dominio do Brasil). */
+export const ML_AUTH_URL = 'https://auth.mercadolivre.com.br/authorization';
+
 /** Site do Brasil. */
 export const SITE_ID = 'MLB';
 

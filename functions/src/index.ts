@@ -17,7 +17,7 @@ setGlobalOptions({ region: REGION, maxInstances: 10 });
 
 /**
  * Sonda de vida: confirma que o app consegue chamar as functions com o token
- * de autenticação e o App Check válidos. Usada no diagnóstico da integração.
+ * de autenticação válido. Usada no diagnóstico da integração.
  */
 export const mlHealth = onCall({ enforceAppCheck: false }, (request) => {
   if (!request.auth) {
@@ -25,3 +25,5 @@ export const mlHealth = onCall({ enforceAppCheck: false }, (request) => {
   }
   return { ok: true as const, uid: request.auth.uid, ts: new Date().toISOString() };
 });
+
+export { mlAuthUrl, mlAuthCallback } from './ml/oauth';
