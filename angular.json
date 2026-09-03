@@ -56,6 +56,24 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "staging": {
+              "budgets": [
+                { "type": "initial", "maximumWarning": "1.5mb", "maximumError": "3mb" },
+                { "type": "anyComponentStyle", "maximumWarning": "8kb", "maximumError": "16kb" }
+              ],
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": { "minify": true, "inlineCritical": false },
+                "fonts": false
+              },
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.staging.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -64,7 +82,8 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": { "buildTarget": "ml-gestao:build:production" },
-            "development": { "buildTarget": "ml-gestao:build:development" }
+            "development": { "buildTarget": "ml-gestao:build:development" },
+          "staging": { "buildTarget": "ml-gestao:build:staging" }
           },
           "defaultConfiguration": "development"
         }

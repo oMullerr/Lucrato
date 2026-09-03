@@ -29,3 +29,12 @@ Thumbs.db
 # Environment
 .env
 .env.local
+
+# Credenciais (service accounts do Firebase, chaves do Mercado Livre)
+*.serviceaccount.json
+/chaves/
+.env.*.local
+
+# Cloud Functions
+/functions/node_modules
+/functions/lib
