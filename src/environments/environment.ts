@@ -1,16 +1,20 @@
+/**
+ * Ambiente de DESENVOLVIMENTO LOCAL (`npm start`).
+ *
+ * Aponta para o projeto Firebase de testes (`lucrato-dev`), nunca para a base
+ * real: rodar o app na máquina não pode mexer em dado de produção. A produção
+ * vem de `environment.prod.ts`, aplicado só no build de produção.
+ */
 export const environment = {
   production: false,
   firebase: {
-    apiKey: "AIzaSyAhax_nL7xFNPmAFDOWLNAg3fwTfwMPA48",
-    authDomain: "lucrato-web.firebaseapp.com",
-    projectId: "lucrato-web",
-    storageBucket: "lucrato-web.firebasestorage.app",
-    messagingSenderId: "268847059786",
-    appId: "1:268847059786:web:818d3a260ea78dd83827b3",
-    measurementId: "G-D5ES5KS2PR"
+    apiKey: "AIzaSyCztKXhCyCcRvzp2PTIOE48p-pUrSN4UIE",
+    authDomain: "lucrato-dev.firebaseapp.com",
+    projectId: "lucrato-dev",
+    storageBucket: "lucrato-dev.firebasestorage.app",
+    messagingSenderId: "151745265552",
+    appId: "1:151745265552:web:d61e09d0ffdbdfd21d3d15",
   },
-  // Chave pública do reCAPTCHA Enterprise (App Check).
-  // Crie em https://console.cloud.google.com/security/recaptcha e cole aqui.
-  // Em dev, deixe vazia para usar o debug token (ver main.ts).
-  recaptchaSiteKey: "6Ldr8vUsAAAAALuC3ZYw7MkPR_Z8_kxrryNMpozE",
+  // App Check desligado no ambiente de testes: chave vazia usa o debug token.
+  recaptchaSiteKey: "",
 };
