@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "lucrato-dev",
+    "dev": "lucrato-dev",
+    "prod": "lucrato-web"
+  }
+}

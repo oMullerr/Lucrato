@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "if [ \"$VERCEL_ENV\" = production ]; then npm run build; else npm run build:staging; fi",
   "outputDirectory": "dist/ml-gestao/browser",
   "framework": null,
   "rewrites": [
