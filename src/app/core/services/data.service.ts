@@ -9,6 +9,7 @@ import {
 import { calculatePurchase, calculateKpis, calculateSale, computeReturn, nextId } from './calculations';
 import { computeFiscalStatus } from '../fiscal/fiscal';
 import { ItemDaCaixa, PlanoDeAplicacao, planejarAplicacao } from '../ml/inbox-apply';
+import { adotarNumerosDoMl } from '../ml/reconcile';
 import { DEFAULT_FISCAL_CONFIG } from '../fiscal/fiscal-regimes';
 import { FiscalConfig } from '../fiscal/fiscal.model';
 import { AuthService } from './auth.service';
@@ -476,6 +477,25 @@ export class DataService {
     });
 
     return plano;
+  }
+
+  /**
+   * Substitui os números de uma venda digitada à mão pelos que vieram do
+   * Mercado Livre, na conciliação do histórico.
+   *
+   * Preserva id, lote, produto e observações; corrige comissão, frete,
+   * desconto, estorno e situação. Depois disso a venda carrega o `externalId`,
+   * então não volta a ser apontada como duplicata.
+   */
+  async adotarNumerosDoMl(saleId: string, item: ItemDaCaixa): Promise<void> {
+    const atual = this.findSale(saleId);
+    if (!atual) return;
+    const corrigida = adotarNumerosDoMl(atual, item);
+
+    await this.update(d => {
+      const i = d.sales.findIndex(v => v.id === saleId);
+      if (i >= 0) d.sales[i] = corrigida;
+    });
   }
 
   private migrateDatabase(data: any): Database {

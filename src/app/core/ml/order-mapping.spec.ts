@@ -133,31 +133,32 @@ describe('frete', () => {
   });
 
   /**
-   * Pedidos Flex reais chegam com custo POSITIVO (medido na conta de teste:
-   * 8,01 / 7,19 / 8,09). Classificar pelo tipo de logística faria esse valor
-   * sumir do lucro, porque no Lucrato 'flex' só soma crédito.
+   * No Flex o vendedor contrata a própria transportadora. O custo que a API
+   * reporta (8,01 na conta de teste) não é pago ao Mercado Livre, então trazê-lo
+   * poria no lucro uma despesa que não existe.
    */
-  it('Flex com custo real e cobrado como custo, nao descartado', () => {
+  it('ignora o custo que a API reporta no Flex', () => {
     const [v] = mapearPedido(pedido({ logisticType: 'self_service', shippingCostSeller: 8.01 }));
-    expect(v.sellerShipping).toBe(8.01);
-    expect(v.shippingType).toBe('correios');
-    expect(v.flexRefund).toBeUndefined();
+    expect(v.sellerShipping).toBe(0);
+    expect(v.flexRefund).toBe(0);
+    expect(v.shippingType).toBe('flex');
   });
 
-  it('marca nas observacoes que o envio foi Flex', () => {
+  it('avisa nas observacoes que o frete do Flex fica de fora', () => {
     const [v] = mapearPedido(pedido({ logisticType: 'self_service', shippingCostSeller: 8.01 }));
     expect(v.notes).toContain('Flex');
+    expect(v.notes).toContain('transportadora');
   });
 
-  it('credito vira estorno de frete, seja qual for a logistica', () => {
-    const [v] = mapearPedido(pedido({ logisticType: 'self_service', shippingCostSeller: -8.5 }));
+  it('fora do Flex, credito vira estorno de frete', () => {
+    const [v] = mapearPedido(pedido({ logisticType: 'drop_off', shippingCostSeller: -8.5 }));
     expect(v.shippingType).toBe('flex');
     expect(v.flexRefund).toBe(8.5);
     expect(v.sellerShipping).toBe(0);
   });
 
-  it('frete zero nao vira credito', () => {
-    const [v] = mapearPedido(pedido({ logisticType: 'self_service', shippingCostSeller: 0 }));
+  it('fora do Flex, frete zero nao vira credito', () => {
+    const [v] = mapearPedido(pedido({ logisticType: 'drop_off', shippingCostSeller: 0 }));
     expect(v.shippingType).toBe('correios');
     expect(v.sellerShipping).toBe(0);
     expect(v.flexRefund).toBeUndefined();

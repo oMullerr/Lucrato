@@ -259,6 +259,27 @@ export class MlIntegrationService {
   }
 
   /**
+   * Importa o histórico que o Mercado Livre ainda entrega (até 12 meses).
+   *
+   * Tudo cai na caixa de entrada, nunca direto no razão: o que parece já ter
+   * sido digitado à mão espera a sua decisão.
+   */
+  async backfill(meses = 12): Promise<number> {
+    if (this.working()) return 0;
+    this.working.set(true);
+    try {
+      const chamar = httpsCallable<{ meses: number }, { total: number }>(
+        this.functions,
+        'mlBackfill',
+      );
+      const { data } = await chamar({ meses });
+      return data.total;
+    } finally {
+      this.working.set(false);
+    }
+  }
+
+  /**
    * Avisa o servidor o que aconteceu com itens da caixa.
    *
    * O documento da caixa é só do servidor: assim o navegador não consegue

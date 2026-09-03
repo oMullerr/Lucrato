@@ -88,6 +88,50 @@
   white-space: nowrap;
 }
 
+/* ---------- conciliação: sua venda de um lado, a do ML do outro ---------- */
+.conciliar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.lados {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.lado {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.rotulo {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+}
+
+.indicios {
+  color: var(--text-tertiary);
+  font-size: 0.78rem;
+}
+
+.acoes {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+@include bp.below(md) {
+  .lados {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .rodape {
   display: flex;
   align-items: center;

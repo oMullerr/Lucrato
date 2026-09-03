@@ -4,6 +4,7 @@ import { DataService } from './data.service';
 import { MlIntegrationService } from './ml-integration.service';
 import { NotifyService } from './notify.service';
 import { logError } from './logger';
+import { classificarCaixa } from '../ml/reconcile';
 
 /**
  * Lança sozinho no razão as vendas do Mercado Livre que já estão prontas.
@@ -41,17 +42,31 @@ export class MlAutoApplyService {
     }, { allowSignalWrites: true });
   }
 
-  /** Roda uma vez a aplicação do que está pendente. Devolve quantas vendas entraram. */
+  /**
+   * Roda uma vez a aplicação do que está pendente. Devolve quantas vendas entraram.
+   *
+   * **Só entra o que foi classificado como venda nova.** O backfill traz até 12
+   * meses de pedidos, e boa parte já foi digitada à mão — lançar sem conferir
+   * duplicaria faturamento, estoque e o teto do MEI. Tudo que parece duplicata
+   * espera decisão na caixa de entrada.
+   */
   async aplicar(): Promise<number> {
     if (this.rodando()) return 0;
     const pendentes = this.ml.inboxPendentes();
     if (pendentes.length === 0) return 0;
 
+    const classificacao = classificarCaixa(pendentes, this.data.sales());
+    const novas = pendentes.filter(i => classificacao.get(i.externalId)?.veredito === 'nova');
+    if (novas.length === 0) {
+      for (const item of pendentes) this.tentados.add(item.externalId);
+      return 0;
+    }
+
     this.rodando.set(true);
     try {
       for (const item of pendentes) this.tentados.add(item.externalId);
 
-      const plano = await this.data.applyMlInbox(pendentes);
+      const plano = await this.data.applyMlInbox(novas);
       if (plano.aplicados.length > 0) {
         await this.ml.markInbox(plano.aplicados, 'aplicado');
       }

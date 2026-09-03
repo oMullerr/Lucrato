@@ -12,6 +12,7 @@
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions/v2';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 
 import { ML_CLIENT_ID, ML_CLIENT_SECRET } from '../config';
@@ -26,6 +27,8 @@ const JANELA_INICIAL_MS = 7 * 24 * 60 * 60 * 1000;
 const PAGINA = 50;
 /** Teto por rodada, para uma conta movimentada não estourar o tempo da function. */
 const MAX_POR_RODADA = 300;
+/** Teto do backfill: 12 meses de uma conta ativa cabem bem abaixo disso. */
+const MAX_BACKFILL = 3_000;
 
 const db = () => getFirestore();
 
@@ -131,6 +134,82 @@ export async function varrerVendedor(uid: string, mlUserId: string): Promise<num
   await marcarSync(uid, { ordersCursor: proximoCursor, lastPollAt: Timestamp.now() });
   return processados;
 }
+
+/**
+ * Traz o histórico que o Mercado Livre ainda entrega.
+ *
+ * A API guarda 12 meses de pedidos; depois disso não há como buscar. Tudo cai
+ * na caixa de entrada, nunca direto no razão: boa parte já foi digitada à mão,
+ * e a conciliação acontece no app, com a sua aprovação.
+ */
+export const mlBackfill = onCall(
+  {
+    enforceAppCheck: false,
+    secrets: [ML_CLIENT_ID, ML_CLIENT_SECRET],
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Faça login para importar o histórico.');
+    }
+    const uid = request.auth.uid;
+
+    const segredo = await db().doc(`users/${uid}/secret/ml`).get();
+    const mlUserId = segredo.exists ? String(segredo.get('mlUserId') ?? '') : '';
+    if (!mlUserId) {
+      throw new HttpsError('failed-precondition', 'Conecte a conta do Mercado Livre primeiro.');
+    }
+
+    const meses = Math.min(12, Math.max(1, Number((request.data as Bruto)?.['meses'] ?? 12)));
+    const desde = new Date();
+    desde.setMonth(desde.getMonth() - meses);
+
+    const cliente = criarMlClient(uid, ML_CLIENT_ID.value(), ML_CLIENT_SECRET.value());
+    let offset = 0;
+    let processados = 0;
+
+    try {
+      while (processados < MAX_BACKFILL) {
+        const pagina = await cliente.get<Bruto>('/orders/search', {
+          seller: mlUserId,
+          'order.date_created.from': desde.toISOString(),
+          sort: 'date_asc',
+          offset,
+          limit: PAGINA,
+        });
+
+        const resultados = Array.isArray(pagina['results']) ? (pagina['results'] as Bruto[]) : [];
+        if (resultados.length === 0) break;
+
+        for (const pedido of resultados) {
+          const orderId = String(pedido['id'] ?? '');
+          if (!orderId) continue;
+          await processarPedido(uid, cliente, orderId);
+          processados++;
+        }
+
+        if (resultados.length < PAGINA) break;
+        offset += PAGINA;
+      }
+
+      await marcarSync(uid, { backfillAt: Timestamp.now(), backfillTotal: processados });
+      logger.info('Histórico importado', { uid, processados, meses });
+      return { total: processados };
+    } catch (err) {
+      const motivo = String((err as Error).message);
+      logger.error('Falha no backfill', { uid, motivo, processados });
+      await db().doc(`users/${uid}/db/ml`).set(
+        { lastError: motivo, updatedAt: Timestamp.now() },
+        { merge: true },
+      );
+      if (motivo === 'reconexao_necessaria') {
+        throw new HttpsError('failed-precondition', 'Reconecte a conta do Mercado Livre.');
+      }
+      throw new HttpsError('internal', 'Não deu para importar o histórico agora.');
+    }
+  },
+);
 
 /** Rede de segurança: roda de 15 em 15 minutos para todos os conectados. */
 export const mlPoller = onSchedule(

@@ -3,6 +3,12 @@
   [eyebrow]="'mlInbox.eyebrow' | translate"
   [subtitle]="'mlInbox.subtitle' | translate"
 >
+  @if (ml.connected()) {
+    <button appBtn="outline" [disabled]="importando() || ml.working()" (click)="importarHistorico()">
+      <app-icon name="hard-drive-download" />
+      {{ 'mlInbox.importHistory' | translate }}
+    </button>
+  }
   @if (pendentes().length > 0) {
     <button appBtn="primary" [disabled]="aplicando()" (click)="aplicarAgora()">
       <app-icon name="refresh-cw" />
@@ -23,7 +29,7 @@
     </app-empty-state>
   } @else if (!ml.inboxLoaded()) {
     <app-skeleton variant="table-row" [count]="4" />
-  } @else if (pendentes().length === 0) {
+  } @else if (totalEsperando() === 0) {
     <app-empty-state
       icon="circle-check"
       [title]="'mlInbox.emptyTitle' | translate"
@@ -34,9 +40,68 @@
   } @else {
 
     <p class="resumo">
-      {{ 'mlInbox.summary' | translate:{ total: pendentes().length } }}
+      {{ 'mlInbox.summary' | translate:{ total: totalEsperando() } }}
       <strong>{{ valorPendente() | brl }}</strong>
     </p>
+
+    @for (grupo of [
+      { lista: duplicadas(), titulo: 'mlInbox.groupDuplicateTitle', msg: 'mlInbox.groupDuplicateMsg' },
+      { lista: conflitantes(), titulo: 'mlInbox.groupConflictTitle', msg: 'mlInbox.groupConflictMsg' }
+    ]; track grupo.titulo) {
+      @if (grupo.lista.length > 0) {
+        <section class="grupo">
+          <header>
+            <app-icon name="arrow-left-right" />
+            <div>
+              <h2>{{ grupo.titulo | translate:{ total: grupo.lista.length } }}</h2>
+              <p>{{ grupo.msg | translate }}</p>
+            </div>
+          </header>
+
+          <ul class="itens">
+            @for (c of grupo.lista; track c.item.externalId) {
+              <li class="conciliar">
+                <div class="lados">
+                  <div class="lado">
+                    <small class="rotulo">{{ 'mlInbox.yours' | translate }}</small>
+                    <span class="produto">{{ c.candidata.venda.product }}</span>
+                    <small>
+                      {{ c.candidata.venda.saleDate | brDate }} ·
+                      {{ c.candidata.venda.quantitySold * c.candidata.venda.unitPrice | brl }} ·
+                      {{ 'mlInbox.fee' | translate }} {{ (c.candidata.venda.feePercentage * 100).toFixed(1) }}%
+                    </small>
+                  </div>
+
+                  <app-icon name="arrow-right" />
+
+                  <div class="lado">
+                    <small class="rotulo">{{ 'mlInbox.fromMl' | translate }}</small>
+                    <span class="produto">{{ c.item.produto }}</span>
+                    <small>
+                      {{ c.item.saleDate | brDate }} ·
+                      {{ c.item.quantitySold * c.item.unitPrice | brl }} ·
+                      {{ 'mlInbox.fee' | translate }} {{ (c.item.feePercentage * 100).toFixed(1) }}% ·
+                      {{ 'mlInbox.shipping' | translate }} {{ c.item.sellerShipping | brl }}
+                    </small>
+                  </div>
+                </div>
+
+                <small class="indicios">{{ indicios(c.candidata) }}</small>
+
+                <div class="acoes">
+                  <button appBtn="ghost" (click)="manterMinha(c.item)">
+                    {{ 'mlInbox.keepMine' | translate }}
+                  </button>
+                  <button appBtn="outline" (click)="usarDoMl(c)">
+                    {{ 'mlInbox.useMl' | translate }}
+                  </button>
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
 
     @if (semVinculo().length > 0) {
       <section class="grupo">
@@ -101,6 +166,10 @@
     <p class="rodape">
       <app-icon name="info" />
       {{ 'mlInbox.autoNote' | translate }}
+    </p>
+    <p class="rodape">
+      <app-icon name="hard-drive-download" />
+      {{ 'mlInbox.importHint' | translate }}
     </p>
   }
 </div>

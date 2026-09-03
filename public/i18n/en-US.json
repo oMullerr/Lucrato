@@ -1111,6 +1111,28 @@
     "ignore": "Ignore",
     "ignored": "Sale ignored.",
     "ignoreError": "Could not ignore it. Please try again.",
-    "autoNote": "Anything with a linked product and stock posts on its own, without stopping here."
+    "autoNote": "Anything with a linked product and stock posts on its own, without stopping here.",
+    "importHistory": "Import history",
+    "imported": "{{total}} order(s) pulled from history.",
+    "importError": "Could not import the history. Please try again.",
+    "importHint": "Mercado Livre keeps 12 months of orders. Nothing is posted without your review.",
+    "groupDuplicateTitle": "Looks already posted ({{total}})",
+    "groupDuplicateMsg": "I found a very similar sale of yours. Choose which numbers win.",
+    "groupConflictTitle": "Similar, with a difference ({{total}})",
+    "groupConflictMsg": "It partly matches a sale of yours. Check before deciding.",
+    "yours": "Yours",
+    "fromMl": "Mercado Livre",
+    "keepMine": "Keep mine",
+    "useMl": "Use ML numbers",
+    "adopted": "Sale updated with Mercado Livre numbers.",
+    "adoptError": "Could not update the sale. Please try again.",
+    "matchedBy": "matches on {{indicios}}",
+    "fee": "fee",
+    "shipping": "shipping",
+    "indicio": {
+      "data": "date",
+      "valor": "amount",
+      "produto": "product"
+    }
   }
 }

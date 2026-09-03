@@ -7,6 +7,7 @@ import { MlAutoApplyService } from '../../core/services/ml-auto-apply.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { logError } from '../../core/services/logger';
 import { ItemDaCaixa, MotivoPendencia, planejarAplicacao } from '../../core/ml/inbox-apply';
+import { Candidata, classificarCaixa } from '../../core/ml/reconcile';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
@@ -20,6 +21,12 @@ import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 export interface PendenteNaTela {
   item: ItemDaCaixa;
   motivo: MotivoPendencia;
+}
+
+/** Item que parece já ter sido lançado à mão. */
+export interface ConciliacaoNaTela {
+  item: ItemDaCaixa;
+  candidata: Candidata;
 }
 
 const ICONE_DO_MOTIVO: Record<MotivoPendencia, IconName> = {
@@ -47,22 +54,48 @@ export class MlInboxComponent {
   private readonly t = inject(TranslateService);
 
   protected readonly aplicando = signal(false);
+  protected readonly importando = signal(false);
   protected readonly icone = ICONE_DO_MOTIVO;
 
+  /** Veredito de cada item pendente contra as vendas já lançadas. */
+  private readonly classificacao = computed(() =>
+    classificarCaixa(this.ml.inboxPendentes(), this.data.sales()),
+  );
+
+  /** Itens que casaram com alguma venda sua e precisam da sua decisão. */
+  protected readonly duplicadas = computed<ConciliacaoNaTela[]>(() =>
+    this.paraConciliar('duplicada'),
+  );
+
+  protected readonly conflitantes = computed<ConciliacaoNaTela[]>(() =>
+    this.paraConciliar('conflitante'),
+  );
+
+  private paraConciliar(veredito: 'duplicada' | 'conflitante'): ConciliacaoNaTela[] {
+    const mapa = this.classificacao();
+    return this.ml
+      .inboxPendentes()
+      .filter(i => mapa.get(i.externalId)?.veredito === veredito)
+      .map(item => ({ item, candidata: mapa.get(item.externalId)!.candidata! }))
+      .sort((a, b) => b.item.saleDate.localeCompare(a.item.saleDate));
+  }
+
   /**
-   * O que está pendente e por quê.
+   * O que está pendente por falta de vínculo ou estoque.
    *
    * O motivo sai do mesmo planejador que aplica de verdade, então a tela nunca
-   * discorda do que aconteceria ao clicar em aplicar.
+   * discorda do que aconteceria ao clicar em aplicar. Itens em conciliação não
+   * entram aqui: eles esperam decisão, não estoque.
    */
   protected readonly pendentes = computed<PendenteNaTela[]>(() => {
-    const itens = this.ml.inboxPendentes();
-    if (itens.length === 0) return [];
+    const mapa = this.classificacao();
+    const novos = this.ml.inboxPendentes().filter(i => mapa.get(i.externalId)?.veredito === 'nova');
+    if (novos.length === 0) return [];
 
-    const plano = planejarAplicacao(itens, this.data.computedPurchases(), this.data.sales());
+    const plano = planejarAplicacao(novos, this.data.computedPurchases(), this.data.sales());
     const porId = new Map(plano.pendentes.map(p => [p.externalId, p.motivo]));
 
-    return itens
+    return novos
       .filter(i => porId.has(i.externalId))
       .map(item => ({ item, motivo: porId.get(item.externalId)! }))
       .sort((a, b) => b.item.saleDate.localeCompare(a.item.saleDate));
@@ -76,10 +109,34 @@ export class MlInboxComponent {
     this.pendentes().filter(p => p.motivo === 'sem_estoque'),
   );
 
-  /** Valor parado esperando decisão — dá a dimensão do que ainda não entrou. */
-  protected readonly valorPendente = computed(() =>
-    this.pendentes().reduce((s, p) => s + p.item.unitPrice * p.item.quantitySold, 0),
+  protected readonly totalEsperando = computed(() =>
+    this.pendentes().length + this.duplicadas().length + this.conflitantes().length,
   );
+
+  /** Valor parado esperando decisão — dá a dimensão do que ainda não entrou. */
+  protected readonly valorPendente = computed(() => {
+    const soma = (l: { item: ItemDaCaixa }[]) =>
+      l.reduce((s, p) => s + p.item.unitPrice * p.item.quantitySold, 0);
+    return soma(this.pendentes()) + soma(this.duplicadas()) + soma(this.conflitantes());
+  });
+
+  protected indicios(c: Candidata): string {
+    const nomes = c.indicios.map(i => this.t.instant(`mlInbox.indicio.${i}`));
+    return this.t.instant('mlInbox.matchedBy', { indicios: nomes.join(', ') });
+  }
+
+  protected async importarHistorico(): Promise<void> {
+    this.importando.set(true);
+    try {
+      const total = await this.ml.backfill(12);
+      this.notify.success(this.t.instant('mlInbox.imported', { total }));
+    } catch (err) {
+      logError('[MlInbox] backfill falhou:', err);
+      this.notify.error(this.t.instant('mlInbox.importError'));
+    } finally {
+      this.importando.set(false);
+    }
+  }
 
   protected async aplicarAgora(): Promise<void> {
     this.aplicando.set(true);
@@ -94,6 +151,23 @@ export class MlInboxComponent {
       this.notify.error(this.t.instant('mlInbox.applyError'));
     } finally {
       this.aplicando.set(false);
+    }
+  }
+
+  /** Mantém a venda digitada à mão e tira o item do Mercado Livre do caminho. */
+  protected async manterMinha(item: ItemDaCaixa): Promise<void> {
+    await this.ignorar(item);
+  }
+
+  /** Substitui os números da venda manual pelos reais do Mercado Livre. */
+  protected async usarDoMl(c: ConciliacaoNaTela): Promise<void> {
+    try {
+      await this.data.adotarNumerosDoMl(c.candidata.venda.id, c.item);
+      await this.ml.markInbox([c.item.externalId], 'aplicado');
+      this.notify.success(this.t.instant('mlInbox.adopted'));
+    } catch (err) {
+      logError('[MlInbox] adotar numeros falhou:', err);
+      this.notify.error(this.t.instant('mlInbox.adoptError'));
     }
   }
 

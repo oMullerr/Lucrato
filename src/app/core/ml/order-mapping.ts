@@ -145,13 +145,16 @@ function descontoDoItem(item: MlOrderItem): number {
 /**
  * Um rascunho por item do pedido.
  *
- * **O frete segue o sinal do dinheiro, não o tipo de logística.**
- * O Lucrato só tem dois modos e eles são excludentes: `correios` subtrai
- * `sellerShipping` e `flex` soma `flexRefund`. Como pedidos Flex reais chegam
- * com `senders[].cost` POSITIVO (a conta do vendedor), classificar por tipo de
- * logística faria esse valor sumir do lucro. Então: valor a pagar entra como
- * custo, valor a receber entra como estorno, e o fato de ter sido Flex fica
- * registrado nas observações.
+ * **Frete no Flex fica de fora.** Pedidos `self_service` chegam com
+ * `senders[].cost` positivo (8,01 na conta de teste), mas esse valor não é
+ * pago ao Mercado Livre: no Flex o vendedor contrata a própria transportadora,
+ * e o custo real é outro. Importar o número do ML aqui poria no lucro uma
+ * despesa que não existe, então ele é ignorado e a venda fica marcada como
+ * Flex para o custo da transportadora ser lançado à parte.
+ *
+ * Fora do Flex, o frete segue o **sinal do dinheiro**, que é o que o motor do
+ * Lucrato entende: valor a pagar vira custo (`correios`), valor a receber vira
+ * estorno (`flex`).
  */
 export function mapearPedido(order: MlOrderNormalizada): RascunhoVenda[] {
   const data = diaLocalDeISO(order.dateClosed || order.dateCreated);
@@ -167,8 +170,8 @@ export function mapearPedido(order: MlOrderNormalizada): RascunhoVenda[] {
     const custoFrete = frete > 0 ? frete : 0;
     const creditoFrete = frete < 0 ? Math.abs(frete) : 0;
     const estorno = estornos[i] ?? 0;
-    // Crédito (custo negativo) é o único caso que o Lucrato trata como 'flex'.
-    const ehCredito = creditoFrete > 0;
+    // Fora do Flex, crédito (custo negativo) é o que o Lucrato trata como 'flex'.
+    const ehCredito = !ehFlex && creditoFrete > 0;
 
     return {
       externalId: [order.orderId, item.itemId, item.variationId].filter(Boolean).join(':'),
@@ -183,14 +186,14 @@ export function mapearPedido(order: MlOrderNormalizada): RascunhoVenda[] {
       unitPrice: item.unitPrice,
       saleDate: data,
       feePercentage: fracaoDaComissao(item.saleFee, item.unitPrice, item.quantity),
-      shippingType: ehCredito ? 'flex' : 'correios',
-      sellerShipping: ehCredito ? 0 : custoFrete,
-      ...(ehCredito ? { flexRefund: creditoFrete } : {}),
+      shippingType: ehFlex || ehCredito ? 'flex' : 'correios',
+      sellerShipping: ehFlex || ehCredito ? 0 : custoFrete,
+      ...(ehFlex || ehCredito ? { flexRefund: ehFlex ? 0 : creditoFrete } : {}),
       discount: descontoDoItem(item),
       ...(estorno > 0 ? { estorno: Math.round(estorno * 100) / 100 } : {}),
       status,
       notes: ehFlex
-        ? `Mercado Livre · pedido ${order.orderId} · envio Flex`
+        ? `Mercado Livre · pedido ${order.orderId} · envio Flex (frete da transportadora à parte)`
         : `Mercado Livre · pedido ${order.orderId}`,
     };
   });

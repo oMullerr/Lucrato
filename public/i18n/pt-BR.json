@@ -1111,6 +1111,28 @@
     "ignore": "Ignorar",
     "ignored": "Venda ignorada.",
     "ignoreError": "Não deu para ignorar. Tente de novo.",
-    "autoNote": "O que tem produto vinculado e estoque entra sozinho, sem passar por aqui."
+    "autoNote": "O que tem produto vinculado e estoque entra sozinho, sem passar por aqui.",
+    "importHistory": "Importar histórico",
+    "imported": "{{total}} pedido(s) trazido(s) do histórico.",
+    "importError": "Não deu para importar o histórico. Tente de novo.",
+    "importHint": "O Mercado Livre guarda 12 meses de pedidos. Nada entra no razão sem a sua conferência.",
+    "groupDuplicateTitle": "Já parece estar lançada ({{total}})",
+    "groupDuplicateMsg": "Encontrei uma venda sua muito parecida. Escolha qual número vale.",
+    "groupConflictTitle": "Parecida, mas com divergência ({{total}})",
+    "groupConflictMsg": "Bate em parte com uma venda sua. Confira antes de decidir.",
+    "yours": "Sua",
+    "fromMl": "Mercado Livre",
+    "keepMine": "Manter a minha",
+    "useMl": "Usar os números do ML",
+    "adopted": "Venda atualizada com os números do Mercado Livre.",
+    "adoptError": "Não deu para atualizar a venda. Tente de novo.",
+    "matchedBy": "bate em {{indicios}}",
+    "fee": "comissão",
+    "shipping": "frete",
+    "indicio": {
+      "data": "data",
+      "valor": "valor",
+      "produto": "produto"
+    }
   }
 }
