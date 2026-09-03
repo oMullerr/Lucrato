@@ -35,6 +35,11 @@ Thumbs.db
 /chaves/
 .env.*.local
 
+# Emuladores do Firebase
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
+
 # Cloud Functions
 /functions/node_modules
 /functions/lib

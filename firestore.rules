@@ -24,15 +24,57 @@ service cloud.firestore {
              && (!('metadata' in d)  || d.metadata is map);
     }
 
-    // Cada usuário só acessa o próprio documento de dados em users/{uid}/db/{doc}.
-    // O caminho fixo impede criar subcoleções/documentos arbitrários (abuso de cota).
-    match /users/{userId}/db/{docId} {
+    // Análises salvas da calculadora. Documento próprio para não disputar
+    // gravação com o documento principal.
+    function isValidAnalysesDoc() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['analyses', 'metadata'])
+             && (!('analyses' in d) || (d.analyses is list && d.analyses.size() <= 2000))
+             && (!('metadata' in d) || d.metadata is map);
+    }
+
+    // Documento principal de dados. Caminho fixo, como sempre foi.
+    match /users/{userId}/db/main {
       allow read:           if isVerifiedOwner(userId);
       allow create, update: if isVerifiedOwner(userId) && isValidMainDoc();
       allow delete:         if isVerifiedOwner(userId);
     }
 
-    // Nega qualquer outro caminho explicitamente.
+    // Estado da integração com o Mercado Livre (nickname, cursores, último
+    // sync, erros). Só o servidor escreve, via Admin SDK.
+    match /users/{userId}/db/ml {
+      allow read:  if isVerifiedOwner(userId);
+      allow write: if false;
+    }
+
+    // Análises da calculadora: gravadas pelo próprio app.
+    match /users/{userId}/db/analyses {
+      allow read:           if isVerifiedOwner(userId);
+      allow create, update: if isVerifiedOwner(userId) && isValidAnalysesDoc();
+      allow delete:         if isVerifiedOwner(userId);
+    }
+
+    // Dados trazidos do Mercado Livre. O app lê para exibir; quem escreve é
+    // sempre o servidor (o Admin SDK ignora estas regras).
+    match /users/{userId}/mlItems/{itemId} {
+      allow read:  if isVerifiedOwner(userId);
+      allow write: if false;
+    }
+    match /users/{userId}/mlLinks/{itemId} {
+      allow read:  if isVerifiedOwner(userId);
+      allow write: if false;
+    }
+    match /users/{userId}/mlInbox/{docId} {
+      allow read:  if isVerifiedOwner(userId);
+      allow write: if false;
+    }
+
+    // Nega qualquer outro caminho explicitamente. Cobre, entre outros:
+    //   users/{uid}/secret/ml     tokens do Mercado Livre
+    //   users/{uid}/mlOrders/*    payloads crus (auditoria)
+    //   users/{uid}/mlEvents/*    fila do webhook
+    //   mlIndex/*                 mapeamento user_id do ML -> uid
+    // Nenhum deles é legível pelo navegador em hipótese alguma.
     match /{document=**} {
       allow read, write: if false;
     }
