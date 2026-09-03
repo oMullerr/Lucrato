@@ -26,7 +26,8 @@
     "profile": "Profile · Lucrato",
     "instructions": "Instructions · Lucrato",
     "returns": "Returns · Lucrato",
-    "integrations": "Integrations · Lucrato"
+    "integrations": "Integrations · Lucrato",
+    "listings": "Listings · Lucrato"
   },
   "common": {
     "save": "Save",
@@ -69,7 +70,8 @@
     "mainNav": "Main navigation",
     "tagline": "Mercado Livre Management",
     "returns": "Returns",
-    "integrations": "Integrations"
+    "integrations": "Integrations",
+    "listings": "Listings"
   },
   "topbar": {
     "openMenu": "Open menu",
@@ -1030,6 +1032,41 @@
       "shipping": "Shipping you paid on each delivery",
       "returns": "Returns and claims, with their real cost",
       "listings": "Your listings: title, SKU, price and stock"
+    }
+  },
+  "listings": {
+    "title": "Listings",
+    "eyebrow": "Mercado Livre",
+    "subtitle": "Link each listing to one of your products. After that, its sales land in the right batch.",
+    "sync": "Sync listings",
+    "synced": "{{total}} listing(s) synced.",
+    "syncError": "Could not sync the listings. Please try again.",
+    "notConnected": "Connect Mercado Livre first",
+    "notConnectedMsg": "Your listings show up here once the account is connected.",
+    "goToIntegrations": "Go to Integrations",
+    "emptyTitle": "No listings yet",
+    "emptyMsg": "Sync to bring your Mercado Livre listings in.",
+    "summary": "{{total}} listing(s), {{semVinculo}} still without a product.",
+    "save": "Save {{total}} link(s)",
+    "linksSaved": "{{total}} link(s) saved.",
+    "linksError": "Could not save the links. Please try again.",
+    "colItem": "Listing",
+    "colPrice": "Price",
+    "colStock": "Stock on ML",
+    "colProduct": "Product in Lucrato",
+    "pickProduct": "Choose product",
+    "searchProduct": "Search product…",
+    "noLink": "No link",
+    "sku": "SKU",
+    "bySku": "suggested by SKU",
+    "byTitle": "suggested by title",
+    "stockMismatch": "Mercado Livre has {{ml}} and Lucrato calculates {{lucrato}}.",
+    "fifoNote": "The batch is picked at sale time, always the oldest one with stock.",
+    "status": {
+      "paused": "paused",
+      "closed": "closed",
+      "under_review": "under review",
+      "inactive": "inactive"
     }
   }
 }

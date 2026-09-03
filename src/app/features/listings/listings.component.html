@@ -1,0 +1,121 @@
+<app-page-header
+  [title]="'listings.title' | translate"
+  [eyebrow]="'listings.eyebrow' | translate"
+  [subtitle]="'listings.subtitle' | translate"
+>
+  @if (ml.connected()) {
+    <button appBtn="outline" [disabled]="ml.working()" (click)="sincronizar()">
+      <app-icon name="refresh-cw" />
+      {{ 'listings.sync' | translate }}
+    </button>
+  }
+</app-page-header>
+
+<div class="page-content listings-body">
+
+  @if (!ml.connected()) {
+    <app-empty-state
+      icon="store"
+      [title]="'listings.notConnected' | translate"
+      [description]="'listings.notConnectedMsg' | translate"
+    >
+      <a appBtn="primary" routerLink="/integracoes">{{ 'listings.goToIntegrations' | translate }}</a>
+    </app-empty-state>
+  } @else if (!ml.itemsLoaded()) {
+    <app-skeleton variant="table-row" [count]="6" />
+  } @else if (linhas().length === 0) {
+    <app-empty-state
+      icon="package"
+      [title]="'listings.emptyTitle' | translate"
+      [description]="'listings.emptyMsg' | translate"
+    >
+      <button appBtn="primary" [disabled]="ml.working()" (click)="sincronizar()">
+        {{ 'listings.sync' | translate }}
+      </button>
+    </app-empty-state>
+  } @else {
+
+    <div class="toolbar">
+      <p class="resumo">
+        {{ 'listings.summary' | translate:{ total: linhas().length, semVinculo: semVinculo() } }}
+      </p>
+      @if (pendentes().length > 0) {
+        <button appBtn="primary" [disabled]="salvando()" (click)="salvar()">
+          {{ 'listings.save' | translate:{ total: pendentes().length } }}
+        </button>
+      }
+    </div>
+
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'listings.colItem' | translate }}</th>
+            <th scope="col" class="num">{{ 'listings.colPrice' | translate }}</th>
+            <th scope="col" class="num">{{ 'listings.colStock' | translate }}</th>
+            <th scope="col">{{ 'listings.colProduct' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of linhas(); track l.item.id) {
+            <tr [class.pendente]="l.escolha !== l.salvo">
+              <td class="anuncio">
+                @if (l.item.thumbnail) {
+                  <img [src]="l.item.thumbnail" [alt]="l.item.title" loading="lazy" width="40" height="40" />
+                }
+                <div class="anuncio-texto">
+                  <a [href]="l.item.permalink" target="_blank" rel="noopener noreferrer">{{ l.item.title }}</a>
+                  <small>
+                    {{ l.item.id }}
+                    @if (l.item.sku) { · {{ 'listings.sku' | translate }} {{ l.item.sku }} }
+                    @if (l.item.status !== 'active') { · {{ 'listings.status.' + l.item.status | translate }} }
+                  </small>
+                </div>
+              </td>
+
+              <td class="num">{{ l.item.price | brl }}</td>
+
+              <td class="num">
+                <span
+                  [class.divergente]="divergente(l)"
+                  [appTooltip]="divergente(l)
+                    ? ('listings.stockMismatch' | translate:{ ml: l.item.availableQuantity, lucrato: l.estoqueLucrato })
+                    : ''"
+                >
+                  {{ l.item.availableQuantity }}
+                  @if (divergente(l)) { <app-icon name="triangle-alert" /> }
+                </span>
+              </td>
+
+              <td class="vinculo">
+                <app-select
+                  [ngModel]="l.escolha"
+                  (ngModelChange)="escolher(l.item.id, $event)"
+                  [placeholder]="'listings.pickProduct' | translate"
+                  [searchable]="true"
+                  [searchPlaceholder]="'listings.searchProduct' | translate"
+                >
+                  <app-option [value]="''" [label]="'listings.noLink' | translate" />
+                  @for (nome of nomesDeProdutos(); track nome) {
+                    <app-option [value]="nome" [label]="nome" />
+                  }
+                </app-select>
+
+                @if (l.sugestao) {
+                  <small class="sugestao">
+                    {{ (l.sugestao === 'sku' ? 'listings.bySku' : 'listings.byTitle') | translate }}
+                  </small>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="rodape">
+      <app-icon name="info" />
+      {{ 'listings.fifoNote' | translate }}
+    </p>
+  }
+</div>

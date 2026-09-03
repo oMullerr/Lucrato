@@ -26,7 +26,8 @@
     "profile": "Perfil · Lucrato",
     "instructions": "Instrucciones · Lucrato",
     "returns": "Devoluciones · Lucrato",
-    "integrations": "Integraciones · Lucrato"
+    "integrations": "Integraciones · Lucrato",
+    "listings": "Publicaciones · Lucrato"
   },
   "common": {
     "save": "Guardar",
@@ -69,7 +70,8 @@
     "mainNav": "Navegación principal",
     "tagline": "Gestión Mercado Livre",
     "returns": "Devoluciones",
-    "integrations": "Integraciones"
+    "integrations": "Integraciones",
+    "listings": "Publicaciones"
   },
   "topbar": {
     "openMenu": "Abrir menú",
@@ -1030,6 +1032,41 @@
       "shipping": "Envío que pagaste en cada despacho",
       "returns": "Devoluciones y reclamos, con su costo real",
       "listings": "Tus publicaciones: título, SKU, precio y stock"
+    }
+  },
+  "listings": {
+    "title": "Publicaciones",
+    "eyebrow": "Mercado Libre",
+    "subtitle": "Vinculá cada publicación con un producto tuyo. Después, sus ventas caen en el lote correcto.",
+    "sync": "Sincronizar publicaciones",
+    "synced": "{{total}} publicación(es) sincronizada(s).",
+    "syncError": "No se pudo sincronizar. Probá de nuevo.",
+    "notConnected": "Conectá Mercado Libre primero",
+    "notConnectedMsg": "Tus publicaciones aparecen acá cuando la cuenta esté conectada.",
+    "goToIntegrations": "Ir a Integraciones",
+    "emptyTitle": "Todavía no hay publicaciones",
+    "emptyMsg": "Sincronizá para traer tus publicaciones de Mercado Libre.",
+    "summary": "{{total}} publicación(es), {{semVinculo}} sin producto todavía.",
+    "save": "Guardar {{total}} vínculo(s)",
+    "linksSaved": "{{total}} vínculo(s) guardado(s).",
+    "linksError": "No se pudieron guardar los vínculos. Probá de nuevo.",
+    "colItem": "Publicación",
+    "colPrice": "Precio",
+    "colStock": "Stock en ML",
+    "colProduct": "Producto en Lucrato",
+    "pickProduct": "Elegir producto",
+    "searchProduct": "Buscar producto…",
+    "noLink": "Sin vínculo",
+    "sku": "SKU",
+    "bySku": "sugerido por SKU",
+    "byTitle": "sugerido por título",
+    "stockMismatch": "Mercado Libre tiene {{ml}} y Lucrato calcula {{lucrato}}.",
+    "fifoNote": "El lote se elige en la venta, siempre el más viejo con stock.",
+    "status": {
+      "paused": "pausada",
+      "closed": "cerrada",
+      "under_review": "en revisión",
+      "inactive": "inactiva"
     }
   }
 }

@@ -8,6 +8,7 @@
 jest.mock('@angular/fire/firestore', () => ({
   Firestore: class Firestore {},
   doc: jest.fn((..._args: unknown[]) => ({ __doc: true, path: _args.slice(1).join('/') })),
+  collection: jest.fn((..._args: unknown[]) => ({ __col: true, path: _args.slice(1).join('/') })),
   onSnapshot: jest.fn(),
 }));
 jest.mock('@angular/fire/functions', () => ({
@@ -33,7 +34,13 @@ function snapshotDe(data: Record<string, unknown> | null): unknown {
 }
 
 function setup(): MlIntegrationService {
-  (onSnapshot as unknown as jest.Mock).mockImplementation((_ref, next: SnapHandler) => {
+  // Três listeners são abertos: db/ml (documento) e as coleções mlItems/mlLinks.
+  // Só o do documento interessa aqui; os outros recebem um snapshot vazio.
+  (onSnapshot as unknown as jest.Mock).mockImplementation((ref: { __col?: boolean }, next: SnapHandler) => {
+    if (ref?.__col) {
+      next({ docs: [] });
+      return () => undefined;
+    }
     emitir = next;
     return () => undefined;
   });

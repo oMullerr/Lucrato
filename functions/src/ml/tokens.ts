@@ -62,6 +62,16 @@ export async function saveTokens(
   );
 }
 
+/**
+ * Força a próxima chamada a renovar o access token.
+ *
+ * Usado quando o Mercado Livre devolve 401 antes da expiração prevista — token
+ * revogado, senha trocada, sessão derrubada.
+ */
+export async function invalidarAccessToken(uid: string): Promise<void> {
+  await secretRef(uid).set({ expiresAt: 0 }, { merge: true });
+}
+
 /** Marca a conta como "precisa reconectar" e conta o motivo ao app. */
 export async function marcarReconexao(uid: string, motivo: string): Promise<void> {
   await secretRef(uid).set({ status: 'reconnect_required' }, { merge: true });

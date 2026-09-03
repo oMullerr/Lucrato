@@ -2,7 +2,9 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2022",
-    "lib": ["es2022"],
+    "lib": [
+      "es2022"
+    ],
     "moduleResolution": "node",
     "outDir": "lib",
     "rootDir": "..",
@@ -18,7 +20,12 @@
   "include": [
     "src/**/*.ts",
     "../src/app/core/models/models.ts",
-    "../src/app/core/fiscal/fiscal.model.ts"
+    "../src/app/core/fiscal/fiscal.model.ts",
+    "../src/app/core/ml/matching.ts"
   ],
-  "exclude": ["lib", "node_modules", "**/*.spec.ts"]
+  "exclude": [
+    "lib",
+    "node_modules",
+    "**/*.spec.ts"
+  ]
 }

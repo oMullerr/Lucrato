@@ -1,9 +1,32 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
-import { Firestore, doc, onSnapshot } from '@angular/fire/firestore';
+import { Firestore, collection, doc, onSnapshot } from '@angular/fire/firestore';
 import type { Unsubscribe } from '@angular/fire/firestore';
 import { Functions, httpsCallable } from '@angular/fire/functions';
 import { AuthService } from './auth.service';
 import { logError } from './logger';
+
+/** Anúncio sincronizado do Mercado Livre (`users/{uid}/mlItems`). */
+export interface MlItem {
+  id: string;
+  title: string;
+  sku: string | null;
+  price: number;
+  availableQuantity: number;
+  soldQuantity: number;
+  status: string;
+  listingTypeId: string;
+  permalink: string;
+  thumbnail: string;
+  logisticType: string;
+  freeShipping: boolean;
+}
+
+/** Vínculo confirmado entre um anúncio e um produto (`users/{uid}/mlLinks`). */
+export interface MlLink {
+  itemId: string;
+  produto: string;
+  productKey: string;
+}
 
 /** Estado da conexão, espelhado pelo servidor em `users/{uid}/db/ml`. */
 export type MlStatus = 'disconnected' | 'connected' | 'reconnect_required';
@@ -52,7 +75,11 @@ export class MlIntegrationService {
   private readonly auth = inject(AuthService);
 
   private readonly _state = signal<MlIntegrationState | null>(null);
+  private readonly _items = signal<MlItem[] | null>(null);
+  private readonly _links = signal<MlLink[] | null>(null);
   private _unsub?: Unsubscribe;
+  private _unsubItems?: Unsubscribe;
+  private _unsubLinks?: Unsubscribe;
 
   /** `null` enquanto o documento ainda não chegou. */
   readonly state = this._state.asReadonly();
@@ -60,6 +87,17 @@ export class MlIntegrationService {
   readonly connected = computed(() => this._state()?.connected === true);
   readonly needsReconnect = computed(() => this._state()?.status === 'reconnect_required');
   readonly nickname = computed(() => this._state()?.nickname ?? '');
+
+  /** Anúncios sincronizados, ordenados por título. `null` antes da primeira leitura. */
+  readonly items = computed(() => this._items());
+  readonly itemsLoaded = computed(() => this._items() !== null);
+
+  /** Vínculo por id de anúncio, para a tela cruzar em O(1). */
+  readonly linksByItem = computed(() => {
+    const mapa = new Map<string, MlLink>();
+    for (const l of this._links() ?? []) mapa.set(l.itemId, l);
+    return mapa;
+  });
 
   /** Em andamento: trava o botão e evita disparar dois fluxos ao mesmo tempo. */
   readonly working = signal(false);
@@ -76,6 +114,7 @@ export class MlIntegrationService {
   }
 
   private watch(uid: string): void {
+    this.watchColecoes(uid);
     this._unsub?.();
     this._unsub = onSnapshot(
       doc(this.firestore, `users/${uid}/db/ml`),
@@ -102,10 +141,43 @@ export class MlIntegrationService {
     );
   }
 
+  /** Coleções escritas pelo servidor: o app só lê (ver `firestore.rules`). */
+  private watchColecoes(uid: string): void {
+    this._unsubItems?.();
+    this._unsubItems = onSnapshot(
+      collection(this.firestore, `users/${uid}/mlItems`),
+      snap => {
+        const itens = snap.docs.map(d => d.data() as MlItem);
+        itens.sort((a, b) => (a.title ?? '').localeCompare(b.title ?? '', 'pt-BR'));
+        this._items.set(itens);
+      },
+      err => {
+        logError('[MlIntegration] mlItems falhou:', err);
+        this._items.set([]);
+      },
+    );
+
+    this._unsubLinks?.();
+    this._unsubLinks = onSnapshot(
+      collection(this.firestore, `users/${uid}/mlLinks`),
+      snap => this._links.set(snap.docs.map(d => d.data() as MlLink)),
+      err => {
+        logError('[MlIntegration] mlLinks falhou:', err);
+        this._links.set([]);
+      },
+    );
+  }
+
   private stop(): void {
     this._unsub?.();
+    this._unsubItems?.();
+    this._unsubLinks?.();
     this._unsub = undefined;
+    this._unsubItems = undefined;
+    this._unsubLinks = undefined;
     this._state.set(null);
+    this._items.set(null);
+    this._links.set(null);
   }
 
   /**
@@ -128,6 +200,37 @@ export class MlIntegrationService {
       this.working.set(false);
       throw err;
     }
+  }
+
+  /**
+   * Puxa a lista de anúncios do Mercado Livre.
+   *
+   * Pode demorar em contas grandes: o servidor pagina com scroll e busca os
+   * detalhes em blocos. Devolve quantos anúncios vieram.
+   */
+  async syncItems(): Promise<number> {
+    if (this.working()) return 0;
+    this.working.set(true);
+    try {
+      const chamar = httpsCallable<void, { total: number }>(this.functions, 'mlSyncItems');
+      const { data } = await chamar();
+      return data.total;
+    } finally {
+      this.working.set(false);
+    }
+  }
+
+  /**
+   * Confirma vínculos anúncio → produto. Produto vazio desfaz o vínculo.
+   * A chave é normalizada no servidor, pelo mesmo módulo que a tela usa.
+   */
+  async setLinks(links: readonly { itemId: string; produto: string }[]): Promise<void> {
+    if (links.length === 0) return;
+    const chamar = httpsCallable<
+      { links: readonly { itemId: string; produto: string }[] },
+      { vinculados: number; desfeitos: number }
+    >(this.functions, 'mlSetLinks');
+    await chamar({ links });
   }
 
   /** Apaga tokens e índice no servidor. Não mexe em nada já importado. */

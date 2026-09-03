@@ -51,6 +51,7 @@ const NAV_GROUPS: NavGroup[] = [
       { path: '/purchases', label: 'nav.purchases', icon: 'shopping-cart', title: 'nav.purchases' },
       { path: '/sales',     label: 'nav.sales',     icon: 'tag',           title: 'nav.sales' },
       { path: '/returns',   label: 'nav.returns',   icon: 'rotate-ccw',    title: 'nav.returns' },
+      { path: '/anuncios',  label: 'nav.listings',  icon: 'tags',          title: 'nav.listings' },
     ],
   },
   {

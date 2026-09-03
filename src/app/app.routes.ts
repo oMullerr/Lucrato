@@ -72,6 +72,12 @@ export const routes: Routes = [
     title: 'routeTitles.integrations',
   },
   {
+    path: 'anuncios',
+    loadComponent: () => import('./features/listings/listings.component').then(m => m.ListingsComponent),
+    canActivate: [authGuard],
+    title: 'routeTitles.listings',
+  },
+  {
     path: 'profile',
     loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
     canActivate: [authGuard],

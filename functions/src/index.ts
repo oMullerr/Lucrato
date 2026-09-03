@@ -27,3 +27,5 @@ export const mlHealth = onCall({ enforceAppCheck: false }, (request) => {
 });
 
 export { mlAuthUrl, mlAuthCallback, mlDisconnect } from './ml/oauth';
+export { mlSyncItems } from './ml/items';
+export { mlSetLinks } from './ml/links';
