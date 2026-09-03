@@ -43,6 +43,7 @@ const NAV_GROUPS: NavGroup[] = [
       { path: '/inventory',  label: 'nav.inventory', icon: 'package',      title: 'nav.inventoryTitle' },
       { path: '/dashboard',  label: 'nav.dashboard', icon: 'chart-column', title: 'nav.dashboard' },
       { path: '/analytics',  label: 'nav.analytics', icon: 'chart-spline', title: 'nav.analytics' },
+      { path: '/calculadora', label: 'nav.calculator', icon: 'calculator',   title: 'nav.calculator' },
       { path: '/fiscal',     label: 'nav.fiscal',    icon: 'landmark',     title: 'nav.fiscal' },
     ],
   },

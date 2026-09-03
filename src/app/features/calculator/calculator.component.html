@@ -1,0 +1,222 @@
+<app-page-header
+  [title]="'calculator.title' | translate"
+  [eyebrow]="'calculator.eyebrow' | translate"
+  [subtitle]="'calculator.subtitle' | translate"
+>
+  @if (temResultado()) {
+    <button appBtn="ghost" [disabled]="salvando()" (click)="salvar()">
+      <app-icon name="save" />
+      {{ 'calculator.save' | translate }}
+    </button>
+    <button appBtn="outline" (click)="virarCompra()">
+      <app-icon name="shopping-cart" />
+      {{ 'calculator.toPurchase' | translate }}
+    </button>
+  }
+</app-page-header>
+
+<div class="page-content calc-body">
+
+  <!-- Buscar dados reais do anúncio -->
+  <section class="busca">
+    <app-field class="f-link" [label]="'calculator.linkLabel' | translate"
+      [hint]="'calculator.linkHint' | translate">
+      <input
+        appInput
+        type="text"
+        [placeholder]="'calculator.linkPlaceholder' | translate"
+        [ngModel]="link()"
+        (ngModelChange)="link.set($event)"
+      />
+    </app-field>
+    <button
+      appBtn="primary"
+      [disabled]="!podeBuscar() || buscando() || !ml.connected()"
+      [appTooltip]="!ml.connected() ? ('calculator.needConnection' | translate) : ''"
+      (click)="buscarDados()"
+    >
+      <app-icon name="search" />
+      {{ 'calculator.fetch' | translate }}
+    </button>
+  </section>
+
+  <div class="colunas">
+    <!-- ---------- entradas ---------- -->
+    <section class="cartao entradas">
+      <h2>{{ 'calculator.inputsTitle' | translate }}</h2>
+
+      <app-field [label]="'calculator.product' | translate">
+        <input appInput type="text" [ngModel]="titulo()" (ngModelChange)="titulo.set($event)" />
+      </app-field>
+
+      <div class="par">
+        <app-field [label]="'calculator.price' | translate">
+          <input appInput type="number" min="0" step="0.01" inputmode="decimal"
+            [ngModel]="precoVenda()" (ngModelChange)="precoVenda.set(numero($event))" />
+        </app-field>
+        <app-field [label]="'calculator.quantity' | translate">
+          <input appInput type="number" min="1" step="1" inputmode="numeric"
+            [ngModel]="quantidade()" (ngModelChange)="quantidade.set(numero($event))" />
+        </app-field>
+      </div>
+
+      <div class="par">
+        <app-field [label]="'calculator.cost' | translate">
+          <input appInput type="number" min="0" step="0.01" inputmode="decimal"
+            [ngModel]="custoProduto()" (ngModelChange)="custoProduto.set(numero($event))" />
+        </app-field>
+        <app-field [label]="'calculator.extras' | translate"
+          [hint]="'calculator.extrasHint' | translate">
+          <input appInput type="number" min="0" step="0.01" inputmode="decimal"
+            [ngModel]="custosExtras()" (ngModelChange)="custosExtras.set(numero($event))" />
+        </app-field>
+      </div>
+
+      <fieldset class="tipos">
+        <legend>{{ 'calculator.listingType' | translate }}</legend>
+        <div class="opcoes">
+          @for (t of tipos; track t.id) {
+            <button
+              type="button"
+              class="opcao"
+              [class.ativa]="tipo() === t.id"
+              (click)="escolherTipo(t.id)"
+            >{{ t.rotulo }}</button>
+          }
+        </div>
+      </fieldset>
+
+      <div class="par">
+        <app-field [label]="'calculator.fee' | translate"
+          [hint]="veioDaApi() ? ('calculator.feeFromMl' | translate) : ('calculator.feeGuess' | translate)">
+          <input appInput type="number" min="0" max="100" step="0.01" inputmode="decimal"
+            [ngModel]="comissaoPct()" (ngModelChange)="comissaoPct.set(numero($event))" />
+        </app-field>
+        <app-field [label]="'calculator.fixedFee' | translate">
+          <input appInput type="number" min="0" step="0.01" inputmode="decimal"
+            [ngModel]="taxaFixa()" (ngModelChange)="taxaFixa.set(numero($event))" />
+        </app-field>
+      </div>
+
+      <div class="linha-switch">
+        <div>
+          <span class="rotulo-switch">{{ 'calculator.freeShipping' | translate }}</span>
+          <small>{{ 'calculator.freeShippingHint' | translate }}</small>
+        </div>
+        <app-switch [ngModel]="freteGratis()" (ngModelChange)="freteGratis.set($event)" />
+      </div>
+
+      <div class="par">
+        <app-field [label]="'calculator.shipping' | translate" [hint]="!freteGratis() ? ('calculator.shippingOff' | translate) : ''">
+          <input appInput type="number" min="0" step="0.01" inputmode="decimal"
+            [disabled]="!freteGratis()"
+            [ngModel]="frete()" (ngModelChange)="frete.set(numero($event))" />
+        </app-field>
+        <app-field [label]="'calculator.tax' | translate" [hint]="'calculator.taxHint' | translate">
+          <input appInput type="number" min="0" max="100" step="0.01" inputmode="decimal"
+            [ngModel]="impostoPct()" (ngModelChange)="impostoPct.set(numero($event))" />
+        </app-field>
+      </div>
+    </section>
+
+    <!-- ---------- resultado ---------- -->
+    <section class="resultado">
+      <div class="kpis">
+        <app-kpi-card
+          size="hero"
+          icon="banknote"
+          [title]="'calculator.netProfit' | translate"
+          [value]="resultado().lucroLiquido | brl"
+          [variant]="tomDaMargem()"
+          [note]="'calculator.perUnit' | translate:{ valor: (resultado().lucroUnitario | brl) }"
+        />
+        <app-kpi-card
+          icon="chart-spline"
+          [title]="'calculator.margin' | translate"
+          [value]="(resultado().margemContribuicao * 100).toFixed(2) + '%'"
+          [variant]="tomDaMargem()"
+          [note]="'calculator.marginTarget' | translate:{ alvo: (margemAlvo() * 100).toFixed(0) }"
+        />
+        <app-kpi-card
+          icon="trending-up"
+          [title]="'calculator.roi' | translate"
+          [value]="(resultado().roi * 100).toFixed(2) + '%'"
+          [note]="resultado().roi === 0 ? ('calculator.roiNeedsCost' | translate) : ''"
+        />
+      </div>
+
+      <div class="cartao detalhe">
+        <h2>{{ 'calculator.breakdownTitle' | translate }}</h2>
+        <dl>
+          <div><dt>{{ 'calculator.grossRevenue' | translate }}</dt><dd>{{ resultado().receitaBruta | brl }}</dd></div>
+          <div class="saida"><dt>{{ 'calculator.fee' | translate }}</dt><dd>− {{ resultado().comissao | brl }}</dd></div>
+          @if (resultado().taxaFixaTotal > 0) {
+            <div class="saida"><dt>{{ 'calculator.fixedFee' | translate }}</dt><dd>− {{ resultado().taxaFixaTotal | brl }}</dd></div>
+          }
+          <div class="saida"><dt>{{ 'calculator.shipping' | translate }}</dt><dd>− {{ resultado().freteTotal | brl }}</dd></div>
+          <div class="total"><dt>{{ 'calculator.received' | translate }}</dt><dd>{{ resultado().valorRecebido | brl }}</dd></div>
+          @if (resultado().imposto > 0) {
+            <div class="saida"><dt>{{ 'calculator.tax' | translate }}</dt><dd>− {{ resultado().imposto | brl }}</dd></div>
+          }
+          <div class="saida"><dt>{{ 'calculator.costTotal' | translate }}</dt><dd>− {{ resultado().custoTotal | brl }}</dd></div>
+          <div class="total"><dt>{{ 'calculator.netProfit' | translate }}</dt><dd>{{ resultado().lucroLiquido | brl }}</dd></div>
+        </dl>
+      </div>
+
+      <div class="cartao metas">
+        <h2>{{ 'calculator.targetsTitle' | translate }}</h2>
+        <ul>
+          <li>
+            <span>{{ 'calculator.breakEven' | translate }}</span>
+            <strong>{{ equilibrio() === null ? '—' : (equilibrio()! | brl) }}</strong>
+          </li>
+          <li>
+            <span>{{ 'calculator.priceForTarget' | translate:{ alvo: (margemAlvo() * 100).toFixed(0) } }}</span>
+            <strong>{{ precoAlvo() === null ? '—' : (precoAlvo()! | brl) }}</strong>
+          </li>
+          <li>
+            <span>{{ 'calculator.maxCost' | translate:{ alvo: (margemAlvo() * 100).toFixed(0) } }}</span>
+            <strong>{{ custoTeto() | brl }}</strong>
+          </li>
+          @if (resultado().markup > 0) {
+            <li>
+              <span>{{ 'calculator.markup' | translate }}</span>
+              <strong>{{ resultado().markup.toFixed(2) }}×</strong>
+            </li>
+          }
+        </ul>
+        <p class="nota">
+          <app-icon name="info" />
+          {{ 'calculator.targetsNote' | translate }}
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ---------- histórico ---------- -->
+  @if ((analises.analises() ?? []).length > 0) {
+    <section class="cartao historico">
+      <h2>{{ 'calculator.historyTitle' | translate }}</h2>
+      <ul>
+        @for (a of analises.analises(); track a.id) {
+          <li>
+            <div class="info">
+              <span class="produto">{{ a.titulo }}</span>
+              <small>
+                {{ 'calculator.price' | translate }} {{ a.entrada.precoVenda | brl }} ·
+                {{ 'calculator.cost' | translate }} {{ a.entrada.custoProduto | brl }}
+              </small>
+            </div>
+            <span class="valor" [class.negativo]="a.resultado.lucroLiquido < 0">
+              {{ a.resultado.lucroLiquido | brl }}
+              <small>{{ (a.resultado.margemContribuicao * 100).toFixed(1) }}%</small>
+            </span>
+            <button appBtn="ghost" (click)="analises.remover(a.id)">
+              <app-icon name="trash" />
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>

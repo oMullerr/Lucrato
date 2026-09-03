@@ -23,7 +23,8 @@
     "../src/app/core/fiscal/fiscal.model.ts",
     "../src/app/core/ml/matching.ts",
     "../src/app/core/ml/order-mapping.ts",
-    "../src/app/core/ml/returns-apply.ts"
+    "../src/app/core/ml/returns-apply.ts",
+    "../src/app/core/ml/item-id.ts"
   ],
   "exclude": [
     "lib",

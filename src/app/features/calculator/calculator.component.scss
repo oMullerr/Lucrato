@@ -1,0 +1,261 @@
+@use '../../../styles/breakpoints' as bp;
+
+.calc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cartao {
+  background: var(--bg-surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+}
+
+.cartao h2 {
+  margin: 0 0 14px;
+  font-size: 0.95rem;
+}
+
+/* ---------- busca ---------- */
+.busca {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--bg-surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+}
+
+.f-busca,
+.f-link {
+  flex: 1 1 auto;
+}
+
+.busca button {
+  margin-top: 22px;
+}
+
+/* ---------- colunas ---------- */
+.colunas {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+@include bp.below(lg) {
+  .colunas {
+    grid-template-columns: 1fr;
+  }
+}
+
+.entradas {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.par {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.tipos {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.tipos legend {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+}
+
+.opcoes {
+  display: inline-flex;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  gap: 2px;
+}
+
+.opcao {
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-full);
+  padding: 6px 16px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: inherit;
+}
+
+.opcao.ativa {
+  background: var(--bg-surface-1);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgb(0 0 0 / 0.2));
+}
+
+.linha-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.rotulo-switch {
+  display: block;
+}
+
+.linha-switch small {
+  color: var(--text-tertiary);
+  font-size: 0.78rem;
+}
+
+/* ---------- resultado ---------- */
+.resultado {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.kpis > *:first-child {
+  grid-column: 1 / -1;
+}
+
+@include bp.below(sm) {
+  .kpis,
+  .par {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detalhe dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detalhe dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.detalhe dt {
+  color: var(--text-secondary);
+}
+
+.detalhe dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.detalhe .saida dd {
+  color: var(--text-tertiary);
+}
+
+.detalhe .total {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 8px;
+  font-weight: 600;
+}
+
+/* ---------- metas ---------- */
+.metas ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.metas li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--text-secondary);
+}
+
+.metas strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.nota {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  font-size: 0.82rem;
+}
+
+/* ---------- histórico ---------- */
+.historico ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.historico li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.historico li:last-child {
+  border-bottom: 0;
+}
+
+.historico .info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.historico .produto {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historico .info small {
+  color: var(--text-tertiary);
+  font-size: 0.78rem;
+}
+
+.historico .valor {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.historico .valor small {
+  display: block;
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+}
+
+.historico .valor.negativo {
+  color: var(--danger, #e5484d);
+}

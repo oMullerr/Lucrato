@@ -78,6 +78,12 @@ export const routes: Routes = [
     title: 'routeTitles.listings',
   },
   {
+    path: 'calculadora',
+    loadComponent: () => import('./features/calculator/calculator.component').then(m => m.CalculatorComponent),
+    canActivate: [authGuard],
+    title: 'routeTitles.calculator',
+  },
+  {
     path: 'caixa-ml',
     loadComponent: () => import('./features/ml-inbox/ml-inbox.component').then(m => m.MlInboxComponent),
     canActivate: [authGuard],

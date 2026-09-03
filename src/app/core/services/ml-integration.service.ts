@@ -7,6 +7,36 @@ import { logError } from './logger';
 import type { ItemDaCaixa } from '../ml/inbox-apply';
 import type { DevolucaoDoMl } from '../ml/returns-apply';
 
+/** Comissão de um tipo de anúncio, como o Mercado Livre informa. */
+export interface ComissaoDoTipo {
+  listingTypeId: string;
+  /** Fração: 0.12 para 12%. */
+  percentageFee: number;
+  fixedFee: number;
+  saleFeeAmount: number;
+}
+
+/** Resposta da consulta de mercado usada pela calculadora. */
+export interface AnaliseDoMl {
+  item?: {
+    id: string;
+    title: string;
+    price: number;
+    categoryId: string;
+    listingTypeId: string;
+    thumbnail: string;
+    permalink: string;
+    soldQuantity: number;
+    availableQuantity: number;
+    freeShipping: boolean;
+    logisticType: string;
+    catalogProductId: string | null;
+  };
+  comissoes: ComissaoDoTipo[];
+  freteEstimado: number | null;
+  concorrencia?: { status: string; priceToWin: number | null; precoAtual: number };
+}
+
 /** Anúncio sincronizado do Mercado Livre (`users/{uid}/mlItems`). */
 export interface MlItem {
   id: string;
@@ -313,6 +343,16 @@ export class MlIntegrationService {
       { total: number }
     >(this.functions, 'mlMarkInbox');
     await chamar({ externalIds, estado });
+  }
+
+  /**
+   * Consulta o Mercado Livre para a calculadora: comissão real da categoria,
+   * frete estimado e situação na disputa do catálogo.
+   */
+  async analisar(item: string): Promise<AnaliseDoMl> {
+    const chamar = httpsCallable<{ item: string }, AnaliseDoMl>(this.functions, 'mlAnalyze');
+    const { data } = await chamar({ item });
+    return data;
   }
 
   /** Marca devoluções já registradas no razão. */
