@@ -71,8 +71,10 @@ export const mlProcessEvent = onDocumentCreated(
 
     const uid = await uidDoVendedor(mlUserId);
     if (!uid) {
-      // Vendedor desconectou: o evento não tem dono, some com o TTL.
+      // Vendedor desconectado (ou notificação de terceiro): não há o que fazer.
+      // Apagar na hora evita a fila acumular lixo até o TTL de 7 dias.
       logger.info('Evento sem vendedor conhecido', { mlUserId, topic });
+      await event.data?.ref.delete();
       return;
     }
 
