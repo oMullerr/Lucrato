@@ -36,7 +36,7 @@ interface EstadoAuth {
 }
 
 /** Passo 1: o app pede a URL para onde mandar o vendedor. */
-export const mlAuthUrl = onCall({ enforceAppCheck: false }, async (request) => {
+export const mlAuthUrl = onCall({ enforceAppCheck: false, secrets: [ML_CLIENT_ID] }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Faça login antes de conectar o Mercado Livre.');
   }
