@@ -1133,6 +1133,7 @@
       "data": "date",
       "valor": "amount",
       "produto": "product"
-    }
+    },
+    "returnsImported": "{{total}} Mercado Livre return(s) recorded."
   }
 }

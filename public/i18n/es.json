@@ -1133,6 +1133,7 @@
       "data": "fecha",
       "valor": "importe",
       "produto": "producto"
-    }
+    },
+    "returnsImported": "{{total}} devolución(es) de Mercado Libre registrada(s)."
   }
 }

@@ -68,6 +68,10 @@ service cloud.firestore {
       allow read:  if isVerifiedOwner(userId);
       allow write: if false;
     }
+    match /users/{userId}/mlReturns/{docId} {
+      allow read:  if isVerifiedOwner(userId);
+      allow write: if false;
+    }
 
     // Nega qualquer outro caminho explicitamente. Cobre, entre outros:
     //   users/{uid}/secret/ml     tokens do Mercado Livre

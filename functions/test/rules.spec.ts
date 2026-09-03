@@ -55,6 +55,7 @@ beforeEach(async () => {
     await setDoc(doc(db, `users/${DONO}/mlItems/MLB1`), { title: 'Anuncio' });
     await setDoc(doc(db, `users/${DONO}/mlLinks/MLB1`), { productKey: 'produto' });
     await setDoc(doc(db, `users/${DONO}/mlInbox/order-1`), { status: 'pronta' });
+    await setDoc(doc(db, `users/${DONO}/mlReturns/claim-1`), { estado: 'pendente' });
     await setDoc(doc(db, `users/${DONO}/secret/ml`), { refreshToken: 'TG-segredo' });
     await setDoc(doc(db, `users/${DONO}/mlOrders/1`), { id: 1 });
     await setDoc(doc(db, `users/${DONO}/mlEvents/e1`), { topic: 'orders_v2' });
@@ -93,7 +94,13 @@ describe('documento principal', () => {
 });
 
 describe('dados do Mercado Livre — leitura do dono, escrita so do servidor', () => {
-  const caminhos = ['db/ml', 'mlItems/MLB1', 'mlLinks/MLB1', 'mlInbox/order-1'];
+  const caminhos = [
+    'db/ml',
+    'mlItems/MLB1',
+    'mlLinks/MLB1',
+    'mlInbox/order-1',
+    'mlReturns/claim-1',
+  ];
 
   it.each(caminhos)('dono le %s', async (caminho) => {
     await assertSucceeds(getDoc(doc(verificado(), `users/${DONO}/${caminho}`)));

@@ -1133,6 +1133,7 @@
       "data": "data",
       "valor": "valor",
       "produto": "produto"
-    }
+    },
+    "returnsImported": "{{total}} devolução(ões) do Mercado Livre registrada(s)."
   }
 }

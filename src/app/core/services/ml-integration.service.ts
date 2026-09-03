@@ -5,6 +5,7 @@ import { Functions, httpsCallable } from '@angular/fire/functions';
 import { AuthService } from './auth.service';
 import { logError } from './logger';
 import type { ItemDaCaixa } from '../ml/inbox-apply';
+import type { DevolucaoDoMl } from '../ml/returns-apply';
 
 /** Anúncio sincronizado do Mercado Livre (`users/{uid}/mlItems`). */
 export interface MlItem {
@@ -79,10 +80,12 @@ export class MlIntegrationService {
   private readonly _items = signal<MlItem[] | null>(null);
   private readonly _links = signal<MlLink[] | null>(null);
   private readonly _inbox = signal<ItemDaCaixa[] | null>(null);
+  private readonly _devolucoes = signal<DevolucaoDoMl[] | null>(null);
   private _unsub?: Unsubscribe;
   private _unsubItems?: Unsubscribe;
   private _unsubLinks?: Unsubscribe;
   private _unsubInbox?: Unsubscribe;
+  private _unsubDevolucoes?: Unsubscribe;
 
   /** `null` enquanto o documento ainda não chegou. */
   readonly state = this._state.asReadonly();
@@ -109,6 +112,11 @@ export class MlIntegrationService {
   /** Só o que ainda espera decisão — é o que o app tenta aplicar. */
   readonly inboxPendentes = computed(() =>
     (this._inbox() ?? []).filter(i => i.estado === 'pendente'),
+  );
+
+  /** Devoluções trazidas do Mercado Livre, ainda não registradas. */
+  readonly devolucoesPendentes = computed(() =>
+    (this._devolucoes() ?? []).filter(d => d.estado === 'pendente'),
   );
 
   /** Em andamento: trava o botão e evita disparar dois fluxos ao mesmo tempo. */
@@ -188,6 +196,16 @@ export class MlIntegrationService {
         this._inbox.set([]);
       },
     );
+
+    this._unsubDevolucoes?.();
+    this._unsubDevolucoes = onSnapshot(
+      collection(this.firestore, `users/${uid}/mlReturns`),
+      snap => this._devolucoes.set(snap.docs.map(d => d.data() as DevolucaoDoMl)),
+      err => {
+        logError('[MlIntegration] mlReturns falhou:', err);
+        this._devolucoes.set([]);
+      },
+    );
   }
 
   private stop(): void {
@@ -195,14 +213,17 @@ export class MlIntegrationService {
     this._unsubItems?.();
     this._unsubLinks?.();
     this._unsubInbox?.();
+    this._unsubDevolucoes?.();
     this._unsub = undefined;
     this._unsubItems = undefined;
     this._unsubLinks = undefined;
     this._unsubInbox = undefined;
+    this._unsubDevolucoes = undefined;
     this._state.set(null);
     this._items.set(null);
     this._links.set(null);
     this._inbox.set(null);
+    this._devolucoes.set(null);
   }
 
   /**
@@ -292,6 +313,16 @@ export class MlIntegrationService {
       { total: number }
     >(this.functions, 'mlMarkInbox');
     await chamar({ externalIds, estado });
+  }
+
+  /** Marca devoluções já registradas no razão. */
+  async markReturns(claimIds: readonly string[], estado: 'aplicado' | 'ignorado'): Promise<void> {
+    if (claimIds.length === 0) return;
+    const chamar = httpsCallable<
+      { claimIds: readonly string[]; estado: string },
+      { total: number }
+    >(this.functions, 'mlMarkReturns');
+    await chamar({ claimIds, estado });
   }
 
   /** Apaga tokens e índice no servidor. Não mexe em nada já importado. */

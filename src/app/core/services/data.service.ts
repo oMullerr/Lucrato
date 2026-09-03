@@ -10,6 +10,7 @@ import { calculatePurchase, calculateKpis, calculateSale, computeReturn, nextId 
 import { computeFiscalStatus } from '../fiscal/fiscal';
 import { ItemDaCaixa, PlanoDeAplicacao, planejarAplicacao } from '../ml/inbox-apply';
 import { adotarNumerosDoMl } from '../ml/reconcile';
+import { DevolucaoDoMl, PlanoDeDevolucoes, planejarDevolucoes } from '../ml/returns-apply';
 import { DEFAULT_FISCAL_CONFIG } from '../fiscal/fiscal-regimes';
 import { FiscalConfig } from '../fiscal/fiscal.model';
 import { AuthService } from './auth.service';
@@ -496,6 +497,31 @@ export class DataService {
       const i = d.sales.findIndex(v => v.id === saleId);
       if (i >= 0) d.sales[i] = corrigida;
     });
+  }
+
+  /**
+   * Registra no razão as devoluções vindas do Mercado Livre.
+   *
+   * A decisão fica no módulo puro `core/ml/returns-apply`; aqui só se grava.
+   * Devolução sem venda correspondente não é criada — espera a venda entrar.
+   */
+  async applyMlReturns(itens: readonly DevolucaoDoMl[]): Promise<PlanoDeDevolucoes> {
+    const plano = planejarDevolucoes(itens, this.sales(), this.returns());
+    if (plano.novas.length === 0 && plano.atualizadas.length === 0) return plano;
+
+    await this.update(dbAtual => {
+      for (const nova of plano.novas) {
+        dbAtual.returns.push(nova);
+        this.syncSaleStatus(dbAtual, nova.saleId);
+      }
+      for (const atualizada of plano.atualizadas) {
+        const i = dbAtual.returns.findIndex(r => r.id === atualizada.id);
+        if (i >= 0) dbAtual.returns[i] = atualizada;
+        this.syncSaleStatus(dbAtual, atualizada.saleId);
+      }
+    });
+
+    return plano;
   }
 
   private migrateDatabase(data: any): Database {

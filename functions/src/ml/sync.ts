@@ -18,6 +18,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { ML_CLIENT_ID, ML_CLIENT_SECRET } from '../config';
 import { criarMlClient } from './client';
 import { marcarSync, processarPedido } from './inbox';
+import { processarReclamacao } from './returns';
 
 type Bruto = Record<string, unknown>;
 
@@ -35,6 +36,16 @@ const db = () => getFirestore();
 /** Extrai o id do pedido de um `resource` como `/orders/2000003508897196`. */
 export function idDoRecurso(resource: string): string {
   const m = /\/orders\/(\d+)/.exec(resource);
+  return m ? m[1] : '';
+}
+
+/**
+ * Extrai o id da reclamação de um `resource` de pós-venda.
+ * O Mercado Livre passou a mandar o prefixo `/post-purchase` no caminho, então
+ * o padrão precisa aceitar as duas formas.
+ */
+export function idDaReclamacao(resource: string): string {
+  const m = /claims\/(\d+)/.exec(resource);
   return m ? m[1] : '';
 }
 
@@ -66,8 +77,10 @@ export const mlProcessEvent = onDocumentCreated(
     }
 
     const orderId = idDoRecurso(resource);
-    if (!orderId) {
-      // shipments e post_purchase entram nas fases seguintes.
+    const claimId = orderId ? '' : idDaReclamacao(resource);
+
+    if (!orderId && !claimId) {
+      // Tópico assinado que ainda não tem tratamento (shipments, por exemplo).
       logger.debug('Recurso ainda não tratado', { topic, resource });
       await event.data?.ref.delete();
       return;
@@ -75,13 +88,17 @@ export const mlProcessEvent = onDocumentCreated(
 
     const cliente = criarMlClient(uid, ML_CLIENT_ID.value(), ML_CLIENT_SECRET.value());
     try {
-      const total = await processarPedido(uid, cliente, orderId);
+      if (claimId) {
+        await processarReclamacao(uid, cliente, claimId);
+      } else {
+        const total = await processarPedido(uid, cliente, orderId);
+        logger.info('Pedido processado pelo webhook', { uid, orderId, rascunhos: total });
+      }
       await marcarSync(uid);
-      logger.info('Pedido processado pelo webhook', { uid, orderId, rascunhos: total });
       await event.data?.ref.delete();
     } catch (err) {
       const motivo = String((err as Error).message);
-      logger.error('Falha ao processar pedido', { uid, orderId, motivo });
+      logger.error('Falha ao processar notificação', { uid, orderId, claimId, motivo });
       await db().doc(`users/${uid}/db/ml`).set(
         { lastError: motivo, updatedAt: Timestamp.now() },
         { merge: true },

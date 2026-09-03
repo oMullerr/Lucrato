@@ -33,10 +33,13 @@ export class MlAutoApplyService {
       const pendentes = this.ml.inboxPendentes();
       const ligado = this.data.settings()?.mlAutoApply !== false;
 
-      if (!ligado || this.rodando() || !this.data.loaded() || pendentes.length === 0) return;
+      const devolucoes = this.ml.devolucoesPendentes();
+      if (!ligado || this.rodando() || !this.data.loaded()) return;
+      if (pendentes.length === 0 && devolucoes.length === 0) return;
 
       const novos = pendentes.filter(i => !this.tentados.has(i.externalId));
-      if (novos.length === 0) return;
+      const novasDevolucoes = devolucoes.filter(d => !this.tentados.has(d.claimId));
+      if (novos.length === 0 && novasDevolucoes.length === 0) return;
 
       void this.aplicar();
     }, { allowSignalWrites: true });
@@ -53,23 +56,46 @@ export class MlAutoApplyService {
   async aplicar(): Promise<number> {
     if (this.rodando()) return 0;
     const pendentes = this.ml.inboxPendentes();
-    if (pendentes.length === 0) return 0;
+    if (pendentes.length === 0) {
+      this.rodando.set(true);
+      try {
+        await this.aplicarDevolucoes();
+      } catch (err) {
+        logError('[MlAutoApply] devolucoes falharam:', err);
+      } finally {
+        this.rodando.set(false);
+      }
+      return 0;
+    }
 
     const classificacao = classificarCaixa(pendentes, this.data.sales());
     const novas = pendentes.filter(i => classificacao.get(i.externalId)?.veredito === 'nova');
     if (novas.length === 0) {
       for (const item of pendentes) this.tentados.add(item.externalId);
+      // Ainda pode haver devolução esperando por uma venda que já está no razão.
+      this.rodando.set(true);
+      try {
+        await this.aplicarDevolucoes();
+      } catch (err) {
+        logError('[MlAutoApply] devolucoes falharam:', err);
+      } finally {
+        this.rodando.set(false);
+      }
       return 0;
     }
 
     this.rodando.set(true);
     try {
       for (const item of pendentes) this.tentados.add(item.externalId);
+      for (const d of this.ml.devolucoesPendentes()) this.tentados.add(d.claimId);
 
       const plano = await this.data.applyMlInbox(novas);
       if (plano.aplicados.length > 0) {
         await this.ml.markInbox(plano.aplicados, 'aplicado');
       }
+
+      // Devoluções entram depois das vendas: elas dependem da venda existir.
+      await this.aplicarDevolucoes();
 
       const entraram = plano.novas.length;
       if (entraram > 0) {
@@ -81,6 +107,25 @@ export class MlAutoApplyService {
       return 0;
     } finally {
       this.rodando.set(false);
+    }
+  }
+
+  /**
+   * Registra as devoluções que o Mercado Livre já informou.
+   *
+   * Devolução só mexe em dinheiro quando finalizada, então criá-la assim que
+   * aparece é seguro: enquanto está aberta, entra como "valor em risco".
+   */
+  private async aplicarDevolucoes(): Promise<void> {
+    const pendentes = this.ml.devolucoesPendentes();
+    if (pendentes.length === 0) return;
+
+    const plano = await this.data.applyMlReturns(pendentes);
+    if (plano.aplicadas.length > 0) {
+      await this.ml.markReturns(plano.aplicadas, 'aplicado');
+    }
+    if (plano.novas.length > 0) {
+      this.notify.info(this.t.instant('mlInbox.returnsImported', { total: plano.novas.length }));
     }
   }
 
