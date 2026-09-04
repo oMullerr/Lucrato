@@ -93,6 +93,18 @@
         </p>
       }
 
+      <!-- Crédito da conta não tem o que conciliar: é dinheiro que entra sem
+           pedido atrás. Sem esta linha, ele viraria um valor sem explicação. -->
+      @if (r.creditos.itens > 0) {
+        <p class="nota">
+          <app-icon name="piggy-bank" />
+          {{ 'cashFlow.creditsPart' | translate:{
+            valor: (r.creditos.total | brl),
+            total: r.creditos.itens
+          } }}
+        </p>
+      }
+
       @if (r.porDia.length > 0) {
         <section class="linha-tempo">
           <h2>{{ 'cashFlow.timelineTitle' | translate }}</h2>
@@ -141,10 +153,13 @@
               </tr>
             </thead>
             <tbody>
-              @for (r of visiveis(); track r.orderId) {
+              @for (r of visiveis(); track r.paymentId) {
                 <tr [class]="'sit-' + r.situacao">
                   <td class="produto">
-                    @if (r.conciliado) {
+                    @if (r.tipo === 'credito') {
+                      <span class="credito">{{ 'cashFlow.creditRow' | translate }}</span>
+                      <small>{{ r.paymentId }}</small>
+                    } @else if (r.conciliado) {
                       <span>{{ r.produto }}</span>
                       <small>{{ r.vendaId }} · {{ r.orderId }}</small>
                     } @else {

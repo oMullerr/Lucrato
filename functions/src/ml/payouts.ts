@@ -1,19 +1,25 @@
 /**
- * Quando o dinheiro de cada venda cai na conta.
+ * Quando o dinheiro cai na conta do Mercado Pago.
  *
  * A data de liberação **não existe** em `/orders/{id}` — o array `payments[]`
  * de lá tem status, parcelas e valores, e nada de liberação. Ela vive no
- * Mercado Pago, em `/v1/payments/{id}`, que a própria documentação do Mercado
- * Livre indica para detalhe de pagamento e que aceita o mesmo access token.
+ * Mercado Pago, junto com o **líquido pronto** (`net_received_amount`). Medido
+ * na conta real: um pedido de R$ 115 deposita R$ 79,95, enquanto o `sale_fee`
+ * sozinho era R$ 20,70 — o frete também sai da operação. Reconstruir o depósito
+ * a partir da comissão erraria por R$ 14,35 num pedido só, e esta tela promete
+ * "isto vai cair na sua conta".
  *
- * Essa rota também é a única que devolve o **líquido pronto**
- * (`net_received_amount`). Medido na conta real: pedido de R$ 115 deposita
- * R$ 79,95, enquanto o `sale_fee` sozinho era R$ 20,70 — o frete também sai da
- * operação. Reconstruir o depósito a partir da comissão erraria por R$ 14,35
- * num pedido só, e esta tela promete "isto vai cair na sua conta".
+ * **A busca é pela CONTA, não pelos pedidos.** A primeira versão caminhava
+ * `mlOrders → /orders/{id} → payments[] → /v1/payments/{id}`, e por isso não
+ * enxergava dinheiro que entra sem pedido atrás — bonificação, ajuste,
+ * devolução de tarifa, que o Mercado Pago trata como `money_transfer`. Foram
+ * dois créditos de R$ 0,80 e R$ 0,90 liberando no MESMO instante de dois
+ * pagamentos de venda: o app do Mercado Pago somava os dois na linha do dia e
+ * o nosso número ficava R$ 1,70 abaixo. Nenhum ajuste de cálculo resolveria —
+ * o dado não estava sendo buscado.
  *
- * Só consulta o que ainda não liberou. Esse conjunto encolhe sozinho para
- * algumas dezenas de pedidos recentes, em vez de crescer com o histórico.
+ * De quebra, ficou muito mais barato: eram duas chamadas por pedido (~200 para
+ * 99 pedidos); a busca devolve 50 por página.
  */
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions/v2';
@@ -35,8 +41,20 @@ const numero = (v: unknown): number => {
 /** Host do Mercado Pago. O resto da integração fala com `api.mercadolibre.com`. */
 const MP_API = 'https://api.mercadopago.com';
 
+/** Máximo que a busca de pagamentos devolve por página. */
+const PAGINA = 50;
+
 /** Teto de pagamentos por rodada, para não estourar o tempo da function. */
-const MAX_POR_RODADA = 200;
+const MAX_POR_RODADA = 1_000;
+
+/**
+ * Janela de criação varrida a cada rodada.
+ *
+ * O Mercado Pago libera em até ~30 dias; 120 cobre com folga qualquer pendente,
+ * inclusive um que tenha ficado para trás. Pagamento antigo já liberado é
+ * regravado igual — idempotente e barato.
+ */
+const DIAS_DE_JANELA = 120;
 
 /** Quanto tempo depois da liberação ainda vale reconferir. */
 const DIAS_DE_GRACA = 3;
@@ -49,22 +67,36 @@ const db = () => getFirestore();
  * `liquido` fica `null` quando o campo não veio: melhor a tela dizer que não
  * sabe do que exibir uma estimativa com cara de número certo.
  */
-export function normalizarPagamento(orderId: string, bruto: Bruto): PagamentoDoMl | null {
+export function normalizarPagamento(bruto: Bruto): PagamentoDoMl | null {
   // O id fica como texto porque é chave de documento e passa de 2^53 — mas
   // isso faz `0` virar `"0"`, que é truthy. Sem checar o valor, um pagamento
   // sem id viraria um documento chamado "0".
   const paymentId = texto(bruto['id']);
+  if (!paymentId || paymentId === '0') return null;
+
+  // Sem data de liberação não há o que prever. É assim que a busca devolve as
+  // tentativas recusadas — com `net_received_amount` zero e liberação nula.
   const liberaEm = texto(bruto['money_release_date']);
-  if (!paymentId || paymentId === '0' || !liberaEm) return null;
+  if (!liberaEm) return null;
+
+  // Só dinheiro aprovado entra: o resto ainda pode não acontecer.
+  if (texto(bruto['status']) !== 'approved') return null;
 
   const detalhes = (bruto['transaction_details'] ?? {}) as Bruto;
   const liquidoCru = detalhes['net_received_amount'];
   const temLiquido = typeof liquidoCru === 'number' && isFinite(liquidoCru);
 
+  // Crédito sem pedido (bonificação, ajuste) vem sem o nó `order`.
+  const pedido = (bruto['order'] ?? {}) as Bruto;
+
   return {
-    orderId,
     paymentId,
+    orderId: texto(pedido['id']),
     liberaEm,
+    // Guardado para reconhecer liberação imediata: nesses o Mercado Pago manda
+    // a data de liberação igual à da aprovação e deixa a situação em `pending`
+    // para sempre.
+    aprovadoEm: texto(bruto['date_approved']),
     situacaoMl: texto(bruto['money_release_status']),
     bruto: numero(bruto['transaction_amount']),
     liquido: temLiquido ? liquidoCru : null,
@@ -79,69 +111,84 @@ export function jaResolvido(gravado: PagamentoDoMl | undefined, agora: Date): bo
   return agora.getTime() - liberou > DIAS_DE_GRACA * 24 * 60 * 60 * 1000;
 }
 
-/** Pedidos que ainda precisam de consulta, do mais recente para o mais antigo. */
-async function pedidosPendentes(uid: string): Promise<string[]> {
-  const [ordens, pagos] = await Promise.all([
-    db().collection(`users/${uid}/mlOrders`).get(),
-    db().collection(`users/${uid}/mlPayouts`).get(),
-  ]);
-
-  const gravados = new Map<string, PagamentoDoMl>();
-  for (const doc of pagos.docs) gravados.set(doc.id, doc.data() as PagamentoDoMl);
-
-  const agora = new Date();
-  return ordens.docs
-    .map(d => d.id)
-    .filter(id => !jaResolvido(gravados.get(id), agora))
-    .sort((a, b) => b.localeCompare(a))
-    .slice(0, MAX_POR_RODADA);
+/** Uma página da busca de pagamentos da conta. */
+async function buscarPagina(
+  cliente: MlClient,
+  desde: Date,
+  ate: Date,
+  offset: number,
+): Promise<Bruto[]> {
+  const pagina = await cliente.get<Bruto>(`${MP_API}/v1/payments/search`, {
+    sort: 'date_created',
+    criteria: 'desc',
+    range: 'date_created',
+    begin_date: desde.toISOString(),
+    end_date: ate.toISOString(),
+    offset,
+    limit: PAGINA,
+  });
+  return Array.isArray(pagina['results']) ? (pagina['results'] as Bruto[]) : [];
 }
 
 /**
- * Busca o pagamento de um pedido.
+ * Todos os pagamentos da conta na janela, inclusive os sem pedido.
  *
- * O id do pagamento vem do próprio pedido; a liberação vem do Mercado Pago.
- * São duas chamadas por pedido, e é por isso que a lista de pendentes precisa
- * ser curta.
+ * É a diferença que importa em relação à primeira versão: aqui a pergunta é
+ * "o que entrou na conta", não "o que os pedidos que eu conheço renderam".
  */
-async function pagamentoDoPedido(
+export async function pagamentosDaConta(
   cliente: MlClient,
-  orderId: string,
-): Promise<PagamentoDoMl | null> {
-  const pedido = await cliente.get<Bruto>(`/orders/${orderId}`).catch(() => null);
-  if (!pedido) return null;
+  agora: Date = new Date(),
+): Promise<PagamentoDoMl[]> {
+  const desde = new Date(agora.getTime() - DIAS_DE_JANELA * 24 * 60 * 60 * 1000);
+  // Um dia à frente cobre pagamento criado com o relógio adiantado do lado deles.
+  const ate = new Date(agora.getTime() + 24 * 60 * 60 * 1000);
 
-  const pagamentos = Array.isArray(pedido['payments']) ? (pedido['payments'] as Bruto[]) : [];
-  // O primeiro pagamento aprovado é o que carrega o dinheiro da venda.
-  const escolhido = pagamentos.find(p => texto(p['status']) === 'approved') ?? pagamentos[0];
-  const paymentId = escolhido ? texto(escolhido['id']) : '';
-  if (!paymentId) return null;
+  const encontrados: PagamentoDoMl[] = [];
+  for (let offset = 0; offset < MAX_POR_RODADA; offset += PAGINA) {
+    const resultados = await buscarPagina(cliente, desde, ate, offset);
+    if (resultados.length === 0) break;
 
-  const mp = await cliente
-    .get<Bruto>(`${MP_API}/v1/payments/${paymentId}`)
-    .catch(() => null);
-  return mp ? normalizarPagamento(orderId, mp) : null;
+    for (const bruto of resultados) {
+      const p = normalizarPagamento(bruto);
+      if (p) encontrados.push(p);
+    }
+
+    if (resultados.length < PAGINA) break;
+  }
+  return encontrados;
 }
 
 /** Atualiza os recebíveis de um vendedor. */
 export async function sincronizarRecebiveis(uid: string): Promise<number> {
   const cliente = criarMlClient(uid, ML_CLIENT_ID.value(), ML_CLIENT_SECRET.value());
-  const pendentes = await pedidosPendentes(uid);
+  const pagamentos = await pagamentosDaConta(cliente);
 
+  const gravados = await db().collection(`users/${uid}/mlPayouts`).get();
+  const anteriores = new Map<string, PagamentoDoMl>();
+  for (const doc of gravados.docs) anteriores.set(doc.id, doc.data() as PagamentoDoMl);
+
+  const agora = new Date();
   let atualizados = 0;
-  for (const orderId of pendentes) {
-    const pagamento = await pagamentoDoPedido(cliente, orderId);
-    if (!pagamento) continue;
+
+  for (const p of pagamentos) {
+    // Já liberado e fora da carência não muda mais: poupa escrita à toa.
+    if (jaResolvido(anteriores.get(p.paymentId), agora)) continue;
 
     await db()
-      .doc(`users/${uid}/mlPayouts/${orderId}`)
-      .set({ ...pagamento, atualizadoEm: Timestamp.now() }, { merge: false });
+      .doc(`users/${uid}/mlPayouts/${p.paymentId}`)
+      .set({ ...p, atualizadoEm: Timestamp.now() }, { merge: false });
     atualizados++;
   }
 
+  const pendentes = pagamentos.filter(p => p.situacaoMl !== 'released').length;
+
   await db()
     .doc(`users/${uid}/db/ml`)
-    .set({ payoutsAt: Timestamp.now(), payoutsPending: pendentes.length }, { merge: true });
+    .set(
+      { payoutsAt: Timestamp.now(), payoutsPending: pendentes },
+      { merge: true },
+    );
 
   return atualizados;
 }

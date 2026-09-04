@@ -1,87 +1,138 @@
 /**
  * Normalização do pagamento do Mercado Pago.
  *
- * Os exemplos são respostas REAIS da conta, colhidas no espião que decidiu a
- * rota (2026-09-04). Se o Mercado Pago mudar o contrato, é aqui que quebra —
- * em vez de a tela passar a mostrar caixa errado em silêncio.
+ * Os exemplos são respostas REAIS da conta. O caso central é o par que passou
+ * despercebido: um pagamento de venda e um crédito sem pedido liberando no
+ * MESMO instante — o app do Mercado Pago soma os dois na linha do dia, e a
+ * primeira versão só enxergava o primeiro.
  */
 import { jaResolvido, normalizarPagamento } from './payouts';
 
-/** Pedido 2000018260149664: R$ 178 pagos, R$ 149,52 depositados. */
-const cru = () => ({
-  id: 177011312292,
+/** Pedido 2000018143858990: R$ 287 pagos, R$ 238,21 depositados. */
+const venda = () => ({
+  id: 175858466634,
   status: 'approved',
   status_detail: 'accredited',
-  money_release_date: '2026-09-11T18:54:14.000-04:00',
+  operation_type: 'regular_payment',
+  money_release_date: '2026-09-04T15:44:23.000-04:00',
   money_release_status: 'pending',
-  money_release_schema: null,
-  transaction_amount: 178,
-  transaction_amount_refunded: 0,
-  transaction_details: {
-    net_received_amount: 149.52,
-    total_paid_amount: 178,
-    overpaid_amount: 0,
-  },
-  fee_details: [],
+  date_approved: '2026-08-27T09:27:30.000-04:00',
+  transaction_amount: 287,
+  transaction_details: { net_received_amount: 238.21, total_paid_amount: 287 },
+  order: { id: '2000018143858990', type: 'mercadolibre' },
 });
 
-describe('normalizacao do pagamento', () => {
-  it('guarda data, situacao, bruto e liquido', () => {
-    expect(normalizarPagamento('2000018260149664', cru())).toEqual({
-      orderId: '2000018260149664',
-      paymentId: '177011312292',
-      liberaEm: '2026-09-11T18:54:14.000-04:00',
+/** O crédito de R$ 0,80 que libera no mesmo instante — e não tem pedido. */
+const credito = () => ({
+  id: 174914022141,
+  status: 'approved',
+  status_detail: 'accredited',
+  operation_type: 'money_transfer',
+  money_release_date: '2026-09-04T15:44:23.000-04:00',
+  money_release_status: 'pending',
+  date_approved: '2026-08-27T09:27:28.000-04:00',
+  transaction_amount: 0.8,
+  transaction_details: { net_received_amount: 0.8, total_paid_amount: 0.8 },
+});
+
+/** Tentativa recusada: a busca devolve, mas não é dinheiro. */
+const recusado = () => ({
+  id: 176023677765,
+  status: 'rejected',
+  operation_type: 'regular_payment',
+  money_release_date: null,
+  money_release_status: 'pending',
+  transaction_amount: 19,
+  transaction_details: { net_received_amount: 0, total_paid_amount: 0 },
+  order: { id: '2000018256632318' },
+});
+
+describe('pagamento de venda', () => {
+  it('guarda pagamento, pedido, data, situacao, bruto e liquido', () => {
+    expect(normalizarPagamento(venda())).toEqual({
+      paymentId: '175858466634',
+      orderId: '2000018143858990',
+      liberaEm: '2026-09-04T15:44:23.000-04:00',
+      aprovadoEm: '2026-08-27T09:27:30.000-04:00',
       situacaoMl: 'pending',
-      bruto: 178,
-      liquido: 149.52,
+      bruto: 287,
+      liquido: 238.21,
     });
   });
 
-  it('o id do pagamento vira texto, nao numero', () => {
-    // Ele é chave de documento e vai para a tela; number perderia precisão
-    // acima de 2^53 e compararia diferente do que o Firestore guardou.
-    expect(typeof normalizarPagamento('1', cru())!.paymentId).toBe('string');
+  it('guarda a data de aprovacao', () => {
+    // Sem ela não dá para reconhecer liberação imediata, e todo pagamento
+    // desse tipo viraria atraso permanente na tela.
+    expect(normalizarPagamento(venda())!.aprovadoEm).toBe('2026-08-27T09:27:30.000-04:00');
   });
 
-  it('sem liquido informado, o campo fica nulo — nunca estimado', () => {
-    // Estimar o depósito a partir da comissão erraria: medido na conta real,
-    // um pedido de R$ 115 deposita R$ 79,95 e a comissão era R$ 20,70.
-    const bruto = cru();
-    bruto.transaction_details = { total_paid_amount: 178, overpaid_amount: 0 } as never;
-    expect(normalizarPagamento('1', bruto)!.liquido).toBeNull();
+  it('os ids viram texto, nao numero', () => {
+    // São chave de documento e passam de 2^53; number perderia precisão.
+    const p = normalizarPagamento(venda())!;
+    expect(typeof p.paymentId).toBe('string');
+    expect(typeof p.orderId).toBe('string');
+  });
+});
+
+describe('credito sem pedido', () => {
+  it('entra no caixa, com pedido vazio', () => {
+    // É o caso que a versão anterior não via: R$ 0,80 e R$ 0,90 liberando
+    // junto com uma venda, somados pelo Mercado Pago na mesma linha do dia.
+    const p = normalizarPagamento(credito())!;
+    expect(p.paymentId).toBe('174914022141');
+    expect(p.orderId).toBe('');
+    expect(p.liquido).toBeCloseTo(0.8, 10);
   });
 
-  it('liquido zero e um valor, nao ausencia', () => {
-    const bruto = cru();
-    bruto.transaction_details.net_received_amount = 0;
-    expect(normalizarPagamento('1', bruto)!.liquido).toBe(0);
+  it('libera no mesmo instante da venda, e os dois sobrevivem', () => {
+    const a = normalizarPagamento(venda())!;
+    const b = normalizarPagamento(credito())!;
+    expect(a.liberaEm).toBe(b.liberaEm);
+    expect(a.paymentId).not.toBe(b.paymentId);
+    // 238,21 + 0,80 = 239,01, que é o que o app mostra.
+    expect(a.liquido! + b.liquido!).toBeCloseTo(239.01, 10);
+  });
+});
+
+describe('o que nao e dinheiro fica de fora', () => {
+  it('tentativa recusada nao entra', () => {
+    expect(normalizarPagamento(recusado())).toBeNull();
   });
 
-  it('reconhece pagamento ja liberado', () => {
-    const bruto = cru();
-    bruto.money_release_status = 'released';
-    expect(normalizarPagamento('1', bruto)!.situacaoMl).toBe('released');
+  it('sem data de liberacao nao entra, mesmo aprovado', () => {
+    const b = { ...venda(), money_release_date: null };
+    expect(normalizarPagamento(b)).toBeNull();
   });
 
-  it('sem data de liberacao nao vira recebivel', () => {
-    const bruto = cru();
-    bruto.money_release_date = '';
-    expect(normalizarPagamento('1', bruto)).toBeNull();
+  it('status diferente de aprovado nao entra, mesmo com data', () => {
+    // Dinheiro em disputa ainda pode não acontecer.
+    expect(normalizarPagamento({ ...venda(), status: 'in_mediation' })).toBeNull();
   });
 
-  it('sem id nao vira recebivel', () => {
-    const bruto = cru();
-    bruto.id = 0 as never;
-    expect(normalizarPagamento('1', bruto)).toBeNull();
+  it('sem id nao entra', () => {
+    expect(normalizarPagamento({ ...venda(), id: 0 })).toBeNull();
+  });
+});
+
+describe('liquido', () => {
+  it('sem valor informado, fica nulo — nunca estimado', () => {
+    const b = { ...venda(), transaction_details: { total_paid_amount: 287 } };
+    expect(normalizarPagamento(b)!.liquido).toBeNull();
+  });
+
+  it('zero e um valor, nao ausencia', () => {
+    const b = { ...venda(), transaction_details: { net_received_amount: 0 } };
+    expect(normalizarPagamento(b)!.liquido).toBe(0);
   });
 });
 
 describe('o que nao precisa ser perguntado de novo', () => {
   const AGORA = new Date('2026-09-04T12:00:00Z');
   const pago = (over = {}) => ({
-    orderId: '1',
     paymentId: '2',
+    orderId: '1',
     liberaEm: '2026-08-20T12:00:00Z',
+    aprovadoEm: '2026-08-01T12:00:00Z',
     situacaoMl: 'released',
     bruto: 178,
     liquido: 149.52,
@@ -89,8 +140,6 @@ describe('o que nao precisa ser perguntado de novo', () => {
   });
 
   it('liberado ha mais de tres dias esta resolvido', () => {
-    // Cada pedido custa duas chamadas; reconsultar o que já caiu faria a
-    // rodada crescer com o histórico em vez de encolher.
     expect(jaResolvido(pago(), AGORA)).toBe(true);
   });
 
@@ -103,11 +152,11 @@ describe('o que nao precisa ser perguntado de novo', () => {
     expect(jaResolvido(pago({ situacaoMl: 'pending' }), AGORA)).toBe(false);
   });
 
-  it('pedido nunca consultado entra na fila', () => {
+  it('pagamento nunca visto entra na fila', () => {
     expect(jaResolvido(undefined, AGORA)).toBe(false);
   });
 
-  it('data corrompida nao trava o pedido como resolvido', () => {
+  it('data corrompida nao trava o pagamento como resolvido', () => {
     expect(jaResolvido(pago({ liberaEm: 'nada' }), AGORA)).toBe(false);
   });
 });

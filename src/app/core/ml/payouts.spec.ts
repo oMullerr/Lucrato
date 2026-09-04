@@ -38,9 +38,12 @@ function venda(over: Partial<Sale> = {}, devolucoes: Return[] = []): ComputedSal
 
 function pagamento(over: Partial<PagamentoDoMl> = {}): PagamentoDoMl {
   return {
-    orderId: '2000001',
     paymentId: '177011312292',
+    orderId: '2000001',
     liberaEm: '2026-09-11T18:54:14.000-04:00',
+    // Bem antes de qualquer `liberaEm` usado nos testes: liberação só é
+    // imediata quando a data de liberação NÃO é posterior à da aprovação.
+    aprovadoEm: '2026-08-20T12:00:00Z',
     situacaoMl: 'pending',
     bruto: 178,
     liquido: 149.52,
@@ -113,6 +116,39 @@ describe('cruzar pagamento com venda', () => {
     expect(juntarRecebiveis([pagamento({ liberaEm: 'nao-e-data' })], [venda()], HOJE)).toHaveLength(0);
   });
 
+  it('credito sem pedido entra no caixa como credito', () => {
+    // O caso que fez a tela ficar R$ 1,70 abaixo do app: um crédito de R$ 0,80
+    // liberando no mesmo instante de uma venda. O Mercado Pago soma os dois na
+    // linha do dia, e antes só o pagamento da venda era visto.
+    const credito = pagamento({
+      paymentId: '174914022141',
+      orderId: '',
+      liquido: 0.8,
+      bruto: 0.8,
+      liberaEm: '2026-09-04T15:44:23.000-04:00',
+    });
+    const [r] = juntarRecebiveis([credito], [venda()], HOJE);
+
+    expect(r.tipo).toBe('credito');
+    expect(r.orderId).toBe('');
+    expect(r.conciliado).toBe(false);
+    expect(r.liquido).toBeCloseTo(0.8, 10);
+  });
+
+  it('pagamento de venda e marcado como pedido', () => {
+    expect(juntarRecebiveis([pagamento()], [venda()], HOJE)[0].tipo).toBe('pedido');
+  });
+
+  it('credito e venda liberando junto viram duas linhas', () => {
+    // Somar 238,21 + 0,80 é o que reproduz os R$ 239,01 do app.
+    const dois = [
+      pagamento({ paymentId: 'A', orderId: '2000001', liquido: 238.21, liberaEm: '2026-09-04T15:44:23.000-04:00' }),
+      pagamento({ paymentId: 'B', orderId: '', liquido: 0.8, liberaEm: '2026-09-04T15:44:23.000-04:00' }),
+    ];
+    const r = resumirCaixa(juntarRecebiveis(dois, [venda()], HOJE), HOJE);
+    expect(r.porDia).toEqual([{ dia: '2026-09-04', valor: 239.01 }]);
+  });
+
   it('ordena pelo que cai primeiro', () => {
     const pagamentos = [
       pagamento({ orderId: 'B', liberaEm: '2026-09-20T12:00:00Z' }),
@@ -142,6 +178,38 @@ describe('situacao do recebivel', () => {
     // Sem esta regra, todo pedido antigo já pago apareceria como problema.
     const p = pagamento({ liberaEm: '2026-01-10T12:00:00Z', situacaoMl: 'released' });
     expect(juntarRecebiveis([p], [venda()], HOJE)[0].situacao).toBe('liberado');
+  });
+
+  it('liberacao imediata e liberada, mesmo com a situacao presa em pending', () => {
+    // Caso real: pagamento 163215970812, R$ 161,81, aprovado e liberado no
+    // mesmo instante de 08/06, líquido igual ao bruto — e `money_release_status`
+    // em `pending` até hoje. Sem esta regra ele viraria atraso permanente:
+    // eram R$ 187,79 de falso alarme na conta.
+    const p = pagamento({
+      paymentId: '163215970812',
+      liberaEm: '2026-06-08T21:18:09.000-04:00',
+      aprovadoEm: '2026-06-08T21:18:09.000-04:00',
+      situacaoMl: 'pending',
+      bruto: 161.81,
+      liquido: 161.81,
+    });
+    expect(juntarRecebiveis([p], [], HOJE)[0].situacao).toBe('liberado');
+  });
+
+  it('atraso de verdade continua sendo atraso', () => {
+    // A regra acima não pode engolir o caso legítimo: liberação prevista para
+    // depois da aprovação, data vencida e ainda pendente.
+    const p = pagamento({
+      liberaEm: '2026-08-28T12:00:00Z',
+      aprovadoEm: '2026-08-01T12:00:00Z',
+      situacaoMl: 'pending',
+    });
+    expect(juntarRecebiveis([p], [], HOJE)[0].situacao).toBe('atrasado');
+  });
+
+  it('data de aprovacao ausente nao transforma tudo em liberado', () => {
+    const p = pagamento({ aprovadoEm: '', liberaEm: '2026-08-28T12:00:00Z' });
+    expect(juntarRecebiveis([p], [], HOJE)[0].situacao).toBe('atrasado');
   });
 });
 
@@ -233,6 +301,20 @@ describe('resumo do caixa', () => {
     expect(r.porDia).toEqual([{ dia: '2026-09-06', valor: 602.12 }]);
   });
 
+  it('credito nao conta como "falta conciliar"', () => {
+    // Mandar o usuário conciliar um crédito da conta seria mandá-lo atrás de
+    // uma venda que não existe. São contadores separados de propósito.
+    const pagamentos = [
+      pagamento({ paymentId: 'A', orderId: 'SEM-VENDA', liquido: 100, liberaEm: '2026-09-06T12:00:00Z' }),
+      pagamento({ paymentId: 'B', orderId: '', liquido: 0.8, liberaEm: '2026-09-06T12:00:00Z' }),
+    ];
+    const r = resumirCaixa(juntarRecebiveis(pagamentos, [], HOJE), HOJE);
+
+    expect(r.naoConciliado).toEqual({ total: 100, pedidos: 1 });
+    expect(r.creditos).toEqual({ total: 0.8, itens: 1 });
+    expect(r.retidoAgora).toBeCloseTo(100.8, 10);
+  });
+
   it('caixa vazio devolve zeros, nao NaN', () => {
     const r = resumirCaixa([], HOJE);
     expect(r).toEqual({
@@ -243,6 +325,7 @@ describe('resumo do caixa', () => {
       porDia: [],
       semLiquido: 0,
       naoConciliado: { total: 0, pedidos: 0 },
+      creditos: { total: 0, itens: 0 },
     });
   });
 });

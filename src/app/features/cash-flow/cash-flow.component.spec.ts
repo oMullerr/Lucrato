@@ -38,6 +38,7 @@ function pagamento(over: Partial<PagamentoDoMl> = {}): PagamentoDoMl {
     paymentId: '177011312292',
     // Bem no futuro: os testes não podem virar "atrasado" com o passar do tempo.
     liberaEm: '2099-01-15T12:00:00Z',
+    aprovadoEm: '2026-08-20T12:00:00Z',
     situacaoMl: 'pending',
     bruto: 178,
     liquido: 149.52,

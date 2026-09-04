@@ -18,12 +18,25 @@ import { diaLocalDeISO } from './order-mapping';
 
 export type SituacaoDoRecebivel = 'retido' | 'liberado' | 'atrasado';
 
+/**
+ * De onde o dinheiro vem.
+ *
+ * `credito` é dinheiro que entra na conta **sem pedido atrás** — bonificação,
+ * ajuste, devolução de tarifa. O Mercado Pago os trata como pagamento comum
+ * (`operation_type: money_transfer`) e os libera junto com o resto.
+ */
+export type TipoDeRecebivel = 'pedido' | 'credito';
+
 /** Um pagamento como o servidor grava em `users/{uid}/mlPayouts`. */
 export interface PagamentoDoMl {
-  orderId: string;
+  /** Chave do documento: todo pagamento tem, inclusive os sem pedido. */
   paymentId: string;
+  /** Vazio quando o crédito não vem de um pedido. */
+  orderId: string;
   /** Instante ISO da liberação, como o Mercado Pago informa. */
   liberaEm: string;
+  /** Instante ISO da aprovação. Serve para reconhecer liberação imediata. */
+  aprovadoEm: string;
   /** `pending`, `released` — o que o Mercado Pago disser. */
   situacaoMl: string;
   /** O que o comprador pagou. */
@@ -34,7 +47,10 @@ export interface PagamentoDoMl {
 
 /** Um recebível, com a venda do razão quando ela existe. */
 export interface Recebivel {
+  paymentId: string;
+  /** Vazio quando é crédito da conta. */
   orderId: string;
+  tipo: TipoDeRecebivel;
   /** Dia da liberação no fuso do vendedor. */
   liberaEm: string;
   situacao: SituacaoDoRecebivel;
@@ -43,7 +59,10 @@ export interface Recebivel {
   /** Vazio quando o pedido ainda não foi casado com uma venda. */
   produto: string;
   vendaId: string;
-  /** `false` quando nenhuma venda do razão carrega este número de pedido. */
+  /**
+   * `false` quando nenhuma venda do razão carrega este número de pedido.
+   * Sempre `false` em crédito da conta — que nunca terá venda.
+   */
   conciliado: boolean;
 }
 
@@ -57,12 +76,19 @@ export interface ResumoDeCaixa {
   /** Quanto entra por dia, só do que ainda está por vir. */
   porDia: { dia: string; valor: number }[];
   /**
-   * Parte do total que ainda não tem venda no razão.
+   * Parte do total em PEDIDOS que ainda não têm venda no razão.
    *
    * Continua somada: o dinheiro entra tenha ou não venda conciliada. Isto aqui
-   * só explica de onde vem a parte que a tela não consegue nomear.
+   * só explica de onde vem a parte que a tela não consegue nomear — e aponta
+   * para uma ação, que é conciliar.
    */
   naoConciliado: { total: number; pedidos: number };
+  /**
+   * Crédito que entra sem pedido atrás: bonificação, ajuste, devolução de
+   * tarifa. Separado do acima de propósito — não há o que conciliar aqui, e
+   * misturar os dois transformaria um recado acionável em ruído.
+   */
+  creditos: { total: number; itens: number };
   /**
    * Recebíveis sem valor líquido informado.
    *
@@ -96,16 +122,41 @@ function porPedido(vendas: readonly ComputedSale[]): Map<string, VendaDoPedido> 
 }
 
 /**
+ * Liberação imediata: o dinheiro ficou disponível na própria aprovação.
+ *
+ * Nesses pagamentos o Mercado Pago devolve `money_release_date` igual ao
+ * `date_approved` e o líquido igual ao bruto — e deixa o `money_release_status`
+ * em `pending` para sempre. Sem reconhecer o padrão, eles se acumulariam como
+ * "atrasado" para o resto da vida: na conta real eram R$ 187,79 de falso alarme,
+ * de junho e agosto.
+ */
+function liberacaoImediata(p: PagamentoDoMl): boolean {
+  const libera = Date.parse(p.liberaEm);
+  const aprova = Date.parse(p.aprovadoEm);
+  if (!isFinite(libera) || !isFinite(aprova)) return false;
+  return libera <= aprova;
+}
+
+function situacaoDoPagamento(
+  p: PagamentoDoMl,
+  liberaEm: string,
+  hoje: string,
+): SituacaoDoRecebivel {
+  if (p.situacaoMl === 'released' || liberacaoImediata(p)) return 'liberado';
+  return liberaEm < hoje ? 'atrasado' : 'retido';
+}
+
+/**
  * Cruza o que o Mercado Pago informou com as vendas do razão.
  *
- * **Todo pagamento entra**, tenha ou não venda correspondente. Quem decide se o
- * dinheiro vem é o Mercado Pago, não o estado do seu razão: uma venda digitada
- * antes da integração não carrega o número do pedido, e descartá-la por isso
- * fazia a tela prometer menos do que vai cair.
+ * **Todo pagamento entra**, tenha ou não venda correspondente, tenha ou não
+ * pedido. Quem decide se o dinheiro vem é o Mercado Pago, não o estado do seu
+ * razão.
  *
- * Isso não é teoria — foi medido: 2 dos 8 pedidos pendentes não tinham venda
- * casada, e a tela mostrava R$ 1.350,80 quando o Mercado Pago dizia R$ 2.002,44.
- * Um terço do caixa sumindo em silêncio.
+ * Isso não é teoria — foi medido duas vezes:
+ *   - descartar pagamento sem venda casada escondia um terço do caixa;
+ *   - buscar só a partir de pedidos escondia os créditos da conta, que o
+ *     Mercado Pago libera junto e o app soma na mesma linha do dia.
  *
  * A venda, quando existe, só acrescenta contexto: o nome do produto e o
  * lançamento. O que ela nunca faz é decidir se a linha aparece.
@@ -120,20 +171,16 @@ export function juntarRecebiveis(
   const recebiveis: Recebivel[] = [];
 
   for (const p of pagamentos) {
-    const venda = doRazao.get(p.orderId);
-
     const liberaEm = diaLocalDeISO(p.liberaEm);
     if (!liberaEm) continue;
 
-    const liberado = p.situacaoMl === 'released';
-    const situacao: SituacaoDoRecebivel = liberado
-      ? 'liberado'
-      : liberaEm < dia
-        ? 'atrasado'
-        : 'retido';
+    const venda = p.orderId ? doRazao.get(p.orderId) : undefined;
+    const situacao = situacaoDoPagamento(p, liberaEm, dia);
 
     recebiveis.push({
+      paymentId: p.paymentId,
       orderId: p.orderId,
+      tipo: p.orderId ? 'pedido' : 'credito',
       liberaEm,
       situacao,
       bruto: p.bruto,
@@ -169,6 +216,8 @@ export function resumirCaixa(
   let semLiquido = 0;
   let naoConciliadoTotal = 0;
   let naoConciliadoPedidos = 0;
+  let creditosTotal = 0;
+  let creditosItens = 0;
 
   const dias = new Map<string, number>();
 
@@ -182,7 +231,12 @@ export function resumirCaixa(
     const valor = zeroSeNulo(r.liquido);
     retidoAgora += valor;
 
-    if (!r.conciliado) {
+    if (r.tipo === 'credito') {
+      creditosTotal += valor;
+      creditosItens++;
+    } else if (!r.conciliado) {
+      // Só pedido conta como "falta conciliar": crédito da conta nunca terá
+      // venda, e pedi-la seria mandar o usuário atrás de algo que não existe.
       naoConciliadoTotal += valor;
       naoConciliadoPedidos++;
     }
@@ -212,12 +266,18 @@ export function resumirCaixa(
       total: centavos(naoConciliadoTotal),
       pedidos: naoConciliadoPedidos,
     },
+    creditos: { total: centavos(creditosTotal), itens: creditosItens },
   };
 }
 
-/** Recebível de um pedido, para a tela de vendas cruzar em O(1). */
+/**
+ * Recebível de um pedido, para a tela de vendas cruzar em O(1).
+ * Crédito da conta fica de fora: não há venda para casar com ele.
+ */
 export function porOrderId(recebiveis: readonly Recebivel[]): Map<string, Recebivel> {
   const mapa = new Map<string, Recebivel>();
-  for (const r of recebiveis) mapa.set(r.orderId, r);
+  for (const r of recebiveis) {
+    if (r.orderId) mapa.set(r.orderId, r);
+  }
   return mapa;
 }
