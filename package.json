@@ -13,6 +13,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "build:ext": "tsc -p extension --noEmit && node extension/build.mjs",
     "test:rules": "firebase emulators:exec --only firestore --project demo-lucrato \"npm --prefix functions run test:rules\""
   },
   "private": true,

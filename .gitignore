@@ -43,3 +43,6 @@ ui-debug.log
 # Cloud Functions
 /functions/node_modules
 /functions/lib
+
+# Build da extensao de navegador (gerado por npm run build:ext)
+/extension/dist

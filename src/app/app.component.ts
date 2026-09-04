@@ -10,6 +10,7 @@ import { AuthService } from './core/services/auth.service';
 import { QuickActionsService } from './core/services/quick-actions.service';
 import { NotifyService } from './core/services/notify.service';
 import { MlAutoApplyService } from './core/services/ml-auto-apply.service';
+import { ExtensionBridgeService } from './core/services/extension-bridge.service';
 import { FabActionsComponent } from './shared/components/fab-actions.component';
 import { ConnectionBannerComponent } from './shared/components/connection-banner.component';
 import { isChunkLoadError } from './core/services/firestore-errors';
@@ -98,6 +99,9 @@ export class AppComponent {
   /* Injetado aqui de proposito: e o que faz o lancamento automatico das
      vendas do Mercado Livre rodar assim que o app abre. */
   private readonly mlAutoApply = inject(MlAutoApplyService);
+  /* Ponte para a extensao de navegador: so responde a pedido da propria
+     origem, e so com sessao ativa (ver ExtensionBridgeService). */
+  private readonly extensionBridge = inject(ExtensionBridgeService);
   private readonly t = inject(TranslateService);
 
   protected readonly sidebarOpen = signal(true);
@@ -143,6 +147,8 @@ export class AppComponent {
   });
 
   constructor() {
+    this.extensionBridge.start();
+
     effect(() => {
       const user = this.auth.currentUser();
       if (user === null) {
