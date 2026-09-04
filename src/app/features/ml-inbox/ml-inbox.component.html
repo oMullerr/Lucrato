@@ -77,7 +77,9 @@
                 <div class="lados">
                   <div class="lado">
                     <small class="rotulo">{{ 'mlInbox.yours' | translate }}</small>
-                    <span class="produto">{{ c.candidata.venda.product }}</span>
+                    <span class="produto" [title]="c.candidata.venda.product">{{
+                      c.candidata.venda.product
+                    }}</span>
                     <small>
                       {{ c.candidata.venda.saleDate | brDate }} ·
                       {{ c.candidata.venda.quantitySold * c.candidata.venda.unitPrice | brl }} ·
@@ -89,7 +91,7 @@
 
                   <div class="lado">
                     <small class="rotulo">{{ 'mlInbox.fromMl' | translate }}</small>
-                    <span class="produto">{{ c.item.produto }}</span>
+                    <span class="produto" [title]="c.item.produto">{{ c.item.produto }}</span>
                     <small>
                       {{ c.item.saleDate | brDate }} ·
                       {{ c.item.quantitySold * c.item.unitPrice | brl }} ·

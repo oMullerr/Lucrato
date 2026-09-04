@@ -43,14 +43,15 @@
   } @else {
 
     @if (resumo(); as r) {
-      <section class="kpis">
+      <!-- Os quatro no mesmo tamanho: o primeiro estava como `hero` e destoava
+           dos outros três, o que fazia a linha parecer quebrada. -->
+      <section class="kpi-grid">
         <app-kpi-card
           [title]="'cashFlow.held' | translate"
           [value]="r.retidoAgora | brl"
           icon="hourglass"
           variant="info"
           [note]="'cashFlow.heldNote' | translate"
-          size="hero"
         />
         <app-kpi-card
           [title]="'cashFlow.in7' | translate"
@@ -141,48 +142,77 @@
           [title]="'cashFlow.noMatchTitle' | translate"
           [description]="'cashFlow.noMatchMsg' | translate"
         />
+      } @else if (bp.isMobile()) {
+        <!-- No celular a tabela virava rolagem lateral: quatro colunas não
+             cabem em 375px. Mesma troca por cards que Vendas e Compras fazem. -->
+        <div class="record-list">
+          @for (r of visiveis(); track r.paymentId) {
+            <app-record-card
+              [title]="nomeDoRecebivel(r)"
+              [code]="r.orderId || r.paymentId"
+              [status]="'cashFlow.status.' + r.situacao | translate"
+              [statusKind]="tomDaSituacao(r.situacao)"
+              [meta]="r.liberaEmInstante | brDateTime"
+              [figures]="valoresDoRecebivel(r)"
+            />
+          }
+        </div>
       } @else {
-        <div class="tabela-wrap">
-          <table class="tabela">
-            <thead>
-              <tr>
-                <th scope="col">{{ 'cashFlow.colProduct' | translate }}</th>
-                <th scope="col">{{ 'cashFlow.colWhen' | translate }}</th>
-                <th scope="col" class="num">{{ 'cashFlow.colGross' | translate }}</th>
-                <th scope="col" class="num">{{ 'cashFlow.colNet' | translate }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (r of visiveis(); track r.paymentId) {
-                <tr [class]="'sit-' + r.situacao">
-                  <td class="produto">
-                    @if (r.tipo === 'credito') {
-                      <span class="credito">{{ 'cashFlow.creditRow' | translate }}</span>
-                      <small>{{ r.paymentId }}</small>
-                    } @else if (r.conciliado) {
-                      <span>{{ r.produto }}</span>
-                      <small>{{ r.vendaId }} · {{ r.orderId }}</small>
-                    } @else {
-                      <span class="sem-venda">{{ 'cashFlow.unlinkedRow' | translate }}</span>
-                      <small>{{ r.orderId }}</small>
-                    }
-                  </td>
-                  <td>
-                    {{ r.liberaEm | brDate }}
-                    <small class="situacao">{{ 'cashFlow.status.' + r.situacao | translate }}</small>
-                  </td>
-                  <td class="num bruto">{{ r.bruto | brl }}</td>
-                  <td class="num">
-                    @if (r.liquido === null) {
-                      <span class="sem-dado" [title]="'cashFlow.netUnknown' | translate">—</span>
-                    } @else {
-                      {{ r.liquido | brl }}
-                    }
-                  </td>
+        <div class="table-frame">
+          <div class="table-scroll">
+            <table
+              class="data-table"
+              appSort
+              [appSortActive]="ordem().active"
+              [appSortDirection]="ordem().direction"
+              (appSortChange)="ordem.set($event)"
+            >
+              <thead>
+                <tr>
+                  <th app-sort-header="produto">{{ 'cashFlow.colProduct' | translate }}</th>
+                  <th app-sort-header="liberaEm">{{ 'cashFlow.colWhen' | translate }}</th>
+                  <th app-sort-header="bruto" class="text-right">
+                    {{ 'cashFlow.colGross' | translate }}
+                  </th>
+                  <th app-sort-header="liquido" class="text-right">
+                    {{ 'cashFlow.colNet' | translate }}
+                  </th>
                 </tr>
-              }
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                @for (r of visiveis(); track r.paymentId) {
+                  <tr [class]="'sit-' + r.situacao">
+                    <td class="product-cell" [title]="nomeDoRecebivel(r)">
+                      @if (r.tipo === 'credito') {
+                        <span class="credito">{{ 'cashFlow.creditRow' | translate }}</span>
+                        <small>{{ r.paymentId }}</small>
+                      } @else if (r.conciliado) {
+                        <span>{{ r.produto }}</span>
+                        <small>{{ r.vendaId }} · {{ r.orderId }}</small>
+                      } @else {
+                        <span class="sem-venda">{{ 'cashFlow.unlinkedRow' | translate }}</span>
+                        <small>{{ r.orderId }}</small>
+                      }
+                    </td>
+                    <td class="quando">
+                      {{ r.liberaEmInstante | brDateTime }}
+                      <small class="situacao">
+                        {{ 'cashFlow.status.' + r.situacao | translate }}
+                      </small>
+                    </td>
+                    <td class="text-right bruto">{{ r.bruto | brl }}</td>
+                    <td class="text-right">
+                      @if (r.liquido === null) {
+                        <span class="sem-dado" [title]="'cashFlow.netUnknown' | translate">—</span>
+                      } @else {
+                        {{ r.liquido | brl }}
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
       }
     </section>

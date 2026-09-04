@@ -11,7 +11,10 @@ import {
   normalizarChaveProduto,
   sugerirProduto,
 } from '../../core/ml/matching';
-import { Alerta, JANELA_DIAS, gerarAlertas } from '../../core/ml/alerts';
+// A janela de 30 dias vem de `alerts.ts` para casar com a das visitas do ML.
+// O resto do módulo continua lá, testado e sem consumidor, para o painel de
+// alertas poder voltar num commit só.
+import { JANELA_DIAS } from '../../core/ml/alerts';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
@@ -112,16 +115,6 @@ export class ListingsComponent {
     }
     return mapa;
   });
-
-  protected readonly alertas = computed<Alerta[]>(() =>
-    gerarAlertas(
-      this.ml.items() ?? [],
-      new Map([...this.ml.linksByItem()].map(([id, l]) => [id, { produto: l.produto }])),
-      this.data.computedSales(),
-      this.data.computedPurchases(),
-      this.data.settings(),
-    ),
-  );
 
   /** Conversão do anúncio: unidades vendidas sobre visitas. */
   protected conversao(itemId: string, visitas: number | undefined): number | null {

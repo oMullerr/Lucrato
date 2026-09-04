@@ -66,6 +66,25 @@ describe('cruzar pagamento com venda', () => {
     expect(juntarRecebiveis([pagamento()], [venda()], HOJE)[0].liberaEm).toBe('2026-09-11');
   });
 
+  it('guarda o instante junto com o dia, sem tocar no dia', () => {
+    // O dia é chave de agrupamento e de janela; a hora existe ao lado, para a
+    // tela poder dizer QUANDO no dia o dinheiro cai. Antes ela era descartada.
+    const [r] = juntarRecebiveis([pagamento()], [venda()], HOJE);
+    expect(r.liberaEmInstante).toBe('2026-09-11T18:54:14.000-04:00');
+    expect(r.liberaEm).toBe('2026-09-11');
+  });
+
+  it('o instante e o do Mercado Pago, sem reescrita', () => {
+    // Guardar cru é o que deixa a conversão de fuso na mão de quem exibe. Se
+    // aqui já saísse convertido, o pipe converteria de novo.
+    const p = pagamento({ liberaEm: '2026-09-11T23:30:00.000-04:00' });
+    const [r] = juntarRecebiveis([p], [venda()], HOJE);
+    expect(r.liberaEmInstante).toBe('2026-09-11T23:30:00.000-04:00');
+    // …e o dia continua saindo pelo fuso do vendedor: 23h30 em -04:00 já é o
+    // dia 12 no Brasil.
+    expect(r.liberaEm).toBe('2026-09-12');
+  });
+
   it('pedido sem venda correspondente CONTINUA no caixa', () => {
     // Medido na conta real: 2 dos 8 pendentes não tinham venda casada, e
     // descartá-los fazia a tela mostrar R$ 1.350,80 quando o Mercado Pago

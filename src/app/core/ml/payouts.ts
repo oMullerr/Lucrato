@@ -51,8 +51,21 @@ export interface Recebivel {
   /** Vazio quando é crédito da conta. */
   orderId: string;
   tipo: TipoDeRecebivel;
-  /** Dia da liberação no fuso do vendedor. */
+  /**
+   * Dia da liberação no fuso do vendedor, `YYYY-MM-DD`.
+   *
+   * É chave de agrupamento (`porDia`), critério de ordenação e das comparações
+   * de janela (`liberaEm < hoje`, `liberaEm <= em7`). Continua sendo o dia por
+   * isso — a hora vive em `liberaEmInstante`, ao lado.
+   */
   liberaEm: string;
+  /**
+   * O instante exato da liberação, como o Mercado Pago informou.
+   *
+   * Vem com o offset deles (`-04:00`), e não com o do Brasil: quem exibir tem
+   * de converter pelo fuso do vendedor, senão mostra uma hora a menos.
+   */
+  liberaEmInstante: string;
   situacao: SituacaoDoRecebivel;
   bruto: number;
   liquido: number | null;
@@ -182,6 +195,7 @@ export function juntarRecebiveis(
       orderId: p.orderId,
       tipo: p.orderId ? 'pedido' : 'credito',
       liberaEm,
+      liberaEmInstante: p.liberaEm,
       situacao,
       bruto: p.bruto,
       liquido: p.liquido,

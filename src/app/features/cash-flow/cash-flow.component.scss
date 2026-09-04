@@ -6,19 +6,8 @@
   gap: 20px;
 }
 
-.kpis {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-}
-
-@include bp.below(lg) {
-  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-@include bp.below(sm) {
-  .kpis { grid-template-columns: 1fr; }
-}
+/* A grade dos KPIs é a `.kpi-grid` global (auto-fit), que já cobre os degraus
+   de largura sem os três breakpoints que existiam aqui. */
 
 /* ---------- linha do tempo ---------- */
 .linha-tempo,
@@ -70,7 +59,7 @@
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: var(--accent, #3d7d72);
+  background: var(--brand-primary);
 }
 
 .linha-tempo .valor {
@@ -92,66 +81,38 @@
 .toolbar h2 { margin: 0; }
 .toolbar app-field { min-width: 220px; }
 
-.tabela-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-}
-
-.tabela {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 560px;
-}
-
-.tabela th,
-.tabela td {
-  padding: 10px 14px;
-  text-align: left;
-  border-bottom: 1px solid var(--border-subtle);
-  vertical-align: middle;
-}
-
-.tabela thead th {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-tertiary);
-  font-weight: 600;
-}
-
-.tabela tbody tr:last-child td { border-bottom: 0; }
-
-.num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
+/* A tabela é a `.data-table` global (cabeçalho fixo, tipografia tokenizada,
+   `.product-cell`), dentro de `.table-frame` > `.table-scroll`. Aqui ficam só
+   as decorações desta tela. */
 
 /* O bruto é referência, o líquido é a resposta: o peso visual segue isso. */
-.bruto { color: var(--text-tertiary); }
+.bruto { color: var(--text-muted); }
 
-.produto span {
+/* A data não pode quebrar em duas linhas por causa da hora. */
+.quando { white-space: nowrap; }
+
+.data-table .product-cell span {
   display: block;
-  max-width: 38ch;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tabela small {
+.data-table small {
   display: block;
-  color: var(--text-tertiary);
-  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-size: var(--fs-caption);
 }
 
 .situacao { text-transform: capitalize; }
 
-.sit-atrasado td { background: color-mix(in srgb, var(--danger) 8%, transparent); }
-.sit-liberado .situacao { color: var(--success, #6fd3a6); }
-.sit-atrasado .situacao { color: var(--danger); }
+/* Atrasado tem de saltar aos olhos: é dinheiro que devia ter caído e não caiu.
+   Ficou sem cor nenhuma enquanto isto apontava para `--danger`, que não existe. */
+.sit-atrasado td { background: var(--tint-danger); }
+.sit-liberado .situacao { color: var(--color-success); }
+.sit-atrasado .situacao { color: var(--color-danger); }
 
-.sem-dado { color: var(--text-tertiary); cursor: help; }
+.sem-dado { color: var(--text-muted); cursor: help; }
 
 .aviso,
 .rodape {
@@ -159,11 +120,11 @@
   align-items: center;
   gap: 8px;
   margin: 0;
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   font-size: 0.88rem;
 }
 
-.aviso { color: var(--warning); }
+.aviso { color: var(--color-warning); }
 
 .nota {
   display: flex;
@@ -174,15 +135,15 @@
   font-size: 0.88rem;
 }
 
-.nota a { color: var(--accent); }
+.nota a { color: var(--brand-primary); }
 
 /* Pedido sem venda casada: presente na conta, mas ainda sem nome. */
 .sem-venda {
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   font-style: italic;
 }
 
 /* Crédito da conta: entra no caixa, mas não é venda. */
 .credito {
-  color: var(--accent);
+  color: var(--brand-primary);
 }

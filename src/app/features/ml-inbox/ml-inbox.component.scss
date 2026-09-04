@@ -79,7 +79,7 @@
 }
 
 .info small {
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   font-size: 0.78rem;
 }
 
@@ -88,8 +88,14 @@
   white-space: nowrap;
 }
 
-/* ---------- conciliação: sua venda de um lado, a do ML do outro ---------- */
-.conciliar {
+/* ---------- conciliação: sua venda de um lado, a do ML do outro ----------
+   O seletor precisa dos dois níveis: `.itens li` (0-1-1) vence `.conciliar`
+   (0-1-0) e devolvia `align-items: center` aqui. Num flex de coluna isso
+   dimensiona o filho por max-content em vez de esticar — `.lados` ficava mais
+   largo que o card (1036px num card de 900px), centralizado, e `overflow:
+   hidden` do `.grupo` cortava as DUAS pontas. Só as linhas de nome longo
+   quebravam; as curtas cabiam e pareciam certas. */
+.itens li.conciliar {
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
@@ -101,6 +107,8 @@
   gap: 14px;
 }
 
+/* Com o pai esticado de novo, é este par que faz o nome longo virar reticência
+   em vez de empurrar a linha para fora do card. */
 .lado {
   flex: 1 1 0;
   min-width: 0;
@@ -111,11 +119,11 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: 0.7rem;
-  color: var(--text-tertiary);
+  color: var(--text-muted);
 }
 
 .indicios {
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   font-size: 0.78rem;
 }
 
@@ -137,7 +145,7 @@
   align-items: center;
   gap: 8px;
   margin: 0;
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   font-size: 0.88rem;
 }
 

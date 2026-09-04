@@ -110,6 +110,8 @@ function montar(db: Database, recebiveis: PagamentoDoMl[] | null, conectado = tr
     maiorDia: () => number;
     largura: (v: number) => string;
     filtro: { set: (v: string) => void };
+    ordem: { set: (v: { active: string; direction: string }) => void };
+    nomeDoRecebivel: (r: Recebivel) => string;
     sincronizar: () => Promise<void>;
   };
   return { component, mlFake };
@@ -226,5 +228,70 @@ describe('sincronizacao', () => {
     mlFake.syncPayouts.mockRejectedValueOnce(new Error('offline'));
     await expect(component.sincronizar()).resolves.toBeUndefined();
     expect(component.recebiveis()).toHaveLength(1);
+  });
+});
+
+describe('ordenacao da tabela', () => {
+  /** Três recebíveis distinguíveis em todas as colunas ordenáveis. */
+  const tres = () => [
+    pagamento({ paymentId: 'P1', orderId: '', liberaEm: '2099-03-01T12:00:00Z', bruto: 50, liquido: 44 }),
+    pagamento({ paymentId: 'P2', orderId: '2000001', liberaEm: '2099-01-15T12:00:00Z', bruto: 178, liquido: 149.52 }),
+    pagamento({ paymentId: 'P3', orderId: '2000009', liberaEm: '2099-02-01T12:00:00Z', bruto: 900, liquido: null }),
+  ];
+
+  it('sem escolha, mantem o que cai primeiro no topo', () => {
+    const { component } = montar(base(), tres());
+    expect(component.visiveis().map(r => r.paymentId)).toEqual(['P2', 'P3', 'P1']);
+  });
+
+  it('ordena por valor bruto', () => {
+    const { component } = montar(base(), tres());
+    component.ordem.set({ active: 'bruto', direction: 'desc' });
+    expect(component.visiveis().map(r => r.bruto)).toEqual([900, 178, 50]);
+  });
+
+  it('recebivel sem liquido informado vai para o fim nos dois sentidos', () => {
+    // Ausência de dado não é um valor: no meio da lista, P3 leria como se
+    // tivesse um líquido entre os outros dois.
+    const { component } = montar(base(), tres());
+    component.ordem.set({ active: 'liquido', direction: 'asc' });
+    expect(component.visiveis().map(r => r.paymentId).at(-1)).toBe('P3');
+    component.ordem.set({ active: 'liquido', direction: 'desc' });
+    expect(component.visiveis().map(r => r.paymentId).at(-1)).toBe('P3');
+  });
+
+  it('ordena pelo instante, nao pelo dia', () => {
+    // Dois recebíveis do mesmo dia têm ordem entre si; pelo dia empatariam e a
+    // ordenação ficaria à mercê da ordem de chegada.
+    const mesmoDia = [
+      pagamento({ paymentId: 'tarde', orderId: '', liberaEm: '2099-01-15T20:00:00Z' }),
+      pagamento({ paymentId: 'cedo', orderId: '', liberaEm: '2099-01-15T09:00:00Z' }),
+    ];
+    const { component } = montar(base(), mesmoDia);
+    component.ordem.set({ active: 'liberaEm', direction: 'asc' });
+    expect(component.visiveis().map(r => r.paymentId)).toEqual(['cedo', 'tarde']);
+  });
+
+  it('ordenar nao muda o filtro nem perde linhas', () => {
+    const { component } = montar(base(), tres());
+    component.ordem.set({ active: 'produto', direction: 'asc' });
+    expect(component.visiveis()).toHaveLength(3);
+  });
+});
+
+describe('nome da linha', () => {
+  it('credito da conta e nomeado, nao fica em branco', () => {
+    const { component } = montar(base(), [pagamento({ orderId: '' })]);
+    expect(component.nomeDoRecebivel(component.visiveis()[0])).toBe('cashFlow.creditRow');
+  });
+
+  it('pedido sem venda no razao diz que falta conciliar', () => {
+    const { component } = montar(base([]), [pagamento()]);
+    expect(component.nomeDoRecebivel(component.visiveis()[0])).toBe('cashFlow.unlinkedRow');
+  });
+
+  it('pedido conciliado usa o nome do produto', () => {
+    const { component } = montar(base(), [pagamento()]);
+    expect(component.nomeDoRecebivel(component.visiveis()[0])).toBe('Furadeira');
   });
 });

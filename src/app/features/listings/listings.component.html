@@ -39,23 +39,6 @@
     </app-empty-state>
   } @else {
 
-    @if (alertas().length > 0) {
-      <section class="alertas" [attr.aria-label]="'listings.alertsTitle' | translate">
-        <h2>
-          <app-icon name="triangle-alert" />
-          {{ 'listings.alertsTitle' | translate:{ total: alertas().length } }}
-        </h2>
-        <ul>
-          @for (a of alertas(); track a.tipo + a.itemId) {
-            <li [class]="'sev-' + a.severidade">
-              <span class="produto">{{ a.titulo }}</span>
-              <span class="motivo">{{ 'listings.alert.' + a.tipo | translate:a.dados }}</span>
-            </li>
-          }
-        </ul>
-      </section>
-    }
-
     <section class="filtros" [attr.aria-label]="'listings.filters' | translate">
       <app-field class="f-busca" [label]="'listings.searchLabel' | translate">
         <input
