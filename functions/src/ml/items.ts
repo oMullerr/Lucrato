@@ -30,6 +30,11 @@ export interface MlItemNormalizado {
   availableQuantity: number;
   soldQuantity: number;
   status: string;
+  /**
+   * Detalhe do status. `deleted` aqui é o que separa "anúncio encerrado, que
+   * ainda existe" de "anúncio excluído, que não existe mais".
+   */
+  subStatus: string[];
   listingTypeId: string;
   categoryId: string;
   catalogProductId: string | null;
@@ -72,6 +77,9 @@ export function normalizarItem(raw: Bruto): MlItemNormalizado {
     availableQuantity: numero(raw['available_quantity']),
     soldQuantity: numero(raw['sold_quantity']),
     status: texto(raw['status']),
+    subStatus: Array.isArray(raw['sub_status'])
+      ? (raw['sub_status'] as unknown[]).map(texto).filter(Boolean)
+      : [],
     listingTypeId: texto(raw['listing_type_id']),
     categoryId: texto(raw['category_id']),
     catalogProductId: texto(raw['catalog_product_id']) || null,
@@ -131,6 +139,60 @@ export async function buscarDetalhes(
   return itens;
 }
 
+/**
+ * O que fazer com cada anúncio guardado que a busca não devolveu.
+ *
+ * Anúncio excluído no Mercado Livre some da busca, mas a sincronização só
+ * gravava — nunca removia. Na conta real isso deixou 118 de 128 anúncios
+ * (92%) congelados na tela, quatro deles marcados como ativos, aparecendo no
+ * topo da lista à frente dos que realmente existem.
+ *
+ * O caminho óbvio — apagar tudo que a busca não trouxe — é perigoso: uma busca
+ * que falhe pela metade limparia a coleção inteira. Por isso **ausência na
+ * busca nunca basta**. Cada candidato é confirmado em `/items/bulk`, e só sai
+ * quando o próprio Mercado Livre diz que foi excluído.
+ *
+ * Duas travas contra o desastre inverso:
+ *   - busca vazia não remove nada (conta vazia é raro; busca falhando não é);
+ *   - confirmação que não devolveu NADA também não remove nada.
+ *
+ * Puro de propósito: é o caminho que apaga dado, e precisa ser testável sem rede.
+ */
+export function decidirDestino(
+  guardados: readonly string[],
+  encontrados: readonly string[],
+  confirmados: ReadonlyMap<string, MlItemNormalizado>,
+): { remover: string[]; atualizar: MlItemNormalizado[] } {
+  const vazio = { remover: [], atualizar: [] };
+  if (encontrados.length === 0) return vazio;
+
+  const vivos = new Set(encontrados);
+  const candidatos = guardados.filter((id) => !vivos.has(id));
+  if (candidatos.length === 0) return vazio;
+  if (confirmados.size === 0) return vazio;
+
+  const remover: string[] = [];
+  const atualizar: MlItemNormalizado[] = [];
+
+  for (const id of candidatos) {
+    const confirmado = confirmados.get(id);
+    // Nem a consulta direta reconhece: o anúncio não existe mais.
+    if (!confirmado) {
+      remover.push(id);
+      continue;
+    }
+    if (confirmado.subStatus.includes('deleted')) {
+      remover.push(id);
+      continue;
+    }
+    // Existe, mas saiu da busca — encerrado. Atualiza para a tela parar de
+    // mostrá-lo com o status velho.
+    atualizar.push(confirmado);
+  }
+
+  return { remover, atualizar };
+}
+
 /** Sincroniza os anúncios do vendedor conectado. */
 export const mlSyncItems = onCall(
   {
@@ -158,15 +220,41 @@ export const mlSyncItems = onCall(
       const ids = await listarIdsDeAnuncios(cliente, mlUserId);
       const itens = await buscarDetalhes(cliente, ids);
 
+      // Reconciliação: o que está guardado e não veio na busca pode ter sido
+      // excluído — mas isso é confirmado antes de qualquer remoção.
+      const guardados = (await db.collection(`users/${uid}/mlItems`).listDocuments()).map(
+        (ref) => ref.id,
+      );
+      const vivos = new Set(ids);
+      const candidatos = guardados.filter((id) => !vivos.has(id));
+
+      const confirmados = new Map<string, MlItemNormalizado>();
+      if (ids.length > 0 && candidatos.length > 0) {
+        for (const item of await buscarDetalhes(cliente, candidatos)) {
+          confirmados.set(item.id, item);
+        }
+      }
+
+      const { remover, atualizar } = decidirDestino(guardados, ids, confirmados);
+
       // Grava em lotes; o Firestore aceita 500 operações por batch.
-      for (let i = 0; i < itens.length; i += 400) {
+      const gravar = [...itens, ...atualizar];
+      for (let i = 0; i < gravar.length; i += 400) {
         const batch = db.batch();
-        for (const item of itens.slice(i, i + 400)) {
+        for (const item of gravar.slice(i, i + 400)) {
           batch.set(
             db.doc(`users/${uid}/mlItems/${item.id}`),
             { ...item, updatedAt: Timestamp.now() },
             { merge: true },
           );
+        }
+        await batch.commit();
+      }
+
+      for (let i = 0; i < remover.length; i += 400) {
+        const batch = db.batch();
+        for (const id of remover.slice(i, i + 400)) {
+          batch.delete(db.doc(`users/${uid}/mlItems/${id}`));
         }
         await batch.commit();
       }
@@ -181,8 +269,13 @@ export const mlSyncItems = onCall(
         { merge: true },
       );
 
-      logger.info('Anúncios sincronizados', { uid, total: itens.length });
-      return { total: itens.length };
+      logger.info('Anúncios sincronizados', {
+        uid,
+        total: itens.length,
+        removidos: remover.length,
+        encerrados: atualizar.length,
+      });
+      return { total: itens.length, removidos: remover.length };
     } catch (err) {
       const motivo = String((err as Error).message);
       await db.doc(`users/${uid}/db/ml`).set(

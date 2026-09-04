@@ -346,15 +346,20 @@ export class MlIntegrationService {
    * Puxa a lista de anúncios do Mercado Livre.
    *
    * Pode demorar em contas grandes: o servidor pagina com scroll e busca os
-   * detalhes em blocos. Devolve quantos anúncios vieram.
+   * detalhes em blocos. Devolve quantos vieram e quantos foram removidos por
+   * terem sido excluídos no Mercado Livre — sem o segundo número, uma limpeza
+   * grande na conta parece "não atualizou nada".
    */
-  async syncItems(): Promise<number> {
-    if (this.working()) return 0;
+  async syncItems(): Promise<{ total: number; removidos: number }> {
+    if (this.working()) return { total: 0, removidos: 0 };
     this.working.set(true);
     try {
-      const chamar = httpsCallable<void, { total: number }>(this.functions, 'mlSyncItems');
+      const chamar = httpsCallable<void, { total: number; removidos: number }>(
+        this.functions,
+        'mlSyncItems',
+      );
       const { data } = await chamar();
-      return data.total;
+      return { total: data.total, removidos: data.removidos ?? 0 };
     } finally {
       this.working.set(false);
     }

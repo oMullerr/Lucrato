@@ -44,25 +44,51 @@ function montar(currentUser: UsuarioFalso | null) {
 let contador = 0;
 
 /**
- * Dispara um `message` como a ponte da extensão faria e espera a resposta.
+ * Espera antes de concluir que a ponte NÃO respondeu.
+ *
+ * Nos casos de recusa a ponte sai de forma síncrona, sem nem enfileirar uma
+ * `postMessage` — então qualquer folga serve. Nos casos em que ela responde, o
+ * teste não espera este prazo: resolve assim que a mensagem chega.
+ *
+ * Um prazo fixo curto para os dois casos deixava o teste instável: sob a carga
+ * da suíte cheia, a resposta legítima (que passa por `getIdToken` e por uma
+ * macrotask do jsdom) às vezes chegava depois dele.
+ */
+const SEM_RESPOSTA_MS = 60;
+/** Rede de segurança: se algo travar, o teste falha em vez de pendurar. */
+const LIMITE_MS = 3_000;
+
+/**
+ * Dispara um `message` como a ponte da extensão faria e devolve a resposta.
  *
  * Cada chamada usa um identificador novo: `postMessage` é assíncrona, e uma
  * resposta atrasada de um caso chegaria no seguinte se os dois usassem o mesmo.
  */
 function pedir(
   pedido = `p${++contador}`,
-  over: Partial<{ canal: string; tipo: string; origin: string; source: unknown }> = {},
+  over: Partial<{
+    canal: string;
+    tipo: string;
+    origin: string;
+    source: unknown;
+    esperaMs: number;
+  }> = {},
 ): Promise<string | null | undefined> {
   return new Promise(resolve => {
-    let respondeu = false;
+    let pronto = false;
 
-    const ouvir = (e: MessageEvent) => {
+    const terminar = (valor: string | null | undefined) => {
+      if (pronto) return;
+      pronto = true;
+      window.removeEventListener('message', ouvir);
+      resolve(valor);
+    };
+
+    function ouvir(e: MessageEvent): void {
       const d = e.data as { canal?: string; tipo?: string; pedido?: string; token?: string | null };
       if (d?.canal !== CANAL || d.tipo !== 'token' || d.pedido !== pedido) return;
-      respondeu = true;
-      window.removeEventListener('message', ouvir);
-      resolve(d.token);
-    };
+      terminar(d.token);
+    }
     window.addEventListener('message', ouvir);
 
     const evento = new MessageEvent('message', {
@@ -72,16 +98,14 @@ function pedir(
     });
     window.dispatchEvent(evento);
 
-    // A resposta passa por `getIdToken` e por uma `postMessage`, que o jsdom
-    // entrega como macrotask. `undefined` aqui significa "não respondeu".
-    setTimeout(() => {
-      if (!respondeu) {
-        window.removeEventListener('message', ouvir);
-        resolve(undefined);
-      }
-    }, 100);
+    setTimeout(() => terminar(undefined), over.esperaMs ?? LIMITE_MS);
   });
 }
+
+/** Para os casos em que a ponte tem de ficar calada. */
+const pedirRecusado = (
+  over: Partial<{ canal: string; tipo: string; origin: string; source: unknown }> = {},
+) => pedir(undefined, { ...over, esperaMs: SEM_RESPOSTA_MS });
 
 const logado = (): UsuarioFalso => ({
   emailVerified: true,
@@ -127,28 +151,28 @@ describe('ignora quem nao e a propria pagina', () => {
     // É o que impede um site que embuta o Lucrato num iframe de pedir o token.
     const u = logado();
     montar(u);
-    await expect(pedir(undefined, { origin: 'https://site-malicioso.example' })).resolves.toBeUndefined();
+    await expect(pedirRecusado({ origin: 'https://site-malicioso.example' })).resolves.toBeUndefined();
     expect(u.getIdToken).not.toHaveBeenCalled();
   });
 
   it('mensagem vinda de outra janela nao e respondida', async () => {
     const u = logado();
     montar(u);
-    await expect(pedir(undefined, { source: null })).resolves.toBeUndefined();
+    await expect(pedirRecusado({ source: null })).resolves.toBeUndefined();
     expect(u.getIdToken).not.toHaveBeenCalled();
   });
 
   it('mensagem de outro canal e ignorada', async () => {
     const u = logado();
     montar(u);
-    await expect(pedir(undefined, { canal: 'outra-coisa' })).resolves.toBeUndefined();
+    await expect(pedirRecusado({ canal: 'outra-coisa' })).resolves.toBeUndefined();
     expect(u.getIdToken).not.toHaveBeenCalled();
   });
 
   it('mensagem de tipo desconhecido e ignorada', async () => {
     const u = logado();
     montar(u);
-    await expect(pedir(undefined, { tipo: 'me-de-tudo' })).resolves.toBeUndefined();
+    await expect(pedirRecusado({ tipo: 'me-de-tudo' })).resolves.toBeUndefined();
     expect(u.getIdToken).not.toHaveBeenCalled();
   });
 });

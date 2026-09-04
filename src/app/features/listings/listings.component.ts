@@ -283,8 +283,15 @@ export class ListingsComponent {
 
   protected async sincronizar(): Promise<void> {
     try {
-      const total = await this.ml.syncItems();
-      this.notify.success(this.t.instant('listings.synced', { total }));
+      const { total, removidos } = await this.ml.syncItems();
+      // O que foi removido precisa ser dito: numa limpeza grande da conta, só
+      // o total faria parecer que a sincronização não trouxe nada.
+      this.notify.success(
+        this.t.instant(removidos > 0 ? 'listings.syncedWithRemoved' : 'listings.synced', {
+          total,
+          removidos,
+        }),
+      );
     } catch (err) {
       logError('[Listings] sincronizacao falhou:', err);
       this.notify.error(this.t.instant('listings.syncError'));
