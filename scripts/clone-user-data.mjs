@@ -1,86 +1,113 @@
 /**
  * Copia a base de um usuário do Firebase de PRODUÇÃO para o de TESTES.
  *
- * Uso:
+ * Uso (a partir da raiz do repositório):
  *   node scripts/clone-user-data.mjs \
- *     --from-key ./chaves/lucrato-web.json   --from-uid <uid-producao> \
- *     --to-key   ./chaves/lucrato-dev.json   --to-uid   <uid-testes>
+ *     --from lucrato-web --from-uid <uid-producao> \
+ *     --to   lucrato-dev --to-uid   <uid-testes>
  *
  * Opções:
  *   --dry-run    só mostra o que copiaria, sem gravar nada
  *
+ * Autenticação: usa a credencial que o `gcloud` já tem na máquina
+ * (`gcloud auth print-access-token`). Nenhuma chave privada de service account
+ * precisa ser baixada, guardada em disco ou rotacionada depois — chave de
+ * service account é credencial de longa duração e o Lucrato evita criar uma
+ * onde um token de minutos resolve.
+ *
  * Garantias:
  *   - A produção é aberta SOMENTE PARA LEITURA. Nada é gravado nela.
  *   - O destino precisa ser um projeto diferente da origem (o script recusa
- *     rodar se os dois projectId forem iguais).
+ *     rodar se os dois forem iguais).
  *   - Só o documento `users/{uid}/db/main` é copiado. Coleções da integração
- *     (mlItems, mlInbox, secret…) não são clonadas de propósito: o ambiente de
- *     testes conecta a própria conta de teste do Mercado Livre.
- *
- * As chaves de service account saem em:
- *   console.firebase.google.com → Configurações do projeto → Contas de serviço
- *   → Gerar nova chave privada. NÃO versione esses arquivos.
- *
- * Depende de firebase-admin. Rode de dentro de functions/ (onde ele é dependência):
- *   node ../scripts/clone-user-data.mjs …
- * ou instale pontualmente: npm i --no-save firebase-admin
+ *     (mlItems, mlInbox, mlBilling, secret…) não são clonadas de propósito: o
+ *     ambiente de testes conecta a sua própria conta do Mercado Livre e monta
+ *     esses dados sozinho.
+ *   - O documento é copiado no formato tipado do Firestore, sem conversão de
+ *     ida e volta — assim nenhum número vira string nem data perde precisão.
  */
-import { readFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import { argv, exit } from 'node:process';
-import { initializeApp, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
 
-function arg(name) {
-  const i = argv.indexOf(`--${name}`);
+function arg(nome) {
+  const i = argv.indexOf(`--${nome}`);
   return i === -1 ? undefined : argv[i + 1];
 }
 
-const fromKey = arg('from-key');
-const fromUid = arg('from-uid');
-const toKey = arg('to-key');
-const toUid = arg('to-uid');
+const origem = arg('from');
+const origemUid = arg('from-uid');
+const destino = arg('to');
+const destinoUid = arg('to-uid');
 const dryRun = argv.includes('--dry-run');
 
-if (!fromKey || !fromUid || !toKey || !toUid) {
+if (!origem || !origemUid || !destino || !destinoUid) {
   console.error('Faltam parâmetros. Veja o cabeçalho do arquivo para o uso.');
   exit(1);
 }
 
-const fromCred = JSON.parse(readFileSync(fromKey, 'utf8'));
-const toCred = JSON.parse(readFileSync(toKey, 'utf8'));
-
-if (fromCred.project_id === toCred.project_id) {
+if (origem === destino) {
   console.error(
-    `Origem e destino são o mesmo projeto (${fromCred.project_id}). ` +
-      'Isso sobrescreveria dados reais — abortando.',
+    `Origem e destino são o mesmo projeto (${origem}). Isso sobrescreveria dados reais — abortando.`,
   );
   exit(1);
 }
 
-const src = getFirestore(initializeApp({ credential: cert(fromCred) }, 'src'));
-const dst = getFirestore(initializeApp({ credential: cert(toCred) }, 'dst'));
+// Comando único em vez de argumentos separados: no Windows o `gcloud` é um
+// `.cmd` e só o shell resolve, e passar args pelo shell dispara aviso de
+// segurança do Node — aqui não há nada vindo de fora para escapar.
+const token = execSync('gcloud auth print-access-token', { encoding: 'utf8' }).trim();
 
-const snap = await src.doc(`users/${fromUid}/db/main`).get();
-if (!snap.exists) {
-  console.error(`Documento users/${fromUid}/db/main não existe em ${fromCred.project_id}.`);
-  exit(1);
+const url = (projeto, uid) =>
+  `https://firestore.googleapis.com/v1/projects/${projeto}/databases/(default)/documents/users/${uid}/db/main`;
+
+async function pedir(endereco, init = {}) {
+  const r = await fetch(endereco, {
+    ...init,
+    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+  });
+  if (!r.ok) {
+    throw new Error(`${r.status} ${r.statusText} — ${(await r.text()).slice(0, 300)}`);
+  }
+  return r.json();
 }
 
-const data = snap.data();
-const resumo = {
-  compras: data.purchases?.length ?? 0,
-  vendas: data.sales?.length ?? 0,
-  devolucoes: data.returns?.length ?? 0,
-};
+const doc = await pedir(url(origem, origemUid)).catch((err) => {
+  console.error(`Não deu para ler a origem: ${err.message}`);
+  exit(1);
+});
 
-console.log(`Origem : ${fromCred.project_id} / users/${fromUid}/db/main`);
-console.log(`Destino: ${toCred.project_id} / users/${toUid}/db/main`);
-console.log(`Conteúdo: ${resumo.compras} compras, ${resumo.vendas} vendas, ${resumo.devolucoes} devoluções`);
+const campos = doc.fields ?? {};
+const tamanho = (nome) => campos[nome]?.arrayValue?.values?.length ?? 0;
+
+console.log(`Origem : ${origem} / users/${origemUid}/db/main`);
+console.log(`Destino: ${destino} / users/${destinoUid}/db/main`);
+console.log(
+  `Conteúdo: ${tamanho('purchases')} compras, ${tamanho('sales')} vendas, ` +
+    `${tamanho('returns')} devoluções`,
+);
+
+// O que vai ser substituído. Sobrescrever sem olhar é como se perde base boa.
+const atual = await pedir(url(destino, destinoUid)).catch(() => null);
+if (atual) {
+  const eram = (nome) => atual.fields?.[nome]?.arrayValue?.values?.length ?? 0;
+  console.log(
+    `Destino hoje: ${eram('purchases')} compras, ${eram('sales')} vendas, ` +
+      `${eram('returns')} devoluções — será SUBSTITUÍDO.`,
+  );
+} else {
+  console.log('Destino hoje: documento ainda não existe.');
+}
 
 if (dryRun) {
   console.log('\n--dry-run: nada foi gravado.');
   exit(0);
 }
 
-await dst.doc(`users/${toUid}/db/main`).set(data);
+// PATCH sem `updateMask` substitui o documento inteiro, que é o que se quer:
+// uma cópia, não uma mesclagem com o que estava lá.
+await pedir(url(destino, destinoUid), {
+  method: 'PATCH',
+  body: JSON.stringify({ fields: campos }),
+});
+
 console.log('\nCópia concluída.');
