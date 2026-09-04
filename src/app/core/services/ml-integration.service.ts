@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { logError } from './logger';
 import type { ItemDaCaixa } from '../ml/inbox-apply';
 import type { DevolucaoDoMl } from '../ml/returns-apply';
+import type { PeriodoDeFaturamento } from '../ml/billing';
 
 /** Comissão de um tipo de anúncio, como o Mercado Livre informa. */
 export interface ComissaoDoTipo {
@@ -85,6 +86,8 @@ export interface MlIntegrationState {
   lastSyncAt: Date | null;
   lastError: string | null;
   reputation: ReputacaoDoMl | null;
+  /** Última vez que a fatura do Mercado Livre foi conferida. */
+  lastBillingAt: Date | null;
 }
 
 const DESCONECTADO: MlIntegrationState = {
@@ -96,6 +99,7 @@ const DESCONECTADO: MlIntegrationState = {
   lastSyncAt: null,
   lastError: null,
   reputation: null,
+  lastBillingAt: null,
 };
 
 /** Firestore devolve Timestamp; o resto do app trabalha com Date. */
@@ -125,11 +129,13 @@ export class MlIntegrationService {
   private readonly _links = signal<MlLink[] | null>(null);
   private readonly _inbox = signal<ItemDaCaixa[] | null>(null);
   private readonly _devolucoes = signal<DevolucaoDoMl[] | null>(null);
+  private readonly _faturamento = signal<PeriodoDeFaturamento[] | null>(null);
   private _unsub?: Unsubscribe;
   private _unsubItems?: Unsubscribe;
   private _unsubLinks?: Unsubscribe;
   private _unsubInbox?: Unsubscribe;
   private _unsubDevolucoes?: Unsubscribe;
+  private _unsubFaturamento?: Unsubscribe;
 
   /** `null` enquanto o documento ainda não chegou. */
   readonly state = this._state.asReadonly();
@@ -157,6 +163,10 @@ export class MlIntegrationService {
   readonly inboxPendentes = computed(() =>
     (this._inbox() ?? []).filter(i => i.estado === 'pendente'),
   );
+
+  /** Períodos de faturamento, do mais recente para o mais antigo. */
+  readonly faturamento = computed(() => this._faturamento());
+  readonly faturamentoLoaded = computed(() => this._faturamento() !== null);
 
   /** Devoluções trazidas do Mercado Livre, ainda não registradas. */
   readonly devolucoesPendentes = computed(() =>
@@ -197,6 +207,7 @@ export class MlIntegrationService {
           lastSyncAt: toDate(d['lastSyncAt']),
           lastError: (d['lastError'] as string) ?? null,
           reputation: (d['reputation'] as ReputacaoDoMl) ?? null,
+          lastBillingAt: toDate(d['billingAt']),
         });
       },
       err => {
@@ -251,6 +262,21 @@ export class MlIntegrationService {
         this._devolucoes.set([]);
       },
     );
+
+    this._unsubFaturamento?.();
+    this._unsubFaturamento = onSnapshot(
+      collection(this.firestore, `users/${uid}/mlBilling`),
+      snap => {
+        const periodos = snap.docs.map(d => d.data() as PeriodoDeFaturamento);
+        // Mais recente primeiro: é o período que interessa conferir.
+        periodos.sort((a, b) => (b.key ?? '').localeCompare(a.key ?? ''));
+        this._faturamento.set(periodos);
+      },
+      err => {
+        logError('[MlIntegration] mlBilling falhou:', err);
+        this._faturamento.set([]);
+      },
+    );
   }
 
   private stop(): void {
@@ -259,16 +285,19 @@ export class MlIntegrationService {
     this._unsubLinks?.();
     this._unsubInbox?.();
     this._unsubDevolucoes?.();
+    this._unsubFaturamento?.();
     this._unsub = undefined;
     this._unsubItems = undefined;
     this._unsubLinks = undefined;
     this._unsubInbox = undefined;
     this._unsubDevolucoes = undefined;
+    this._unsubFaturamento = undefined;
     this._state.set(null);
     this._items.set(null);
     this._links.set(null);
     this._inbox.set(null);
     this._devolucoes.set(null);
+    this._faturamento.set(null);
   }
 
   /**
@@ -324,6 +353,32 @@ export class MlIntegrationService {
       const chamar = httpsCallable<void, { total: number }>(this.functions, 'mlSyncMetrics');
       const { data } = await chamar();
       return data.total;
+    } finally {
+      this.working.set(false);
+    }
+  }
+
+  /**
+   * Traz a fatura do Mercado Livre dos períodos que ele ainda entrega (12).
+   *
+   * A rodada automática, uma vez por dia, reconsulta só o período aberto — é o
+   * único que muda. Este botão refaz todos, para quando um período fechado
+   * recebe uma bonificação atrasada.
+   *
+   * O Mercado Livre bloqueia por IP quem varre os doze períodos de uma vez, e
+   * insistir só aprofunda o bloqueio. Por isso a varredura é retomável: quando
+   * `faltam` volta maior que zero, basta chamar de novo daqui a alguns minutos.
+   */
+  async syncBilling(): Promise<{ total: number; faltam: number }> {
+    if (this.working()) return { total: 0, faltam: 0 };
+    this.working.set(true);
+    try {
+      const chamar = httpsCallable<void, { total: number; faltam: number }>(
+        this.functions,
+        'mlSyncBilling',
+      );
+      const { data } = await chamar();
+      return data;
     } finally {
       this.working.set(false);
     }

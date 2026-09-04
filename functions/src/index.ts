@@ -34,4 +34,5 @@ export { mlMarkInbox } from './ml/inbox';
 export { mlMarkReturns } from './ml/returns';
 export { mlAnalyze } from './ml/analyze';
 export { mlSyncMetrics, mlMetricsDaily } from './ml/metrics';
+export { mlSyncBilling, mlBillingDaily } from './ml/billing';
 export { mlProcessEvent, mlPoller, mlBackfill } from './ml/sync';

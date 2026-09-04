@@ -25,7 +25,8 @@
     "../src/app/core/ml/order-mapping.ts",
     "../src/app/core/ml/returns-apply.ts",
     "../src/app/core/ml/item-id.ts",
-    "../src/app/core/ml/alerts.ts"
+    "../src/app/core/ml/alerts.ts",
+    "../src/app/core/ml/billing.ts"
   ],
   "exclude": [
     "lib",

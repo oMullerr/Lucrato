@@ -1,0 +1,237 @@
+<app-page-header
+  [title]="'billing.title' | translate"
+  [eyebrow]="'billing.eyebrow' | translate"
+  [subtitle]="'billing.subtitle' | translate"
+>
+  @if (ml.connected()) {
+    <button appBtn="outline" [disabled]="ml.working() || sincronizando()" (click)="sincronizar()">
+      <app-icon name="refresh-cw" />
+      {{ 'billing.sync' | translate }}
+    </button>
+  }
+</app-page-header>
+
+<div class="page-content billing-body">
+
+  @if (!ml.connected()) {
+    <app-empty-state
+      icon="store"
+      [title]="'billing.notConnected' | translate"
+      [description]="'billing.notConnectedMsg' | translate"
+    >
+      <a appBtn="primary" routerLink="/integracoes">{{ 'billing.goToIntegrations' | translate }}</a>
+    </app-empty-state>
+  } @else if (!ml.faturamentoLoaded()) {
+    <app-skeleton variant="table-row" [count]="5" />
+  } @else if (periodos().length === 0) {
+    <app-empty-state
+      icon="receipt-text"
+      [title]="'billing.emptyTitle' | translate"
+      [description]="'billing.emptyMsg' | translate"
+    >
+      <button appBtn="primary" [disabled]="ml.working() || sincronizando()" (click)="sincronizar()">
+        {{ 'billing.sync' | translate }}
+      </button>
+    </app-empty-state>
+  } @else {
+    <!-- `as` só vale no `@if` primário, então o período abre um bloco próprio. -->
+    @if (periodo(); as p) {
+
+    <section class="seletor">
+      <app-field [label]="'billing.periodLabel' | translate">
+        <app-select [ngModel]="p.key" (ngModelChange)="escolher($event)">
+          @for (op of periodos(); track op.key) {
+            <app-option [value]="op.key">{{ rotuloDoPeriodo(op) }}</app-option>
+          }
+        </app-select>
+      </app-field>
+
+      <p class="janela">
+        <app-icon name="calendar-range" />
+        {{ 'billing.window' | translate:{ de: (p.dateFrom | brDate), ate: (p.dateTo | brDate) } }}
+        @if (p.status === 'OPEN') {
+          <span class="aberto">{{ 'billing.stillOpen' | translate }}</span>
+        }
+      </p>
+    </section>
+
+    @if (confronto(); as c) {
+
+      <section class="kpis">
+        <app-kpi-card
+          [title]="'billing.chargedByMl' | translate"
+          [value]="c.cobradoComparavel | brl"
+          icon="receipt-text"
+          variant="neutral"
+          [note]="'billing.chargedNote' | translate:{ pedidos: c.pedidos.length }"
+        />
+        <app-kpi-card
+          [title]="'billing.recordedByApp' | translate"
+          [value]="c.registradoComparavel | brl"
+          icon="banknote"
+          variant="neutral"
+          [note]="'billing.recordedNote' | translate"
+        />
+        <app-kpi-card
+          [title]="'billing.difference' | translate"
+          [value]="c.diferenca | brl"
+          icon="arrow-left-right"
+          [variant]="tomDaDiferenca()"
+          [note]="(c.divergentes === 0
+            ? 'billing.differenceNoneNote'
+            : 'billing.differenceNote') | translate:{ total: c.divergentes }"
+          size="hero"
+        />
+      </section>
+
+      <!-- O que não é comparável fica FORA da diferença de propósito: senão o
+           número viraria "você ainda não conciliou", não "o Mercado Livre cobrou
+           diferente". -->
+      @if (c.semVenda.pedidos > 0 || c.semPedido !== 0 || c.semCobranca.vendas > 0) {
+        <section class="fora" [attr.aria-label]="'billing.outsideTitle' | translate">
+          <h2>
+            <app-icon name="info" />
+            {{ 'billing.outsideTitle' | translate }}
+          </h2>
+          <ul>
+            @if (c.semVenda.pedidos > 0) {
+              <li>
+                <strong>{{ c.semVenda.total | brl }}</strong>
+                <span>{{ 'billing.noSale' | translate:{ total: c.semVenda.pedidos } }}</span>
+                <a routerLink="/caixa-ml">{{ 'billing.goToInbox' | translate }}</a>
+              </li>
+            }
+            @if (c.semPedido !== 0) {
+              <li>
+                <strong>{{ c.semPedido | brl }}</strong>
+                <span>{{ 'billing.noOrder' | translate }}</span>
+              </li>
+            }
+            @if (c.semCobranca.vendas > 0) {
+              <li>
+                <strong>{{ c.semCobranca.total | brl }}</strong>
+                <span>
+                  {{ 'billing.noCharge' | translate:{ total: c.semCobranca.vendas } }}
+                  @if (p.status === 'OPEN') { {{ 'billing.noChargeOpen' | translate }} }
+                </span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <section class="composicao">
+        <h2>{{ 'billing.compositionTitle' | translate }}</h2>
+        <p class="ajuda">{{ 'billing.compositionHelp' | translate }}</p>
+        <div class="tabela-wrap">
+          <table class="tabela">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'billing.colCharge' | translate }}</th>
+                <th scope="col">{{ 'billing.colBucket' | translate }}</th>
+                <th scope="col" class="num">{{ 'billing.colLines' | translate }}</th>
+                <th scope="col" class="num">{{ 'billing.colAmount' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (l of linhas(); track l.subTipo + l.rotulo) {
+                <tr>
+                  <td>
+                    {{ l.rotulo || ('billing.unlabeled' | translate) }}
+                    <small>{{ l.subTipo }}</small>
+                  </td>
+                  <td>
+                    <span class="balde" [class]="'balde-' + l.balde">
+                      {{ 'billing.bucket.' + l.balde | translate }}
+                    </span>
+                  </td>
+                  <td class="num">{{ l.linhas }}</td>
+                  <td class="num">{{ l.valor | brl }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row" colspan="3">{{ 'billing.periodTotal' | translate }}</th>
+                <td class="num">{{ totalCobrado() | brl }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        @if (naoExplicado() !== 0) {
+          <p class="aviso">
+            <app-icon name="triangle-alert" />
+            {{ 'billing.unexplained' | translate:{
+              total: (p.totalMl | brl),
+              diferenca: (naoExplicado() | brl)
+            } }}
+          </p>
+        }
+        @if (p.truncado) {
+          <p class="aviso">
+            <app-icon name="triangle-alert" />
+            {{ 'billing.truncated' | translate }}
+          </p>
+        }
+      </section>
+
+      <section class="pedidos">
+        <div class="toolbar">
+          <h2>{{ 'billing.ordersTitle' | translate }}</h2>
+          <app-switch [ngModel]="soDivergentes()" (ngModelChange)="soDivergentes.set($event)">
+            {{ 'billing.onlyDiverging' | translate }}
+          </app-switch>
+        </div>
+
+        @if (pedidos().length === 0) {
+          <app-empty-state
+            [icon]="soDivergentes() ? 'circle-check' : 'receipt-text'"
+            [title]="(soDivergentes() ? 'billing.allMatchTitle' : 'billing.noOrdersTitle') | translate"
+            [description]="(soDivergentes() ? 'billing.allMatchMsg' : 'billing.noOrdersMsg') | translate"
+          />
+        } @else {
+          <div class="tabela-wrap">
+            <table class="tabela">
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'billing.colOrder' | translate }}</th>
+                  <th scope="col" class="num">{{ 'billing.colCommission' | translate }}</th>
+                  <th scope="col" class="num">{{ 'billing.colShipping' | translate }}</th>
+                  <th scope="col" class="num">{{ 'billing.colOther' | translate }}</th>
+                  <th scope="col" class="num">{{ 'billing.colRecorded' | translate }}</th>
+                  <th scope="col" class="num">{{ 'billing.colDiff' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (o of pedidos(); track o.orderId) {
+                  <tr [class.divergente]="o.veredito === 'divergente'">
+                    <td class="pedido">
+                      <span class="produto">{{ o.produto }}</span>
+                      <small>{{ o.data | brDate }} · {{ o.orderId }}</small>
+                    </td>
+                    <td class="num">{{ o.cobrado.comissao | brl }}</td>
+                    <td class="num">{{ o.cobrado.frete | brl }}</td>
+                    <td class="num">{{ o.cobrado.outros | brl }}</td>
+                    <td class="num">
+                      {{ (o.registrado.comissao + o.registrado.frete) | brl }}
+                    </td>
+                    <td class="num diff" [class.pra-mais]="o.diferenca > 0">
+                      {{ o.diferenca | brl }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+
+      <p class="rodape">
+        <app-icon name="info" />
+        {{ 'billing.fiscalNote' | translate }}
+      </p>
+    }
+
+    }
+  }
+</div>
