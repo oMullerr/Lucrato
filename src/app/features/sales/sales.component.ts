@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { DataService } from '../../core/services/data.service';
+import { MlIntegrationService } from '../../core/services/ml-integration.service';
+import { Recebivel, juntarRecebiveis, porOrderId } from '../../core/ml/payouts';
 import { NotifyService } from '../../core/services/notify.service';
 import { QuickActionsService } from '../../core/services/quick-actions.service';
 import { remainingReturnable } from '../../core/services/calculations';
@@ -53,6 +55,7 @@ type SaleFilter = 'all' | 'profit' | 'loss' | 'low-margin';
 })
 export class SalesComponent {
   protected readonly data = inject(DataService);
+  protected readonly ml = inject(MlIntegrationService);
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(DialogService);
   private readonly t = inject(TranslateService);
@@ -106,6 +109,9 @@ export class SalesComponent {
     netMargin: row => row.netMargin,
     status: row => this.STATUS_PRIORITY[row.effectiveStatus] ?? 99,
     returnLoss: row => row.returnLoss,
+    // A liberação não está em `ComputedSale` — ela vem do Mercado Pago e é
+    // cruzada pelo número do pedido. Sem data, vai para o fim da ordenação.
+    payout: row => this.liberacao(row)?.liberaEm ?? '￿',
   };
 
   constructor() {
@@ -173,6 +179,20 @@ export class SalesComponent {
       return b.id.localeCompare(a.id, undefined, { numeric: true });
     });
   });
+
+  /**
+   * Quando o dinheiro de cada pedido cai, indexado para a tabela cruzar em O(1).
+   *
+   * Só vendas que carregam o número do pedido do Mercado Livre aparecem aqui;
+   * as digitadas antes da integração ficam sem data até serem conciliadas.
+   */
+  private readonly recebiveisPorPedido = computed(() =>
+    porOrderId(juntarRecebiveis(this.ml.recebiveis() ?? [], this.data.computedSales())),
+  );
+
+  protected liberacao(v: ComputedSale): Recebivel | undefined {
+    return v.mlOrderId ? this.recebiveisPorPedido().get(v.mlOrderId) : undefined;
+  }
 
   /** Ordenação do usuário sobre a lista filtrada, ou ordem padrão. */
   protected readonly filteredSales = computed(() => {

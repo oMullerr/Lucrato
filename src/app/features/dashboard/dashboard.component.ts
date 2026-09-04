@@ -5,6 +5,8 @@ import { BaseChartDirective } from 'ng2-charts';
 import type { ChartConfiguration } from 'chart.js';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
+import { MlIntegrationService } from '../../core/services/ml-integration.service';
+import { juntarRecebiveis, resumirCaixa } from '../../core/ml/payouts';
 import { ThemeService } from '../../core/services/theme.service';
 import { LanguageService } from '../../core/services/language.service';
 import { CHART_COLORS } from '../../core/constants/app.constants';
@@ -52,6 +54,7 @@ const RANGE_OPTIONS: RangeOption[] = [
 })
 export class DashboardComponent {
   protected readonly dataService = inject(DataService);
+  protected readonly ml = inject(MlIntegrationService);
   private readonly themeService = inject(ThemeService);
   private readonly t = inject(TranslateService);
   private readonly lang = inject(LanguageService);
@@ -65,6 +68,22 @@ export class DashboardComponent {
   /** All completed sales — unfiltered base. */
   private readonly allSales = computed(() =>
     this.dataService.computedSales().filter(s => s.countsAsRevenue)
+  );
+
+  /**
+   * Caixa a receber do Mercado Pago.
+   *
+   * Fora do filtro de período de propósito: "quanto tenho a receber" é sobre o
+   * futuro, e recortá-lo pelos últimos 30 dias esconderia justamente o dinheiro
+   * que ainda vai cair. Também não é lucro — os seus custos próprios não entram
+   * aqui, porque nunca passaram pelo Mercado Pago.
+   */
+  protected readonly caixa = computed(() =>
+    resumirCaixa(juntarRecebiveis(this.ml.recebiveis() ?? [], this.dataService.computedSales()))
+  );
+
+  protected readonly temRecebiveis = computed(
+    () => this.ml.connected() && this.caixa().retidoAgora > 0
   );
 
   /** Bounds [start, end] for the active range, or null for "all" or incomplete custom. */

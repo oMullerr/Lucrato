@@ -9,7 +9,7 @@
  *     jest.mock('@angular/fire/firestore', () => ({ Firestore: class {}, doc: jest.fn(), setDoc: jest.fn(), onSnapshot: jest.fn() }));
  *   (jest.mock é içado por arquivo; não funciona dentro deste helper.)
  */
-import { Type, signal } from '@angular/core';
+import { Type, computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
@@ -24,6 +24,7 @@ import { LanguageService } from '../app/core/services/language.service';
 import { QuickActionsService } from '../app/core/services/quick-actions.service';
 import { XlsxExportService } from '../app/core/services/xlsx-export.service';
 import { DialogService } from '../app/shared/ui/dialog/dialog.service';
+import { MlIntegrationService } from '../app/core/services/ml-integration.service';
 import type { Database } from '../app/core/models/models';
 
 export const MONTHS_FIXTURE = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -60,6 +61,21 @@ export function setupComponentHarness<T>(cmp: Type<T>, db: Database): ComponentH
   const fakeDialog = { open: jest.fn(() => ({ afterClosed: () => of(null) })) };
   const fakeXlsx = { download: jest.fn() };
   const fakeQuick = { markReceivedToday: jest.fn() };
+  /**
+   * Integração do Mercado Livre desligada por padrão.
+   *
+   * Entra como dublê e não como serviço real porque o real injeta `Functions`,
+   * cujo SDK toca `fetch` no import — que o jsdom desta versão não expõe. Um
+   * spec que precise da integração ligada sobrescreve este provider.
+   */
+  const fakeMl = {
+    connected: computed(() => false),
+    recebiveis: computed(() => null),
+    recebiveisLoaded: computed(() => false),
+    faturamento: computed(() => null),
+    faturamentoLoaded: computed(() => false),
+    working: signal(false),
+  };
 
   TestBed.configureTestingModule({
     providers: [
@@ -76,6 +92,7 @@ export function setupComponentHarness<T>(cmp: Type<T>, db: Database): ComponentH
       { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false, breakpoints: {} }), isMatched: () => false } },
       { provide: XlsxExportService, useValue: fakeXlsx },
       { provide: QuickActionsService, useValue: fakeQuick },
+      { provide: MlIntegrationService, useValue: fakeMl },
     ],
   });
 

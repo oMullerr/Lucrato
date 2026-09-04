@@ -88,6 +88,40 @@
       />
     </section>
 
+    <!-- Caixa a receber. Fora do filtro de período: é sobre o que ainda vai
+         cair, não sobre o que já aconteceu. -->
+    @if (temRecebiveis()) {
+      <section class="kpi-grid" [attr.aria-label]="'dashboard.payoutsTitle' | translate">
+        <app-kpi-card
+          [title]="'dashboard.payoutHeld' | translate"
+          [value]="caixa().retidoAgora | brl"
+          variant="info"
+          [note]="'dashboard.payoutHeldNote' | translate"
+        />
+        <app-kpi-card
+          [title]="'dashboard.payoutIn7' | translate"
+          [value]="caixa().liberaEm7 | brl"
+          variant="success"
+          [note]="'dashboard.payoutIn7Note' | translate"
+        />
+        @if (caixa().atrasado > 0) {
+          <app-kpi-card
+            [title]="'dashboard.payoutLate' | translate"
+            [value]="caixa().atrasado | brl"
+            variant="danger"
+            [note]="'dashboard.payoutLateNote' | translate"
+          />
+        } @else {
+          <app-kpi-card
+            [title]="'dashboard.payoutIn30' | translate"
+            [value]="caixa().liberaEm30 | brl"
+            variant="neutral"
+            [note]="'dashboard.payoutIn30Note' | translate"
+          />
+        }
+      </section>
+    }
+
     <!-- Hero chart -->
     <section class="chart-card chart-hero" [attr.aria-label]="'dashboard.monthlyEvolution' | translate">
       <header class="cc-head">

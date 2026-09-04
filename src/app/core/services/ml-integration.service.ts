@@ -7,6 +7,7 @@ import { logError } from './logger';
 import type { ItemDaCaixa } from '../ml/inbox-apply';
 import type { DevolucaoDoMl } from '../ml/returns-apply';
 import type { PeriodoDeFaturamento } from '../ml/billing';
+import type { PagamentoDoMl } from '../ml/payouts';
 
 /** Comissão de um tipo de anúncio, como o Mercado Livre informa. */
 export interface ComissaoDoTipo {
@@ -130,12 +131,14 @@ export class MlIntegrationService {
   private readonly _inbox = signal<ItemDaCaixa[] | null>(null);
   private readonly _devolucoes = signal<DevolucaoDoMl[] | null>(null);
   private readonly _faturamento = signal<PeriodoDeFaturamento[] | null>(null);
+  private readonly _recebiveis = signal<PagamentoDoMl[] | null>(null);
   private _unsub?: Unsubscribe;
   private _unsubItems?: Unsubscribe;
   private _unsubLinks?: Unsubscribe;
   private _unsubInbox?: Unsubscribe;
   private _unsubDevolucoes?: Unsubscribe;
   private _unsubFaturamento?: Unsubscribe;
+  private _unsubRecebiveis?: Unsubscribe;
 
   /** `null` enquanto o documento ainda não chegou. */
   readonly state = this._state.asReadonly();
@@ -167,6 +170,10 @@ export class MlIntegrationService {
   /** Períodos de faturamento, do mais recente para o mais antigo. */
   readonly faturamento = computed(() => this._faturamento());
   readonly faturamentoLoaded = computed(() => this._faturamento() !== null);
+
+  /** Liberação do dinheiro por pedido, como o Mercado Pago informa. */
+  readonly recebiveis = computed(() => this._recebiveis());
+  readonly recebiveisLoaded = computed(() => this._recebiveis() !== null);
 
   /** Devoluções trazidas do Mercado Livre, ainda não registradas. */
   readonly devolucoesPendentes = computed(() =>
@@ -277,6 +284,16 @@ export class MlIntegrationService {
         this._faturamento.set([]);
       },
     );
+
+    this._unsubRecebiveis?.();
+    this._unsubRecebiveis = onSnapshot(
+      collection(this.firestore, `users/${uid}/mlPayouts`),
+      snap => this._recebiveis.set(snap.docs.map(d => d.data() as PagamentoDoMl)),
+      err => {
+        logError('[MlIntegration] mlPayouts falhou:', err);
+        this._recebiveis.set([]);
+      },
+    );
   }
 
   private stop(): void {
@@ -286,18 +303,21 @@ export class MlIntegrationService {
     this._unsubInbox?.();
     this._unsubDevolucoes?.();
     this._unsubFaturamento?.();
+    this._unsubRecebiveis?.();
     this._unsub = undefined;
     this._unsubItems = undefined;
     this._unsubLinks = undefined;
     this._unsubInbox = undefined;
     this._unsubDevolucoes = undefined;
     this._unsubFaturamento = undefined;
+    this._unsubRecebiveis = undefined;
     this._state.set(null);
     this._items.set(null);
     this._links.set(null);
     this._inbox.set(null);
     this._devolucoes.set(null);
     this._faturamento.set(null);
+    this._recebiveis.set(null);
   }
 
   /**
@@ -379,6 +399,24 @@ export class MlIntegrationService {
       );
       const { data } = await chamar();
       return data;
+    } finally {
+      this.working.set(false);
+    }
+  }
+
+  /**
+   * Atualiza a previsão de liberação do dinheiro.
+   *
+   * Consulta só os pedidos cujo dinheiro ainda não caiu, então o custo não
+   * cresce com o histórico. Também roda sozinho, uma vez por dia às 7h.
+   */
+  async syncPayouts(): Promise<number> {
+    if (this.working()) return 0;
+    this.working.set(true);
+    try {
+      const chamar = httpsCallable<void, { total: number }>(this.functions, 'mlSyncPayouts');
+      const { data } = await chamar();
+      return data.total;
     } finally {
       this.working.set(false);
     }

@@ -31,7 +31,8 @@
     "mlInbox": "Mercado Livre inbox · Lucrato",
     "calculator": "Calculator · Lucrato",
     "billing": "Billing · Lucrato",
-    "mlGuide": "Mercado Livre guide · Lucrato"
+    "mlGuide": "Mercado Livre guide · Lucrato",
+    "cashFlow": "Cash flow · Lucrato"
   },
   "common": {
     "save": "Save",
@@ -79,7 +80,8 @@
     "mlInbox": "ML inbox",
     "calculator": "Calculator",
     "billing": "Billing",
-    "mlGuide": "ML guide"
+    "mlGuide": "ML guide",
+    "cashFlow": "Cash flow"
   },
   "topbar": {
     "openMenu": "Open menu",
@@ -411,7 +413,16 @@
     "topReturnedTitle": "Most returned products",
     "topReturnedSubtitle": "Sorted by loss",
     "noReturns": "No returns in this period",
-    "pendingReturns": "{{count}} return(s) awaiting arrival — {{value}} at risk"
+    "pendingReturns": "{{count}} return(s) awaiting arrival — {{value}} at risk",
+    "payoutsTitle": "Cash to receive",
+    "payoutHeld": "Held at Mercado Pago",
+    "payoutHeldNote": "outside the period filter — it's what is still to land",
+    "payoutIn7": "Releases in 7 days",
+    "payoutIn7Note": "already net of what leaves the operation",
+    "payoutIn30": "Releases in 30 days",
+    "payoutIn30Note": "cumulative up to then",
+    "payoutLate": "Past due",
+    "payoutLateNote": "due before today"
   },
   "inventory": {
     "sortDefault": "Default (status)",
@@ -624,7 +635,10 @@
     "returnedOf": "Returned: {{qty}} of {{total}} units",
     "registerReturn": "Register return",
     "noReturnableQty": "All units have already been returned",
-    "statusLockedByReturn": "Status is driven by the Returns tab"
+    "statusLockedByReturn": "Status is driven by the Returns tab",
+    "colPayout": "Releases on",
+    "payoutReleased": "released",
+    "payoutUnknown": "No Mercado Livre order number. Reconcile the sale in the ML inbox to see when the money lands."
   },
   "saleForm": {
     "editTitle": "Edit Sale",
@@ -1304,6 +1318,49 @@
     "sec11Title": "O que muda na aba Fiscal",
     "sec11Body": "Nada no motor fiscal mudou, e isso é de propósito.\n\nUma venda vinda do Mercado Livre é uma venda comum: mesmos campos, mesmo tratamento. Ela entra no acompanhamento do teto do MEI automaticamente, como qualquer outra.\n\nDois pontos de atenção:\n\n1. Importar o histórico PODE mudar o faturamento de meses passados — vendas que faltavam passam a contar. Isso é o comportamento certo, não um defeito. E é justamente por isso que nada entra sem a sua aprovação na Caixa do ML.\n\n2. A data de início do regime continua valendo: o que é anterior à abertura do CNPJ continua de fora.\n\nA tela de Faturamento NÃO entra no teto. Quem conta para o MEI é a venda, que já está no razão. Lá se confere custo, não receita — somar os dois seria contar a mesma coisa duas vezes.\n\nO campo Imposto da Calculadora é simulação e não toca no DAS.",
     "sec12Title": "Quando alguma coisa não bate",
-    "sec12Body": "A venda não apareceu:\n   1. Veja em Integrações se a conta continua conectada.\n   2. A varredura roda a cada 15 minutos — pode ser só esperar.\n   3. Abra a Caixa do ML: ela provavelmente está lá esperando vínculo ou estoque.\n   4. Clique em \"Tentar aplicar agora\" depois de resolver o que faltava.\n\nApareceu \"Precisa reconectar\":\n   O Mercado Livre invalidou o acesso, normalmente porque a senha mudou ou a permissão foi revogada. Clique em \"Reconectar\". Nada do que já entrou se perde.\n\nA comissão veio diferente do que eu esperava:\n   Ela é a real daquele pedido, e varia por categoria, tipo de anúncio e faixa de preço. Os 12% eram uma média que nunca existiu na prática. Confira em Faturamento o que o Mercado Livre cobrou de fato.\n\nO mesmo produto aparece em dois anúncios com visitas muito diferentes:\n   Provavelmente é um Clássico e um Premium do mesmo item dividindo a audiência. Vale olhar se o segundo se paga.\n\nA tela de Faturamento diz que muitos pedidos \"não são reconhecidos\":\n   São vendas que você digitou antes da integração e ainda não carregam o número do pedido. Vá à Caixa do ML e use \"Usar os do ML\" — o botão de lote resolve as seguras de uma vez.\n\nA conferência da fatura parou no meio:\n   O Mercado Livre limita consultas seguidas ao faturamento. A varredura para, guarda o que já veio e continua na próxima. Clique de novo daqui a alguns minutos."
+    "sec12Body": "A venda não apareceu:\n   1. Veja em Integrações se a conta continua conectada.\n   2. A varredura roda a cada 15 minutos — pode ser só esperar.\n   3. Abra a Caixa do ML: ela provavelmente está lá esperando vínculo ou estoque.\n   4. Clique em \"Tentar aplicar agora\" depois de resolver o que faltava.\n\nApareceu \"Precisa reconectar\":\n   O Mercado Livre invalidou o acesso, normalmente porque a senha mudou ou a permissão foi revogada. Clique em \"Reconectar\". Nada do que já entrou se perde.\n\nA comissão veio diferente do que eu esperava:\n   Ela é a real daquele pedido, e varia por categoria, tipo de anúncio e faixa de preço. Os 12% eram uma média que nunca existiu na prática. Confira em Faturamento o que o Mercado Livre cobrou de fato.\n\nO mesmo produto aparece em dois anúncios com visitas muito diferentes:\n   Provavelmente é um Clássico e um Premium do mesmo item dividindo a audiência. Vale olhar se o segundo se paga.\n\nA tela de Faturamento diz que muitos pedidos \"não são reconhecidos\":\n   São vendas que você digitou antes da integração e ainda não carregam o número do pedido. Vá à Caixa do ML e use \"Usar os do ML\" — o botão de lote resolve as seguras de uma vez.\n\nA conferência da fatura parou no meio:\n   O Mercado Livre limita consultas seguidas ao faturamento. A varredura para, guarda o que já veio e continua na próxima. Clique de novo daqui a alguns minutos.",
+    "sec13Title": "Fluxo de caixa — quando o dinheiro cai",
+    "sec13Body": "Menu REGISTROS › Fluxo de caixa.\n\nEsta tela responde uma pergunta que nenhuma outra responde: quanto entra, e quando. Uma venda lucrativa cujo dinheiro só libera em 28 dias é lucro no papel e aperto no caixa.\n\nBotão \"Atualizar recebíveis\": pergunta ao Mercado Pago a data de liberação de cada pedido. Consulta só o que ainda não caiu, então não fica mais lento com o tempo. Também roda sozinho todo dia às 7h.\n\nOs quatro números do topo:\n   • Retido agora — tudo que ainda não caiu, inclusive o que passou da data.\n   • Libera em 7 dias e em 30 dias — acumulado até lá.\n   • Passou da data — previsto para antes de hoje e ainda não liberado. Quando está zerado, a tela diz isso em vez de mostrar um zero sem contexto.\n\n\"O que entra por dia\": a linha do tempo do que ainda vai cair. A barra dá a proporção — sem ela, um dia de R$ 5 e outro de R$ 5.000 pareceriam iguais.\n\n\"Pedido a pedido\": a lista, com o que o comprador pagou e o que cai na sua conta, lado a lado. O filtro começa em \"o que falta cair\", que é a pergunta que traz você aqui.\n\nO que \"cai na conta\" quer dizer, com precisão:\n\nÉ o depósito do Mercado Pago, já sem o que foi descontado da operação — comissão, principalmente. O número vem PRONTO deles, não é conta nossa. Medido na sua conta: um pedido de R$ 115 deposita R$ 79,95, enquanto a comissão sozinha era R$ 20,70.\n\nDuas coisas que NÃO estão descontadas aí:\n   • Cobranças que o Mercado Livre lança na fatura em vez de tirar da operação — o frete, normalmente. Elas saem depois, e aparecem na tela de Faturamento.\n   • Seus custos próprios, como embalagem e etiqueta. Esse dinheiro nunca passa pelo Mercado Pago, então não cabe aqui. Custo próprio é assunto de lucro, não de caixa.\n\nPor isso as duas telas não se substituem: Fluxo de caixa diz quanto entra; Faturamento diz quanto o Mercado Livre cobrou no total.\n\nSe a tela aparecer vazia:\n\nQuase sempre significa que suas vendas ainda não carregam o número do pedido do Mercado Livre — foram digitadas antes da integração. Sem esse número não há como ligar o depósito à venda. A própria tela diz quantas estão nessa situação e leva você à Caixa do ML para conciliar.\n\nA coluna \"Libera em\" também aparece na tela de Vendas, com a data e o valor que cai, e dá para ordenar por ela.\n\nQuando um pedido aparece com traço no lugar do valor líquido, é porque o Mercado Pago não informou esse número. Ele fica fora das somas de propósito: preferimos um total incompleto e assumido a um total com valor estimado."
+  },
+  "cashFlow": {
+    "title": "Cash flow",
+    "eyebrow": "Mercado Livre",
+    "subtitle": "When each sale's money lands in your Mercado Pago account.",
+    "sync": "Refresh receivables",
+    "synced": "{{total}} order(s) checked.",
+    "syncError": "Couldn't fetch the receivables. Try again.",
+    "notConnected": "Connect Mercado Livre first",
+    "notConnectedMsg": "The release forecast shows up here once the account is connected.",
+    "goToIntegrations": "Go to Integrations",
+    "emptyTitle": "Nothing to receive here",
+    "emptyMsg": "Fetch the release forecast for your orders.",
+    "emptyNeedsLink": "You have {{total}} Mercado Livre sale(s) with no order number — they were typed before the integration. Without it there's no way to tie the deposit to the sale. Reconcile them in the ML inbox and they show up here.",
+    "goToInbox": "Reconcile in the ML inbox",
+    "held": "Held now",
+    "heldNote": "hasn't landed yet",
+    "in7": "Releases in 7 days",
+    "in30": "Releases in 30 days",
+    "late": "Past due",
+    "lateNote": "due before today and still not released",
+    "lateNone": "nothing overdue",
+    "missingNet": "{{total}} order(s) with no net amount from Mercado Pago. They stay out of the totals — we would rather not estimate the deposit.",
+    "timelineTitle": "What lands each day",
+    "listTitle": "Order by order",
+    "filter": "Show",
+    "filterPending": "What hasn't landed",
+    "filterAll": "All",
+    "noMatchTitle": "Nothing under this filter",
+    "noMatchMsg": "Switch the filter to see the other orders.",
+    "colProduct": "Product",
+    "colWhen": "Releases on",
+    "colGross": "Buyer paid",
+    "colNet": "Lands in account",
+    "netUnknown": "Mercado Pago did not report a net amount for this order.",
+    "netNote": "\"Lands in account\" is the Mercado Pago deposit, already net of what was taken from the operation. Charges Mercado Livre puts on the invoice — shipping, usually — come off later and show in Billing. Your own costs, like packaging, are not here: they never pass through Mercado Pago.",
+    "status": {
+      "retido": "held",
+      "liberado": "released",
+      "atrasado": "overdue"
+    }
   }
 }

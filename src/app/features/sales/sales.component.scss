@@ -97,3 +97,19 @@
     background: var(--tint-warning);
   }
 }
+
+/* ---------- liberação do dinheiro (Mercado Pago) ---------- */
+.col-payout {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.col-payout small {
+  display: block;
+  color: var(--text-tertiary);
+  font-size: 0.76rem;
+}
+
+.pay-liberado { color: var(--success, #6fd3a6); }
+.pay-atrasado { color: var(--danger); font-weight: 600; }
+.pay-sem { color: var(--text-tertiary); cursor: help; }

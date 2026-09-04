@@ -87,9 +87,9 @@ describe('as duas páginas que usam o guia', () => {
     expect(el.querySelectorAll('.inst-section')).toHaveLength(10);
   });
 
-  it('o guia do Mercado Livre cobre as 12 telas e regras', () => {
+  it('o guia do Mercado Livre cobre as 13 telas e regras', () => {
     const el = montar(MlGuideComponent).nativeElement as HTMLElement;
-    expect(el.querySelectorAll('.inst-section')).toHaveLength(12);
-    expect(el.querySelectorAll('.toc-link')).toHaveLength(12);
+    expect(el.querySelectorAll('.inst-section')).toHaveLength(13);
+    expect(el.querySelectorAll('.toc-link')).toHaveLength(13);
   });
 });

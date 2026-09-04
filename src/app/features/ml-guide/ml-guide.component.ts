@@ -26,6 +26,7 @@ const SECOES: GuideItem[] = [
   { titleKey: 'mlGuide.sec9Title',  bodyKey: 'mlGuide.sec9Body' },
   { titleKey: 'mlGuide.sec10Title', bodyKey: 'mlGuide.sec10Body' },
   { titleKey: 'mlGuide.sec11Title', bodyKey: 'mlGuide.sec11Body' },
+  { titleKey: 'mlGuide.sec13Title', bodyKey: 'mlGuide.sec13Body' },
   { titleKey: 'mlGuide.sec12Title', bodyKey: 'mlGuide.sec12Body' },
 ];
 

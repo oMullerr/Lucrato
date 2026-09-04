@@ -57,6 +57,7 @@ const NAV_GROUPS: NavGroup[] = [
       { path: '/anuncios',  label: 'nav.listings',  icon: 'tags',          title: 'nav.listings' },
       { path: '/caixa-ml',  label: 'nav.mlInbox',   icon: 'download',      title: 'nav.mlInbox' },
       { path: '/faturamento', label: 'nav.billing', icon: 'receipt-text',  title: 'nav.billing' },
+      { path: '/fluxo-de-caixa', label: 'nav.cashFlow', icon: 'banknote',  title: 'nav.cashFlow' },
     ],
   },
   {

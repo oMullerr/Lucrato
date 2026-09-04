@@ -57,6 +57,7 @@ beforeEach(async () => {
     await setDoc(doc(db, `users/${DONO}/mlInbox/order-1`), { status: 'pronta' });
     await setDoc(doc(db, `users/${DONO}/mlReturns/claim-1`), { estado: 'pendente' });
     await setDoc(doc(db, `users/${DONO}/mlBilling/2026-09-01`), { key: '2026-09-01' });
+    await setDoc(doc(db, `users/${DONO}/mlPayouts/2000001`), { orderId: '2000001' });
     await setDoc(doc(db, `users/${DONO}/secret/ml`), { refreshToken: 'TG-segredo' });
     await setDoc(doc(db, `users/${DONO}/mlOrders/1`), { id: 1 });
     await setDoc(doc(db, `users/${DONO}/mlEvents/e1`), { topic: 'orders_v2' });
@@ -102,6 +103,7 @@ describe('dados do Mercado Livre — leitura do dono, escrita so do servidor', (
     'mlInbox/order-1',
     'mlReturns/claim-1',
     'mlBilling/2026-09-01',
+    'mlPayouts/2000001',
   ];
 
   it.each(caminhos)('dono le %s', async (caminho) => {

@@ -1,0 +1,162 @@
+<app-page-header
+  [title]="'cashFlow.title' | translate"
+  [eyebrow]="'cashFlow.eyebrow' | translate"
+  [subtitle]="'cashFlow.subtitle' | translate"
+>
+  @if (ml.connected()) {
+    <button appBtn="outline" [disabled]="ml.working() || sincronizando()" (click)="sincronizar()">
+      <app-icon name="refresh-cw" />
+      {{ 'cashFlow.sync' | translate }}
+    </button>
+  }
+</app-page-header>
+
+<div class="page-content caixa-body">
+
+  @if (!ml.connected()) {
+    <app-empty-state
+      icon="store"
+      [title]="'cashFlow.notConnected' | translate"
+      [description]="'cashFlow.notConnectedMsg' | translate"
+    >
+      <a appBtn="primary" routerLink="/integracoes">{{ 'cashFlow.goToIntegrations' | translate }}</a>
+    </app-empty-state>
+  } @else if (!ml.recebiveisLoaded()) {
+    <app-skeleton variant="table-row" [count]="5" />
+  } @else if (recebiveis().length === 0) {
+    <!-- Vazio quase sempre significa "falta o número do pedido nas vendas",
+         não "a integração não funcionou". A tela precisa dizer qual dos dois. -->
+    <app-empty-state
+      icon="banknote"
+      [title]="'cashFlow.emptyTitle' | translate"
+      [description]="(semVinculo() > 0 ? 'cashFlow.emptyNeedsLink' : 'cashFlow.emptyMsg')
+        | translate:{ total: semVinculo() }"
+    >
+      @if (semVinculo() > 0) {
+        <a appBtn="primary" routerLink="/caixa-ml">{{ 'cashFlow.goToInbox' | translate }}</a>
+      } @else {
+        <button appBtn="primary" [disabled]="ml.working() || sincronizando()" (click)="sincronizar()">
+          {{ 'cashFlow.sync' | translate }}
+        </button>
+      }
+    </app-empty-state>
+  } @else {
+
+    @if (resumo(); as r) {
+      <section class="kpis">
+        <app-kpi-card
+          [title]="'cashFlow.held' | translate"
+          [value]="r.retidoAgora | brl"
+          icon="hourglass"
+          variant="info"
+          [note]="'cashFlow.heldNote' | translate"
+          size="hero"
+        />
+        <app-kpi-card
+          [title]="'cashFlow.in7' | translate"
+          [value]="r.liberaEm7 | brl"
+          icon="calendar-check"
+          variant="success"
+        />
+        <app-kpi-card
+          [title]="'cashFlow.in30' | translate"
+          [value]="r.liberaEm30 | brl"
+          icon="calendar-range"
+          variant="neutral"
+        />
+        <app-kpi-card
+          [title]="'cashFlow.late' | translate"
+          [value]="r.atrasado | brl"
+          icon="triangle-alert"
+          [variant]="r.atrasado > 0 ? 'danger' : 'neutral'"
+          [note]="(r.atrasado > 0 ? 'cashFlow.lateNote' : 'cashFlow.lateNone') | translate"
+        />
+      </section>
+
+      @if (r.semLiquido > 0) {
+        <p class="aviso">
+          <app-icon name="triangle-alert" />
+          {{ 'cashFlow.missingNet' | translate:{ total: r.semLiquido } }}
+        </p>
+      }
+
+      @if (r.porDia.length > 0) {
+        <section class="linha-tempo">
+          <h2>{{ 'cashFlow.timelineTitle' | translate }}</h2>
+          <ul>
+            @for (d of r.porDia; track d.dia) {
+              <li>
+                <span class="dia">{{ d.dia | brDate }}</span>
+                <span class="barra"><i [style.width]="largura(d.valor)"></i></span>
+                <span class="valor">{{ d.valor | brl }}</span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+
+    <section class="lista">
+      <div class="toolbar">
+        <h2>{{ 'cashFlow.listTitle' | translate }}</h2>
+        <app-field [label]="'cashFlow.filter' | translate">
+          <app-select [ngModel]="filtro()" (ngModelChange)="filtro.set($event)">
+            <app-option [value]="'pendentes'">{{ 'cashFlow.filterPending' | translate }}</app-option>
+            <app-option [value]="'retido'">{{ 'cashFlow.status.retido' | translate }}</app-option>
+            <app-option [value]="'atrasado'">{{ 'cashFlow.status.atrasado' | translate }}</app-option>
+            <app-option [value]="'liberado'">{{ 'cashFlow.status.liberado' | translate }}</app-option>
+            <app-option [value]="'todos'">{{ 'cashFlow.filterAll' | translate }}</app-option>
+          </app-select>
+        </app-field>
+      </div>
+
+      @if (visiveis().length === 0) {
+        <app-empty-state
+          icon="circle-check"
+          [title]="'cashFlow.noMatchTitle' | translate"
+          [description]="'cashFlow.noMatchMsg' | translate"
+        />
+      } @else {
+        <div class="tabela-wrap">
+          <table class="tabela">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'cashFlow.colProduct' | translate }}</th>
+                <th scope="col">{{ 'cashFlow.colWhen' | translate }}</th>
+                <th scope="col" class="num">{{ 'cashFlow.colGross' | translate }}</th>
+                <th scope="col" class="num">{{ 'cashFlow.colNet' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of visiveis(); track r.orderId) {
+                <tr [class]="'sit-' + r.situacao">
+                  <td class="produto">
+                    <span>{{ r.produto }}</span>
+                    <small>{{ r.vendaId }} · {{ r.orderId }}</small>
+                  </td>
+                  <td>
+                    {{ r.liberaEm | brDate }}
+                    <small class="situacao">{{ 'cashFlow.status.' + r.situacao | translate }}</small>
+                  </td>
+                  <td class="num bruto">{{ r.bruto | brl }}</td>
+                  <td class="num">
+                    @if (r.liquido === null) {
+                      <span class="sem-dado" [title]="'cashFlow.netUnknown' | translate">—</span>
+                    } @else {
+                      {{ r.liquido | brl }}
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <p class="rodape">
+      <app-icon name="info" />
+      {{ 'cashFlow.netNote' | translate }}
+    </p>
+  }
+</div>

@@ -35,4 +35,5 @@ export { mlMarkReturns } from './ml/returns';
 export { mlAnalyze } from './ml/analyze';
 export { mlSyncMetrics, mlMetricsDaily } from './ml/metrics';
 export { mlSyncBilling, mlBillingDaily } from './ml/billing';
+export { mlSyncPayouts, mlPayoutsDaily } from './ml/payouts';
 export { mlProcessEvent, mlPoller, mlBackfill } from './ml/sync';

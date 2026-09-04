@@ -90,6 +90,12 @@ export const routes: Routes = [
     title: 'routeTitles.mlInbox',
   },
   {
+    path: 'fluxo-de-caixa',
+    loadComponent: () => import('./features/cash-flow/cash-flow.component').then(m => m.CashFlowComponent),
+    canActivate: [authGuard],
+    title: 'routeTitles.cashFlow',
+  },
+  {
     path: 'faturamento',
     loadComponent: () => import('./features/billing/billing.component').then(m => m.BillingComponent),
     canActivate: [authGuard],

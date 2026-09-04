@@ -151,6 +151,9 @@
                   <th class="text-center" app-sort-header="quantitySold">{{ 'sales.colQty' | translate }}</th>
                   <th class="text-right" app-sort-header="netProfit">{{ 'sales.colNetProfit' | translate }}</th>
                   <th class="text-center" app-sort-header="netMargin">{{ 'sales.colMargin' | translate }}</th>
+                  @if (ml.connected()) {
+                    <th app-sort-header="payout">{{ 'sales.colPayout' | translate }}</th>
+                  }
                   <th app-sort-header="status">{{ 'sales.colStatus' | translate }}</th>
                   <th class="text-right col-actions"></th>
                 </tr>
@@ -188,6 +191,25 @@
                     <td class="text-center mono" [class]="marginClass(v.netMargin)">
                       <strong>{{ (v.netMargin * 100).toFixed(1) }}%</strong>
                     </td>
+                    @if (ml.connected()) {
+                      <td class="col-payout">
+                        @if (liberacao(v); as lib) {
+                          <span [class]="'pay-' + lib.situacao">
+                            {{ lib.situacao === 'liberado'
+                                ? ('sales.payoutReleased' | translate)
+                                : (lib.liberaEm | brDate) }}
+                          </span>
+                          @if (lib.liquido !== null) {
+                            <small>{{ lib.liquido | brl }}</small>
+                          }
+                        } @else {
+                          <span
+                            class="pay-sem"
+                            [appTooltip]="'sales.payoutUnknown' | translate"
+                          >—</span>
+                        }
+                      </td>
+                    }
                     <td>
                       <app-status-badge [status]="v.effectiveStatus" />
                       @if (v.returnedQuantity > 0 && v.effectiveStatus !== 'Devolvida') {
