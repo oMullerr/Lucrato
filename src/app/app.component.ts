@@ -65,6 +65,7 @@ const NAV_GROUPS: NavGroup[] = [
       { path: '/integracoes',  label: 'nav.integrations', icon: 'store',              title: 'nav.integrations' },
       { path: '/settings',     label: 'nav.settings',     icon: 'sliders-horizontal', title: 'nav.settings' },
       { path: '/instructions', label: 'nav.instructions', icon: 'book-open',          title: 'nav.instructions' },
+      { path: '/guia-mercado-livre', label: 'nav.mlGuide', icon: 'store',             title: 'nav.mlGuide' },
     ],
   },
 ];

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { MlIntegrationService } from '../../core/services/ml-integration.service';
@@ -16,6 +17,11 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { IconName } from '../../shared/ui/icon/icons';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+  ConfirmDialogResult,
+} from '../../shared/components/confirm-dialog.component';
 
 /** Item pendente com o motivo já resolvido, para a tela agrupar. */
 export interface PendenteNaTela {
@@ -52,9 +58,11 @@ export class MlInboxComponent {
   private readonly auto = inject(MlAutoApplyService);
   private readonly notify = inject(NotifyService);
   private readonly t = inject(TranslateService);
+  private readonly dialog = inject(DialogService);
 
   protected readonly aplicando = signal(false);
   protected readonly importando = signal(false);
+  protected readonly adotandoTudo = signal(false);
   protected readonly icone = ICONE_DO_MOTIVO;
 
   /** Veredito de cada item pendente contra as vendas já lançadas. */
@@ -157,6 +165,54 @@ export class MlInboxComponent {
   /** Mantém a venda digitada à mão e tira o item do Mercado Livre do caminho. */
   protected async manterMinha(item: ItemDaCaixa): Promise<void> {
     await this.ignorar(item);
+  }
+
+  /**
+   * Adota os números do Mercado Livre em todas as duplicadas de uma vez.
+   *
+   * Só nas duplicadas de propósito. Elas casaram nos três indícios (data, valor
+   * e produto), então a correspondência é segura. As conflitantes casaram em
+   * dois: oferecer um botão de lote ali anularia justamente o motivo de elas
+   * terem sido separadas.
+   */
+  protected adotarTodasDuplicadas(): void {
+    const lista = this.duplicadas();
+    if (lista.length === 0 || this.adotandoTudo()) return;
+
+    this.dialog
+      .open<ConfirmDialogComponent, ConfirmDialogData, ConfirmDialogResult>(
+        ConfirmDialogComponent,
+        {
+          data: {
+            title: this.t.instant('mlInbox.adoptAllTitle'),
+            message: this.t.instant('mlInbox.adoptAllMsg', { total: lista.length }),
+            confirmText: this.t.instant('mlInbox.adoptAllConfirm', { total: lista.length }),
+          },
+          size: 'sm',
+        },
+      )
+      .afterClosed()
+      .subscribe(async confirmado => {
+        if (!confirmado) return;
+        this.adotandoTudo.set(true);
+        try {
+          const adotados = await this.data.adotarNumerosDoMlEmLote(
+            lista.map(c => ({ saleId: c.candidata.venda.id, item: c.item })),
+          );
+          // Só depois de a gravação passar é que o servidor é avisado; se a
+          // ordem fosse a inversa, uma falha deixaria itens marcados como
+          // aplicados sem nada ter entrado no razão.
+          await this.ml.markInbox(adotados, 'aplicado');
+          this.notify.success(
+            this.t.instant('mlInbox.adoptedAll', { total: adotados.length }),
+          );
+        } catch (err) {
+          logError('[MlInbox] adotar em lote falhou:', err);
+          this.notify.error(this.t.instant('mlInbox.adoptError'));
+        } finally {
+          this.adotandoTudo.set(false);
+        }
+      });
   }
 
   /** Substitui os números da venda manual pelos reais do Mercado Livre. */

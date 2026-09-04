@@ -44,9 +44,12 @@
       <strong>{{ valorPendente() | brl }}</strong>
     </p>
 
+    <!-- `lote` só nas duplicadas: elas casaram nos três indícios. As
+         conflitantes casaram em dois e existem justamente para serem vistas
+         uma a uma. -->
     @for (grupo of [
-      { lista: duplicadas(), titulo: 'mlInbox.groupDuplicateTitle', msg: 'mlInbox.groupDuplicateMsg' },
-      { lista: conflitantes(), titulo: 'mlInbox.groupConflictTitle', msg: 'mlInbox.groupConflictMsg' }
+      { lista: duplicadas(), titulo: 'mlInbox.groupDuplicateTitle', msg: 'mlInbox.groupDuplicateMsg', lote: true },
+      { lista: conflitantes(), titulo: 'mlInbox.groupConflictTitle', msg: 'mlInbox.groupConflictMsg', lote: false }
     ]; track grupo.titulo) {
       @if (grupo.lista.length > 0) {
         <section class="grupo">
@@ -56,6 +59,16 @@
               <h2>{{ grupo.titulo | translate:{ total: grupo.lista.length } }}</h2>
               <p>{{ grupo.msg | translate }}</p>
             </div>
+            @if (grupo.lote) {
+              <button
+                appBtn="primary"
+                [disabled]="adotandoTudo()"
+                (click)="adotarTodasDuplicadas()"
+              >
+                <app-icon name="check" />
+                {{ 'mlInbox.adoptAll' | translate:{ total: grupo.lista.length } }}
+              </button>
+            }
           </header>
 
           <ul class="itens">

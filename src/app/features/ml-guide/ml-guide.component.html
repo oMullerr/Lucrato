@@ -1,0 +1,13 @@
+<app-page-header
+  [title]="'mlGuide.title' | translate"
+  [eyebrow]="'mlGuide.eyebrow' | translate:{ count: secoes.length }"
+  [subtitle]="'mlGuide.subtitle' | translate"
+/>
+
+<div class="page-content guide-body">
+  <app-guide
+    [items]="secoes"
+    tocTitle="mlGuide.tocTitle"
+    indexAria="mlGuide.indexAria"
+  />
+</div>

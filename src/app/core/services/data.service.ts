@@ -500,6 +500,33 @@ export class DataService {
   }
 
   /**
+   * O mesmo, para várias vendas de uma vez.
+   *
+   * Existe por causa do custo da escrita: `persist()` regrava o documento
+   * inteiro, então adotar 68 vendas uma a uma seriam 68 reescritas da base
+   * completa — e 68 janelas em que uma falha no meio deixaria metade adotada.
+   * Aqui é uma gravação só: ou entra tudo, ou nada muda.
+   *
+   * Devolve os `externalId` efetivamente adotados, para quem chamou avisar o
+   * servidor. Item cuja venda sumiu no meio do caminho é simplesmente pulado.
+   */
+  async adotarNumerosDoMlEmLote(
+    pares: readonly { saleId: string; item: ItemDaCaixa }[],
+  ): Promise<string[]> {
+    const alvos = pares.filter(p => this.findSale(p.saleId));
+    if (alvos.length === 0) return [];
+
+    await this.update(d => {
+      for (const { saleId, item } of alvos) {
+        const i = d.sales.findIndex(v => v.id === saleId);
+        if (i >= 0) d.sales[i] = adotarNumerosDoMl(d.sales[i], item);
+      }
+    });
+
+    return alvos.map(p => p.item.externalId);
+  }
+
+  /**
    * Registra no razão as devoluções vindas do Mercado Livre.
    *
    * A decisão fica no módulo puro `core/ml/returns-apply`; aqui só se grava.

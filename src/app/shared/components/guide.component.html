@@ -1,0 +1,27 @@
+<div class="layout">
+  <aside class="toc" [attr.aria-label]="indexAria() | translate">
+    <span class="toc-title">{{ tocTitle() | translate }}</span>
+    <ol class="toc-list">
+      @for (item of items(); track item.titleKey; let i = $index) {
+        <li>
+          <a [href]="'#sec-' + i" class="toc-link" (click)="scrollToSection($event, i)">
+            <span class="toc-num mono">{{ numero(i) }}</span>
+            <span class="toc-label">{{ item.titleKey | translate }}</span>
+          </a>
+        </li>
+      }
+    </ol>
+  </aside>
+
+  <article class="sections">
+    @for (item of items(); track item.titleKey; let i = $index) {
+      <section class="inst-section" [attr.id]="'sec-' + i">
+        <header class="inst-head">
+          <span class="inst-num mono">{{ numero(i) }}</span>
+          <h2>{{ item.titleKey | translate }}</h2>
+        </header>
+        <p class="inst-body-text">{{ item.bodyKey | translate }}</p>
+      </section>
+    }
+  </article>
+</div>

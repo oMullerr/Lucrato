@@ -107,5 +107,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     title: 'routeTitles.instructions',
   },
+  {
+    path: 'guia-mercado-livre',
+    loadComponent: () => import('./features/ml-guide/ml-guide.component').then(m => m.MlGuideComponent),
+    canActivate: [authGuard],
+    title: 'routeTitles.mlGuide',
+  },
   { path: '**', redirectTo: 'inventory' },
 ];
