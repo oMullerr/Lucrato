@@ -97,13 +97,43 @@ export function classificarItem(item: ItemDaCaixa, vendas: readonly Sale[]): Cla
   };
 }
 
-/** Classifica a caixa inteira de uma vez. */
+/**
+ * Classifica a caixa inteira de uma vez.
+ *
+ * Depois de classificar item a item, rebaixa para "conflitante" toda duplicada
+ * que disputa a MESMA venda com outra.
+ *
+ * O motivo é concreto: quando dois pedidos do Mercado Livre casam com uma única
+ * venda sua — mesmo produto, mesmo preço, dias seguidos —, o mais provável é que
+ * você tenha vendido duas vezes e lançado uma. Tratar os dois como duplicada
+ * faria o segundo ser gravado por cima do primeiro, e uma venda real sumiria do
+ * razão sem aviso nenhum. Encontrado na base real: 9 vendas disputadas por 18
+ * pedidos.
+ *
+ * Conflitante é exatamente o balde certo: casou em parte, precisa do seu olho, e
+ * não recebe adoção em lote.
+ */
 export function classificarCaixa(
   itens: readonly ItemDaCaixa[],
   vendas: readonly Sale[],
 ): Map<string, Classificacao> {
   const mapa = new Map<string, Classificacao>();
   for (const item of itens) mapa.set(item.externalId, classificarItem(item, vendas));
+
+  const disputantes = new Map<string, string[]>();
+  for (const [externalId, c] of mapa) {
+    if (c.veredito !== 'duplicada' || !c.candidata) continue;
+    const vendaId = c.candidata.venda.id;
+    disputantes.set(vendaId, [...(disputantes.get(vendaId) ?? []), externalId]);
+  }
+
+  for (const ids of disputantes.values()) {
+    if (ids.length < 2) continue;
+    for (const externalId of ids) {
+      mapa.set(externalId, { ...mapa.get(externalId)!, veredito: 'conflitante' });
+    }
+  }
+
   return mapa;
 }
 

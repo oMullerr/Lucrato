@@ -124,6 +124,71 @@ describe('conflitante', () => {
   });
 });
 
+describe('dois pedidos disputando a mesma venda', () => {
+  /**
+   * Caso real da base: mesmo produto, mesmo preço, dias seguidos — duas vendas
+   * de verdade, lançadas à mão uma vez só. Se as duas virassem "duplicada", a
+   * adoção em lote gravaria a segunda por cima da primeira e uma venda real
+   * sumiria do razão, sem aviso.
+   */
+  const doisPedidos = () => [
+    item({ externalId: 'A', mlOrderId: '2000016946339484', saleDate: '2026-08-10' }),
+    item({ externalId: 'B', mlOrderId: '2000016966075374', saleDate: '2026-08-11' }),
+  ];
+
+  it('nenhum dos dois fica como duplicada', () => {
+    const mapa = classificarCaixa(doisPedidos(), [manual()]);
+    expect(mapa.get('A')!.veredito).toBe('conflitante');
+    expect(mapa.get('B')!.veredito).toBe('conflitante');
+  });
+
+  it('a venda candidata continua sendo mostrada, para você decidir', () => {
+    // Rebaixar o veredito não pode custar o contexto: sem a candidata, a tela
+    // não teria o que comparar lado a lado.
+    const mapa = classificarCaixa(doisPedidos(), [manual()]);
+    expect(mapa.get('A')!.candidata?.venda.id).toBe('V001');
+  });
+
+  it('um pedido sozinho continua duplicada', () => {
+    const mapa = classificarCaixa([item({ externalId: 'A' })], [manual()]);
+    expect(mapa.get('A')!.veredito).toBe('duplicada');
+  });
+
+  it('pedidos de produtos diferentes seguem duplicadas', () => {
+    const vendas = [manual({ id: 'V001' }), manual({ id: 'V002', product: 'Pneu aro 15', unitPrice: 900 })];
+    const mapa = classificarCaixa(
+      [item({ externalId: 'A' }), item({ externalId: 'B', produto: 'Pneu aro 15', unitPrice: 900 })],
+      vendas,
+    );
+    expect(mapa.get('A')!.veredito).toBe('duplicada');
+    expect(mapa.get('B')!.veredito).toBe('duplicada');
+  });
+
+  it('duas vendas iguais e dois pedidos: os dois pedem conferência', () => {
+    // Limitação conhecida e deliberada: a escolha do candidato é feita item a
+    // item, sem repartir vendas empatadas entre eles. Com duas vendas idênticas,
+    // os dois pedidos elegem a mesma e caem em conflitante.
+    //
+    // Isso erra para o lado seguro — pede uma decisão em vez de arriscar
+    // sobrescrever. Repartir automaticamente exigiria um pareamento global, e
+    // seria adivinhar qual pedido é qual venda quando os dois são iguais.
+    const vendas = [manual({ id: 'V001' }), manual({ id: 'V002', saleDate: '2026-08-11' })];
+    const mapa = classificarCaixa(doisPedidos(), vendas);
+    expect(mapa.get('A')!.veredito).toBe('conflitante');
+    expect(mapa.get('B')!.veredito).toBe('conflitante');
+  });
+
+  it('cada venda pode ser adotada uma vez só, mesmo em lote', () => {
+    // A garantia que interessa: o conjunto de duplicadas nunca tem duas
+    // apontando para o mesmo lugar.
+    const mapa = classificarCaixa(doisPedidos(), [manual()]);
+    const alvos = [...mapa.values()]
+      .filter(c => c.veredito === 'duplicada')
+      .map(c => c.candidata!.venda.id);
+    expect(new Set(alvos).size).toBe(alvos.length);
+  });
+});
+
 describe('caixa inteira', () => {
   it('classifica cada item pela sua chave', () => {
     const mapa = classificarCaixa(
