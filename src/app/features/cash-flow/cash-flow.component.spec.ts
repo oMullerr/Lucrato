@@ -123,9 +123,15 @@ describe('cruzamento com o razao', () => {
     expect(component.resumo().retidoAgora).toBeCloseTo(149.52, 10);
   });
 
-  it('venda cancelada some do caixa', () => {
-    const { component } = montar(base([venda({ status: 'Cancelada' })]), [pagamento()]);
-    expect(component.recebiveis()).toHaveLength(0);
+  it('pedido sem venda no razao continua contando', () => {
+    // Foi o bug que a conferencia contra o app do Mercado Pago pegou: dois
+    // pedidos sem venda casada faziam a tela mostrar um terco a menos.
+    const manuais = [venda({ id: 'V001', mlOrderId: undefined, source: undefined })];
+    const { component } = montar(base(manuais), [pagamento()]);
+
+    expect(component.recebiveis()).toHaveLength(1);
+    expect(component.resumo().retidoAgora).toBeCloseTo(149.52, 10);
+    expect(component.resumo().naoConciliado).toEqual({ total: 149.52, pedidos: 1 });
   });
 
   it('o total e o liquido, nao o bruto', () => {

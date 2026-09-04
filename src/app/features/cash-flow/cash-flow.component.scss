@@ -164,3 +164,20 @@
 }
 
 .aviso { color: var(--warning); }
+
+.nota {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.nota a { color: var(--accent); }
+
+/* Pedido sem venda casada: presente na conta, mas ainda sem nome. */
+.sem-venda {
+  color: var(--text-tertiary);
+  font-style: italic;
+}

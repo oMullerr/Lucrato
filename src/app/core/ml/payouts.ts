@@ -32,7 +32,7 @@ export interface PagamentoDoMl {
   liquido: number | null;
 }
 
-/** Um recebível já cruzado com a venda do razão. */
+/** Um recebível, com a venda do razão quando ela existe. */
 export interface Recebivel {
   orderId: string;
   /** Dia da liberação no fuso do vendedor. */
@@ -40,8 +40,11 @@ export interface Recebivel {
   situacao: SituacaoDoRecebivel;
   bruto: number;
   liquido: number | null;
+  /** Vazio quando o pedido ainda não foi casado com uma venda. */
   produto: string;
   vendaId: string;
+  /** `false` quando nenhuma venda do razão carrega este número de pedido. */
+  conciliado: boolean;
 }
 
 export interface ResumoDeCaixa {
@@ -54,6 +57,13 @@ export interface ResumoDeCaixa {
   /** Quanto entra por dia, só do que ainda está por vir. */
   porDia: { dia: string; valor: number }[];
   /**
+   * Parte do total que ainda não tem venda no razão.
+   *
+   * Continua somada: o dinheiro entra tenha ou não venda conciliada. Isto aqui
+   * só explica de onde vem a parte que a tela não consegue nomear.
+   */
+  naoConciliado: { total: number; pedidos: number };
+  /**
    * Recebíveis sem valor líquido informado.
    *
    * Ficam fora das somas de propósito: um caixa previsto com número inventado
@@ -64,26 +74,23 @@ export interface ResumoDeCaixa {
 
 const zeroSeNulo = (v: number | null): number => (v === null ? 0 : v);
 
-/** Soma as fatias de uma mesma order: FIFO pode ter dividido a venda em várias. */
+/**
+ * Venda do razão por número de pedido.
+ *
+ * Uma order pode ter virado várias vendas (FIFO divide entre lotes); para dar
+ * nome ao recebível basta a primeira fatia.
+ */
 interface VendaDoPedido {
   produto: string;
   vendaId: string;
-  conta: boolean;
 }
 
 function porPedido(vendas: readonly ComputedSale[]): Map<string, VendaDoPedido> {
   const mapa = new Map<string, VendaDoPedido>();
   for (const v of vendas) {
     const id = v.mlOrderId;
-    if (!id) continue;
-    const atual = mapa.get(id);
-    if (atual) {
-      // Basta uma fatia contar como receita para o pedido valer: uma devolução
-      // parcial não faz o dinheiro do resto deixar de cair.
-      atual.conta = atual.conta || v.countsAsRevenue;
-    } else {
-      mapa.set(id, { produto: v.product, vendaId: v.id, conta: v.countsAsRevenue });
-    }
+    if (!id || mapa.has(id)) continue;
+    mapa.set(id, { produto: v.product, vendaId: v.id });
   }
   return mapa;
 }
@@ -91,9 +98,17 @@ function porPedido(vendas: readonly ComputedSale[]): Map<string, VendaDoPedido> 
 /**
  * Cruza o que o Mercado Pago informou com as vendas do razão.
  *
- * Pagamento sem venda correspondente fica de fora: seria uma linha que você não
- * reconhece, e a tela não tem como explicá-la. Isso acontece com venda digitada
- * antes da integração, que ainda não carrega o número do pedido.
+ * **Todo pagamento entra**, tenha ou não venda correspondente. Quem decide se o
+ * dinheiro vem é o Mercado Pago, não o estado do seu razão: uma venda digitada
+ * antes da integração não carrega o número do pedido, e descartá-la por isso
+ * fazia a tela prometer menos do que vai cair.
+ *
+ * Isso não é teoria — foi medido: 2 dos 8 pedidos pendentes não tinham venda
+ * casada, e a tela mostrava R$ 1.350,80 quando o Mercado Pago dizia R$ 2.002,44.
+ * Um terço do caixa sumindo em silêncio.
+ *
+ * A venda, quando existe, só acrescenta contexto: o nome do produto e o
+ * lançamento. O que ela nunca faz é decidir se a linha aparece.
  */
 export function juntarRecebiveis(
   pagamentos: readonly PagamentoDoMl[],
@@ -106,8 +121,6 @@ export function juntarRecebiveis(
 
   for (const p of pagamentos) {
     const venda = doRazao.get(p.orderId);
-    // Venda cancelada ou em disputa não vira caixa a receber.
-    if (!venda || !venda.conta) continue;
 
     const liberaEm = diaLocalDeISO(p.liberaEm);
     if (!liberaEm) continue;
@@ -125,8 +138,9 @@ export function juntarRecebiveis(
       situacao,
       bruto: p.bruto,
       liquido: p.liquido,
-      produto: venda.produto,
-      vendaId: venda.vendaId,
+      produto: venda?.produto ?? '',
+      vendaId: venda?.vendaId ?? '',
+      conciliado: venda !== undefined,
     });
   }
 
@@ -153,6 +167,8 @@ export function resumirCaixa(
   let liberaEm30 = 0;
   let atrasado = 0;
   let semLiquido = 0;
+  let naoConciliadoTotal = 0;
+  let naoConciliadoPedidos = 0;
 
   const dias = new Map<string, number>();
 
@@ -165,6 +181,11 @@ export function resumirCaixa(
 
     const valor = zeroSeNulo(r.liquido);
     retidoAgora += valor;
+
+    if (!r.conciliado) {
+      naoConciliadoTotal += valor;
+      naoConciliadoPedidos++;
+    }
 
     if (r.situacao === 'atrasado') {
       atrasado += valor;
@@ -187,6 +208,10 @@ export function resumirCaixa(
       .map(([dia, valor]) => ({ dia, valor: centavos(valor) }))
       .sort((a, b) => a.dia.localeCompare(b.dia)),
     semLiquido,
+    naoConciliado: {
+      total: centavos(naoConciliadoTotal),
+      pedidos: naoConciliadoPedidos,
+    },
   };
 }
 

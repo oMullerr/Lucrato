@@ -1361,6 +1361,8 @@
       "retido": "retenido",
       "liberado": "liberado",
       "atrasado": "atrasado"
-    }
+    },
+    "unlinkedPart": "De este total, {{valor}} vienen de {{total}} pedido(s) que aún no tienen venta en el libro. El dinero entra igual — solo falta ponerle nombre.",
+    "unlinkedRow": "pedido sin venta en el libro"
   }
 }

@@ -63,19 +63,34 @@ describe('cruzar pagamento com venda', () => {
     expect(juntarRecebiveis([pagamento()], [venda()], HOJE)[0].liberaEm).toBe('2026-09-11');
   });
 
-  it('pedido sem venda correspondente fica de fora', () => {
-    // Venda digitada antes da integração não carrega mlOrderId. Mostrar a
-    // linha seria exibir um recebível que o usuário não reconhece.
+  it('pedido sem venda correspondente CONTINUA no caixa', () => {
+    // Medido na conta real: 2 dos 8 pendentes não tinham venda casada, e
+    // descartá-los fazia a tela mostrar R$ 1.350,80 quando o Mercado Pago
+    // dizia R$ 2.002,44. O dinheiro entra tendo ou não venda no razão.
     const manual = venda({ mlOrderId: undefined, source: undefined });
-    expect(juntarRecebiveis([pagamento()], [manual], HOJE)).toHaveLength(0);
+    const r = juntarRecebiveis([pagamento()], [manual], HOJE);
+    expect(r).toHaveLength(1);
+    expect(r[0].conciliado).toBe(false);
+    expect(r[0].liquido).toBeCloseTo(149.52, 10);
   });
 
-  it('venda cancelada nao vira caixa a receber', () => {
-    expect(juntarRecebiveis([pagamento()], [venda({ status: 'Cancelada' })], HOJE)).toHaveLength(0);
+  it('sem venda, o recebivel fica sem nome em vez de sumir', () => {
+    const r = juntarRecebiveis([pagamento()], [], HOJE);
+    expect(r[0].produto).toBe('');
+    expect(r[0].vendaId).toBe('');
   });
 
-  it('venda em disputa nao vira caixa a receber', () => {
-    expect(juntarRecebiveis([pagamento()], [venda({ status: 'Em disputa' })], HOJE)).toHaveLength(0);
+  it('com venda casada, marca como conciliado e ganha o nome', () => {
+    const r = juntarRecebiveis([pagamento()], [venda()], HOJE);
+    expect(r[0].conciliado).toBe(true);
+    expect(r[0].produto).toBe('Furadeira');
+  });
+
+  it('quem decide se o dinheiro vem e o Mercado Pago, nao o razao', () => {
+    // A situação da venda no razão não muda o que o Mercado Pago vai depositar.
+    // Filtrar por ela foi exatamente o que escondeu um terço do caixa.
+    const cancelada = juntarRecebiveis([pagamento()], [venda({ status: 'Cancelada' })], HOJE);
+    expect(cancelada).toHaveLength(1);
   });
 
   it('venda dividida entre lotes vira um recebivel so', () => {
@@ -200,6 +215,24 @@ describe('resumo do caixa', () => {
     ]);
   });
 
+  it('o nao conciliado entra no total e aparece a parte', () => {
+    // O total precisa bater com o app do Mercado Pago; a separação existe só
+    // para explicar a parte que a tela não consegue nomear.
+    const pagamentos = [
+      pagamento({ orderId: 'A', liberaEm: '2026-09-06T12:00:00Z', liquido: 100 }),
+      pagamento({ orderId: 'ORFAO', liberaEm: '2026-09-06T12:00:00Z', liquido: 502.12 }),
+    ];
+    const r = resumirCaixa(
+      juntarRecebiveis(pagamentos, [venda({ id: 'V0', mlOrderId: 'A' })], HOJE),
+      HOJE,
+    );
+
+    expect(r.retidoAgora).toBeCloseTo(602.12, 10);
+    expect(r.naoConciliado).toEqual({ total: 502.12, pedidos: 1 });
+    // E continua na linha do tempo: é dinheiro que entra naquele dia.
+    expect(r.porDia).toEqual([{ dia: '2026-09-06', valor: 602.12 }]);
+  });
+
   it('caixa vazio devolve zeros, nao NaN', () => {
     const r = resumirCaixa([], HOJE);
     expect(r).toEqual({
@@ -209,6 +242,7 @@ describe('resumo do caixa', () => {
       atrasado: 0,
       porDia: [],
       semLiquido: 0,
+      naoConciliado: { total: 0, pedidos: 0 },
     });
   });
 });

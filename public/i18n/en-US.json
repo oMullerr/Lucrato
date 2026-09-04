@@ -1361,6 +1361,8 @@
       "retido": "held",
       "liberado": "released",
       "atrasado": "overdue"
-    }
+    },
+    "unlinkedPart": "Of this total, {{valor}} comes from {{total}} order(s) with no sale in the ledger yet. The money lands all the same — it just has no name yet.",
+    "unlinkedRow": "order with no sale in the ledger"
   }
 }

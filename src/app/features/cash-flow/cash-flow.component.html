@@ -80,6 +80,19 @@
         </p>
       }
 
+      <!-- Está somado no total de propósito: o dinheiro entra tendo ou não
+           venda conciliada. Isto só explica a parte que a tela não nomeia. -->
+      @if (r.naoConciliado.pedidos > 0) {
+        <p class="nota">
+          <app-icon name="info" />
+          {{ 'cashFlow.unlinkedPart' | translate:{
+            valor: (r.naoConciliado.total | brl),
+            total: r.naoConciliado.pedidos
+          } }}
+          <a routerLink="/caixa-ml">{{ 'cashFlow.goToInbox' | translate }}</a>
+        </p>
+      }
+
       @if (r.porDia.length > 0) {
         <section class="linha-tempo">
           <h2>{{ 'cashFlow.timelineTitle' | translate }}</h2>
@@ -131,8 +144,13 @@
               @for (r of visiveis(); track r.orderId) {
                 <tr [class]="'sit-' + r.situacao">
                   <td class="produto">
-                    <span>{{ r.produto }}</span>
-                    <small>{{ r.vendaId }} · {{ r.orderId }}</small>
+                    @if (r.conciliado) {
+                      <span>{{ r.produto }}</span>
+                      <small>{{ r.vendaId }} · {{ r.orderId }}</small>
+                    } @else {
+                      <span class="sem-venda">{{ 'cashFlow.unlinkedRow' | translate }}</span>
+                      <small>{{ r.orderId }}</small>
+                    }
                   </td>
                   <td>
                     {{ r.liberaEm | brDate }}
