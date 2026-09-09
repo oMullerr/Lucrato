@@ -87,6 +87,30 @@ describe('normalizacao do anuncio', () => {
   it('catalogo ausente vira nulo', () => {
     expect(normalizarItem({ ...cru(), catalog_product_id: '' }).catalogProductId).toBeNull();
   });
+
+  it('usa o secure_thumbnail quando ele vem', () => {
+    expect(normalizarItem(cru()).thumbnail).toBe(
+      'https://http2.mlstatic.com/D_NQ_NP_2X_123-O.webp',
+    );
+  });
+
+  it('sem secure_thumbnail, sobe o http para https', () => {
+    // Foi o que aconteceu na conta real: o Mercado Livre devolveu o campo
+    // seguro vazio e a foto ficou em `http://`. Numa pagina https o navegador
+    // bloqueia como conteudo misto E o CSP barra de novo — a tela abre inteira,
+    // so sem imagem nenhuma, e nada denuncia o motivo.
+    const semSeguro = {
+      ...cru(),
+      secure_thumbnail: '',
+      thumbnail: 'http://http2.mlstatic.com/D_1-I.jpg',
+    };
+    expect(normalizarItem(semSeguro).thumbnail).toBe('https://http2.mlstatic.com/D_1-I.jpg');
+  });
+
+  it('sem foto nenhuma, fica vazio em vez de virar "https://"', () => {
+    const semFoto = { ...cru(), secure_thumbnail: '', thumbnail: '' };
+    expect(normalizarItem(semFoto).thumbnail).toBe('');
+  });
 });
 
 describe('o que remover — o caminho que apaga dado', () => {

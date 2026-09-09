@@ -52,6 +52,20 @@ const texto = (v: unknown): string => (typeof v === 'string' ? v : '');
 const numero = (v: unknown): number => (typeof v === 'number' && isFinite(v) ? v : 0);
 
 /**
+ * Sobe a URL da miniatura para https.
+ *
+ * O Mercado Livre nem sempre preenche `secure_thumbnail`, e o `thumbnail` vem
+ * em `http://`. Numa página servida por https isso não aparece de jeito
+ * nenhum: o navegador bloqueia como conteúdo misto, e o nosso CSP (`img-src`
+ * aceita só `https:`) barra de novo. O mesmo arquivo existe em https no
+ * mlstatic — conferido: 200 image/jpeg no mesmo caminho.
+ *
+ * A imagem quebrada não derruba a tela, e é justamente por isso que passa: a
+ * página funciona, só fica sem foto.
+ */
+const emHttps = (url: string): string => url.replace(/^http:\/\//i, 'https://');
+
+/**
  * SKU do vendedor. O Mercado Livre guarda em dois lugares por razões
  * históricas: no atributo `SELLER_SKU` e no antigo `seller_custom_field`.
  */
@@ -84,7 +98,7 @@ export function normalizarItem(raw: Bruto): MlItemNormalizado {
     categoryId: texto(raw['category_id']),
     catalogProductId: texto(raw['catalog_product_id']) || null,
     permalink: texto(raw['permalink']),
-    thumbnail: texto(raw['secure_thumbnail']) || texto(raw['thumbnail']),
+    thumbnail: emHttps(texto(raw['secure_thumbnail']) || texto(raw['thumbnail'])),
     shippingMode: texto(shipping['mode']),
     logisticType: texto(shipping['logistic_type']),
     freeShipping: shipping['free_shipping'] === true,
