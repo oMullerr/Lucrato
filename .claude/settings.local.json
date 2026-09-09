@@ -28,7 +28,24 @@
       "Bash(git ls-files *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git --no-pager log --oneline -3)"
+      "Bash(git --no-pager log --oneline -3)",
+      "Bash(git fetch *)",
+      "Bash(git push *)",
+      "Bash(git branch *)",
+      "Bash(git --no-pager log --oneline -1 main)",
+      "Bash(git --no-pager log --oneline -1 origin/main)",
+      "Bash(git --no-pager log --oneline -1 origin/ui-overhaul)",
+      "Bash(git --no-pager diff --stat)",
+      "Bash(git --no-pager log --oneline origin/main..origin/build-backend)",
+      "Bash(git --no-pager log --oneline origin/main..origin/dependabot/npm_and_yarn/angular/cdk-21.2.13)",
+      "Bash(git --no-pager log --oneline origin/main..origin/claude/lucid-lederberg-d2a243)",
+      "Bash(git checkout *)",
+      "Bash(PYTHONIOENCODING=utf-8 python \"C:/Users/User/AppData/Local/Temp/claude/C--Users-User-Desktop-Lucrato/6fd97a85-04e4-4202-9710-b4298f3ce982/scratchpad/build_import.py\")",
+      "Bash(PYTHONIOENCODING=utf-8 python \"C:/Users/User/AppData/Local/Temp/claude/C--Users-User-Desktop-Lucrato/6fd97a85-04e4-4202-9710-b4298f3ce982/scratchpad/verify_import.py\")",
+      "Bash(PYTHONIOENCODING=utf-8 python -c ' *)",
+      "Bash(npx firebase *)",
+      "PowerShell(& \"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-User-Desktop-Lucrato\\\\79b0644a-9226-41d3-8742-00e623485585\\\\scratchpad\\\\fetch-ml-docs.ps1\" -OutDir \"C:\\\\Users\\\\User\\\\.claude\\\\projects\\\\C--Users-User-Desktop-Lucrato\\\\refs\\\\mercadolivre\" -SlugFile \"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-User-Desktop-Lucrato\\\\79b0644a-9226-41d3-8742-00e623485585\\\\scratchpad\\\\ml-slugs.txt\")",
+      "PowerShell(& \"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-User-Desktop-Lucrato\\\\79b0644a-9226-41d3-8742-00e623485585\\\\scratchpad\\\\fetch-ml-docs.ps1\" -OutDir \"C:\\\\Users\\\\User\\\\.claude\\\\projects\\\\C--Users-User-Desktop-Lucrato\\\\refs\\\\mercadolivre\" -SlugFile \"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-User-Desktop-Lucrato\\\\79b0644a-9226-41d3-8742-00e623485585\\\\scratchpad\\\\ml-priority.txt\")"
     ]
   }
 }
