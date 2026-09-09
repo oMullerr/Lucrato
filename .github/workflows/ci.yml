@@ -18,6 +18,28 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      # A auditoria de celular é estática: falha se voltar `@media` cru,
+      # `min-width` que não cabe em 375px, token de cor inexistente ou `100vh`.
+      - run: node scripts/audit-mobile.mjs
+
+  # As functions rodam no servidor e mexem em token e em dinheiro — ficarem
+  # fora do CI era a lacuna maior. Projeto separado, `npm ci` próprio.
+  functions:
+    name: Functions · Test · Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
 
   audit:
     name: Dependency audit (informativo)

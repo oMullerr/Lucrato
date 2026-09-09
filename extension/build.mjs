@@ -12,7 +12,18 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const raiz = dirname(fileURLToPath(import.meta.url));
 const dist = resolve(raiz, 'dist');
+
+/**
+ * `--producao` decide DUAS coisas de uma vez, de propósito: minificar e falar
+ * com o projeto de produção. Separar os dois flags só criaria a combinação
+ * perigosa — um pacote minificado, com cara de final, apontando para a base de
+ * testes.
+ */
 const producao = process.argv.includes('--producao');
+
+/* O config lê `process.env.LUCRATO_ENV`, que não existe no navegador: o valor
+   é fixado aqui, no empacotamento, para os dois bundles concordarem. */
+const ambiente = { 'process.env.LUCRATO_ENV': JSON.stringify(producao ? 'producao' : 'teste') };
 
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });
@@ -28,6 +39,7 @@ async function lerConfig() {
     outfile: temporario,
     bundle: true,
     format: 'esm',
+    define: ambiente,
     logLevel: 'silent',
   });
   const mod = await import(pathToFileURL(temporario).href);
@@ -47,6 +59,7 @@ await build({
   bundle: true,
   format: 'iife',
   target: ['chrome114'],
+  define: ambiente,
   minify: producao,
   sourcemap: !producao,
   legalComments: 'none',
@@ -76,3 +89,4 @@ console.log(`extensao empacotada em ${dist}`);
 console.log(`  Mercado Livre: ${config.ORIGENS_DO_ML.join(', ')}`);
 console.log(`  Lucrato:       ${config.ORIGENS_DO_LUCRATO.join(', ')}`);
 console.log(`  Functions:     ${config.FUNCTIONS_BASE}`);
+console.log(`  Ambiente:      ${producao ? 'PRODUCAO' : 'testes'}`);

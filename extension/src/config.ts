@@ -7,11 +7,23 @@
  */
 
 /**
+ * Qual projeto Firebase a extensão fala.
+ *
+ * `npm run build:ext` gera a versão de TESTES (`lucrato-dev`);
+ * `npm run build:ext:prod` gera a de PRODUÇÃO (`lucrato-web`).
+ *
+ * Antes isto era uma string fixa apontando para o ambiente de testes — quem
+ * empacotasse para produção levaria junto, sem aviso, uma extensão conversando
+ * com o banco errado.
+ */
+const PROJETO = process.env['LUCRATO_ENV'] === 'producao' ? 'lucrato-web' : 'lucrato-dev';
+
+/**
  * Onde o Lucrato roda no seu navegador.
  *
- * Comece pelo local. Ao publicar, acrescente o endereço exato do seu deploy
- * (ex.: `https://lucrato-staging.vercel.app/*`). Evite curingas largos como
- * `https://*.vercel.app/*`: isso injetaria a ponte em todo site hospedado lá.
+ * Só nestas origens a ponte de token é injetada. Curinga largo como
+ * `https://*.vercel.app/*` está fora de propósito: injetaria a ponte em todo
+ * site hospedado lá. Acrescente aqui o endereço exato do seu deploy.
  */
 export const ORIGENS_DO_LUCRATO = ['http://localhost:4200/*'];
 
@@ -24,8 +36,7 @@ export const ORIGENS_DO_LUCRATO = ['http://localhost:4200/*'];
 export const ORIGENS_DO_ML = ['https://*.mercadolivre.com.br/*'];
 
 /** Base das Cloud Functions do projeto. Mesma região do Firestore. */
-export const FUNCTIONS_BASE =
-  'https://southamerica-east1-lucrato-dev.cloudfunctions.net';
+export const FUNCTIONS_BASE = `https://southamerica-east1-${PROJETO}.cloudfunctions.net`;
 
 /** Prefixo das mensagens trocadas na página, para não colidir com o site. */
 export const CANAL = 'lucrato-ext';
