@@ -1366,6 +1366,7 @@
     "unlinkedPart": "Deste total, {{valor}} vêm de {{total}} pedido(s) que ainda não têm venda no razão. O dinheiro entra do mesmo jeito — só falta dar nome a ele.",
     "unlinkedRow": "pedido sem venda no razão",
     "creditsPart": "Outros {{valor}} vêm de {{total}} crédito(s) do Mercado Pago sem pedido atrás — bonificação, ajuste ou devolução de tarifa. Não há o que conciliar neles.",
-    "creditRow": "crédito do Mercado Pago"
+    "creditRow": "crédito do Mercado Pago",
+    "sortDefault": "Como estava"
   }
 }

@@ -1,3 +1,5 @@
+@use '../../../../styles/breakpoints' as bp;
+
 :host {
   display: block;
   padding: 9px 12px;
@@ -26,4 +28,11 @@
   cursor: not-allowed;
 
   &:hover { background: transparent; }
+}
+
+/* Piso de toque no celular: 44px é o mínimo confortável para o dedo, e o
+   padrão desktop deste kit fica entre 26 e 40. Só abaixo de md — no mouse os
+   tamanhos compactos são uma vantagem, não um defeito. */
+@include bp.below(md) {
+  :host { min-height: 44px; display: flex; align-items: center; }
 }

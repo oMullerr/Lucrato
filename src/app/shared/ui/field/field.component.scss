@@ -1,3 +1,5 @@
+@use '../../../../styles/breakpoints' as bp;
+
 :host {
   display: flex;
   flex-direction: column;
@@ -64,3 +66,10 @@
 
 .field-hint { color: var(--text-muted); }
 .field-error { color: var(--color-danger); font-weight: 500; }
+
+/* Piso de toque no celular: 44px é o mínimo confortável para o dedo, e o
+   padrão desktop deste kit fica entre 26 e 40. Só abaixo de md — no mouse os
+   tamanhos compactos são uma vantagem, não um defeito. */
+@include bp.below(md) {
+  .field-box { min-height: 44px; }
+}

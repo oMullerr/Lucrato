@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 .settings-body {
   display: flex;
   flex-direction: column;
@@ -92,7 +94,7 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
 
-  @media (max-width: 700px) { grid-template-columns: 1fr; }
+  @include bp.below(md) { grid-template-columns: 1fr; }
 }
 
 .unit-suffix { margin-right: 12px; }
@@ -102,8 +104,8 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 
-  @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
-  @media (max-width: 700px)  { grid-template-columns: 1fr; }
+  @include bp.below(xl) { grid-template-columns: repeat(2, 1fr); }
+  @include bp.below(md) { grid-template-columns: 1fr; }
 }
 
 /* Import / Danger */
@@ -135,7 +137,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@include bp.below(md) {
   .tab-body { padding: 18px 16px 22px; }
   .config-card { padding: 18px; }
 }

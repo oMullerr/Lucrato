@@ -145,6 +145,16 @@
       } @else if (bp.isMobile()) {
         <!-- No celular a tabela virava rolagem lateral: quatro colunas não
              cabem em 375px. Mesma troca por cards que Vendas e Compras fazem. -->
+        <!-- Sem isto, no celular não existiria jeito de reordenar: a ordenação
+             mora no cabeçalho da tabela, que aqui não é renderizado. -->
+        <div class="mobile-sort">
+          <span>{{ 'table.sortBy' | translate }}</span>
+          <app-select [ngModel]="ordemNoCelular()" (ngModelChange)="ordenarNoCelular($event)">
+            @for (o of opcoesDeOrdem; track o.valor) {
+              <app-option [value]="o.valor">{{ o.rotulo | translate }}</app-option>
+            }
+          </app-select>
+        </div>
         <div class="record-list">
           @for (r of visiveis(); track r.paymentId) {
             <app-record-card

@@ -6,7 +6,7 @@
 
 .page-container {
   background: var(--bg-canvas);
-  min-height: calc(100vh - var(--topbar-height));
+  min-height: calc(100dvh - var(--topbar-height));
 }
 
 .page-content {
@@ -111,6 +111,34 @@
   }
 }
 
+/* Tabela larga no celular.
+   Vale para as telas de ANÁLISE, onde a linha só faz sentido comparada com as
+   outras: virar card destruiria justamente a comparação. Ali a rolagem lateral
+   é a resposta certa — o que faltava era saber QUAL linha se está lendo depois
+   de rolar três colunas. Então a primeira coluna fica fixa. */
+@include bp.below(md) {
+  .data-table {
+    th:first-child,
+    td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: var(--bg-surface-1);
+    }
+
+    thead th:first-child {
+      z-index: 3;
+      background: var(--bg-surface-2);
+    }
+
+    /* Separa visualmente a coluna fixa do conteúdo que corre por baixo. */
+    th:first-child,
+    td:first-child {
+      box-shadow: 1px 0 0 var(--border-subtle);
+    }
+  }
+}
+
 /* Lista de cards que substitui a tabela no mobile */
 .record-list {
   display: flex;
@@ -196,6 +224,14 @@ cdk-dialog-container { outline: none; }
 
   /* O anel de foco fica no .field-box (focus-within); sem anel interno. */
   &:focus-visible { box-shadow: none; }
+
+  /* Abaixo de 16px o Safari do iPhone dá zoom sozinho ao focar o campo — e
+     não desfaz. `--fs-body` tem teto de 15px, então corrigir a raiz não
+     resolve isto: o piso precisa ser explícito. */
+  @include bp.below(md) {
+    font-size: 16px;
+    height: 44px;
+  }
 }
 
 textarea.app-input {

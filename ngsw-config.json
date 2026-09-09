@@ -1,0 +1,50 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/index.html",
+          "/manifest.webmanifest",
+          "/favicon.svg",
+          "/*.css",
+          "/*.js"
+        ]
+      }
+    },
+    {
+      "name": "traducoes",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": ["/i18n/*.json"]
+      }
+    },
+    {
+      "name": "fontes-e-icones",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/fonts/inter-var-latin.woff2",
+          "/fonts/archivo-var-latin.woff2",
+          "/fonts/geist-mono-var-latin.woff2",
+          "/icons/*.png"
+        ]
+      }
+    },
+    {
+      "name": "opcionais",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": ["/fonts/*-latin-ext.woff2", "/flags/*.svg"]
+      }
+    }
+  ],
+  "navigationRequestStrategy": "performance"
+}

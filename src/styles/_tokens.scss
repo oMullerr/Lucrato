@@ -141,6 +141,21 @@
 @media (min-width: 1920px) { :root { --content-max: 1760px; } }
 @media (min-width: 2560px) { :root { --content-max: 1920px; } }
 
+/* ---------- Degrau de leitura no celular ----------
+   A escala é desenhada para um monitor a um braço de distância, onde denso é
+   qualidade. No telefone, a 30cm e sem apoio, os três degraus de baixo do
+   `clamp` caem no piso: corpo a 13,8px, legenda a 11px. Aqui eles sobem — e só
+   abaixo de md, para o desktop continuar com a densidade que você conhece.
+   (Media query crua é a convenção deste arquivo: ver os degraus ultrawide
+   acima; `_breakpoints.scss` isenta `_tokens.scss` da regra.) */
+@media (max-width: 767.98px) {
+  :root {
+    --fs-body:    0.9375rem;  /* 15px */
+    --fs-small:   0.875rem;   /* 14px */
+    --fs-caption: 0.75rem;    /* 12px — cabeçalho de tabela e legenda */
+  }
+}
+
 /* ---------- Dark mode (modo canônico da identidade) ---------- */
 html.dark {
   --brand-primary:    #2BAE96;

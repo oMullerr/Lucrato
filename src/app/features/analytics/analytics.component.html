@@ -86,55 +86,57 @@
                 [description]="'analytics.noSalesDesc' | translate"
               />
             } @else {
-              <div class="table-scroll">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th class="text-center">#</th>
-                      <th><button class="sort-btn" (click)="sortProduct('product')">{{ 'analytics.colProduct' | translate }} <app-icon [name]="sortIcon(productSort(), 'product')" [size]="14" /></button></th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortProduct('qty')">{{ 'purchases.colQty' | translate }} <app-icon [name]="sortIcon(productSort(), 'qty')" [size]="14" /></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('revenue')">{{ 'analytics.hGrossRevenue' | translate }} <app-icon [name]="sortIcon(productSort(), 'revenue')" [size]="14" /></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('netRevenue')">{{ 'analytics.hNetRevenue' | translate }} <app-icon [name]="sortIcon(productSort(), 'netRevenue')" [size]="14" /></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('cost')">{{ 'analytics.hCost' | translate }} <app-icon [name]="sortIcon(productSort(), 'cost')" [size]="14" /></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortProduct('netProfit')">{{ 'analytics.hNetProfit' | translate }} <app-icon [name]="sortIcon(productSort(), 'netProfit')" [size]="14" /></button></th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortProduct('margin')">{{ 'sales.colMargin' | translate }} <app-icon [name]="sortIcon(productSort(), 'margin')" [size]="14" /></button></th>
-                      @if (finalizedReturns().length > 0) {
-                        <th class="text-center"><button class="sort-btn" (click)="sortProduct('returnRate')">{{ 'analytics.colReturnRate' | translate }} <app-icon [name]="sortIcon(productSort(), 'returnRate')" [size]="14" /></button></th>
-                        <th class="text-right"><button class="sort-btn" (click)="sortProduct('returnLoss')">{{ 'analytics.colReturnLoss' | translate }} <app-icon [name]="sortIcon(productSort(), 'returnLoss')" [size]="14" /></button></th>
-                      }
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (p of pagedProductRanking(); track p.product; let i = $index) {
+              <div class="table-frame">
+                <div class="table-scroll">
+                  <table class="data-table">
+                    <thead>
                       <tr>
-                        <td class="text-center pos mono">{{ productPage().pageIndex * productPage().pageSize + i + 1 }}</td>
-                        <td class="product-cell">{{ p.product }}</td>
-                        <td class="text-center mono">{{ p.qty }}</td>
-                        <td class="text-right mono">{{ p.revenue | brl }}</td>
-                        <td class="text-right mono">{{ p.netRevenue | brl }}</td>
-                        <td class="text-right text-muted mono">{{ p.cost | brl }}</td>
-                        <td class="text-right mono"
-                            [class.text-success]="p.netProfit > 0"
-                            [class.text-danger]="p.netProfit < 0">
-                          <strong>{{ p.netProfit | brl }}</strong>
-                        </td>
-                        <td class="text-center mono" [class]="marginClass(p.margin)">
-                          <strong>{{ (p.margin * 100).toFixed(1) }}%</strong>
-                        </td>
+                        <th class="text-center">#</th>
+                        <th><button class="sort-btn" (click)="sortProduct('product')">{{ 'analytics.colProduct' | translate }} <app-icon [name]="sortIcon(productSort(), 'product')" [size]="14" /></button></th>
+                        <th class="text-center"><button class="sort-btn" (click)="sortProduct('qty')">{{ 'purchases.colQty' | translate }} <app-icon [name]="sortIcon(productSort(), 'qty')" [size]="14" /></button></th>
+                        <th class="text-right"><button class="sort-btn" (click)="sortProduct('revenue')">{{ 'analytics.hGrossRevenue' | translate }} <app-icon [name]="sortIcon(productSort(), 'revenue')" [size]="14" /></button></th>
+                        <th class="text-right"><button class="sort-btn" (click)="sortProduct('netRevenue')">{{ 'analytics.hNetRevenue' | translate }} <app-icon [name]="sortIcon(productSort(), 'netRevenue')" [size]="14" /></button></th>
+                        <th class="text-right"><button class="sort-btn" (click)="sortProduct('cost')">{{ 'analytics.hCost' | translate }} <app-icon [name]="sortIcon(productSort(), 'cost')" [size]="14" /></button></th>
+                        <th class="text-right"><button class="sort-btn" (click)="sortProduct('netProfit')">{{ 'analytics.hNetProfit' | translate }} <app-icon [name]="sortIcon(productSort(), 'netProfit')" [size]="14" /></button></th>
+                        <th class="text-center"><button class="sort-btn" (click)="sortProduct('margin')">{{ 'sales.colMargin' | translate }} <app-icon [name]="sortIcon(productSort(), 'margin')" [size]="14" /></button></th>
                         @if (finalizedReturns().length > 0) {
-                          <td class="text-center mono" [class.text-warning]="p.returnRate > 0">
-                            {{ p.returnedQty > 0 ? (p.returnRate * 100).toFixed(1) + '%' : '—' }}
-                          </td>
-                          <td class="text-right mono"
-                              [class.text-danger]="p.returnLoss > 0"
-                              [class.text-success]="p.returnLoss < 0">
-                            {{ p.returnLoss !== 0 ? (p.returnLoss | brl) : '—' }}
-                          </td>
+                          <th class="text-center"><button class="sort-btn" (click)="sortProduct('returnRate')">{{ 'analytics.colReturnRate' | translate }} <app-icon [name]="sortIcon(productSort(), 'returnRate')" [size]="14" /></button></th>
+                          <th class="text-right"><button class="sort-btn" (click)="sortProduct('returnLoss')">{{ 'analytics.colReturnLoss' | translate }} <app-icon [name]="sortIcon(productSort(), 'returnLoss')" [size]="14" /></button></th>
                         }
                       </tr>
-                    }
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      @for (p of pagedProductRanking(); track p.product; let i = $index) {
+                        <tr>
+                          <td class="text-center pos mono">{{ productPage().pageIndex * productPage().pageSize + i + 1 }}</td>
+                          <td class="product-cell">{{ p.product }}</td>
+                          <td class="text-center mono">{{ p.qty }}</td>
+                          <td class="text-right mono">{{ p.revenue | brl }}</td>
+                          <td class="text-right mono">{{ p.netRevenue | brl }}</td>
+                          <td class="text-right text-muted mono">{{ p.cost | brl }}</td>
+                          <td class="text-right mono"
+                              [class.text-success]="p.netProfit > 0"
+                              [class.text-danger]="p.netProfit < 0">
+                            <strong>{{ p.netProfit | brl }}</strong>
+                          </td>
+                          <td class="text-center mono" [class]="marginClass(p.margin)">
+                            <strong>{{ (p.margin * 100).toFixed(1) }}%</strong>
+                          </td>
+                          @if (finalizedReturns().length > 0) {
+                            <td class="text-center mono" [class.text-warning]="p.returnRate > 0">
+                              {{ p.returnedQty > 0 ? (p.returnRate * 100).toFixed(1) + '%' : '—' }}
+                            </td>
+                            <td class="text-right mono"
+                                [class.text-danger]="p.returnLoss > 0"
+                                [class.text-success]="p.returnLoss < 0">
+                              {{ p.returnLoss !== 0 ? (p.returnLoss | brl) : '—' }}
+                            </td>
+                          }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
               </div>
               <app-paginator [length]="productRanking().length" [pageSize]="productPage().pageSize" [pageIndex]="productPage().pageIndex" [pageSizeOptions]="pageSizeOptions" [showFirstLast]="true" (page)="productPage.set($event)" />
             }
@@ -151,39 +153,41 @@
                 {{ 'analytics.exportExcel' | translate }}
               </button>
             </div>
-            <div class="table-scroll">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th><button class="sort-btn" (click)="sortCategory('category')">{{ 'analytics.colCategory' | translate }} <app-icon [name]="sortIcon(categorySort(), 'category')" [size]="14" /></button></th>
-                    <th class="text-center"><button class="sort-btn" (click)="sortCategory('batches')">{{ 'analytics.hBatches' | translate }} <app-icon [name]="sortIcon(categorySort(), 'batches')" [size]="14" /></button></th>
-                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('invested')">{{ 'analytics.hInvested' | translate }} <app-icon [name]="sortIcon(categorySort(), 'invested')" [size]="14" /></button></th>
-                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('idleCapital')">{{ 'analytics.hIdleShort' | translate }} <app-icon [name]="sortIcon(categorySort(), 'idleCapital')" [size]="14" /></button></th>
-                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('revenue')">{{ 'analytics.hRevenue' | translate }} <app-icon [name]="sortIcon(categorySort(), 'revenue')" [size]="14" /></button></th>
-                    <th class="text-right"><button class="sort-btn" (click)="sortCategory('profit')">{{ 'analytics.hNetProfit' | translate }} <app-icon [name]="sortIcon(categorySort(), 'profit')" [size]="14" /></button></th>
-                    <th class="text-center"><button class="sort-btn" (click)="sortCategory('margin')">{{ 'sales.colMargin' | translate }} <app-icon [name]="sortIcon(categorySort(), 'margin')" [size]="14" /></button></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (c of pagedCategoryStats(); track c.category) {
+            <div class="table-frame">
+              <div class="table-scroll">
+                <table class="data-table">
+                  <thead>
                     <tr>
-                      <td><app-color-pill [name]="c.category" /></td>
-                      <td class="text-center mono">{{ c.batches }}</td>
-                      <td class="text-right mono">{{ c.invested | brl }}</td>
-                      <td class="text-right mono text-warning">{{ c.idleCapital | brl }}</td>
-                      <td class="text-right mono">{{ c.revenue | brl }}</td>
-                      <td class="text-right mono"
-                          [class.text-success]="c.profit > 0"
-                          [class.text-danger]="c.profit < 0">
-                        <strong>{{ c.profit | brl }}</strong>
-                      </td>
-                      <td class="text-center mono" [class]="marginClass(c.margin)">
-                        {{ (c.margin * 100).toFixed(1) }}%
-                      </td>
+                      <th><button class="sort-btn" (click)="sortCategory('category')">{{ 'analytics.colCategory' | translate }} <app-icon [name]="sortIcon(categorySort(), 'category')" [size]="14" /></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortCategory('batches')">{{ 'analytics.hBatches' | translate }} <app-icon [name]="sortIcon(categorySort(), 'batches')" [size]="14" /></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortCategory('invested')">{{ 'analytics.hInvested' | translate }} <app-icon [name]="sortIcon(categorySort(), 'invested')" [size]="14" /></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortCategory('idleCapital')">{{ 'analytics.hIdleShort' | translate }} <app-icon [name]="sortIcon(categorySort(), 'idleCapital')" [size]="14" /></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortCategory('revenue')">{{ 'analytics.hRevenue' | translate }} <app-icon [name]="sortIcon(categorySort(), 'revenue')" [size]="14" /></button></th>
+                      <th class="text-right"><button class="sort-btn" (click)="sortCategory('profit')">{{ 'analytics.hNetProfit' | translate }} <app-icon [name]="sortIcon(categorySort(), 'profit')" [size]="14" /></button></th>
+                      <th class="text-center"><button class="sort-btn" (click)="sortCategory('margin')">{{ 'sales.colMargin' | translate }} <app-icon [name]="sortIcon(categorySort(), 'margin')" [size]="14" /></button></th>
                     </tr>
-                  }
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    @for (c of pagedCategoryStats(); track c.category) {
+                      <tr>
+                        <td><app-color-pill [name]="c.category" /></td>
+                        <td class="text-center mono">{{ c.batches }}</td>
+                        <td class="text-right mono">{{ c.invested | brl }}</td>
+                        <td class="text-right mono text-warning">{{ c.idleCapital | brl }}</td>
+                        <td class="text-right mono">{{ c.revenue | brl }}</td>
+                        <td class="text-right mono"
+                            [class.text-success]="c.profit > 0"
+                            [class.text-danger]="c.profit < 0">
+                          <strong>{{ c.profit | brl }}</strong>
+                        </td>
+                        <td class="text-center mono" [class]="marginClass(c.margin)">
+                          {{ (c.margin * 100).toFixed(1) }}%
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
             </div>
             <app-paginator [length]="categoryStats().length" [pageSize]="categoryPage().pageSize" [pageIndex]="categoryPage().pageIndex" [pageSizeOptions]="pageSizeOptions" [showFirstLast]="true" (page)="categoryPage.set($event)" />
           </div>
@@ -206,41 +210,43 @@
                 [description]="'analytics.noMonthlyDesc' | translate"
               />
             } @else {
-              <div class="table-scroll">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th><button class="sort-btn" (click)="sortMonth('sortKey')">{{ 'analytics.hMonth' | translate }} <app-icon [name]="sortIcon(monthSort(), 'sortKey')" [size]="14" /></button></th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortMonth('qty')">{{ 'analytics.hSales' | translate }} <app-icon [name]="sortIcon(monthSort(), 'qty')" [size]="14" /></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('revenue')">{{ 'analytics.hRevenue' | translate }} <app-icon [name]="sortIcon(monthSort(), 'revenue')" [size]="14" /></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('fees')">{{ 'analytics.hFees' | translate }} <app-icon [name]="sortIcon(monthSort(), 'fees')" [size]="14" /></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('netRevenue')">{{ 'analytics.hNetRevenue' | translate }} <app-icon [name]="sortIcon(monthSort(), 'netRevenue')" [size]="14" /></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('cost')">{{ 'analytics.hCost' | translate }} <app-icon [name]="sortIcon(monthSort(), 'cost')" [size]="14" /></button></th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortMonth('profit')">{{ 'analytics.hProfit' | translate }} <app-icon [name]="sortIcon(monthSort(), 'profit')" [size]="14" /></button></th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortMonth('margin')">{{ 'sales.colMargin' | translate }} <app-icon [name]="sortIcon(monthSort(), 'margin')" [size]="14" /></button></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (m of pagedMonthlyStats(); track m.sortKey) {
+              <div class="table-frame">
+                <div class="table-scroll">
+                  <table class="data-table">
+                    <thead>
                       <tr>
-                        <td><strong>{{ m.month }}</strong></td>
-                        <td class="text-center mono">{{ m.qty }}</td>
-                        <td class="text-right mono">{{ m.revenue | brl }}</td>
-                        <td class="text-right text-warning mono">{{ m.fees | brl }}</td>
-                        <td class="text-right mono">{{ m.netRevenue | brl }}</td>
-                        <td class="text-right text-muted mono">{{ m.cost | brl }}</td>
-                        <td class="text-right mono"
-                            [class.text-success]="m.profit > 0"
-                            [class.text-danger]="m.profit < 0">
-                          <strong>{{ m.profit | brl }}</strong>
-                        </td>
-                        <td class="text-center mono" [class]="marginClass(m.margin)">
-                          {{ (m.margin * 100).toFixed(1) }}%
-                        </td>
+                        <th><button class="sort-btn" (click)="sortMonth('sortKey')">{{ 'analytics.hMonth' | translate }} <app-icon [name]="sortIcon(monthSort(), 'sortKey')" [size]="14" /></button></th>
+                        <th class="text-center"><button class="sort-btn" (click)="sortMonth('qty')">{{ 'analytics.hSales' | translate }} <app-icon [name]="sortIcon(monthSort(), 'qty')" [size]="14" /></button></th>
+                        <th class="text-right"><button class="sort-btn" (click)="sortMonth('revenue')">{{ 'analytics.hRevenue' | translate }} <app-icon [name]="sortIcon(monthSort(), 'revenue')" [size]="14" /></button></th>
+                        <th class="text-right"><button class="sort-btn" (click)="sortMonth('fees')">{{ 'analytics.hFees' | translate }} <app-icon [name]="sortIcon(monthSort(), 'fees')" [size]="14" /></button></th>
+                        <th class="text-right"><button class="sort-btn" (click)="sortMonth('netRevenue')">{{ 'analytics.hNetRevenue' | translate }} <app-icon [name]="sortIcon(monthSort(), 'netRevenue')" [size]="14" /></button></th>
+                        <th class="text-right"><button class="sort-btn" (click)="sortMonth('cost')">{{ 'analytics.hCost' | translate }} <app-icon [name]="sortIcon(monthSort(), 'cost')" [size]="14" /></button></th>
+                        <th class="text-right"><button class="sort-btn" (click)="sortMonth('profit')">{{ 'analytics.hProfit' | translate }} <app-icon [name]="sortIcon(monthSort(), 'profit')" [size]="14" /></button></th>
+                        <th class="text-center"><button class="sort-btn" (click)="sortMonth('margin')">{{ 'sales.colMargin' | translate }} <app-icon [name]="sortIcon(monthSort(), 'margin')" [size]="14" /></button></th>
                       </tr>
-                    }
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      @for (m of pagedMonthlyStats(); track m.sortKey) {
+                        <tr>
+                          <td><strong>{{ m.month }}</strong></td>
+                          <td class="text-center mono">{{ m.qty }}</td>
+                          <td class="text-right mono">{{ m.revenue | brl }}</td>
+                          <td class="text-right text-warning mono">{{ m.fees | brl }}</td>
+                          <td class="text-right mono">{{ m.netRevenue | brl }}</td>
+                          <td class="text-right text-muted mono">{{ m.cost | brl }}</td>
+                          <td class="text-right mono"
+                              [class.text-success]="m.profit > 0"
+                              [class.text-danger]="m.profit < 0">
+                            <strong>{{ m.profit | brl }}</strong>
+                          </td>
+                          <td class="text-center mono" [class]="marginClass(m.margin)">
+                            {{ (m.margin * 100).toFixed(1) }}%
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
               </div>
               <app-paginator [length]="monthlyStats().length" [pageSize]="monthPage().pageSize" [pageIndex]="monthPage().pageIndex" [pageSizeOptions]="pageSizeOptions" [showFirstLast]="true" (page)="monthPage.set($event)" />
             }
@@ -264,48 +270,50 @@
                 [description]="'analytics.noIdleDesc' | translate"
               />
             } @else {
-              <div class="table-scroll">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>{{ 'analytics.colId' | translate }}</th>
-                      <th>{{ 'analytics.colProduct' | translate }}</th>
-                      <th class="text-center"><button class="sort-btn" (click)="sortIdle('currentStock')">{{ 'inventory.colStock' | translate }} <app-icon [name]="sortIcon(idleSort(), 'currentStock')" [size]="14" /></button></th>
-                      <th class="text-right">{{ 'analytics.hUnitCost' | translate }}</th>
-                      <th class="text-right"><button class="sort-btn" (click)="sortIdle('idleValue')">{{ 'analytics.hIdleShort' | translate }} <app-icon [name]="sortIcon(idleSort(), 'idleValue')" [size]="14" /></button></th>
-                      <th class="text-left col-days"><button class="sort-btn" (click)="sortIdle('daysInStock')">{{ 'analytics.hDaysIdle' | translate }} <app-icon [name]="sortIcon(idleSort(), 'daysInStock')" [size]="14" /></button></th>
-                      <th>{{ 'purchases.colStatus' | translate }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (c of pagedIdleInventory(); track c.id) {
+              <div class="table-frame">
+                <div class="table-scroll">
+                  <table class="data-table">
+                    <thead>
                       <tr>
-                        <td><span class="id-tag mono">{{ c.id }}</span></td>
-                        <td class="product-cell">{{ c.product }}</td>
-                        <td class="text-center mono"><strong>{{ c.currentStock }}</strong></td>
-                        <td class="text-right text-muted mono">{{ c.actualUnitCost | brl }}</td>
-                        <td class="text-right text-warning mono"><strong>{{ c.idleValue | brl }}</strong></td>
-                        <td class="col-days">
-                          <div class="days-cell">
-                            <div class="days-bar-wrap">
-                              <div class="days-bar"
-                                   [style.width.%]="maxIdleDays() > 0 ? (c.daysInStock / maxIdleDays()) * 100 : 0"
-                                   [class.warn]="c.daysInStock >= 25 && c.daysInStock < 30"
-                                   [class.danger]="c.daysInStock >= 30">
-                              </div>
-                            </div>
-                            <span class="days-num mono"
-                                  [class.text-danger]="c.daysInStock >= 30"
-                                  [class.text-warning]="c.daysInStock >= 25 && c.daysInStock < 30">
-                              {{ c.daysInStock }}d
-                            </span>
-                          </div>
-                        </td>
-                        <td><app-status-badge [status]="c.status" /></td>
+                        <th>{{ 'analytics.colId' | translate }}</th>
+                        <th>{{ 'analytics.colProduct' | translate }}</th>
+                        <th class="text-center"><button class="sort-btn" (click)="sortIdle('currentStock')">{{ 'inventory.colStock' | translate }} <app-icon [name]="sortIcon(idleSort(), 'currentStock')" [size]="14" /></button></th>
+                        <th class="text-right">{{ 'analytics.hUnitCost' | translate }}</th>
+                        <th class="text-right"><button class="sort-btn" (click)="sortIdle('idleValue')">{{ 'analytics.hIdleShort' | translate }} <app-icon [name]="sortIcon(idleSort(), 'idleValue')" [size]="14" /></button></th>
+                        <th class="text-left col-days"><button class="sort-btn" (click)="sortIdle('daysInStock')">{{ 'analytics.hDaysIdle' | translate }} <app-icon [name]="sortIcon(idleSort(), 'daysInStock')" [size]="14" /></button></th>
+                        <th>{{ 'purchases.colStatus' | translate }}</th>
                       </tr>
-                    }
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      @for (c of pagedIdleInventory(); track c.id) {
+                        <tr>
+                          <td><span class="id-tag mono">{{ c.id }}</span></td>
+                          <td class="product-cell">{{ c.product }}</td>
+                          <td class="text-center mono"><strong>{{ c.currentStock }}</strong></td>
+                          <td class="text-right text-muted mono">{{ c.actualUnitCost | brl }}</td>
+                          <td class="text-right text-warning mono"><strong>{{ c.idleValue | brl }}</strong></td>
+                          <td class="col-days">
+                            <div class="days-cell">
+                              <div class="days-bar-wrap">
+                                <div class="days-bar"
+                                     [style.width.%]="maxIdleDays() > 0 ? (c.daysInStock / maxIdleDays()) * 100 : 0"
+                                     [class.warn]="c.daysInStock >= 25 && c.daysInStock < 30"
+                                     [class.danger]="c.daysInStock >= 30">
+                                </div>
+                              </div>
+                              <span class="days-num mono"
+                                    [class.text-danger]="c.daysInStock >= 30"
+                                    [class.text-warning]="c.daysInStock >= 25 && c.daysInStock < 30">
+                                {{ c.daysInStock }}d
+                              </span>
+                            </div>
+                          </td>
+                          <td><app-status-badge [status]="c.status" /></td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
               </div>
               <app-paginator [length]="idleInventory().length" [pageSize]="idlePage().pageSize" [pageIndex]="idlePage().pageIndex" [pageSizeOptions]="pageSizeOptions" [showFirstLast]="true" (page)="idlePage.set($event)" />
             }

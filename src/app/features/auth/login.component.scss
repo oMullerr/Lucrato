@@ -3,9 +3,9 @@
 :host { display: block; }
 
 .login-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   background: var(--bg-canvas);
 }
 
@@ -147,6 +147,9 @@
   background: transparent;
   border: none;
   padding: 8px 16px;
+  /* Alternar entre entrar e criar conta é a primeira coisa que se toca no app;
+     31px de altura era o menor alvo do caminho de entrada. */
+  min-height: 44px;
   border-radius: var(--radius-full);
   font-size: 13.5px;
   font-weight: 500;
@@ -201,9 +204,17 @@
 .form-card .form-side .form { max-width: 400px; }
 
 @include bp.below(lg) {
-  .login-page { grid-template-columns: 1fr; }
+  /* `minmax(0, ...)` e nao `1fr`: a faixa `1fr` tem minimo `auto` (min-content),
+     entao um conteudo que nao encolhe estica a coluna alem da tela. Em 320px a
+     coluna ia a 367px e o cartao vazava. */
+  .login-page { grid-template-columns: minmax(0, 1fr); }
   .hero { display: none; }
-  .form-wordmark.mobile-only { display: inline-flex; }
+  .form-wordmark.mobile-only {
+    display: inline-flex;
+    /* É um link, e no celular era o último alvo abaixo de 44px. */
+    min-height: 44px;
+    align-items: center;
+  }
 }
 
 @include bp.below(sm) {

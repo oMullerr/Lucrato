@@ -215,7 +215,7 @@
     class="pur-detail-drawer"
     position="end"
     [mode]="bp.isWide() ? 'side' : 'over'"
-    [width]="bp.isWide() ? 'clamp(380px, 26vw, 480px)' : 'clamp(360px, 42vw, 520px)'"
+    [width]="bp.isWide() ? 'clamp(380px, 26vw, 480px)' : 'min(92vw, 520px)'"
     [open]="panelOpen()"
     (openChange)="onDrawerOpenChange($event)"
     [ariaLabel]="'batchPanel.statsLabel' | translate"

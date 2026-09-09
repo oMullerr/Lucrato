@@ -1,3 +1,5 @@
+@use '../../../../styles/breakpoints' as bp;
+
 :host { display: block; }
 
 .tabs-header {
@@ -49,4 +51,21 @@
 
 .tab-panel {
   padding-top: var(--space-5);
+}
+
+@include bp.below(md) {
+  .tab-btn {
+    min-height: 44px;
+  }
+
+  /* A tira rola de lado quando há mais abas do que cabem, mas o scrollbar é
+     escondido — sem uma pista visual, ninguém descobre que há mais. Este
+     esmaecido na borda direita é a pista. */
+  .tabs-header {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    scroll-snap-type: x proximity;
+  }
+
+  .tab-btn { scroll-snap-align: start; }
 }

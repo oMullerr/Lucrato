@@ -1366,6 +1366,7 @@
     "unlinkedPart": "Of this total, {{valor}} comes from {{total}} order(s) with no sale in the ledger yet. The money lands all the same — it just has no name yet.",
     "unlinkedRow": "order with no sale in the ledger",
     "creditsPart": "Another {{valor}} comes from {{total}} Mercado Pago credit(s) with no order behind them — a bonus, an adjustment or a fee refund. There is nothing to reconcile there.",
-    "creditRow": "Mercado Pago credit"
+    "creditRow": "Mercado Pago credit",
+    "sortDefault": "Default order"
   }
 }

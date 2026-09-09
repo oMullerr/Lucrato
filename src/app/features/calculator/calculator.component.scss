@@ -74,7 +74,7 @@
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   margin-bottom: 6px;
 }
 
@@ -115,7 +115,7 @@
 }
 
 .linha-switch small {
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   font-size: 0.78rem;
 }
 
@@ -166,7 +166,7 @@
 }
 
 .detalhe .saida dd {
-  color: var(--text-tertiary);
+  color: var(--text-muted);
 }
 
 .detalhe .total {
@@ -204,7 +204,7 @@
   margin: 14px 0 0;
   padding-top: 12px;
   border-top: 1px solid var(--border-subtle);
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   font-size: 0.82rem;
 }
 
@@ -240,7 +240,7 @@
 }
 
 .historico .info small {
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   font-size: 0.78rem;
 }
 
@@ -252,7 +252,7 @@
 
 .historico .valor small {
   display: block;
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   font-size: 0.75rem;
 }
 

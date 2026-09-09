@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 .panel {
   display: flex;
   flex-direction: column;
@@ -233,9 +235,12 @@
   }
 }
 
-@media (max-width: 600px) {
+@include bp.below(md) {
   .panel {
-    width: 100vw;
+    /* Era `100vw`: a gaveta mede 92vw, então o conteúdo transbordava dela e
+       criava rolagem lateral dentro do painel. Preenche a gaveta, seja qual
+       for a largura dela. */
+    width: 100%;
     padding: 20px 16px 16px;
   }
   .stats { grid-template-columns: repeat(2, 1fr); }

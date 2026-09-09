@@ -2,6 +2,19 @@
 
 * { box-sizing: border-box; }
 
+/* A raiz define a base de TODO `rem` do app.
+   Ela precisa ficar em 16px (o padrão do navegador). Antes, `font-size:
+   var(--fs-body)` estava aqui junto com o `body`, e como esse token é escrito
+   em `rem` ele virava a própria base: a raiz caía para ~13,8px e a escala
+   inteira encolhia 14%. Num celular isso dava legenda a 9,5px e campo a 12px.
+   O tamanho do texto corrido continua sendo do `body`, logo abaixo. */
+html {
+  font-size: 100%;
+  /* O iOS aumenta a fonte sozinho ao girar o aparelho; isto desliga. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -9,12 +22,22 @@ html, body {
   font-family: var(--font-body);
   background: var(--bg-canvas);
   color: var(--text-primary);
-  font-size: var(--fs-body);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'cv11', 'ss01', 'ss03';
   transition: background-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
+}
+
+body {
+  font-size: var(--fs-body);
+}
+
+/* O realce azul do toque atrapalha mais do que ajuda: some no meio de uma
+   paleta escura e atrasa o feedback. Quem responde ao dedo é o `:active` de
+   cada componente. */
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }

@@ -3,9 +3,11 @@ import {
   ApplicationConfig,
   ErrorHandler,
   importProvidersFrom,
+  isDevMode,
   LOCALE_ID,
   provideZoneChangeDetection,
 } from '@angular/core';
+import { provideServiceWorker } from '@angular/service-worker';
 import { provideRouter, TitleStrategy, withComponentInputBinding, withViewTransitions } from '@angular/router';
 import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
@@ -74,6 +76,14 @@ export const appConfig: ApplicationConfig = {
     /* Mesma regiao das functions (ver functions/src/config.ts). */
     provideFunctions(() => getFunctions(getApp(), 'southamerica-east1')),
     ...appCheckProvider,
+    /* Casca do app em cache, para abrir do icone sem internet. Os DADOS ja
+       funcionavam offline (Firestore em IndexedDB); faltava a casca.
+       `registerWhenStable` espera o app assentar antes de baixar o cache, para
+       o service worker nao disputar banda com a primeira renderizacao. */
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
     { provide: LOCALE_ID, useValue: 'pt-BR' },
     { provide: TitleStrategy, useClass: TranslateTitleStrategy },

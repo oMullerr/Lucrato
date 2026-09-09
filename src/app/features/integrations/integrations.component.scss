@@ -30,8 +30,8 @@
   color: var(--text-secondary);
 }
 
-.tone-ok .status-icon { color: var(--success); }
-.tone-warn .status-icon { color: var(--warning); }
+.tone-ok .status-icon { color: var(--color-success); }
+.tone-warn .status-icon { color: var(--color-warning); }
 
 .status-text h2 {
   margin: 0 0 4px;
@@ -56,7 +56,7 @@
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-tertiary);
+  color: var(--text-muted);
 }
 
 .status-meta dd {
@@ -97,6 +97,6 @@
   margin: 16px 0 0;
   padding-top: 14px;
   border-top: 1px solid var(--border-subtle);
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   font-size: 0.88rem;
 }

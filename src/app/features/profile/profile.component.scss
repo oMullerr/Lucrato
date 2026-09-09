@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 .profile-body {
   display: flex;
   flex-direction: column;
@@ -249,7 +251,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@include bp.below(sm) {
   .profile-hero { flex-direction: column; align-items: flex-start; padding: 22px; }
   .info-row {
     flex-direction: column;

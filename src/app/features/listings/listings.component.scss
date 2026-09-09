@@ -50,28 +50,19 @@
 }
 
 /* A tabela é larga por natureza; rolar dentro do card evita rolagem lateral na página. */
-.tabela-wrap {
-  overflow-x: auto;
-  background: var(--bg-surface-1);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-}
-
-.tabela {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 720px;
-}
-
-.tabela th,
-.tabela td {
+/* A base da tabela vem de `.data-table` (global). O `min-width: 720px`
+   que existia aqui era o que espremia a tela no celular: agora a largura sai
+   naturalmente do `nowrap` dos cabeçalhos, e a rolagem fica dentro da moldura
+   com a primeira coluna fixa. */
+.data-table th,
+.data-table td {
   padding: 10px 14px;
   text-align: left;
   border-bottom: 1px solid var(--border-subtle);
   vertical-align: middle;
 }
 
-.tabela th {
+.data-table th {
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -80,15 +71,15 @@
 }
 
 /* Altura fixa: a linha não pode mudar de tamanho por causa da nota de sugestão. */
-.tabela tbody tr {
+.data-table tbody tr {
   height: 78px;
 }
 
-.tabela tbody tr:last-child td {
+.data-table tbody tr:last-child td {
   border-bottom: 0;
 }
 
-.tabela tr.pendente td {
+.data-table tr.pendente td {
   background: var(--tint-brand);
 }
 

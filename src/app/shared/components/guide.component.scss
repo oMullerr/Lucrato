@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 
 .layout {
   display: grid;
@@ -103,7 +105,7 @@
   max-width: 65ch;
 }
 
-@media (max-width: 900px) {
+@include bp.below(lg) {
   .layout { grid-template-columns: 1fr; gap: 28px; }
   .toc { position: static; }
 }

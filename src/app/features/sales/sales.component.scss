@@ -106,10 +106,10 @@
 
 .col-payout small {
   display: block;
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   font-size: 0.76rem;
 }
 
-.pay-liberado { color: var(--success, #6fd3a6); }
-.pay-atrasado { color: var(--danger); font-weight: 600; }
-.pay-sem { color: var(--text-tertiary); cursor: help; }
+.pay-liberado { color: var(--color-success); }
+.pay-atrasado { color: var(--color-danger); font-weight: 600; }
+.pay-sem { color: var(--text-muted); cursor: help; }

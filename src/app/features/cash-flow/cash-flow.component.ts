@@ -113,6 +113,32 @@ export class CashFlowComponent {
     });
   });
 
+  /**
+   * As mesmas colunas do cabeçalho, como lista para o celular.
+   *
+   * A ordenação do desktop mora no `th`; no celular a tabela não existe, então
+   * ela precisa de uma porta própria — senão o cartão fica sem jeito nenhum de
+   * reordenar.
+   */
+  protected readonly opcoesDeOrdem = [
+    { valor: '', rotulo: 'cashFlow.sortDefault' },
+    { valor: 'liberaEm:asc', rotulo: 'cashFlow.colWhen' },
+    { valor: 'liquido:desc', rotulo: 'cashFlow.colNet' },
+    { valor: 'bruto:desc', rotulo: 'cashFlow.colGross' },
+    { valor: 'produto:asc', rotulo: 'cashFlow.colProduct' },
+  ];
+
+  protected readonly ordemNoCelular = computed(() => {
+    const { active, direction } = this.ordem();
+    return active && direction ? `${active}:${direction}` : '';
+  });
+
+  protected ordenarNoCelular(valor: string): void {
+    if (!valor) return this.ordem.set({ active: '', direction: '' });
+    const [active, direction] = valor.split(':');
+    this.ordem.set({ active, direction: direction as SortState['direction'] });
+  }
+
   /** 1 quando a linha não tem o valor daquela coluna. */
   private semValor(coluna: string, r: Recebivel): number {
     return coluna === 'liquido' && r.liquido === null ? 1 : 0;

@@ -19,6 +19,18 @@
   flex-direction: column;
   height: 100dvh;
   min-width: 0;
+  /* Coluna fixada de propósito: no celular o drawer sai do fluxo
+     (`display: contents` + filhos `fixed`) e não ocupa a primeira coluna, o
+     que fazia o `app-toast-host` — um host sem estilo, blocado pelo grid —
+     escorregar para a segunda e empurrar o main para a trilha `auto`.
+     Funcionava por acaso, porque o grid tem largura definida. */
+  grid-column: 2;
+}
+
+/* O host do toast não é caixa: só o painel flutuante importa. Sem isto ele
+   entra na conta do grid. */
+app-toast-host {
+  display: contents;
 }
 
 /* =================================================================
@@ -340,13 +352,27 @@ app-connection-banner { flex-shrink: 0; }
    ================================================================= */
 @include bp.below(md) {
   .sidebar { box-shadow: var(--shadow-xl); }
-  .topbar { padding: 0 16px; }
+  /* Com `viewport-fit=cover` o conteúdo passa a ir até a borda física: no
+     iPhone deitado, o entalhe come o canto do topbar sem este recuo. */
+  .topbar {
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
   .breadcrumb .bc-root { display: none; }
   .breadcrumb .bc-sep { display: none; }
+
+  /* A barra de gestos do iPhone fica por cima do fim da rolagem. */
+  .page-container {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 @include bp.below(sm) {
-  .topbar { padding: 0 12px; gap: 4px; }
+  .topbar {
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+    gap: 4px;
+  }
   .user-name { display: none; }
   .user-btn { padding: 0 6px; }
 }

@@ -123,40 +123,42 @@
       <section class="composicao">
         <h2>{{ 'billing.compositionTitle' | translate }}</h2>
         <p class="ajuda">{{ 'billing.compositionHelp' | translate }}</p>
-        <div class="tabela-wrap">
-          <table class="tabela">
-            <thead>
-              <tr>
-                <th scope="col">{{ 'billing.colCharge' | translate }}</th>
-                <th scope="col">{{ 'billing.colBucket' | translate }}</th>
-                <th scope="col" class="num">{{ 'billing.colLines' | translate }}</th>
-                <th scope="col" class="num">{{ 'billing.colAmount' | translate }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (l of linhas(); track l.subTipo + l.rotulo) {
+        <div class="table-frame">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
                 <tr>
-                  <td>
-                    {{ l.rotulo || ('billing.unlabeled' | translate) }}
-                    <small>{{ l.subTipo }}</small>
-                  </td>
-                  <td>
-                    <span class="balde" [class]="'balde-' + l.balde">
-                      {{ 'billing.bucket.' + l.balde | translate }}
-                    </span>
-                  </td>
-                  <td class="num">{{ l.linhas }}</td>
-                  <td class="num">{{ l.valor | brl }}</td>
+                  <th scope="col">{{ 'billing.colCharge' | translate }}</th>
+                  <th scope="col">{{ 'billing.colBucket' | translate }}</th>
+                  <th scope="col" class="num">{{ 'billing.colLines' | translate }}</th>
+                  <th scope="col" class="num">{{ 'billing.colAmount' | translate }}</th>
                 </tr>
-              }
-            </tbody>
-            <tfoot>
-              <tr>
-                <th scope="row" colspan="3">{{ 'billing.periodTotal' | translate }}</th>
-                <td class="num">{{ totalCobrado() | brl }}</td>
-              </tr>
-            </tfoot>
-          </table>
+              </thead>
+              <tbody>
+                @for (l of linhas(); track l.subTipo + l.rotulo) {
+                  <tr>
+                    <td>
+                      {{ l.rotulo || ('billing.unlabeled' | translate) }}
+                      <small>{{ l.subTipo }}</small>
+                    </td>
+                    <td>
+                      <span class="balde" [class]="'balde-' + l.balde">
+                        {{ 'billing.bucket.' + l.balde | translate }}
+                      </span>
+                    </td>
+                    <td class="num">{{ l.linhas }}</td>
+                    <td class="num">{{ l.valor | brl }}</td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th scope="row" colspan="3">{{ 'billing.periodTotal' | translate }}</th>
+                  <td class="num">{{ totalCobrado() | brl }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
         @if (naoExplicado() !== 0) {
           <p class="aviso">
@@ -190,38 +192,40 @@
             [description]="(soDivergentes() ? 'billing.allMatchMsg' : 'billing.noOrdersMsg') | translate"
           />
         } @else {
-          <div class="tabela-wrap">
-            <table class="tabela">
-              <thead>
-                <tr>
-                  <th scope="col">{{ 'billing.colOrder' | translate }}</th>
-                  <th scope="col" class="num">{{ 'billing.colCommission' | translate }}</th>
-                  <th scope="col" class="num">{{ 'billing.colShipping' | translate }}</th>
-                  <th scope="col" class="num">{{ 'billing.colOther' | translate }}</th>
-                  <th scope="col" class="num">{{ 'billing.colRecorded' | translate }}</th>
-                  <th scope="col" class="num">{{ 'billing.colDiff' | translate }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (o of pedidos(); track o.orderId) {
-                  <tr [class.divergente]="o.veredito === 'divergente'">
-                    <td class="pedido">
-                      <span class="produto">{{ o.produto }}</span>
-                      <small>{{ o.data | brDate }} · {{ o.orderId }}</small>
-                    </td>
-                    <td class="num">{{ o.cobrado.comissao | brl }}</td>
-                    <td class="num">{{ o.cobrado.frete | brl }}</td>
-                    <td class="num">{{ o.cobrado.outros | brl }}</td>
-                    <td class="num">
-                      {{ (o.registrado.comissao + o.registrado.frete) | brl }}
-                    </td>
-                    <td class="num diff" [class.pra-mais]="o.diferenca > 0">
-                      {{ o.diferenca | brl }}
-                    </td>
+          <div class="table-frame">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th scope="col">{{ 'billing.colOrder' | translate }}</th>
+                    <th scope="col" class="num">{{ 'billing.colCommission' | translate }}</th>
+                    <th scope="col" class="num">{{ 'billing.colShipping' | translate }}</th>
+                    <th scope="col" class="num">{{ 'billing.colOther' | translate }}</th>
+                    <th scope="col" class="num">{{ 'billing.colRecorded' | translate }}</th>
+                    <th scope="col" class="num">{{ 'billing.colDiff' | translate }}</th>
                   </tr>
-                }
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  @for (o of pedidos(); track o.orderId) {
+                    <tr [class.divergente]="o.veredito === 'divergente'">
+                      <td class="pedido">
+                        <span class="produto">{{ o.produto }}</span>
+                        <small>{{ o.data | brDate }} · {{ o.orderId }}</small>
+                      </td>
+                      <td class="num">{{ o.cobrado.comissao | brl }}</td>
+                      <td class="num">{{ o.cobrado.frete | brl }}</td>
+                      <td class="num">{{ o.cobrado.outros | brl }}</td>
+                      <td class="num">
+                        {{ (o.registrado.comissao + o.registrado.frete) | brl }}
+                      </td>
+                      <td class="num diff" [class.pra-mais]="o.diferenca > 0">
+                        {{ o.diferenca | brl }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
         }
       </section>
