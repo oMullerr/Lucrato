@@ -77,7 +77,12 @@ const atual = (() => {
   }
 })();
 
-if (atual === conteudo) {
+/* No Windows o arquivo vem do git com CRLF e este script escreve LF. Comparar
+   byte a byte marcaria o arquivo como alterado em todo build, e `git status`
+   sujo por ruído é `git status` que ninguém lê. */
+const mesmaCoisa = (a, b) => a?.replace(/\r\n/g, '\n') === b.replace(/\r\n/g, '\n');
+
+if (mesmaCoisa(atual, conteudo)) {
   console.log(`versão do CSP já está em dia: ${versao}`);
 } else {
   writeFileSync(DESTINO, conteudo);
