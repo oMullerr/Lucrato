@@ -25,6 +25,7 @@ import { getApp } from 'firebase/app';
 
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
+import { CSP_VERSION } from '../environments/csp-version';
 import { GlobalErrorHandler } from './core/services/global-error-handler';
 import { TranslateTitleStrategy } from './core/services/translate-title.strategy';
 import { LanguageService } from './core/services/language.service';
@@ -80,13 +81,14 @@ export const appConfig: ApplicationConfig = {
        funcionavam offline (Firestore em IndexedDB); faltava a casca.
        `registerWhenStable` espera o app assentar antes de baixar o cache, para
        o service worker nao disputar banda com a primeira renderizacao. */
-    /* O `?csp=2` nao e enfeite. O CSP que vale para o service worker e o que
+    /* O `?csp=` nao e enfeite. O CSP que vale para o service worker e o que
        veio nos headers do ngsw-worker.js no dia em que ele foi instalado, e o
        arquivo e sempre igual byte a byte — entao o navegador nunca reinstala o
        worker e o CSP antigo fica congelado para sempre em quem ja tem o app.
-       Mudar a URL do script troca o registro e forca um worker novo, com o CSP
-       de hoje. Suba esse numero sempre que mexer no CSP do vercel.json. */
-    provideServiceWorker('ngsw-worker.js?csp=2', {
+       Mudar a URL do script troca o registro e forca um worker novo. A versao
+       e uma impressao digital do proprio CSP, gerada no build por
+       scripts/gerar-versao-csp.mjs: mexeu no CSP, a URL muda sozinha. */
+    provideServiceWorker(`ngsw-worker.js?csp=${CSP_VERSION}`, {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',
     }),
