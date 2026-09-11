@@ -1,0 +1,50 @@
+name: Smoke
+
+# O smoke roda contra a PRODUÇÃO, não contra um build local: a pergunta que ele
+# responde é "o que está no ar está de pé?". Em setembro/2026 o app quebrou duas
+# vezes por CSP e nas duas quem descobriu foi o usuário — este workflow existe
+# para descobrir primeiro. Falha aqui manda e-mail do GitHub para o dono do repo.
+on:
+  push:
+    branches: [main]
+  schedule:
+    # 08h e 20h de Brasília, como canário — pega quebra que não veio de deploy
+    # (chave do reCAPTCHA expirada, mudança de header na Vercel, CDN fora).
+    - cron: '0 11,23 * * *'
+  workflow_dispatch:
+
+# Um deploy atrás do outro: vale o último, não adianta medir o que já foi
+# substituído. Sem cancelar em andamento, para não perder o sinal do anterior.
+concurrency:
+  group: smoke-producao
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Produção
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+
+      # Sem isto o smoke mede a versão anterior e passa justamente no deploy
+      # que quebrou.
+      - name: Esperar a Vercel publicar este commit
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/esperar-deploy.mjs ${{ github.sha }}
+
+      - run: npx playwright install --with-deps chromium
+      - run: npm run smoke
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: smoke-trace
+          path: test-results/
+          retention-days: 7

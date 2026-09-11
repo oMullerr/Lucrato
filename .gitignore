@@ -49,3 +49,9 @@ ui-debug.log
 
 # Backups do Firestore: podem conter tokens vivos do Mercado Livre
 lucrato-backup-*.json
+
+# Smoke de producao (Playwright)
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
