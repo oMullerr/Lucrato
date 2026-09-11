@@ -80,7 +80,13 @@ export const appConfig: ApplicationConfig = {
        funcionavam offline (Firestore em IndexedDB); faltava a casca.
        `registerWhenStable` espera o app assentar antes de baixar o cache, para
        o service worker nao disputar banda com a primeira renderizacao. */
-    provideServiceWorker('ngsw-worker.js', {
+    /* O `?csp=2` nao e enfeite. O CSP que vale para o service worker e o que
+       veio nos headers do ngsw-worker.js no dia em que ele foi instalado, e o
+       arquivo e sempre igual byte a byte — entao o navegador nunca reinstala o
+       worker e o CSP antigo fica congelado para sempre em quem ja tem o app.
+       Mudar a URL do script troca o registro e forca um worker novo, com o CSP
+       de hoje. Suba esse numero sempre que mexer no CSP do vercel.json. */
+    provideServiceWorker('ngsw-worker.js?csp=2', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',
     }),
