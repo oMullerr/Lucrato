@@ -97,12 +97,17 @@ export const logClientError = onCall({ enforceAppCheck: false, maxInstances: 3 }
     });
 
   /* Vai junto para o Cloud Logging, que é onde dá para montar alerta sem
-     depender de ninguém abrir o Firestore. */
+     depender de ninguém abrir o Firestore.
+     Aninhado em `erro` de proposito: o logger do firebase-functions usa a
+     chave `message` para o texto DELE, e um campo `message` solto aqui some
+     sobrescrito — some justamente a informação que interessa. */
   logger.error('Erro no cliente', {
-    message: erro.message,
-    name: erro.name,
-    url: erro.url,
-    build: erro.build,
+    erro: {
+      message: erro.message,
+      name: erro.name,
+      url: erro.url,
+      build: erro.build,
+    },
     uid: request.auth?.uid ?? null,
   });
 
