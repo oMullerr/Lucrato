@@ -17,6 +17,13 @@
  *
  * Sem esta espera, o smoke correria contra a versão ANTERIOR e passaria feliz
  * justamente no deploy que quebrou — pior que não ter smoke, porque mente.
+ *
+ * LIMITE CONHECIDO: o contexto do status é "Vercel" tanto para produção quanto
+ * para preview. Quando o mesmo commit está numa branch e na main — um
+ * fast-forward, por exemplo — a preview pode ficar pronta antes, e a espera
+ * libera cedo. O sintoma seria um smoke verde medindo a produção anterior.
+ * Distinguir os dois exige token da Vercel; enquanto o custo não se justificar,
+ * fica registrado aqui em vez de escondido.
  */
 const [, , sha] = process.argv;
 const repo = process.env.GITHUB_REPOSITORY;
