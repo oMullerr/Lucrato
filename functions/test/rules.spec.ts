@@ -157,3 +157,28 @@ describe('caminhos nao previstos continuam negados', () => {
     await assertFails(setDoc(doc(verificado(), `users/${DONO}/db/qualquer`), { a: 1 }));
   });
 });
+
+/**
+ * O reporte de erro do cliente (function logClientError) grava em `errorLog`
+ * pelo Admin SDK, que ignora regras. O navegador nao tem nada que ver essa
+ * colecao: ela junta mensagem de erro e stack de TODOS os usuarios. Hoje quem
+ * nega e o catch-all no fim do arquivo de regras — este teste existe para que
+ * isso continue verdade de proposito, e nao por acidente.
+ */
+describe('errorLog e invisivel ao navegador', () => {
+  beforeEach(async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'errorLog/erro-1'), { message: 'quebrou' });
+    });
+  });
+
+  it('nao le, nem o dono verificado', async () => {
+    await assertFails(getDoc(doc(verificado(), 'errorLog/erro-1')));
+    await assertFails(getDoc(doc(anonimo(), 'errorLog/erro-1')));
+  });
+
+  it('nao escreve', async () => {
+    await assertFails(setDoc(doc(verificado(), 'errorLog/inventado'), { message: 'oi' }));
+    await assertFails(deleteDoc(doc(verificado(), 'errorLog/erro-1')));
+  });
+});

@@ -26,6 +26,9 @@ export const mlHealth = onCall({ enforceAppCheck: false }, (request) => {
   return { ok: true as const, uid: request.auth.uid, ts: new Date().toISOString() };
 });
 
+/** Reporte de erro do navegador. Sem isto, produção é cega. */
+export { logClientError } from './client-errors';
+
 export { mlAuthUrl, mlAuthCallback, mlDisconnect } from './ml/oauth';
 export { mlSyncItems } from './ml/items';
 export { mlSetLinks } from './ml/links';

@@ -1,6 +1,7 @@
 import { ErrorHandler, Injectable, NgZone, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { NotifyService } from './notify.service';
+import { ErrorReporterService } from './error-reporter.service';
 import { firestoreErrorMessage, isChunkLoadError } from './firestore-errors';
 import { logError } from './logger';
 
@@ -9,11 +10,15 @@ export class GlobalErrorHandler implements ErrorHandler {
   private readonly notify = inject(NotifyService);
   private readonly zone = inject(NgZone);
   private readonly t = inject(TranslateService);
+  private readonly reporter = inject(ErrorReporterService);
   private chunkPromptShown = false;
 
   handleError(error: unknown): void {
     logError('[GlobalErrorHandler]', error);
     const cause = this.unwrap(error);
+    /* Em produção o log acima não escreve nada, de propósito. Este é o único
+       caminho pelo qual um erro de produção chega até nós. */
+    this.reporter.report(cause);
 
     if (isChunkLoadError(cause)) {
       if (this.chunkPromptShown) return;
