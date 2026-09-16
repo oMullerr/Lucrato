@@ -175,24 +175,6 @@ Abra **http://localhost:4200** no navegador.
 
 ---
 
-### Passo 7 — Habilitar App Check (reCAPTCHA Enterprise)
-
-App Check bloqueia chamadas à API Firestore que não venham do seu domínio autorizado, protegendo contra bots e abuso de cota mesmo se a API key vazar.
-
-1. No **Firebase Console** → projeto → **App Check** → registrar a app web
-2. Escolher provider **reCAPTCHA Enterprise**
-3. Em `console.cloud.google.com → Security → reCAPTCHA Enterprise`, criar uma chave para:
-   - `localhost` (dev)
-   - domínio de produção (ex.: `lucrato-web.vercel.app`)
-4. Copiar o **site key** (público) e colar nos environments:
-   - [src/environments/environment.ts](src/environments/environment.ts) — `recaptchaSiteKey`
-   - [src/environments/environment.prod.ts](src/environments/environment.prod.ts) — `recaptchaSiteKey`
-5. Em **Firebase Console → App Check → APIs → Cloud Firestore**, ativar **Enforce** quando estiver confiante (recomendado: rodar uma semana em "unenforced" primeiro pra ver métricas)
-
-**Debug token (dev local):** [main.ts](src/main.ts) habilita `FIREBASE_APPCHECK_DEBUG_TOKEN` automaticamente. Na primeira execução `npm start`, o console do navegador mostrará um token — copie e registre em **Firebase Console → App Check → Apps → ⋯ → Manage debug tokens**, senão chamadas locais falharão depois do Enforce.
-
----
-
 ### Estrutura dos dados no Firestore
 
 Cada usuário tem um documento exclusivo no caminho:
@@ -230,7 +212,6 @@ A aplicação implementa defesa em profundidade nas seguintes camadas:
 | Camada | Onde |
 | --- | --- |
 | Firestore Rules: isolamento por UID + `email_verified` + validação de formato/tamanho + deny-all | [firestore.rules](firestore.rules) |
-| App Check (reCAPTCHA Enterprise) | [src/app/app.config.ts](src/app/app.config.ts) |
 | HTTP security headers (CSP, HSTS, X-Frame, nosniff, Referrer, Permissions) | [vercel.json](vercel.json) |
 | Verificação de e-mail obrigatória (guard + rules) | [src/app/core/guards/auth.guard.ts](src/app/core/guards/auth.guard.ts) |
 | Política de senha forte (8+ chars, letra+número) | [src/app/core/services/password-validator.ts](src/app/core/services/password-validator.ts) |
@@ -245,13 +226,11 @@ A aplicação implementa defesa em profundidade nas seguintes camadas:
 Algumas proteções não vivem no código — precisam ser ativadas nos consoles do Firebase / Google Cloud.
 Faça este checklist no setup e revise periodicamente:
 
-- [ ] **App Check em "Enforce"** — Firebase Console → App Check → Cloud Firestore → *Enforce*.
-      Rode ~1 semana em "unenforced" primeiro para conferir métricas.
 - [ ] **Proteção contra enumeração de e-mail** — Firebase Console → Authentication → Settings →
       *Email enumeration protection* (ativar). Impede descobrir quais e-mails têm conta pelo cadastro.
 - [ ] **Restringir a API key Web** — Google Cloud Console → APIs & Services → Credentials → a *Browser key* →
       *Application restrictions* = HTTP referrers (`localhost` + domínio de produção) e *API restrictions* = só
-      as APIs usadas (Identity Toolkit, Cloud Firestore, App Check, Firebase Installations). A `apiKey` no
+      as APIs usadas (Identity Toolkit, Cloud Firestore, Firebase Installations). A `apiKey` no
       `environment.ts` é pública por design, mas a restrição impede reuso/abuso de cota a partir de outros domínios.
 - [ ] **Backups do Firestore** — Firebase Console → Firestore → *Point-in-time recovery* (ativar) e/ou agendar
       exports para um bucket GCS. Recupera dados após exclusão acidental ou maliciosa.

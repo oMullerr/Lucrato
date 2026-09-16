@@ -2,9 +2,9 @@
  * Recebe o erro que estourou no navegador do usuário.
  *
  * Produção era cega: `logError` silencia tudo quando `production` é true e não
- * existia reporte nenhum. Quando o CSP derrubou o reCAPTCHA e as fotos do
- * Mercado Livre, em setembro/2026, o app ficou dias quebrado sem um sinal
- * chegar em ninguém. Esta function é esse sinal.
+ * existia reporte nenhum. Quando o CSP derrubou as fotos do Mercado Livre, em
+ * setembro/2026, o app ficou dias quebrado sem um sinal chegar em ninguém.
+ * Esta function é esse sinal.
  *
  * O app mexe com dado financeiro, então aqui vale a regra do porteiro: só passa
  * o que está na lista, truncado no tamanho da lista. Nada de `...dados`.
@@ -67,9 +67,9 @@ export function cabeNaJanela(agoraMs: number): boolean {
 }
 
 /**
- * `enforceAppCheck: false` é proposital, e não descuido: o erro que mais
- * interessa é justamente o do App Check quebrado. Exigir App Check aqui
- * silenciaria o reporte na única hora em que ele importa.
+ * `enforceAppCheck: false` é proposital, e não descuido: o cliente não tem mais
+ * App Check, e mesmo que voltasse a ter, ligar a exigência aqui silenciaria o
+ * reporte justamente na hora em que o App Check estivesse quebrado.
  */
 export const logClientError = onCall({ enforceAppCheck: false, maxInstances: 3 }, async (request) => {
   const erro = sanitizarErro(request.data);

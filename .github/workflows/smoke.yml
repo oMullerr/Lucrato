@@ -9,7 +9,7 @@ on:
     branches: [main]
   schedule:
     # 08h e 20h de Brasília, como canário — pega quebra que não veio de deploy
-    # (chave do reCAPTCHA expirada, mudança de header na Vercel, CDN fora).
+    # (mudança de header na Vercel, certificado vencido, CDN fora).
     - cron: '0 11,23 * * *'
   workflow_dispatch:
 

@@ -18,7 +18,6 @@ import localePt from '@angular/common/locales/pt';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 import { provideFirestore } from '@angular/fire/firestore';
-import { provideAppCheck, initializeAppCheck, ReCaptchaEnterpriseProvider } from '@angular/fire/app-check';
 import { provideFunctions, getFunctions } from '@angular/fire/functions';
 import { initializeFirestore, memoryLocalCache, persistentLocalCache } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
@@ -35,15 +34,6 @@ registerLocaleData(localePt);
 export function httpLoaderFactory(http: HttpClient): TranslateLoader {
   return new TranslateHttpLoader(http, './i18n/', '.json');
 }
-
-const appCheckProvider = environment.recaptchaSiteKey
-  ? [
-      provideAppCheck(() => initializeAppCheck(getApp(), {
-        provider: new ReCaptchaEnterpriseProvider(environment.recaptchaSiteKey),
-        isTokenAutoRefreshEnabled: true,
-      })),
-    ]
-  : [];
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -76,7 +66,6 @@ export const appConfig: ApplicationConfig = {
     })),
     /* Mesma regiao das functions (ver functions/src/config.ts). */
     provideFunctions(() => getFunctions(getApp(), 'southamerica-east1')),
-    ...appCheckProvider,
     /* Casca do app em cache, para abrir do icone sem internet. Os DADOS ja
        funcionavam offline (Firestore em IndexedDB); faltava a casca.
        `registerWhenStable` espera o app assentar antes de baixar o cache, para

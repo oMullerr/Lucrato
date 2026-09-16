@@ -6,12 +6,12 @@ import { expect, test, type Page } from '@playwright/test';
  *
  * Cada asserção aqui corresponde a uma quebra que já aconteceu ou que o mesmo
  * mecanismo torna possível. Em setembro/2026 o app quebrou duas vezes em
- * produção pelo CSP estrangulando o service worker — o reCAPTCHA morreu, as
- * fotos do Mercado Livre sumiram — e nas duas vezes quem descobriu foi o olho
- * do dono. Este arquivo existe para descobrir antes dele.
+ * produção pelo CSP estrangulando o service worker — as fotos do Mercado Livre
+ * sumiram — e nas duas vezes quem descobriu foi o olho do dono. Este arquivo
+ * existe para descobrir antes dele.
  *
- * Só a tela de login, de propósito: cobre CSP, service worker, App Check e o
- * bundle sem precisar de credencial em CI.
+ * Só a tela de login, de propósito: cobre CSP, service worker e o bundle sem
+ * precisar de credencial em CI.
  */
 
 /** Host permitido pelo `img-src https:` e FORA do `connect-src` do documento.
@@ -99,17 +99,6 @@ test('a versão do worker acompanha o CSP que está no ar', async ({ page, reque
   // O CSP do worker congela no dia da instalação; só mudar a URL troca o
   // worker. Se estes dois divergirem, um conserto de CSP não chegou a ninguém.
   expect(scriptURL).toContain(`?csp=${versaoDoCsp(csp)}`);
-});
-
-test('o reCAPTCHA Enterprise carrega — App Check tem com que trabalhar', async ({ page }) => {
-  await page.goto('/login');
-
-  await page.waitForFunction(
-    () => !!(window as unknown as { grecaptcha?: { enterprise?: unknown } }).grecaptcha?.enterprise,
-    null,
-    { timeout: 40_000 },
-  );
-  expect(await violacoes(page)).toEqual([]);
 });
 
 test('imagem de host fora do connect-src carrega através do worker', async ({ page }) => {

@@ -14,6 +14,4 @@ export const environment = {
     messagingSenderId: "151745265552",
     appId: "1:151745265552:web:d61e09d0ffdbdfd21d3d15",
   },
-  // App Check desligado no ambiente de testes: chave vazia usa o debug token.
-  recaptchaSiteKey: "",
 };

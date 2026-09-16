@@ -52,7 +52,10 @@ const doDocumento = () => diretivas(cspDoDocumento());
 const doWorker = () => diretivas(politicas().filter((p) => p.source === FONTE_DO_WORKER)[0].csp);
 
 describe('CSP do vercel.json', () => {
-  it('libera no connect-src os hosts do reCAPTCHA Enterprise (App Check)', () => {
+  /* Estes hosts sobreviveram à remoção do App Check: o próprio Firebase Auth
+     carrega reCAPTCHA por conta dele quando a proteção contra enumeração de
+     e-mail está ligada no console. Tirar daqui quebraria o login. */
+  it('libera no connect-src os hosts que o Firebase Auth carrega', () => {
     const { 'connect-src': connect } = doDocumento();
 
     expect(connect).toContain('https://www.google.com');
