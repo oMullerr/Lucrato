@@ -6,6 +6,13 @@
  * setembro/2026, o app ficou dias quebrado sem um sinal chegar em ninguém.
  * Esta function é esse sinal.
  *
+ * O LIMITE DELE, medido em 16/09/2026: um CSP sem o `frame-src` do reCAPTCHA
+ * travou o Firestore de quem já estava logado, e nada chegou aqui. A falha
+ * morreu dentro de uma Promise do SDK do Firebase, que ninguém aguarda, e o
+ * caminho que sobrou — `logError` — é silencioso em produção por design. Este
+ * reporte pega exceção que estoura no app; não pega app que simplesmente para
+ * de receber dado.
+ *
  * O app mexe com dado financeiro, então aqui vale a regra do porteiro: só passa
  * o que está na lista, truncado no tamanho da lista. Nada de `...dados`.
  */

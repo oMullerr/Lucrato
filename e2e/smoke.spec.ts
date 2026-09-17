@@ -12,6 +12,13 @@ import { expect, test, type Page } from '@playwright/test';
  *
  * Só a tela de login, de propósito: cobre CSP, service worker e o bundle sem
  * precisar de credencial em CI.
+ *
+ * O PREÇO DESSA ESCOLHA, cobrado em 16/09/2026: um CSP sem o `frame-src` do
+ * reCAPTCHA passou por aqui com os cinco testes verdes. Carregar /login não
+ * abre iframe de reCAPTCHA nem espera o Firestore responder — quem quebrou foi
+ * quem já estava logado. Verde aqui significa "a casca subiu", não "o app
+ * funciona". Sem credencial em CI isso não tem conserto neste arquivo; o que
+ * tem conserto é o CSP ser verificado diretriz por diretriz em src/csp.spec.ts.
  */
 
 /** Host permitido pelo `img-src https:` e FORA do `connect-src` do documento.

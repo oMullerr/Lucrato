@@ -62,6 +62,19 @@ describe('CSP do vercel.json', () => {
     expect(connect).toContain('https://www.gstatic.com');
   });
 
+  /* O iframe âncora do reCAPTCHA Enterprise mora em www.google.com, e NÃO é
+     exclusivo do App Check: o Firebase Auth abre o mesmo iframe quando a
+     proteção contra enumeração de e-mail está ligada. Tirar este host daqui
+     derrubou a produção em 16/09/2026 — o script carregava, o iframe não, e o
+     `reCAPTCHA Timeout` travava o Firestore de quem ainda tinha o bundle
+     antigo em cache. Nenhum teste olhava o frame-src; agora olha. */
+  it('libera no frame-src o iframe do reCAPTCHA e o handler do Auth', () => {
+    const { 'frame-src': frame } = doDocumento();
+
+    expect(frame).toContain('https://www.google.com');
+    expect(frame).toContain('https://lucrato-web.firebaseapp.com');
+  });
+
   it('libera no connect-src as fotos de anúncio do Mercado Livre', () => {
     expect(doDocumento()['connect-src']).toContain('https://*.mlstatic.com');
   });
