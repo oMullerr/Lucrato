@@ -2,7 +2,7 @@ import { ErrorHandler, Injectable, NgZone, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { NotifyService } from './notify.service';
 import { ErrorReporterService } from './error-reporter.service';
-import { firestoreErrorMessage, isChunkLoadError } from './firestore-errors';
+import { firestoreErrorMessage, isChunkLoadError, isViewTransitionAbort } from './firestore-errors';
 import { logError } from './logger';
 
 @Injectable()
@@ -16,6 +16,11 @@ export class GlobalErrorHandler implements ErrorHandler {
   handleError(error: unknown): void {
     logError('[GlobalErrorHandler]', error);
     const cause = this.unwrap(error);
+
+    /* Antes de qualquer coisa: transição de rota pulada não é erro. Não avisa o
+       usuário e, principalmente, não gasta uma das cinco vagas de reporte. */
+    if (isViewTransitionAbort(cause)) return;
+
     /* Em produção o log acima não escreve nada, de propósito. Este é o único
        caminho pelo qual um erro de produção chega até nós. */
     this.reporter.report(cause);

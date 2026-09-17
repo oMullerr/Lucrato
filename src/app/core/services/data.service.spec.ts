@@ -535,6 +535,58 @@ describe('DataService', () => {
       expect((harness.service as any)._retryTimer).toBeDefined();
       jest.useRealTimers();
     });
+
+    /* Em 16/09/2026 o refresh do token ficou pendurado para sempre (o App Check
+       não entregava token porque o CSP bloqueava o reCAPTCHA) e o onSnapshot
+       NUNCA chegou a ser registrado: app em pé, zero dado, nenhum aviso. O
+       refresh é um empurrão para o token trazer `email_verified` novo, não um
+       pré-requisito — se ele falhar, assinar assim mesmo é sempre melhor, porque
+       o onSnapshot tem callback de erro e retry, e um await pendurado não tem
+       nada. */
+    it('registra o onSnapshot mesmo quando o refresh do token nunca responde', async () => {
+      jest.useFakeTimers();
+      const { service, fakeAuth } = setupHarness();
+      (onSnapshot as jest.Mock).mockReturnValue(jest.fn());
+      fakeAuth.refreshIdToken.mockReturnValue(new Promise(() => undefined));
+
+      const sync = (service as any).startSync('user-123');
+      await jest.advanceTimersByTimeAsync(60_000);
+      await sync;
+
+      expect(onSnapshot).toHaveBeenCalled();
+      jest.useRealTimers();
+    });
+
+    it('registra o onSnapshot mesmo quando o refresh do token falha', async () => {
+      const { service, fakeAuth } = setupHarness();
+      (onSnapshot as jest.Mock).mockReturnValue(jest.fn());
+      fakeAuth.refreshIdToken.mockRejectedValue(new Error('rede fora'));
+
+      await (service as any).startSync('user-123');
+
+      expect(onSnapshot).toHaveBeenCalled();
+    });
+
+    /* A assinatura velha era derrubada ANTES do await. Se o await demorasse, o
+       app ficava sem a antiga e sem a nova — pior que não ter feito nada. */
+    it('só derruba a assinatura anterior depois de passar pelo refresh', async () => {
+      const unsubAntigo = jest.fn();
+      const { service, fakeAuth } = setupHarness();
+      (onSnapshot as jest.Mock).mockReturnValue(unsubAntigo);
+      await (service as any).startSync('user-123');
+      expect(unsubAntigo).not.toHaveBeenCalled();
+
+      let liberaRefresh: () => void = () => undefined;
+      fakeAuth.refreshIdToken.mockReturnValue(new Promise<void>(r => { liberaRefresh = r; }));
+
+      const sync = (service as any).startSync('user-123');
+      await Promise.resolve();
+      expect(unsubAntigo).not.toHaveBeenCalled();
+
+      liberaRefresh();
+      await sync;
+      expect(unsubAntigo).toHaveBeenCalled();
+    });
   });
 
   describe('stopSync (via cast)', () => {

@@ -1,5 +1,5 @@
 import { Injectable, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   Auth,
   EmailAuthProvider,
@@ -21,6 +21,18 @@ export class AuthService {
 
   /** Emits `undefined` while Firebase resolves the initial auth state, then `null` (logged out) or `User`. */
   readonly currentUser = toSignal(user(this._auth), { initialValue: undefined });
+
+  /**
+   * Mesma coisa que `currentUser`, em Observable — para quem precisa esperar o
+   * estado de auth assentar (os guards).
+   *
+   * Vive aqui, e não dentro do guard, de propósito: `toObservable()` cria um
+   * `effect` no injector onde é chamado. Chamado dentro de um guard, isso era
+   * um effect NOVO a cada navegação, registrado no injector raiz e nunca
+   * destruído — um vazamento que crescia com o uso do app. Criado uma vez no
+   * serviço, é um effect só, pela vida inteira do app.
+   */
+  readonly currentUser$ = toObservable(this.currentUser);
 
   readonly isLoggedIn = computed(() => !!this.currentUser());
 

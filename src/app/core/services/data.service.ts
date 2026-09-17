@@ -18,8 +18,13 @@ import { NotifyService } from './notify.service';
 import { ConnectionService } from './connection.service';
 import { firestoreErrorMessage } from './firestore-errors';
 import { logError } from './logger';
+import { comPrazo } from './com-prazo';
 
 const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 16000, 30000];
+
+/** Prazo da renovação do token antes de assinar. Generoso: só existe para
+    impedir espera infinita, não para apertar rede lenta. */
+const TOKEN_REFRESH_TIMEOUT_MS = 10_000;
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
@@ -88,8 +93,10 @@ export class DataService {
 
   private async startSync(uid: string): Promise<void> {
     this.cancelRetry();
+    await this.renovarTokenSemTravar();
+    /* Só agora derruba a assinatura anterior. Derrubar ANTES do await deixava o
+       app sem a antiga e sem a nova enquanto o await não voltasse. */
     this._unsub?.();
-    await this.auth.refreshIdToken();
     const ref = doc(this.firestore, `users/${uid}/db/main`);
     this._unsub = onSnapshot(
       ref,
@@ -129,6 +136,28 @@ export class DataService {
         this.scheduleRetry(uid);
       },
     );
+  }
+
+  /**
+   * Renova o token antes de assinar, mas nunca às custas da assinatura.
+   *
+   * O refresh existe para o token trazer um `email_verified` fresco, de que as
+   * rules dependem — é um empurrão, não um pré-requisito. Em 16/09/2026 ele
+   * virou pré-requisito na prática: o App Check não entregava token (o CSP
+   * bloqueava o reCAPTCHA), o `await` ficou pendurado para sempre e o
+   * `onSnapshot` nunca chegou a ser registrado. Resultado: app em pé, zero
+   * dado, nenhum retry e nenhum aviso, porque `logError` é mudo em produção.
+   *
+   * Assinar com um token velho é sempre melhor que não assinar: se as rules
+   * recusarem, o callback de erro do `onSnapshot` dispara e o `scheduleRetry`
+   * assume. Um await pendurado não tem plano B nenhum.
+   */
+  private async renovarTokenSemTravar(): Promise<void> {
+    try {
+      await comPrazo(this.auth.refreshIdToken(), TOKEN_REFRESH_TIMEOUT_MS);
+    } catch (err) {
+      logError('[DataService] renovação do token falhou ou estourou o prazo; assinando assim mesmo:', err);
+    }
   }
 
   private scheduleRetry(uid: string): void {

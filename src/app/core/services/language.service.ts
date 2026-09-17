@@ -2,6 +2,12 @@ import { inject, Injectable, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { APP } from '../constants/app.constants';
+import { comPrazo } from './com-prazo';
+import { logError } from './logger';
+
+/** Prazo do i18n no boot. Curto de propósito: é melhor subir com as chaves
+    cruas do que segurar a tela esperando um JSON. */
+const I18N_TIMEOUT_MS = 5000;
 
 export type LangCode = 'pt-BR' | 'en-US' | 'es';
 
@@ -29,13 +35,30 @@ export class LanguageService {
   readonly lang = this._lang.asReadonly();
   readonly available = SUPPORTED_LANGS;
 
-  /** Configures ngx-translate and preloads the active language. Used by APP_INITIALIZER. */
-  init(): Promise<unknown> {
+  /**
+   * Configura o ngx-translate e pré-carrega o idioma ativo. Usado pelo
+   * APP_INITIALIZER.
+   *
+   * NUNCA rejeita e NUNCA pendura. Este é o único ponto do app capaz de impedir
+   * o `bootstrapApplication` de completar, e o preço de falhar aqui é tela
+   * branca: sem casca, sem erro na tela, só um `console.error` em `main.ts` que
+   * ninguém vê. Nenhum arquivo de tradução vale isso.
+   *
+   * Se as traduções não chegarem, o app sobe com as chaves cruas e o
+   * ngx-translate as preenche depois, se a requisição enfim responder. Feio por
+   * alguns segundos é infinitamente melhor que branco para sempre.
+   */
+  async init(): Promise<void> {
     this.translate.addLangs(SUPPORTED_LANGS.map(l => l.code));
     this.translate.setDefaultLang(DEFAULT_LANG);
     const lang = this._lang();
     document.documentElement.lang = lang;
-    return firstValueFrom(this.translate.use(lang));
+
+    try {
+      await comPrazo(firstValueFrom(this.translate.use(lang)), I18N_TIMEOUT_MS);
+    } catch (err) {
+      logError('[LanguageService] traduções não carregaram; subindo com as chaves cruas:', err);
+    }
   }
 
   set(code: LangCode): void {

@@ -1,6 +1,5 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { toObservable } from '@angular/core/rxjs-interop';
 import { catchError, filter, map, of, take, timeout } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../services/auth.service';
@@ -19,7 +18,7 @@ export const authGuard: CanActivateFn = (_route, state) => {
   const notify = inject(NotifyService);
   const t = inject(TranslateService);
 
-  return toObservable(auth.currentUser).pipe(
+  return auth.currentUser$.pipe(
     filter(u => u !== undefined),
     take(1),
     timeout(AUTH_TIMEOUT_MS),
@@ -47,7 +46,7 @@ export const verifyEmailGuard: CanActivateFn = () => {
   const notify = inject(NotifyService);
   const t = inject(TranslateService);
 
-  return toObservable(auth.currentUser).pipe(
+  return auth.currentUser$.pipe(
     filter(u => u !== undefined),
     take(1),
     timeout(AUTH_TIMEOUT_MS),
@@ -68,7 +67,7 @@ export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  return toObservable(auth.currentUser).pipe(
+  return auth.currentUser$.pipe(
     filter(u => u !== undefined),
     take(1),
     timeout(AUTH_TIMEOUT_MS),
