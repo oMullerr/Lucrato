@@ -55,3 +55,8 @@ lucrato-backup-*.json
 /playwright-report
 /blob-report
 /playwright/.cache
+# Permissoes locais do Claude Code — por maquina, nao por repositorio.
+# O conteudo sao comandos ad-hoc com caminhos de temporarios e UUIDs de sessao
+# que nunca mais existem; para quem clona o repo e ruido, e as entradas valeriam
+# como permissao concedida sem que ninguem tenha concedido.
+.claude/settings.local.json
