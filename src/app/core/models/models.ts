@@ -296,11 +296,30 @@ export interface KpiSummary {
   pendingReturnValue: number;
 }
 
+/**
+ * Versão do formato de armazenamento.
+ *
+ *  1 — tudo num documento só (`users/{uid}/db/main`), inclusive os arrays.
+ *      Formato original; ainda lido para quem não migrou.
+ *  2 — o razão vive em subcoleções (`users/{uid}/{purchases,sales,returns}`) e
+ *      `db/main` guarda só `settings` e `metadata`.
+ *
+ * O documento único tem teto de 1 MiB no Firestore, o que dava uma parede real
+ * em torno de 1.500 a 2.500 vendas — e toda alteração, até marcar um DAS como
+ * pago, regravava a base inteira.
+ */
+export const SCHEMA_SUBCOLECOES = 2;
+
 /** JSON database */
 export interface Database {
   purchases: Purchase[];
   sales: Sale[];
   returns: Return[];
   settings: Settings;
-  metadata: { versao: string; ultimaAtualizacao: string };
+  metadata: {
+    versao: string;
+    ultimaAtualizacao: string;
+    /** Ausente ⇒ 1 (formato original). */
+    schema?: number;
+  };
 }

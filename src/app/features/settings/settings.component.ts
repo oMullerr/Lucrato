@@ -133,6 +133,10 @@ export class SettingsComponent {
   private readonly appliedBaseline = signal<FormSettings>(projetar(DEFAULT_SETTINGS));
   protected readonly saving = signal(false);
   protected readonly importing = signal(false);
+  protected readonly migrando = signal(false);
+
+  /** Exposto ao template: o card de armazenamento lê os contadores daqui. */
+  protected readonly data = this.dataService;
 
   protected readonly hasChanges = computed(() => {
     const a = this.serverSettings() ?? projetar(DEFAULT_SETTINGS);
@@ -293,6 +297,56 @@ export class SettingsComponent {
     } finally {
       this.importing.set(false);
     }
+  }
+
+  /**
+   * Move o razão para as subcoleções.
+   *
+   * Não pede confirmação porque não destrói nada: copia, marca o formato novo e
+   * deixa a base antiga intacta em `db/main`. O passo que apaga é outro.
+   */
+  protected async migrar(): Promise<void> {
+    if (this.migrando()) return;
+    this.migrando.set(true);
+    try {
+      const t = await this.dataService.migrarParaSubcolecoes();
+      this.notify.success(
+        this.t.instant('settings.storageMigrated', { p: t.purchases, v: t.sales, d: t.returns }),
+      );
+    } catch (err) {
+      logError('[Settings] migração falhou:', err);
+      this.notify.error(this.t.instant('settings.storageMigrateError'));
+    } finally {
+      this.migrando.set(false);
+    }
+  }
+
+  /** Apaga os arrays antigos. Este SIM pede confirmação: é irreversível. */
+  protected limparLegado(): void {
+    this.dialog
+      .open(ConfirmDialogComponent, {
+        data: {
+          title: this.t.instant('settings.storageCleanup'),
+          message: this.t.instant('settings.storageCleanupConfirm'),
+          danger: true,
+          confirmText: this.t.instant('settings.storageCleanup'),
+        },
+        size: 'sm',
+      })
+      .afterClosed()
+      .subscribe(async confirmado => {
+        if (!confirmado) return;
+        this.migrando.set(true);
+        try {
+          await this.dataService.limparRazaoLegado();
+          this.notify.success(this.t.instant('settings.storageCleaned'));
+        } catch (err) {
+          logError('[Settings] limpeza do legado falhou:', err);
+          this.notify.error(this.t.instant('settings.storageMigrateError'));
+        } finally {
+          this.migrando.set(false);
+        }
+      });
   }
 
   protected resetAll(): void {

@@ -210,6 +210,42 @@
     <app-tab [label]="'settings.tabDanger' | translate">
 
       <div class="tab-body">
+        <!-- Armazenamento. Fica na aba de perigo porque mexe no formato do
+             razão — mas a migração em si é aditiva: nada é apagado até a
+             limpeza, que é um botão separado e só aparece depois. -->
+        <div class="danger-card storage-card">
+          <h3 class="card-title">
+            <app-icon name="package" [size]="18" />
+            {{ 'settings.storageTitle' | translate }}
+          </h3>
+
+          @if (data.emSubcolecoes()) {
+            <p class="storage-ok">
+              <app-icon name="circle-check" [size]="16" />
+              {{ 'settings.storageMigrated' | translate:{
+                   p: data.purchases().length,
+                   v: data.sales().length,
+                   d: data.returns().length } }}
+            </p>
+            <p>{{ 'settings.storageCleanupHelp' | translate }}</p>
+            <button appBtn="outline" type="button" [loading]="migrando()" (click)="limparLegado()">
+              {{ 'settings.storageCleanup' | translate }}
+            </button>
+          } @else {
+            <p>{{ 'settings.storageHelp' | translate }}</p>
+            <button
+              appBtn
+              type="button"
+              [loading]="migrando()"
+              [disabled]="!data.loaded()"
+              (click)="migrar()"
+            >
+              <app-icon name="refresh-cw" [size]="16" />
+              {{ 'settings.storageMigrate' | translate }}
+            </button>
+          }
+        </div>
+
         <div class="danger-card">
           <h3 class="card-title danger">
             <app-icon name="triangle-alert" [size]="18" />

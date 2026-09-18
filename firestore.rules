@@ -34,10 +34,57 @@ service cloud.firestore {
     }
 
     // Documento principal de dados. Caminho fixo, como sempre foi.
+    //
+    // A partir do schema 2 ele guarda apenas `settings` e `metadata`: o razão
+    // mudou para as subcoleções abaixo. Os arrays continuam ACEITOS aqui porque
+    // a migração é aditiva — enquanto houver base sem migrar, este documento
+    // ainda é a fonte, e o limite de 1 MiB do Firestore continua valendo para
+    // ela (era essa parede, por volta de 1.500 a 2.500 vendas, que motivou a
+    // mudança).
     match /users/{userId}/db/main {
       allow read:           if isVerifiedOwner(userId);
       allow create, update: if isVerifiedOwner(userId) && isValidMainDoc();
       allow delete:         if isVerifiedOwner(userId);
+    }
+
+    // ── Razão em subcoleções (schema 2) ──────────────────────────────────
+    //
+    // Um documento por registro tira o teto de 1 MiB do caminho, torna a
+    // escrita incremental (antes QUALQUER alteração regravava a base inteira)
+    // e — o que mais importa — permite que a Cloud Function escreva no razão
+    // sem correr o risco de ser sobrescrita pela próxima gravação do navegador.
+    //
+    // O tamanho é limitado por documento, não por coleção: contar documentos
+    // numa rule custaria uma leitura por gravação, e o teto real agora é o da
+    // conta, não o do Firestore.
+
+    function campoTexto(d, campo, max) {
+      return !(campo in d) || (d[campo] is string && d[campo].size() <= max);
+    }
+
+    function isValidLancamento() {
+      let d = request.resource.data;
+      return d.keys().size() <= 40
+             && d.id is string && d.id.size() > 0 && d.id.size() <= 64
+             && campoTexto(d, 'product', 300)
+             && campoTexto(d, 'notes', 2000)
+             && campoTexto(d, 'externalId', 200);
+    }
+
+    match /users/{userId}/purchases/{purchaseId} {
+      allow read:   if isVerifiedOwner(userId);
+      allow write:  if isVerifiedOwner(userId)
+                    && (request.method == 'delete' || isValidLancamento());
+    }
+    match /users/{userId}/sales/{saleId} {
+      allow read:   if isVerifiedOwner(userId);
+      allow write:  if isVerifiedOwner(userId)
+                    && (request.method == 'delete' || isValidLancamento());
+    }
+    match /users/{userId}/returns/{returnId} {
+      allow read:   if isVerifiedOwner(userId);
+      allow write:  if isVerifiedOwner(userId)
+                    && (request.method == 'delete' || isValidLancamento());
     }
 
     // Estado da integração com o Mercado Livre (nickname, cursores, último
