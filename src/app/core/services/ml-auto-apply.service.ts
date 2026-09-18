@@ -7,6 +7,16 @@ import { logError } from './logger';
 import { classificarCaixa } from '../ml/reconcile';
 
 /**
+ * Teto de rodadas automáticas numa janela curta, e a janela.
+ *
+ * Uso normal dispara um punhado de rodadas, espalhadas; um loop dispara
+ * centenas em milissegundos. Não é afinação de desempenho — é o limite entre
+ * "trabalhando" e "girando em falso".
+ */
+const MAX_RODADAS_NA_JANELA = 20;
+const JANELA_MS = 5000;
+
+/**
  * Lança sozinho no razão as vendas do Mercado Livre que já estão prontas.
  *
  * A captura acontece no servidor 24 horas por dia; o que espera o app abrir é
@@ -28,8 +38,15 @@ export class MlAutoApplyService {
   /** Itens já tentados nesta sessão, para não insistir no que não coube. */
   private readonly tentados = new Set<string>();
 
+  /* Trava de segurança: ver `registrarRodada`. */
+  private rodadasNaJanela = 0;
+  private janelaAbertaEm = 0;
+  private desarmado = false;
+
   constructor() {
     effect(() => {
+      if (this.desarmado) return;
+
       const pendentes = this.ml.inboxPendentes();
       const ligado = this.data.settings()?.mlAutoApply !== false;
 
@@ -55,6 +72,7 @@ export class MlAutoApplyService {
    */
   async aplicar(): Promise<number> {
     if (this.rodando()) return 0;
+    this.registrarRodada();
     const pendentes = this.ml.inboxPendentes();
     if (pendentes.length === 0) {
       this.rodando.set(true);
@@ -87,7 +105,9 @@ export class MlAutoApplyService {
     this.rodando.set(true);
     try {
       for (const item of pendentes) this.tentados.add(item.externalId);
-      for (const d of this.ml.devolucoesPendentes()) this.tentados.add(d.claimId);
+      /* As devoluções são registradas dentro de `aplicarDevolucoes`, no momento
+         em que são de fato tentadas — aqui o retrato ainda seria o de antes das
+         vendas entrarem. */
 
       const plano = await this.data.applyMlInbox(novas);
       if (plano.aplicados.length > 0) {
@@ -120,6 +140,22 @@ export class MlAutoApplyService {
     const pendentes = this.ml.devolucoesPendentes();
     if (pendentes.length === 0) return;
 
+    /* Registra a tentativa ANTES de tentar, e por isso aqui dentro: é por este
+       método que passam as três saídas de `aplicar()`, e duas delas não
+       registravam nada.
+
+       Isso não é zelo, é o que faz o app parar de rodar. O effect LÊ
+       `rodando()`, e toda rodada liga e desliga esse sinal — terminar já
+       re-arma o effect. Quem segura o loop é este Set: o que não couber
+       (devolução cuja venda não está no razão, que `planejarDevolucoes` devolve
+       em `pendentes` e nunca em `aplicadas`) precisa sair do conjunto de
+       "novos" na mesma rodada. Sem isso o par effect→aplicar→effect gira para
+       sempre, em microtask fechada, e a aba congela — sem timer, sem rede e sem
+       um erro sequer. Foi o que derrubou o app em 18/09/2026.
+
+       Antes do `await` de propósito: cobre também o caminho de exceção. */
+    for (const d of pendentes) this.tentados.add(d.claimId);
+
     const plano = await this.data.applyMlReturns(pendentes);
     if (plano.aplicadas.length > 0) {
       await this.ml.markReturns(plano.aplicadas, 'aplicado');
@@ -129,8 +165,45 @@ export class MlAutoApplyService {
     }
   }
 
+  /**
+   * Conta as rodadas automáticas e desarma se elas virarem um loop.
+   *
+   * Existe para o caso que não previmos. O registro em `tentados` já prova que
+   * o loop acaba — o conjunto de itens novos só diminui —, mas essa prova vale
+   * enquanto todo caminho novo continuar registrando o que tentou. Esta trava
+   * não depende disso: ela olha só a frequência, que é o que separa "está
+   * trabalhando" de "está girando em falso", e limita QUALQUER loop futuro,
+   * venha de onde vier.
+   *
+   * Mesma regra que a `comPrazo` já firmou para Promise, aplicada a effect:
+   * estourar o limite é um resultado — dá para logar e seguir. Rodar para
+   * sempre não é, porque congela a aba e leva junto o console de quem tentaria
+   * diagnosticar.
+   *
+   * Desarma só o caminho automático. O botão "Tentar aplicar agora" chama
+   * `aplicar()` direto e continua funcionando: é ação do dono, e tem fim.
+   */
+  private registrarRodada(): void {
+    const agora = Date.now();
+    if (agora - this.janelaAbertaEm > JANELA_MS) {
+      this.janelaAbertaEm = agora;
+      this.rodadasNaJanela = 0;
+    }
+    if (++this.rodadasNaJanela > MAX_RODADAS_NA_JANELA && !this.desarmado) {
+      this.desarmado = true;
+      logError(
+        '[MlAutoApply] auto-aplicar desarmado nesta sessão: virou loop.',
+        { rodadas: this.rodadasNaJanela, janelaMs: JANELA_MS },
+      );
+    }
+  }
+
   /** Permite tentar de novo o que ficou pendente (depois de vincular ou comprar). */
   esquecerTentativas(): void {
     this.tentados.clear();
+    // Re-arma: é o dono pedindo, no botão. Se tinha desarmado, ganha nova chance.
+    this.desarmado = false;
+    this.rodadasNaJanela = 0;
+    this.janelaAbertaEm = Date.now();
   }
 }

@@ -178,6 +178,35 @@
       </section>
     }
 
+    @if (devolucoesSemVenda().length > 0) {
+      <section class="grupo">
+        <header>
+          <app-icon name="rotate-ccw" />
+          <div>
+            <h2>{{ 'mlInbox.groupReturnNoSaleTitle' | translate:{ total: devolucoesSemVenda().length } }}</h2>
+            <p>{{ 'mlInbox.groupReturnNoSaleMsg' | translate }}</p>
+          </div>
+          <a appBtn="outline" routerLink="/sales">{{ 'mlInbox.goToSales' | translate }}</a>
+        </header>
+
+        <ul class="itens">
+          @for (d of devolucoesSemVenda(); track d.claimId) {
+            <li>
+              <div class="info">
+                <span class="produto">{{ 'mlInbox.claim' | translate:{ id: d.claimId } }}</span>
+                <small>
+                  {{ d.requestDate | brDate }} ·
+                  {{ d.reason }} ·
+                  {{ d.mlItemId }}
+                </small>
+              </div>
+              <span class="valor">{{ d.returnShipping | brl }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
     <p class="rodape">
       <app-icon name="info" />
       {{ 'mlInbox.autoNote' | translate }}

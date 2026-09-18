@@ -8,6 +8,7 @@ import { MlAutoApplyService } from '../../core/services/ml-auto-apply.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { logError } from '../../core/services/logger';
 import { ItemDaCaixa, MotivoPendencia, planejarAplicacao } from '../../core/ml/inbox-apply';
+import { DevolucaoDoMl, planejarDevolucoes } from '../../core/ml/returns-apply';
 import { Candidata, classificarCaixa } from '../../core/ml/reconcile';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
@@ -117,8 +118,32 @@ export class MlInboxComponent {
     this.pendentes().filter(p => p.motivo === 'sem_estoque'),
   );
 
+  /**
+   * Devoluções que o Mercado Livre informou e que não têm venda no razão.
+   *
+   * `planejarDevolucoes` já as separa em `pendentes` com motivo `sem_venda`,
+   * mas até aqui ninguém lia esse campo: elas eram calculadas e descartadas em
+   * silêncio, rodada após rodada. Some frete e valor em risco da conta sem uma
+   * linha na tela — e era justamente a devolução órfã que, por nunca sair de
+   * `devolucoesPendentes`, alimentava o loop que congelava o app.
+   *
+   * Mesmo planejador que o auto-aplicar usa, então a tela nunca discorda do que
+   * aconteceria de verdade — igual ao `pendentes` das vendas, acima.
+   */
+  protected readonly devolucoesSemVenda = computed<DevolucaoDoMl[]>(() => {
+    const doMl = this.ml.devolucoesPendentes();
+    if (doMl.length === 0) return [];
+
+    const plano = planejarDevolucoes(doMl, this.data.sales(), this.data.returns());
+    const orfas = new Set(plano.pendentes.map(p => p.claimId));
+    return doMl
+      .filter(d => orfas.has(d.claimId))
+      .sort((a, b) => b.requestDate.localeCompare(a.requestDate));
+  });
+
   protected readonly totalEsperando = computed(() =>
-    this.pendentes().length + this.duplicadas().length + this.conflitantes().length,
+    this.pendentes().length + this.duplicadas().length + this.conflitantes().length
+    + this.devolucoesSemVenda().length,
   );
 
   /** Valor parado esperando decisão — dá a dimensão do que ainda não entrou. */
