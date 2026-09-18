@@ -16,6 +16,7 @@
     "test:rules": "jest test"
   },
   "dependencies": {
+    "@google-cloud/kms": "^6.2.0",
     "firebase-admin": "^13.0.2",
     "firebase-functions": "^6.3.0"
   },

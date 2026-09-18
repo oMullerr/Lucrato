@@ -13,6 +13,7 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions/v2';
 
 import { ML_API } from '../config';
+import { cifrar, decifrar } from './cofre';
 
 /** Estado da conexão exposto ao app (sem nada sensível). */
 export type MlStatus = 'connected' | 'reconnect_required' | 'disconnected';
@@ -40,7 +41,13 @@ const publicRef = (uid: string) => db().doc(`users/${uid}/db/ml`);
 
 export async function readTokens(uid: string): Promise<MlTokens | null> {
   const snap = await secretRef(uid).get();
-  return snap.exists ? (snap.data() as MlTokens) : null;
+  if (!snap.exists) return null;
+  const t = snap.data() as MlTokens;
+  return {
+    ...t,
+    accessToken: await decifrar(t.accessToken ?? ''),
+    refreshToken: await decifrar(t.refreshToken ?? ''),
+  };
 }
 
 /** Grava tokens e espelha no documento público o que o app pode ver. */
@@ -49,7 +56,15 @@ export async function saveTokens(
   tokens: MlTokens,
   publico: Record<string, unknown> = {},
 ): Promise<void> {
-  await secretRef(uid).set({ ...tokens, updatedAt: Timestamp.now() }, { merge: true });
+  await secretRef(uid).set(
+    {
+      ...tokens,
+      accessToken: await cifrar(tokens.accessToken),
+      refreshToken: await cifrar(tokens.refreshToken),
+      updatedAt: Timestamp.now(),
+    },
+    { merge: true },
+  );
   await publicRef(uid).set(
     {
       connected: tokens.status === 'connected',
@@ -173,6 +188,10 @@ export async function getValidAccessToken(
 
       const t = snap.data() as MlTokens;
       if (t.status === 'reconnect_required') return { tipo: 'reconectar' as const };
+      /* Os tokens saem da transação COMO ESTÃO no banco, cifrados ou não. A
+         chamada ao KMS é rede, e transação do Firestore pode ser reexecutada —
+         efeito colateral aí dentro roda mais de uma vez. Decifrar é trabalho
+         para depois do commit. */
       if (t.accessToken && t.expiresAt > agora + MARGEM_MS) {
         return { tipo: 'valido' as const, accessToken: t.accessToken };
       }
@@ -184,7 +203,7 @@ export async function getValidAccessToken(
       return { tipo: 'renovar' as const, refreshToken: t.refreshToken, mlUserId: t.mlUserId };
     });
 
-    if (resultado.tipo === 'valido') return resultado.accessToken;
+    if (resultado.tipo === 'valido') return decifrar(resultado.accessToken);
     if (resultado.tipo === 'ausente') throw new Error('sem_integracao');
     if (resultado.tipo === 'reconectar') throw new Error('reconexao_necessaria');
 
@@ -194,11 +213,19 @@ export async function getValidAccessToken(
     }
 
     try {
-      const novo = await trocarRefreshToken(resultado.refreshToken, clientId, clientSecret);
+      /* O que sai do lock pode estar cifrado; o Mercado Livre precisa do
+         refresh em claro. É aqui que a migração acontece sozinha: o par novo
+         volta cifrado logo abaixo, então cada vendedor passa a cifrado na
+         primeira renovação — dentro de seis horas, sem script. */
+      const novo = await trocarRefreshToken(
+        await decifrar(resultado.refreshToken),
+        clientId,
+        clientSecret,
+      );
       await secretRef(uid).set(
         {
-          accessToken: novo.accessToken,
-          refreshToken: novo.refreshToken,
+          accessToken: await cifrar(novo.accessToken),
+          refreshToken: await cifrar(novo.refreshToken),
           expiresAt: Date.now() + novo.expiresIn * 1000,
           mlUserId: novo.mlUserId || resultado.mlUserId,
           status: 'connected' satisfies MlStatus,

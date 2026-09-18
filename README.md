@@ -134,11 +134,48 @@ secretas (`ML_REDIRECT_URI`, `APP_ORIGINS`) ficam em `functions/.env.<projeto>`.
 | Reporte de erro do navegador com alta rigorosa de campos e teto por minuto | [functions/src/client-errors.ts](functions/src/client-errors.ts) |
 | Limites de upload XLSX (5 MB, extensão conferida) | [settings.component.ts](src/app/features/settings/settings.component.ts) |
 
+### Cifrar os tokens do Mercado Livre (opcional, recomendado)
+
+`users/{uid}/secret/ml` guarda o `access_token` e o `refresh_token` do Mercado
+Livre. As security rules negam esse caminho ao navegador, mas isso não cobre os
+caminhos de fora do app: credencial de service account vazada, engano nas rules,
+ou um backup baixado para a máquina errada. Com a cifra, um backup vazado vira
+texto inútil.
+
+**Desligada por padrão.** Sem `ML_KMS_KEY`, tudo funciona como antes.
+
+```bash
+gcloud kms keyrings create lucrato --location southamerica-east1
+gcloud kms keys create ml-tokens --location southamerica-east1 \
+  --keyring lucrato --purpose encryption
+```
+
+Dê à conta de serviço das functions permissão de uso da chave
+(`roles/cloudkms.cryptoKeyEncrypterDecrypter`) e configure o nome completo em
+`functions/.env.<projeto>`:
+
+```
+ML_KMS_KEY=projects/<projeto>/locations/southamerica-east1/keyRings/lucrato/cryptoKeys/ml-tokens
+```
+
+Não há script de migração e não precisa haver: a leitura reconhece os dois
+formatos, e o `refresh_token` do Mercado Livre é de uso único — cada renovação
+reescreve o par, então os tokens passam a cifrados sozinhos em até seis horas.
+
+> Ligada a chave, **não a remova**: token já cifrado sem chave para abrir falha
+> alto de propósito, e a conta precisa ser reconectada.
+
 ### Checklist do console
 
 Proteções que não moram no código. Fazer no setup e revisar de tempos em tempos:
 
 - [ ] **Proteção contra enumeração de e-mail** — Authentication → Settings.
+- [ ] **Segredo do webhook do ML** — defina `ML_WEBHOOK_TOKEN` e cadastre a URL
+      no DevCenter como `.../mlWebhook/<segredo>`. Sem ele o endpoint é público:
+      não dá para injetar venda (o corpo é tratado como ponteiro), mas dá para
+      gerar custo. Vazio = aceita tudo, que é o padrão.
+- [ ] **`APP_ORIGINS`** — obrigatória desde que o curinga `*.vercel.app` saiu do
+      `returnTo`. Sem ela, conectar o Mercado Livre para de funcionar.
 - [ ] **Restringir a API key Web** — Google Cloud → Credentials → Browser key → HTTP referrers
       (`localhost` + domínio de produção) e só as APIs usadas. A `apiKey` é pública por design;
       a restrição impede reuso de cota a partir de outros domínios.
