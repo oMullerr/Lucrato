@@ -11,12 +11,17 @@ jest.mock('@angular/fire/auth', () => ({
   sendEmailVerification: jest.fn(),
   sendPasswordResetEmail: jest.fn(),
   updatePassword: jest.fn(),
-  deleteUser: jest.fn(),
   reauthenticateWithCredential: jest.fn(),
   EmailAuthProvider: {
     credential: jest.fn((email: string, pwd: string) => ({ email, pwd })),
   },
   user: jest.fn(),
+}));
+
+// A exclusão de conta virou callable: o cliente não alcança `secret/ml`.
+jest.mock('@angular/fire/functions', () => ({
+  Functions: class Functions {},
+  httpsCallable: jest.fn(),
 }));
 
 import {
@@ -28,11 +33,11 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   updatePassword,
-  deleteUser,
   reauthenticateWithCredential,
   EmailAuthProvider,
   user,
 } from '@angular/fire/auth';
+import { Functions, httpsCallable } from '@angular/fire/functions';
 import { AuthService } from './auth.service';
 import { makeFakeUser } from '../../../testing/firebase-mocks';
 
@@ -50,6 +55,7 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         { provide: Auth, useValue: fakeAuth },
+        { provide: Functions, useValue: {} },
       ],
     });
     service = TestBed.inject(AuthService);
@@ -206,18 +212,63 @@ describe('AuthService', () => {
     });
   });
 
+  /**
+   * A exclusão passou para o servidor em setembro/2026.
+   *
+   * O cliente chamava `deleteUser()` direto e apagava só `db/main`. Os tokens
+   * do Mercado Livre em `users/{uid}/secret/ml` e o `mlIndex` que o poller usa
+   * ficavam vivos — e as security rules negam esses caminhos ao navegador, então
+   * não sobrava NENHUM jeito de limpá-los depois. O teste que existia aqui
+   * cravava justamente o comportamento errado.
+   */
   describe('deleteAccount', () => {
     it('lança "not-logged-in" quando deslogado', async () => {
       setup(null);
       await expect(service.deleteAccount()).rejects.toThrow('not-logged-in');
     });
 
-    it('chama deleteUser quando logado', async () => {
-      const fakeUser = makeFakeUser();
-      setup(fakeUser);
-      (deleteUser as jest.Mock).mockResolvedValue(undefined);
+    it('chama a callable do servidor, não o deleteUser do cliente', async () => {
+      const chamar = jest.fn().mockResolvedValue({ data: { ok: true } });
+      (httpsCallable as jest.Mock).mockReturnValue(chamar);
+      (signOut as jest.Mock).mockResolvedValue(undefined);
+      setup(makeFakeUser());
+
       await service.deleteAccount();
-      expect(deleteUser).toHaveBeenCalledWith(fakeUser);
+
+      expect(httpsCallable).toHaveBeenCalledWith(expect.anything(), 'deleteAccount');
+      expect(chamar).toHaveBeenCalled();
+    });
+
+    it('encerra a sessão local depois, para a próxima leitura não dar erro', async () => {
+      const chamar = jest.fn().mockResolvedValue({ data: { ok: true } });
+      (httpsCallable as jest.Mock).mockReturnValue(chamar);
+      (signOut as jest.Mock).mockResolvedValue(undefined);
+      setup(makeFakeUser());
+
+      await service.deleteAccount();
+
+      expect(signOut).toHaveBeenCalledWith(fakeAuth);
+    });
+
+    it('falha no servidor propaga — a conta NÃO pode parecer excluída', async () => {
+      // Engolir este erro seria pior que o bug antigo: o dono sairia achando
+      // que apagou tudo, com os tokens do ML ainda de pé.
+      const chamar = jest.fn().mockRejectedValue(new Error('internal'));
+      (httpsCallable as jest.Mock).mockReturnValue(chamar);
+      setup(makeFakeUser());
+
+      await expect(service.deleteAccount()).rejects.toThrow('internal');
+      expect(signOut).not.toHaveBeenCalled();
+    });
+
+    it('sessão que não encerra não derruba a exclusão', async () => {
+      // O usuário já não existe; falhar o signOut aqui só assustaria à toa.
+      const chamar = jest.fn().mockResolvedValue({ data: { ok: true } });
+      (httpsCallable as jest.Mock).mockReturnValue(chamar);
+      (signOut as jest.Mock).mockRejectedValue(new Error('user-token-expired'));
+      setup(makeFakeUser());
+
+      await expect(service.deleteAccount()).resolves.toBeUndefined();
     });
   });
 

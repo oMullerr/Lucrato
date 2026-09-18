@@ -784,6 +784,7 @@
     "errWeakPassword": "A nova senha deve ter pelo menos 8 caracteres, com letra e número.",
     "errTooManyRequests": "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
     "errRecentLogin": "Por segurança, faça login novamente antes desta ação.",
+    "errDeleteServer": "Não deu para excluir a conta agora — nada foi apagado. Tente de novo em instantes.",
     "errNetwork": "Falha de conexão. Verifique sua internet.",
     "errGeneric": "Não foi possível concluir a operação. Tente novamente."
   },

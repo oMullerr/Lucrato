@@ -1,10 +1,10 @@
 import { Injectable, computed, inject } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { Functions, httpsCallable } from '@angular/fire/functions';
 import {
   Auth,
   EmailAuthProvider,
   createUserWithEmailAndPassword,
-  deleteUser,
   reauthenticateWithCredential,
   sendEmailVerification,
   sendPasswordResetEmail,
@@ -18,6 +18,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly _auth = inject(Auth);
+  private readonly _functions = inject(Functions);
 
   /** Emits `undefined` while Firebase resolves the initial auth state, then `null` (logged out) or `User`. */
   readonly currentUser = toSignal(user(this._auth), { initialValue: undefined });
@@ -96,9 +97,26 @@ export class AuthService {
     await reauthenticateWithCredential(u, credential);
   }
 
+  /**
+   * Exclui a conta pelo servidor.
+   *
+   * O navegador NÃO consegue fazer isso sozinho: `users/{uid}/secret/ml` (onde
+   * ficam os tokens do Mercado Livre) e `mlIndex/*` são negados a ele pelas
+   * security rules. Até setembro/2026 o app apagava só `db/main` e chamava
+   * `deleteUser()` — e o refresh token do ML seguia vivo, sendo renovado pelo
+   * poller a cada quinze minutos, sem nenhuma conta capaz de desconectá-lo.
+   *
+   * A function apaga tudo e remove o usuário do Auth no fim. Por isso não há
+   * `deleteUser()` aqui: quando ela volta, o usuário já não existe.
+   */
   async deleteAccount(): Promise<void> {
     const u = this._auth.currentUser;
     if (!u) throw new Error('not-logged-in');
-    await deleteUser(u);
+    const chamar = httpsCallable<void, { ok: true }>(this._functions, 'deleteAccount');
+    await chamar();
+    /* A sessão local ainda carrega um token de um usuário que já não existe.
+       Sem isto, a próxima leitura falha com permission-denied e o app mostra
+       erro de sincronização em vez da tela de login. */
+    await signOut(this._auth).catch(() => { /* já era: o usuário sumiu */ });
   }
 }

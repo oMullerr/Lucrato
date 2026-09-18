@@ -15,7 +15,7 @@ import { defineString } from 'firebase-functions/params';
 
 import { ML_API, ML_AUTH_URL, ML_CLIENT_ID, ML_CLIENT_SECRET } from '../config';
 import { codeChallengeOf, isAllowedReturnTo, newCodeVerifier, newState } from './crypto';
-import { saveTokens } from './tokens';
+import { apagarConexao, saveTokens } from './tokens';
 
 /** Deve ser IDÊNTICA à cadastrada no DevCenter do Mercado Livre. */
 export const ML_REDIRECT_URI = defineString('ML_REDIRECT_URI', { default: '' });
@@ -217,18 +217,9 @@ export const mlDisconnect = onCall({ enforceAppCheck: false }, async (request) =
   }
   const uid = request.auth.uid;
 
-  const secret = db().doc(`users/${uid}/secret/ml`);
-  const snap = await secret.get();
-  const mlUserId = snap.exists ? Number(snap.get('mlUserId')) : 0;
+  // Mesma rotina que a exclusão de conta usa (ver `apagarConexao`).
+  const mlUserId = await apagarConexao(uid);
 
-  if (mlUserId) {
-    const indice = db().doc(`mlIndex/${mlUserId}`);
-    const atual = await indice.get();
-    // Só remove o índice se ele ainda aponta para este usuário.
-    if (atual.exists && atual.get('uid') === uid) await indice.delete();
-  }
-
-  await secret.delete();
   await db().doc(`users/${uid}/db/ml`).set(
     {
       connected: false,

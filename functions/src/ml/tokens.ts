@@ -72,6 +72,37 @@ export async function invalidarAccessToken(uid: string): Promise<void> {
   await secretRef(uid).set({ expiresAt: 0 }, { merge: true });
 }
 
+/**
+ * Apaga a conexão com o Mercado Livre: tokens e índice do webhook.
+ *
+ * Mora aqui, e não dentro do `mlDisconnect`, porque há DOIS caminhos que
+ * precisam dela — desconectar a conta e excluir a conta — e o segundo foi
+ * esquecido por meses. Enquanto a lógica vivia dentro do callable, excluir a
+ * conta deixava `users/{uid}/secret/ml` e `mlIndex/{mlUserId}` de pé: o poller
+ * continuava renovando o refresh token e varrendo pedidos de um usuário que não
+ * existia mais, e não sobrava jeito de desconectar pelo app, porque as rules
+ * negam esse caminho ao navegador.
+ *
+ * Devolve o `mlUserId` que estava conectado (0 quando não havia conexão), para
+ * quem chamou poder registrar no log.
+ */
+export async function apagarConexao(uid: string): Promise<number> {
+  const secret = secretRef(uid);
+  const snap = await secret.get();
+  const mlUserId = snap.exists ? Number(snap.get('mlUserId')) : 0;
+
+  if (mlUserId) {
+    const indice = db().doc(`mlIndex/${mlUserId}`);
+    const atual = await indice.get();
+    // Só remove o índice se ele ainda aponta para este usuário: uma conta do ML
+    // reconectada por outro uid não pode ser desligada por este caminho.
+    if (atual.exists && atual.get('uid') === uid) await indice.delete();
+  }
+
+  await secret.delete();
+  return mlUserId;
+}
+
 /** Marca a conta como "precisa reconectar" e conta o motivo ao app. */
 export async function marcarReconexao(uid: string, motivo: string): Promise<void> {
   await secretRef(uid).set({ status: 'reconnect_required' }, { merge: true });

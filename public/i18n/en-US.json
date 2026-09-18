@@ -784,6 +784,7 @@
     "errWeakPassword": "The new password must be at least 8 characters, with a letter and a number.",
     "errTooManyRequests": "Too many attempts. Wait a few minutes and try again.",
     "errRecentLogin": "For security, please log in again before this action.",
+    "errDeleteServer": "Could not delete the account right now — nothing was erased. Please try again in a moment.",
     "errNetwork": "Connection failed. Check your internet.",
     "errGeneric": "Couldn't complete the operation. Please try again."
   },
