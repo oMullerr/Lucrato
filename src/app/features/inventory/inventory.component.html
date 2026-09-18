@@ -46,6 +46,11 @@
         </app-empty-state>
 
       } @else {
+        <!-- ZONA 0 — PAUTA. Antes do pulso de propósito: "como vai o negócio"
+             é a segunda pergunta de quem abre o app; a primeira é "tem algo
+             pedindo minha decisão agora?". Some quando não há nada. -->
+        <app-pendencias-card [pendencias]="pendencias()" />
+
         <!-- ZONA A — PULSO -->
         <section class="hero" [attr.aria-label]="'inventory.financialSummary' | translate">
           <article class="hero-card">

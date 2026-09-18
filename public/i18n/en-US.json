@@ -1065,6 +1065,13 @@
       "listings": "Your listings: title, SKU, price and stock"
     }
   },
+  "pendencias": {
+    "ml_reconectar": "The Mercado Livre connection expired — nothing new has arrived since",
+    "caixa_esperando": "{{total}} captured sale(s) waiting on you, totalling {{valor}}",
+    "estoque_parado": "{{total}} stalled batch(es), with {{valor}} tied up",
+    "devolucao_aberta": "{{total}} open return(s), {{valor}} at risk",
+    "mei_teto": "You have used {{pct}}% of this year's MEI ceiling"
+  },
   "alerts": {
     "listLabel": "Operation alerts",
     "resolve": "Fix",

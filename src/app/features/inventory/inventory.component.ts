@@ -4,6 +4,7 @@ import {
   computed,
   effect,
   inject,
+  input,
   signal,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
@@ -12,6 +13,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { DataService } from '../../core/services/data.service';
+import { MlIntegrationService } from '../../core/services/ml-integration.service';
+import { montarPendencias } from '../../core/pendencias';
 import { NotifyService } from '../../core/services/notify.service';
 import { QuickActionsService } from '../../core/services/quick-actions.service';
 import { ComputedPurchase, InventoryStatus, Purchase } from '../../core/models/models';
@@ -22,6 +25,7 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { BatchDetailPanelComponent } from '../../shared/components/batch-detail-panel.component';
+import { PendenciasCardComponent } from '../../shared/components/pendencias-card.component';
 import { ColorPillComponent } from '../../shared/components/color-pill.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
@@ -59,6 +63,7 @@ interface MobileSortOption {
     RouterLink, FormsModule, TranslateModule,
     PageHeaderComponent, KpiCardComponent, StatusBadgeComponent,
     EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent,
+    PendenciasCardComponent,
     BrlPipe, BrDatePipe, DatePipe,
     ButtonComponent, IconComponent, TooltipDirective, ChipComponent, DrawerComponent,
     MoneyComponent, SortDirective, SortHeaderComponent, PaginatorComponent,
@@ -69,6 +74,7 @@ interface MobileSortOption {
 })
 export class InventoryComponent {
   protected readonly data = inject(DataService);
+  private readonly ml = inject(MlIntegrationService);
   private readonly dialog = inject(DialogService);
   private readonly notify = inject(NotifyService);
   private readonly quick = inject(QuickActionsService);
@@ -78,6 +84,17 @@ export class InventoryComponent {
   protected readonly kpis = this.data.kpis;
 
   protected readonly filter = signal<FilterKey>('all');
+
+  /**
+   * Filtro vindo da query (`/inventory?status=Parado`).
+   *
+   * É o que faz o "Resolver" da pauta chegar na tabela já filtrada. Sem isto o
+   * link apontaria para a própria tela e não faria nada — pior que não ter
+   * link, porque promete uma ação e não entrega.
+   *
+   * Chega por `withComponentInputBinding()` (ver app.config.ts).
+   */
+  readonly status = input<string | undefined>(undefined);
 
   /** Linha expandida inline (só desktop). */
   protected readonly expandedRow = signal<string | null>(null);
@@ -118,6 +135,15 @@ export class InventoryComponent {
     effect(() => {
       this.filter();
       this.pageState.update(p => ({ ...p, pageIndex: 0 }));
+    }, { allowSignalWrites: true });
+
+    /* Aplica o filtro da query. Só valores conhecidos: um `?status=qualquer`
+       na barra de endereços não pode deixar a tabela vazia sem explicação. */
+    effect(() => {
+      const vindo = this.status();
+      if (vindo && vindo in this.statusCounts()) {
+        this.filter.set(vindo as FilterKey);
+      }
     }, { allowSignalWrites: true });
   }
 
@@ -221,6 +247,31 @@ export class InventoryComponent {
     this.data.computedPurchases()
       .filter(c => c.status === 'Parado' || c.status === 'Atenção')
       .sort((a, b) => b.daysInStock - a.daysInStock)
+  );
+
+  /**
+   * A pauta do dia, somada de todos os cantos do app.
+   *
+   * Esta é a rota inicial, e até setembro/2026 ela respondia só "como vai o
+   * negócio". O que exige ação estava espalhado por cinco telas — caixa do ML,
+   * estoque parado, devolução aberta, teto do MEI, conexão vencida — e nenhuma
+   * delas é a primeira que se abre de manhã.
+   *
+   * A decisão do que merece aparecer mora em `core/pendencias.ts`, puro e
+   * testado; aqui só se junta o retrato.
+   */
+  protected readonly pendencias = computed(() =>
+    montarPendencias({
+      precisaReconectar: this.ml.needsReconnect(),
+      caixaEsperando: this.ml.inboxPendentes().length,
+      caixaValor: this.ml
+        .inboxPendentes()
+        .reduce((s, i) => s + i.unitPrice * i.quantitySold, 0),
+      lotes: this.data.computedPurchases(),
+      devolucoes: this.data.computedReturns(),
+      bandaFiscal: this.data.fiscalConfig().regime === 'none' ? null : this.data.fiscalStatus().band,
+      usoDoTeto: this.data.fiscalStatus().usagePct,
+    }),
   );
 
   protected readonly alertLevel = computed<'high' | 'medium'>(() =>

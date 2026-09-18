@@ -1065,6 +1065,13 @@
       "listings": "Seus anúncios: título, SKU, preço e estoque"
     }
   },
+  "pendencias": {
+    "ml_reconectar": "A conexão com o Mercado Livre venceu — nada novo está chegando desde então",
+    "caixa_esperando": "{{total}} venda(s) capturada(s) esperando sua decisão, somando {{valor}}",
+    "estoque_parado": "{{total}} lote(s) parado(s), com {{valor}} imobilizados",
+    "devolucao_aberta": "{{total}} devolução(ões) em aberto, {{valor}} em risco",
+    "mei_teto": "Você já usou {{pct}}% do teto do MEI neste ano"
+  },
   "alerts": {
     "listLabel": "Alertas de operação",
     "resolve": "Resolver",

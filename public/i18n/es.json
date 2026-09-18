@@ -1065,6 +1065,13 @@
       "listings": "Tus publicaciones: título, SKU, precio y stock"
     }
   },
+  "pendencias": {
+    "ml_reconectar": "La conexión con Mercado Libre venció — nada nuevo llegó desde entonces",
+    "caixa_esperando": "{{total}} venta(s) capturada(s) esperando tu decisión, sumando {{valor}}",
+    "estoque_parado": "{{total}} lote(s) parado(s), con {{valor}} inmovilizados",
+    "devolucao_aberta": "{{total}} devolución(es) abierta(s), {{valor}} en riesgo",
+    "mei_teto": "Ya usaste {{pct}}% del tope del MEI de este año"
+  },
   "alerts": {
     "listLabel": "Alertas de operación",
     "resolve": "Resolver",
