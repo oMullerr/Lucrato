@@ -156,8 +156,6 @@ export interface Settings {
    * vinculado a um produto com estoque. Ausente ⇒ true.
    */
   mlAutoApply?: boolean;
-  /** Percentual de imposto usado como padrao na calculadora. Ausente ⇒ 0. */
-  taxPercentage?: number;
 }
 
 /** Purchase with derived computed fields */

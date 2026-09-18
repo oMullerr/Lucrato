@@ -1,261 +1,169 @@
-# 📦 Lucrato
+# Lucrato
 
-Sistema de gestão de compras, vendas e estoque para vendedores do **Mercado Livre** (e outros marketplaces). Construído em **Angular 18 + Material**, com tema **light/dark**, gráficos interativos e sincronização em tempo real via **Firebase**.
+Painel financeiro do revendedor do Mercado Livre. Responde uma pergunta que o painel do próprio
+marketplace não responde: **quanto sobrou de verdade**, depois da comissão real, do frete, do
+desconto, da devolução e do custo do lote de onde a unidade saiu.
 
-![Angular](https://img.shields.io/badge/Angular-18-DD0031?style=flat-square&logo=angular)
-![Material](https://img.shields.io/badge/Material-18-757575?style=flat-square&logo=material-design)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?style=flat-square&logo=typescript)
-![Firebase](https://img.shields.io/badge/Firebase-10-FFCA28?style=flat-square&logo=firebase)
-
----
-
-## 🎯 Funcionalidades
-
-- **📦 Estoque** — visão executiva com KPIs, status de cada lote, alertas visuais (amarelo ≥25 dias, vermelho ≥30 dias).
-- **🛒 Compras** — cadastro de lotes com cálculo automático de custo total real (custo + frete + outros).
-- **💰 Vendas** — registro de cada venda individual, com **taxa ML customizável por venda**, suporte a envio Correios e Flex, vínculo ao lote via ID e cálculo de lucro/margem em tempo real.
-- **📈 Dashboard** — gráficos de evolução mensal, ranking de produtos, composição da receita e capital parado.
-- **📊 Análises** — resumos por produto, categoria e mês com tabelas detalhadas.
-- **⚙️ Configurações** — taxa padrão, margem mínima, dias de alerta, listas editáveis.
-- **🌗 Light/Dark mode** com persistência e detecção da preferência do sistema.
-- **💾 Backup** — exportação e importação de dados em JSON.
-- **🔐 Login por usuário** — cada loja tem seus próprios dados isolados via Firebase Auth.
-- **☁️ Sincronização automática** — dados salvos no Firestore, acessíveis em qualquer dispositivo.
-- **📱 Responsivo** — funciona em desktop, tablet e mobile.
+Angular 18 · design system próprio · Firebase (Auth + Firestore + Cloud Functions) · PWA.
 
 ---
 
-## 🚀 Como rodar
+## O modelo
 
-### Pré-requisitos
+Tudo gira em torno de uma premissa: **cada lote de compra tem seu próprio custo, e cada venda
+puxa o custo do lote de onde saiu.** Comprar o mesmo produto duas vezes por preços diferentes
+gera dois lotes, e o lucro de cada venda depende de qual deles a unidade veio.
 
-- Node.js 18.19+ ou 20.11+
-- npm 9+
-- Projeto Firebase configurado (veja a seção abaixo)
+```
+Compra (lote)  →  custo unitário real = (qtd × custo + frete + outros) / qtd
+     ↓
+Venda          →  lucro = receita − comissão − frete − desconto − custo do lote
+     ↓
+Devolução      →  reverte receita proporcionalmente; comissão e frete original ficam como prejuízo
+```
 
-### Instalação e execução
+Nenhuma métrica é armazenada. Tudo é derivado em tempo real por funções puras em
+[`core/services/calculations.ts`](src/app/core/services/calculations.ts), cobertas por testes.
+
+---
+
+## A integração com o Mercado Livre
+
+Somente leitura — o Lucrato **nunca** escreve no Mercado Livre. O cliente HTTP
+([`functions/src/ml/client.ts`](functions/src/ml/client.ts)) expõe apenas `GET`, de propósito.
+
+```
+Mercado Livre ──webhook + poller (15min)──> Cloud Functions ──> users/{uid}/mlInbox
+                                                                        │
+                                                              app aberto no navegador
+                                                                        ↓
+                                                        users/{uid}/db/main  (o razão)
+```
+
+A function não escreve no razão: o app grava arrays inteiros e o Firestore não faz transação
+offline, então uma escrita do servidor poderia ser sobrescrita em silêncio pela próxima gravação
+do navegador. A caixa de entrada é durável, e o app aplica de lá — automaticamente quando o
+anúncio já está vinculado e há estoque, e sob sua decisão no resto dos casos.
+
+O que a integração traz: vendas, comissão real por venda, frete do vendedor, devoluções,
+anúncios, visitas, reputação, fatura do ML e previsão de liberação do dinheiro.
+
+**O que ela nunca vai trazer:** quanto você pagou ao fornecedor. Por isso a tela de Compras
+continua sendo entrada manual — sem lote não há custo, e sem custo não há lucro.
+
+---
+
+## Rodando
+
+Node 20+ e npm 9+.
 
 ```bash
-# 1. Instale as dependências
 npm install
-
-# 2. Configure o Firebase (preencha src/environments/environment.ts)
-
-# 3. Rode em modo desenvolvimento
-npm start
-# Abre em http://localhost:4200
-
-# 4. Build de produção
-npm run build
-# Gera os arquivos em dist/ml-gestao/browser
+npm start          # http://localhost:4200, aponta para o projeto lucrato-dev
 ```
 
----
-
-## 🛠️ Stack
-
-- [Angular 18](https://angular.dev) — framework
-- [Angular Material 18](https://material.angular.io) — componentes UI
-- [Firebase 10](https://firebase.google.com) + [@angular/fire](https://github.com/angular/angularfire) — autenticação e banco de dados em tempo real
-- [Chart.js](https://www.chartjs.org) + [ng2-charts](https://github.com/valor-software/ng2-charts) — gráficos
-- [TypeScript 5.5](https://www.typescriptlang.org) — tipagem estrita
-- [Inter](https://fonts.google.com/specimen/Inter) — tipografia
-
----
-
-## 🔥 Configuração do Firebase
-
-Este guia explica como conectar o Lucrato ao seu projeto Firebase para habilitar sincronização em tempo real e login de usuários.
-
-### O que você vai precisar
-
-- Conta Google (gmail.com ou similar)
-- Node.js 18+ instalado
-- Projeto clonado e dependências instaladas (`npm install`)
+| Comando | O que faz |
+|---|---|
+| `npm test` | Testes do app (Jest, fuso fixado em `America/Sao_Paulo`) |
+| `npm run test:functions` | Testes das Cloud Functions |
+| `npm run test:rules` | Testes das security rules (precisa do emulador do Firestore) |
+| `npm run build` | Build de produção em `dist/ml-gestao/browser` |
+| `npm run smoke` | Smoke do Playwright **contra produção** |
+| `npm run build:ext` | Extensão de navegador em `extension/dist` |
+| `node scripts/audit-mobile.mjs` | Auditoria estática de responsividade |
 
 ---
 
-### Passo 1 — Criar o projeto no Firebase
+## Estrutura dos dados
 
-1. Acesse **console.firebase.google.com**
-2. Clique em **"Adicionar projeto"**
-3. Escolha um nome (ex: `lucrato-minha-loja`)
-4. Desative o Google Analytics (opcional) e clique em **Criar projeto**
-5. Aguarde a criação e clique em **Continuar**
-
----
-
-### Passo 2 — Registrar o app Web
-
-1. Na tela inicial do projeto, clique no ícone **`</>`** (Web)
-2. Dê um apelido ao app (ex: `lucrato-web`) — **não** marque "Firebase Hosting"
-3. Clique em **Registrar app**
-4. O Firebase vai exibir um bloco de código com `firebaseConfig`. **Copie esses valores** — você vai precisar deles no Passo 5:
-
-```js
-const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "meu-projeto.firebaseapp.com",
-  projectId: "meu-projeto",
-  storageBucket: "meu-projeto.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abc123"
-};
+```
+users/{uid}/db/main        o razão: purchases[], sales[], returns[], settings   (app escreve)
+users/{uid}/db/analyses    histórico da calculadora                             (app escreve)
+users/{uid}/db/ml          estado da integração                                 (só servidor)
+users/{uid}/secret/ml      tokens do Mercado Livre            (negado ao navegador)
+users/{uid}/mlInbox        vendas esperando entrar no razão                     (só servidor)
+users/{uid}/mlItems        anúncios sincronizados                               (só servidor)
+users/{uid}/mlLinks        vínculo anúncio → produto                            (só servidor)
+users/{uid}/mlReturns      devoluções vindas do ML                              (só servidor)
+users/{uid}/mlBilling      fatura do ML por período                             (só servidor)
+users/{uid}/mlPayouts      liberação do dinheiro por pedido                     (só servidor)
+users/{uid}/mlOrders       payload cru dos pedidos (auditoria)   (negado ao navegador)
+mlIndex/{mlUserId}         mapeia user_id do ML → uid            (negado ao navegador)
 ```
 
-5. Clique em **Continuar no console**
+Quem pode ler o quê está em [`firestore.rules`](firestore.rules), que termina em deny-all
+explícito.
 
 ---
 
-### Passo 3 — Ativar autenticação por E-mail/Senha
+## Configurando um projeto Firebase do zero
 
-1. No menu lateral do Firebase, clique em **Authentication**
-2. Clique na aba **"Sign-in method"**
-3. Clique em **"E-mail/senha"**
-4. Ative o primeiro interruptor (**E-mail/senha**) e clique em **Salvar**
-
----
-
-### Passo 4 — Criar o banco de dados Firestore
-
-1. No menu lateral, clique em **Firestore Database**
-2. Clique em **"Criar banco de dados"**
-3. Escolha **"Começar no modo de produção"** e clique em **Avançar**
-4. Selecione a região mais próxima (ex: `southamerica-east1` para São Paulo) e clique em **Ativar**
-5. Aguarde a criação do banco
-
-### Configurar as regras de segurança
-
-As regras restritivas já estão versionadas em [firestore.rules](firestore.rules) na raiz do projeto. Use o Firebase CLI para publicá-las (não cole manualmente no console):
+1. **Criar o projeto** em console.firebase.google.com.
+2. **Registrar o app Web** (`</>`), sem marcar Firebase Hosting. Copie o `firebaseConfig`.
+3. **Authentication** → Sign-in method → ativar **E-mail/senha**.
+4. **Firestore Database** → criar em modo de produção, região `southamerica-east1`
+   (a mesma das functions — ver [`functions/src/config.ts`](functions/src/config.ts)).
+5. **Colar o config** em [`src/environments/environment.ts`](src/environments/environment.ts)
+   (dev) e `environment.prod.ts` (produção).
+6. **Publicar as rules** pelo CLI, nunca colando no console:
 
 ```bash
-npx firebase-tools login                                           # 1ª vez
 npx firebase-tools deploy --only firestore:rules --project lucrato-web
 ```
 
-> As regras restringem cada usuário ao seu próprio subtree **e exigem e-mail verificado**. Sem este deploy, qualquer pessoa autenticada poderia acessar dados de outros usuários.
-
----
-
-### Passo 5 — Configurar o app com suas credenciais
-
-1. Abra o arquivo `src/environments/environment.ts` no projeto
-2. Substitua os valores placeholder pelos que você copiou no Passo 2:
-
-```typescript
-export const environment = {
-  production: false,
-  firebase: {
-    apiKey: 'AIzaSy...',
-    authDomain: 'meu-projeto.firebaseapp.com',
-    projectId: 'meu-projeto',
-    storageBucket: 'meu-projeto.appspot.com',
-    messagingSenderId: '123456789',
-    appId: '1:123456789:web:abc123',
-  },
-};
-```
-
-3. Faça o mesmo no arquivo `src/environments/environment.prod.ts`
-
----
-
-### Passo 6 — Executar o app
-
-```bash
-npm start
-```
-
-Abra **http://localhost:4200** no navegador.
-
-- Na primeira vez, você verá a tela de **Login**
-- Clique em **"Criar conta"** para registrar seu e-mail, senha e nome da loja
-- Após o cadastro, você será redirecionado para o Estoque
-- Os dados são salvos automaticamente no Firestore e sincronizados em todos os dispositivos
-
----
-
-### Estrutura dos dados no Firestore
-
-Cada usuário tem um documento exclusivo no caminho:
-
-```
-users/{uid}/db/main
-```
-
----
-
-### Build de produção
-
-```bash
-npm run build
-```
-
-Os arquivos gerados ficam em `dist/`. Podem ser hospedados em qualquer servidor estático (Firebase Hosting, Netlify, Vercel, etc.).
-
-### Deploy com Firebase Hosting (opcional)
-
-```bash
-npm install -g firebase-tools
-firebase login
-firebase init hosting
-npm run build
-firebase deploy
-```
+Para a integração com o Mercado Livre, os segredos do app do DevCenter vão para o Secret
+Manager (`ML_CLIENT_ID`, `ML_CLIENT_SECRET`) — nunca para o repositório. As duas URLs não
+secretas (`ML_REDIRECT_URI`, `APP_ORIGINS`) ficam em `functions/.env.<projeto>`.
 
 ---
 
 ## Segurança
 
-A aplicação implementa defesa em profundidade nas seguintes camadas:
-
 | Camada | Onde |
-| --- | --- |
-| Firestore Rules: isolamento por UID + `email_verified` + validação de formato/tamanho + deny-all | [firestore.rules](firestore.rules) |
-| HTTP security headers (CSP, HSTS, X-Frame, nosniff, Referrer, Permissions) | [vercel.json](vercel.json) |
-| Verificação de e-mail obrigatória (guard + rules) | [src/app/core/guards/auth.guard.ts](src/app/core/guards/auth.guard.ts) |
-| Política de senha forte (8+ chars, letra+número) | [src/app/core/services/password-validator.ts](src/app/core/services/password-validator.ts) |
-| Forgot password (sem enumeração de contas) | [src/app/features/auth/forgot-password.dialog.ts](src/app/features/auth/forgot-password.dialog.ts) |
-| Re-autenticação antes de trocar senha / excluir conta | [src/app/features/profile/profile.component.ts](src/app/features/profile/profile.component.ts) |
-| Limites de upload XLSX (5 MB, 5000 linhas/aba, extensão) | [src/app/features/settings/settings.component.ts](src/app/features/settings/settings.component.ts) |
-| Leitura de planilha pela build **corrigida** do SheetJS (xlsx 0.20.x) | [src/app/core/services/import.service.ts](src/app/core/services/import.service.ts) |
-| Logs detalhados desligados em produção | [src/app/core/services/logger.ts](src/app/core/services/logger.ts) |
+|---|---|
+| Isolamento por UID + `email_verified` + validação de formato/tamanho + deny-all | [firestore.rules](firestore.rules) |
+| Headers HTTP (CSP, HSTS, X-Frame, nosniff, Referrer, Permissions) | [vercel.json](vercel.json) |
+| CSP verificado diretriz por diretriz | [src/csp.spec.ts](src/csp.spec.ts) + [e2e/smoke.spec.ts](e2e/smoke.spec.ts) |
+| E-mail verificado obrigatório (guard + rules) | [auth.guard.ts](src/app/core/guards/auth.guard.ts) |
+| Senha forte (8+ caracteres, letra + número) | [password-validator.ts](src/app/core/services/password-validator.ts) |
+| Recuperação de senha sem enumeração de contas | [forgot-password.dialog.ts](src/app/features/auth/forgot-password.dialog.ts) |
+| Re-autenticação antes de trocar senha ou excluir conta | [profile.component.ts](src/app/features/profile/profile.component.ts) |
+| OAuth com PKCE, `state` de uso único em transação, TTL de 10 min | [functions/src/ml/oauth.ts](functions/src/ml/oauth.ts) |
+| Refresh token de uso único protegido por lock em transação | [functions/src/ml/tokens.ts](functions/src/ml/tokens.ts) |
+| Cliente da API do ML só expõe `GET` | [functions/src/ml/client.ts](functions/src/ml/client.ts) |
+| Reporte de erro do navegador com alta rigorosa de campos e teto por minuto | [functions/src/client-errors.ts](functions/src/client-errors.ts) |
+| Limites de upload XLSX (5 MB, extensão conferida) | [settings.component.ts](src/app/features/settings/settings.component.ts) |
 
-### 🛡️ Operações de segurança no console (checklist)
+### Checklist do console
 
-Algumas proteções não vivem no código — precisam ser ativadas nos consoles do Firebase / Google Cloud.
-Faça este checklist no setup e revise periodicamente:
+Proteções que não moram no código. Fazer no setup e revisar de tempos em tempos:
 
-- [ ] **Proteção contra enumeração de e-mail** — Firebase Console → Authentication → Settings →
-      *Email enumeration protection* (ativar). Impede descobrir quais e-mails têm conta pelo cadastro.
-- [ ] **Restringir a API key Web** — Google Cloud Console → APIs & Services → Credentials → a *Browser key* →
-      *Application restrictions* = HTTP referrers (`localhost` + domínio de produção) e *API restrictions* = só
-      as APIs usadas (Identity Toolkit, Cloud Firestore, Firebase Installations). A `apiKey` no
-      `environment.ts` é pública por design, mas a restrição impede reuso/abuso de cota a partir de outros domínios.
-- [ ] **Backups do Firestore** — Firebase Console → Firestore → *Point-in-time recovery* (ativar) e/ou agendar
-      exports para um bucket GCS. Recupera dados após exclusão acidental ou maliciosa.
-- [ ] **Publicar as Firestore Rules** após qualquer alteração:
-      `npx firebase-tools deploy --only firestore:rules --project lucrato-web`
-      — teste antes no *Rules Playground* / emulador para não bloquear gravações legítimas.
+- [ ] **Proteção contra enumeração de e-mail** — Authentication → Settings.
+- [ ] **Restringir a API key Web** — Google Cloud → Credentials → Browser key → HTTP referrers
+      (`localhost` + domínio de produção) e só as APIs usadas. A `apiKey` é pública por design;
+      a restrição impede reuso de cota a partir de outros domínios.
+- [ ] **Point-in-time recovery** no Firestore, e/ou exports agendados para um bucket GCS.
+- [ ] **Orçamento com alerta** no Google Cloud Billing — o webhook do ML é um endpoint público.
+- [ ] **Republicar as rules** depois de qualquer alteração, testando antes no emulador.
 
 ### Notas técnicas
 
-- **CSP / `unsafe-inline` em estilos**: a diretiva `style-src` permite `'unsafe-inline'` porque o Angular
-  Material injeta estilos inline (necessário). Os **scripts** *não* permitem `unsafe-inline`/`unsafe-eval`
-  (apenas `wasm-unsafe-eval`), mantendo a proteção anti-XSS importante. Se algum recurso bloquear em produção,
-  abra DevTools → Console no domínio Vercel e ajuste a diretiva correspondente em [vercel.json](vercel.json).
-- **Parser de planilha**: a leitura de arquivos enviados usa a build oficial **corrigida** do SheetJS,
-  instalada a partir do CDN deles (o registro npm está congelado numa versão vulnerável — CVE-2023-30533 /
-  CVE-2024-22363). Para reproduzir o ambiente após um clone limpo:
-  `npm install --save https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`. O `xlsx-js-style` permanece apenas
-  para **gerar** planilhas estilizadas (a escrita não processa entrada não-confiável).
+- **`unsafe-inline` em `style-src`**: necessário para os estilos inline do Angular. Os
+  **scripts** não permitem `unsafe-inline` nem `unsafe-eval` (só `wasm-unsafe-eval`), que é o
+  que importa contra XSS.
+- **Service worker e CSP**: o CSP que vale para o worker é o do dia em que ele foi instalado, e
+  o arquivo nunca muda byte a byte — então o navegador nunca o reinstala. Por isso a URL do
+  worker carrega `?csp=<hash>`, gerado no build por `scripts/gerar-versao-csp.mjs`. Mexeu no
+  CSP, a URL muda sozinha e o worker é trocado. Já derrubou a produção duas vezes.
+- **Parser de planilha**: a leitura usa a build corrigida do SheetJS (`xlsx` 0.20.x, instalada
+  do CDN deles — o registro npm está congelado numa versão com CVE-2023-30533 e CVE-2024-22363).
+  O `xlsx-js-style` fica só para **gerar** planilhas estilizadas, caminho que não processa
+  entrada não-confiável. Após um clone limpo:
+  `npm install --save https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`.
 
-## TODO
+---
 
-- Ler como ficou o texto das instruções
-- tag de tipo de envio (correio/flex/full)
-- manter os dados no modal, mesmo se fechar a modal
-- adicionar logica do full e agencia
-- usuario escolher se ele quer colocar as taxas manualmente ou colocar só o valor vendido, valor anunciado e taxa de envio e o sistema calcula as taxas automaticamente
+## Auditoria de setembro/2026
 
-## BUGS
+Um mapa de melhorias — segurança, arquitetura, telas redundantes, métricas e layout — foi
+levantado e está sendo executado na branch `auditoria/2026-09`.
