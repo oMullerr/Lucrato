@@ -53,8 +53,12 @@
       </div>
     </section>
 
-    @if (ml.connected()) {
-      <!-- O comportamento mais consequente do app precisa ser visível e negociável. -->
+    @if (ml.connected() || ml.needsReconnect()) {
+      <!-- O comportamento mais consequente do app precisa ser visível e negociável.
+           `needsReconnect` também conta: a conta continua sendo sua, só a
+           autorização venceu — esconder o interruptor ali deixaria a
+           configuração inalcançável justo em quem tem caixa acumulada para
+           aplicar depois de reconectar. -->
       <section class="info-card auto-apply">
         <div class="auto-apply-head">
           <div class="auto-apply-text">
