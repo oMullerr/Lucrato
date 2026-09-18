@@ -1047,6 +1047,11 @@
     "disconnected": "Mercado Livre desconectado.",
     "disconnectError": "Não deu para desconectar. Tente de novo.",
     "connectError": "Não deu para iniciar a conexão. Tente de novo.",
+    "autoApplyTitle": "Lançar as vendas sozinho",
+    "autoApplyHelp": "Quando o anúncio já está vinculado a um produto com estoque, a venda entra no razão assim que chega — sem passar pela sua conferência. O resto continua esperando você na caixa de entrada.",
+    "autoApplyOn": "Lançamento automático ligado.",
+    "autoApplyOff": "Lançamento automático desligado.",
+    "autoApplyOffNote": "Desligado: nenhuma venda entra no razão sozinha. Todas ficam na caixa de entrada esperando você aplicar.",
     "readsTitle": "O que o Lucrato lê da sua conta",
     "readOnly": "Somente leitura: o Lucrato nunca altera preço, estoque nem publica anúncios.",
     "reads": {

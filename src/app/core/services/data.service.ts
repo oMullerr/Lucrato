@@ -78,6 +78,14 @@ export class DataService {
   /** Anos-base com DASN-SIMEI entregue. */
   readonly dasnDeclaredYears = computed<number[]>(() => this.settings()?.dasnDeclaredYears ?? []);
 
+  /**
+   * Lançamento automático das vendas do ML ligado? Ausente ⇒ ligado.
+   *
+   * Mesma leitura que o `MlAutoApplyService` faz para decidir se roda — uma
+   * fonte só, para a tela nunca mostrar um estado que o serviço não respeita.
+   */
+  readonly mlAutoApply = computed(() => this.settings()?.mlAutoApply !== false);
+
   constructor() {
     effect(() => {
       const u = this.auth.currentUser();
@@ -329,6 +337,17 @@ export class DataService {
     const set = new Set(this.dasnDeclaredYears());
     if (declared) set.add(baseYear); else set.delete(baseYear);
     await this.mergeSettings({ dasnDeclaredYears: [...set].sort((a, b) => a - b) });
+  }
+
+  /**
+   * Liga ou desliga o lançamento automático das vendas do Mercado Livre.
+   *
+   * A configuração existia desde a integração, com o serviço respeitando-a e o
+   * padrão em `true` — mas nenhuma tela permitia mexer. O comportamento mais
+   * consequente do app (escrever no razão sozinho) era invisível e inegociável.
+   */
+  async setMlAutoApply(on: boolean): Promise<void> {
+    await this.mergeSettings({ mlAutoApply: on });
   }
 
   addPurchase(purchase: Purchase): void {

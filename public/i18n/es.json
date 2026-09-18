@@ -1047,6 +1047,11 @@
     "disconnected": "Mercado Libre desconectado.",
     "disconnectError": "No se pudo desconectar. Probá de nuevo.",
     "connectError": "No se pudo iniciar la conexión. Probá de nuevo.",
+    "autoApplyTitle": "Registrar las ventas solo",
+    "autoApplyHelp": "Cuando el anuncio ya está vinculado a un producto con stock, la venta entra al libro apenas llega — sin pasar por tu revisión. El resto sigue esperándote en la bandeja de entrada.",
+    "autoApplyOn": "Registro automático activado.",
+    "autoApplyOff": "Registro automático desactivado.",
+    "autoApplyOffNote": "Desactivado: ninguna venta entra al libro sola. Todas quedan en la bandeja de entrada esperando que las apliques.",
     "readsTitle": "Qué lee Lucrato de tu cuenta",
     "readOnly": "Solo lectura: Lucrato nunca cambia precios ni stock, ni publica anuncios.",
     "reads": {

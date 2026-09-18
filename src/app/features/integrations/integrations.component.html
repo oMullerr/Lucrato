@@ -53,6 +53,30 @@
       </div>
     </section>
 
+    @if (ml.connected()) {
+      <!-- O comportamento mais consequente do app precisa ser visível e negociável. -->
+      <section class="info-card auto-apply">
+        <div class="auto-apply-head">
+          <div class="auto-apply-text">
+            <h3>{{ 'integrations.autoApplyTitle' | translate }}</h3>
+            <p>{{ 'integrations.autoApplyHelp' | translate }}</p>
+          </div>
+          <app-switch
+            [ngModel]="data.mlAutoApply()"
+            (ngModelChange)="alternarAutoApply($event)"
+            [disabled]="salvandoAutoApply() || !data.loaded()"
+            [attr.aria-label]="'integrations.autoApplyTitle' | translate"
+          />
+        </div>
+        @if (!data.mlAutoApply()) {
+          <p class="auto-apply-warn">
+            <app-icon name="triangle-alert" />
+            {{ 'integrations.autoApplyOffNote' | translate }}
+          </p>
+        }
+      </section>
+    }
+
     <!-- O que a integração faz, em português claro -->
     <section class="info-card">
       <h3>{{ 'integrations.readsTitle' | translate }}</h3>

@@ -1047,6 +1047,11 @@
     "disconnected": "Mercado Livre disconnected.",
     "disconnectError": "Could not disconnect. Please try again.",
     "connectError": "Could not start the connection. Please try again.",
+    "autoApplyTitle": "Post sales automatically",
+    "autoApplyHelp": "When a listing is already linked to a product that has stock, the sale is posted to the ledger as soon as it arrives — without waiting for your review. Everything else still waits for you in the inbox.",
+    "autoApplyOn": "Automatic posting on.",
+    "autoApplyOff": "Automatic posting off.",
+    "autoApplyOffNote": "Off: no sale is posted to the ledger on its own. They all wait in the inbox for you to apply.",
     "readsTitle": "What Lucrato reads from your account",
     "readOnly": "Read-only: Lucrato never changes prices, stock, or publishes listings.",
     "reads": {
