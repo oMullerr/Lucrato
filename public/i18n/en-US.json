@@ -1143,6 +1143,7 @@
   },
   "mlInbox": {
     "title": "Mercado Livre inbox",
+    "staleData": "Authorization expired — nothing new is arriving, but what was already captured is still here waiting for you.",
     "eyebrow": "Automatic sales",
     "subtitle": "Sales that arrived from Mercado Livre and could not be posted on their own yet.",
     "applyNow": "Try to apply now",
@@ -1257,6 +1258,7 @@
   },
   "billing": {
     "title": "Billing",
+    "staleData": "Authorization expired — these are the last synced periods. Reconnect to refresh.",
     "eyebrow": "Mercado Livre",
     "subtitle": "What Mercado Livre charged on the invoice, checked against what Lucrato recorded.",
     "sync": "Check invoice",
@@ -1350,6 +1352,7 @@
   },
   "cashFlow": {
     "title": "Cash flow",
+    "staleData": "Authorization expired — these are the last synced payouts. Reconnect to refresh.",
     "eyebrow": "Mercado Livre",
     "subtitle": "When each sale's money lands in your Mercado Pago account.",
     "sync": "Refresh receivables",

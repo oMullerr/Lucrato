@@ -1143,6 +1143,7 @@
   },
   "mlInbox": {
     "title": "Caixa de entrada do Mercado Livre",
+    "staleData": "A autorização venceu — nada novo está chegando, mas o que já foi capturado continua aqui esperando você.",
     "eyebrow": "Vendas automáticas",
     "subtitle": "Vendas que chegaram do Mercado Livre e ainda não puderam entrar sozinhas.",
     "applyNow": "Tentar aplicar agora",
@@ -1257,6 +1258,7 @@
   },
   "billing": {
     "title": "Faturamento",
+    "staleData": "A autorização venceu — estes são os últimos períodos sincronizados. Reconecte para atualizar.",
     "eyebrow": "Mercado Livre",
     "subtitle": "O que o Mercado Livre cobrou na fatura, confrontado com o que o Lucrato registrou.",
     "sync": "Conferir fatura",
@@ -1350,6 +1352,7 @@
   },
   "cashFlow": {
     "title": "Fluxo de caixa",
+    "staleData": "A autorização venceu — estas são as últimas liberações sincronizadas. Reconecte para atualizar.",
     "eyebrow": "Mercado Livre",
     "subtitle": "Quando o dinheiro de cada venda cai na sua conta do Mercado Pago.",
     "sync": "Atualizar recebíveis",
