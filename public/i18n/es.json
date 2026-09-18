@@ -33,6 +33,7 @@
     "billing": "Facturación · Lucrato",
     "mlGuide": "Guía de Mercado Libre · Lucrato",
     "guide": "Guía · Lucrato",
+    "closing": "Cierre · Lucrato",
     "cashFlow": "Flujo de caja · Lucrato"
   },
   "common": {
@@ -66,6 +67,7 @@
     "groupRecords": "REGISTROS",
     "groupSystem": "SISTEMA",
     "guide": "Guía",
+    "closing": "Cierre",
     "inventory": "Inventario",
     "inventoryTitle": "Panorama",
     "dashboard": "Panel",
@@ -807,6 +809,36 @@
     "errDeleteServer": "No se pudo eliminar la cuenta ahora — no se borró nada. Probá de nuevo en un momento.",
     "errNetwork": "Error de conexión. Revisa tu internet.",
     "errGeneric": "No se pudo completar la operación. Inténtalo de nuevo."
+  },
+  "closing": {
+    "title": "Cierre del mes",
+    "eyebrow": "DINERO · RESULTADO CERRADO",
+    "subtitle": "El resultado de un mes, quieto en el tiempo — con el mes anterior al lado.",
+    "monthLabel": "Mes",
+    "export": "Exportar",
+    "colLine": "Línea",
+    "colChange": "Variación",
+    "emptyTitle": "Todavía no hay nada cerrado",
+    "emptyMsg": "Apenas haya una compra o una venta, el mes aparece acá.",
+    "noBase": "Sin base de comparación — el mes anterior fue cero",
+    "returnsNote": "La devolución entra en el mes de la venta original, no en el mes en que llegó. Es lo que hace que un mes cerrado siga cerrado.",
+    "row": {
+      "receitaBruta": "Ingreso bruto",
+      "comissao": "(−) Comisión del marketplace",
+      "frete": "(−) Envío",
+      "descontos": "(−) Descuentos",
+      "outrosCustos": "(−) Otros costos",
+      "receitaLiquida": "= Ingreso neto",
+      "cmv": "(−) Costo de los productos vendidos",
+      "perdaComDevolucoes": "(−) Pérdida por devoluciones",
+      "lucroLiquido": "= Ganancia neta",
+      "margem": "Margen neto",
+      "vendas": "Ventas",
+      "unidades": "Unidades",
+      "ticketMedio": "Ticket promedio",
+      "devolucoes": "Devoluciones",
+      "investido": "Comprado en el mes"
+    }
   },
   "guide": {
     "title": "Guía",

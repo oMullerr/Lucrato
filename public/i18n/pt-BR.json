@@ -33,6 +33,7 @@
     "billing": "Faturamento · Lucrato",
     "mlGuide": "Guia do Mercado Livre · Lucrato",
     "guide": "Guia · Lucrato",
+    "closing": "Fechamento · Lucrato",
     "cashFlow": "Fluxo de caixa · Lucrato"
   },
   "common": {
@@ -66,6 +67,7 @@
     "groupRecords": "REGISTROS",
     "groupSystem": "SISTEMA",
     "guide": "Guia",
+    "closing": "Fechamento",
     "inventory": "Estoque",
     "inventoryTitle": "Panorama",
     "dashboard": "Dashboard",
@@ -807,6 +809,36 @@
     "errDeleteServer": "Não deu para excluir a conta agora — nada foi apagado. Tente de novo em instantes.",
     "errNetwork": "Falha de conexão. Verifique sua internet.",
     "errGeneric": "Não foi possível concluir a operação. Tente novamente."
+  },
+  "closing": {
+    "title": "Fechamento do mês",
+    "eyebrow": "DINHEIRO · RESULTADO FECHADO",
+    "subtitle": "O resultado de um mês, parado no tempo — com o mês anterior ao lado.",
+    "monthLabel": "Mês",
+    "export": "Exportar",
+    "colLine": "Linha",
+    "colChange": "Variação",
+    "emptyTitle": "Nada fechado ainda",
+    "emptyMsg": "Assim que houver uma compra ou uma venda, o mês aparece aqui.",
+    "noBase": "Sem base de comparação — o mês anterior foi zero",
+    "returnsNote": "A devolução entra no mês da venda original, não no mês em que chegou. É o que faz um mês fechado continuar fechado.",
+    "row": {
+      "receitaBruta": "Receita bruta",
+      "comissao": "(−) Comissão do marketplace",
+      "frete": "(−) Frete",
+      "descontos": "(−) Descontos",
+      "outrosCustos": "(−) Outros custos",
+      "receitaLiquida": "= Receita líquida",
+      "cmv": "(−) Custo dos produtos vendidos",
+      "perdaComDevolucoes": "(−) Perda com devoluções",
+      "lucroLiquido": "= Lucro líquido",
+      "margem": "Margem líquida",
+      "vendas": "Vendas",
+      "unidades": "Unidades",
+      "ticketMedio": "Ticket médio",
+      "devolucoes": "Devoluções",
+      "investido": "Comprado no mês"
+    }
   },
   "guide": {
     "title": "Guia",

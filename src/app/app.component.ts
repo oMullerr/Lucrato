@@ -74,6 +74,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'nav.groupMoney',
     items: [
+      { path: '/fechamento', label: 'nav.closing', icon: 'calendar-check', title: 'nav.closing' },
       { path: '/fluxo-de-caixa', label: 'nav.cashFlow', icon: 'banknote',  title: 'nav.cashFlow' },
       { path: '/faturamento', label: 'nav.billing', icon: 'receipt-text',  title: 'nav.billing' },
       { path: '/calculadora', label: 'nav.calculator', icon: 'calculator', title: 'nav.calculator' },

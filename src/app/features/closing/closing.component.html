@@ -1,0 +1,89 @@
+<app-page-header
+  [title]="'closing.title' | translate"
+  [eyebrow]="'closing.eyebrow' | translate"
+  [subtitle]="'closing.subtitle' | translate"
+>
+  @if (temMovimento()) {
+    <button appBtn="outline" type="button" (click)="exportar()">
+      <app-icon name="download" [size]="16" />
+      {{ 'closing.export' | translate }}
+    </button>
+  }
+</app-page-header>
+
+<div class="page-content closing-body">
+
+  @if (!data.loaded()) {
+    <app-skeleton variant="table-row" [count]="8" />
+  } @else if (!temMovimento()) {
+    <app-empty-state
+      icon="calendar-check"
+      [title]="'closing.emptyTitle' | translate"
+      [description]="'closing.emptyMsg' | translate"
+    />
+  } @else {
+
+    <app-field class="seletor" [label]="'closing.monthLabel' | translate">
+      <app-select [ngModel]="mes()" (ngModelChange)="escolher($event)">
+        @for (m of meses(); track m) {
+          <app-option [value]="m" [label]="rotulo(m)">{{ rotulo(m) }}</app-option>
+        }
+      </app-select>
+    </app-field>
+
+    <!-- A ordem desce da receita bruta ao lucro, com cada dedução no caminho:
+         ler de cima para baixo responde "para onde foi o dinheiro". -->
+    <section class="dre" [attr.aria-label]="'closing.title' | translate">
+      <header class="dre-head">
+        <span class="col-nome">{{ 'closing.colLine' | translate }}</span>
+        <span class="col-valor">{{ rotulo(mes()) }}</span>
+        @if (fechamento().anterior; as ant) {
+          <span class="col-anterior">{{ rotulo(ant.mes) }}</span>
+          <span class="col-var">{{ 'closing.colChange' | translate }}</span>
+        }
+      </header>
+
+      @for (l of linhas(); track l.chave) {
+        <div class="dre-row" [class.destaque]="l.destaque">
+          <span class="col-nome">{{ 'closing.row.' + l.chave | translate }}</span>
+
+          <span class="col-valor mono">
+            @if (l.tipo === 'percent') {
+              {{ (l.valor * 100).toFixed(1) }}%
+            } @else if (l.tipo === 'count') {
+              {{ l.valor }}
+            } @else {
+              {{ l.valor | brl }}
+            }
+          </span>
+
+          @if (fechamento().anterior) {
+            <span class="col-anterior mono">
+              @if (l.tipo === 'percent') {
+                {{ ((l.anterior ?? 0) * 100).toFixed(1) }}%
+              } @else if (l.tipo === 'count') {
+                {{ l.anterior }}
+              } @else {
+                {{ l.anterior ?? 0 | brl }}
+              }
+            </span>
+
+            <span class="col-var mono" [class]="'var-' + tomDaVariacao(l)">
+              @if (l.variacao === null) {
+                <!-- Partir de zero não é "cresceu infinito". -->
+                <span [title]="'closing.noBase' | translate">—</span>
+              } @else {
+                {{ l.variacao > 0 ? '+' : '' }}{{ (l.variacao * 100).toFixed(1) }}%
+              }
+            </span>
+          }
+        </div>
+      }
+    </section>
+
+    <p class="nota">
+      <app-icon name="rotate-ccw" [size]="15" />
+      {{ 'closing.returnsNote' | translate }}
+    </p>
+  }
+</div>

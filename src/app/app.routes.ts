@@ -96,6 +96,12 @@ export const routes: Routes = [
     title: 'routeTitles.cashFlow',
   },
   {
+    path: 'fechamento',
+    loadComponent: () => import('./features/closing/closing.component').then(m => m.ClosingComponent),
+    canActivate: [authGuard],
+    title: 'routeTitles.closing',
+  },
+  {
     path: 'faturamento',
     loadComponent: () => import('./features/billing/billing.component').then(m => m.BillingComponent),
     canActivate: [authGuard],

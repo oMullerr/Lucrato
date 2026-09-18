@@ -33,6 +33,7 @@
     "billing": "Billing · Lucrato",
     "mlGuide": "Mercado Livre guide · Lucrato",
     "guide": "Guide · Lucrato",
+    "closing": "Month close · Lucrato",
     "cashFlow": "Cash flow · Lucrato"
   },
   "common": {
@@ -66,6 +67,7 @@
     "groupRecords": "RECORDS",
     "groupSystem": "SYSTEM",
     "guide": "Guide",
+    "closing": "Close",
     "inventory": "Inventory",
     "inventoryTitle": "Overview",
     "dashboard": "Dashboard",
@@ -807,6 +809,36 @@
     "errDeleteServer": "Could not delete the account right now — nothing was erased. Please try again in a moment.",
     "errNetwork": "Connection failed. Check your internet.",
     "errGeneric": "Couldn't complete the operation. Please try again."
+  },
+  "closing": {
+    "title": "Month close",
+    "eyebrow": "MONEY · CLOSED RESULT",
+    "subtitle": "One month's result, frozen in time — with the previous month beside it.",
+    "monthLabel": "Month",
+    "export": "Export",
+    "colLine": "Line",
+    "colChange": "Change",
+    "emptyTitle": "Nothing closed yet",
+    "emptyMsg": "As soon as there is a purchase or a sale, the month shows up here.",
+    "noBase": "No basis for comparison — the previous month was zero",
+    "returnsNote": "A return belongs to the month of the original sale, not the month it arrived. That is what keeps a closed month closed.",
+    "row": {
+      "receitaBruta": "Gross revenue",
+      "comissao": "(−) Marketplace commission",
+      "frete": "(−) Shipping",
+      "descontos": "(−) Discounts",
+      "outrosCustos": "(−) Other costs",
+      "receitaLiquida": "= Net revenue",
+      "cmv": "(−) Cost of goods sold",
+      "perdaComDevolucoes": "(−) Loss from returns",
+      "lucroLiquido": "= Net profit",
+      "margem": "Net margin",
+      "vendas": "Sales",
+      "unidades": "Units",
+      "ticketMedio": "Average ticket",
+      "devolucoes": "Returns",
+      "investido": "Purchased in the month"
+    }
   },
   "guide": {
     "title": "Guide",

@@ -1,0 +1,100 @@
+@use '../../../styles/breakpoints' as bp;
+
+.closing-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.seletor {
+  max-width: 260px;
+}
+
+.dre {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-1);
+  overflow: hidden;
+}
+
+/* Quatro colunas quando há mês anterior; o `auto` some sozinho quando o
+   template não renderiza as duas últimas. */
+.dre-head,
+.dre-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 16px;
+  align-items: baseline;
+  padding: 10px 16px;
+}
+
+.dre-head {
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface-2);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.dre-row + .dre-row {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.dre-row.destaque {
+  background: var(--bg-surface-2);
+  font-weight: 600;
+}
+
+.col-nome {
+  min-width: 0;
+  color: var(--text-secondary);
+}
+
+.dre-row.destaque .col-nome {
+  color: var(--text-primary);
+}
+
+.col-valor,
+.col-anterior,
+.col-var {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.col-valor { min-width: 7rem; }
+.col-anterior { min-width: 7rem; color: var(--text-muted); }
+.col-var { min-width: 5rem; }
+
+.var-up { color: var(--color-success); }
+.var-down { color: var(--color-danger); }
+.var-flat { color: var(--text-muted); }
+
+.nota {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+@include bp.below(md) {
+  /* No celular a comparação lado a lado não cabe: o mês anterior e a variação
+     descem para uma segunda linha, alinhados à direita. */
+  .dre-head {
+    display: none;
+  }
+
+  .dre-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 2px;
+  }
+
+  .col-anterior,
+  .col-var {
+    grid-column: 2;
+    font-size: 0.78rem;
+  }
+}
