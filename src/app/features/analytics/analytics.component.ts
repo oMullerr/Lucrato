@@ -6,6 +6,7 @@ import { DataService } from '../../core/services/data.service';
 import { LanguageService } from '../../core/services/language.service';
 import { XlsxExportService, SheetSpec, ResumoSpec, Tone } from '../../core/services/xlsx-export.service';
 import { ComputedPurchase, ComputedReturn, InventoryStatus } from '../../core/models/models';
+import { calcularMetricasDeCapital } from '../../core/metricas';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
@@ -81,6 +82,17 @@ export class AnalyticsComponent {
   private readonly lang = inject(LanguageService);
 
   protected readonly kpis = this.data.kpis;
+
+  /**
+   * Giro, cobertura e ROI.
+   *
+   * Os três podem vir `null` de propósito — estoque zerado não é "giro
+   * infinito", é ausência de base para a conta. Um zero silencioso num painel
+   * financeiro faz alguém decidir compra em cima de um número inventado.
+   */
+  protected readonly capital = computed(() =>
+    calcularMetricasDeCapital(this.data.computedPurchases(), this.data.computedSales()),
+  );
   protected readonly hasData = computed(() =>
     this.data.sales().length > 0 || this.data.purchases().length > 0
   );
@@ -266,6 +278,20 @@ export class AnalyticsComponent {
           { label: tr('analytics.totalDiscounts'), value: k.totalDiscounts, tone: 'neutral' as const, prefix: '' },
           { label: tr('analytics.avgTicket'),      value: k.averageTicket,  tone: 'neutral' as const, prefix: '' },
           { label: tr('analytics.netMargin'),      value: k.netMargin,      tone: 'success' as const, kind: 'percent' as const, emphasis: true },
+        ],
+      },
+      {
+        /* Eficiência do CAPITAL, que é outra pergunta que a margem não responde:
+           margem diz quanto sobra por venda, giro diz quantas vendas o mesmo
+           dinheiro faz por ano. Um produto de 15% que gira seis vezes rende
+           mais que um de 30% que gira uma. */
+        title: tr('analytics.resCapital'),
+        icon: 'refresh-cw' as IconName,
+        rows: [
+          { label: tr('analytics.turnover'),  value: this.capital().giroAnual,     tone: 'neutral' as const, kind: 'times' as const },
+          { label: tr('analytics.coverage'),  value: this.capital().coberturaDias, tone: 'neutral' as const, kind: 'days' as const },
+          { label: tr('analytics.cogsWindow'), value: this.capital().cmvDaJanela,  tone: 'neutral' as const, prefix: '' },
+          { label: tr('analytics.roi'),       value: this.capital().roi,           tone: 'success' as const, kind: 'percent' as const, emphasis: true },
         ],
       },
       {
