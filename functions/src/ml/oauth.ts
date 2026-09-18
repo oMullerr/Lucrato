@@ -49,6 +49,19 @@ export const mlAuthUrl = onCall({ enforceAppCheck: false, secrets: [ML_CLIENT_ID
   const returnTo = String((request.data as { returnTo?: unknown } | undefined)?.returnTo ?? '');
   const extras = APP_ORIGINS.value().split(',').map((s) => s.trim()).filter(Boolean);
   if (returnTo && !isAllowedReturnTo(returnTo, extras)) {
+    /* Separar os dois casos não é capricho: desde que o curinga `*.vercel.app`
+       saiu (setembro/2026), TODO destino remoto depende de `APP_ORIGINS`. Sem
+       essa distinção, esquecer a configuração no deploy produziria "endereço
+       não autorizado" para o endereço certo — a mensagem que mais atrasa o
+       diagnóstico, porque manda procurar no lugar errado. */
+    if (extras.length === 0) {
+      logger.error('APP_ORIGINS não configurada: nenhum destino remoto é aceito', { returnTo });
+      throw new HttpsError(
+        'failed-precondition',
+        'APP_ORIGINS não configurada nas functions — nenhum endereço de retorno é aceito.',
+      );
+    }
+    logger.warn('Destino de retorno recusado', { returnTo });
     throw new HttpsError('invalid-argument', 'Endereço de retorno não autorizado.');
   }
 

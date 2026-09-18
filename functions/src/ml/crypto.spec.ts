@@ -47,12 +47,14 @@ describe('destino de retorno', () => {
     expect(isAllowedReturnTo('http://127.0.0.1:4200/')).toBe(true);
   });
 
-  it('aceita preview da Vercel', () => {
-    expect(isAllowedReturnTo('https://lucrato-git-feature-ml-abc.vercel.app/settings')).toBe(true);
+  it('recusa http em dominio remoto', () => {
+    expect(isAllowedReturnTo('http://lucrato-teste.vercel.app/', ['https://lucrato-teste.vercel.app'])).toBe(false);
   });
 
-  it('recusa http em dominio remoto', () => {
-    expect(isAllowedReturnTo('http://lucrato-teste.vercel.app/')).toBe(false);
+  it('nao confia mais em qualquer hospedado na Vercel', () => {
+    // Era o buraco: `endsWith('.vercel.app')` cobria o mundo inteiro.
+    expect(isAllowedReturnTo('https://atacante.vercel.app/')).toBe(false);
+    expect(isAllowedReturnTo('https://lucrato-git-feature-ml-abc.vercel.app/settings')).toBe(false);
   });
 
   it('recusa esquema perigoso', () => {
@@ -72,6 +74,31 @@ describe('destino de retorno', () => {
     const extras = ['https://lucrato.app'];
     expect(isAllowedReturnTo('https://lucrato.app/settings', extras)).toBe(true);
     expect(isAllowedReturnTo('https://lucrato.app.atacante.com/', extras)).toBe(false);
+  });
+
+  it('curinga cobre um rotulo a esquerda, e so um', () => {
+    const extras = ['https://*.lucrato.vercel.app'];
+    expect(isAllowedReturnTo('https://preview-abc.lucrato.vercel.app/', extras)).toBe(true);
+    // Dois rotulos nao casam: senao `a.atacante.lucrato.vercel.app` passaria.
+    expect(isAllowedReturnTo('https://a.b.lucrato.vercel.app/', extras)).toBe(false);
+    // O dominio-pai tambem nao: curinga exige algo a esquerda.
+    expect(isAllowedReturnTo('https://lucrato.vercel.app/', extras)).toBe(false);
+    // E o sufixo precisa bater de verdade, nao por coincidencia de texto.
+    expect(isAllowedReturnTo('https://x.malucrato.vercel.app/', extras)).toBe(false);
+  });
+
+  it('curinga sem ponto na base nao vale nada', () => {
+    expect(isAllowedReturnTo('https://qualquer.app/', ['https://*.app'])).toBe(false);
+  });
+
+  it('entrada vazia ou invalida na lista nao libera nada', () => {
+    expect(isAllowedReturnTo('https://lucrato.app/', ['', '   ', 'nao-e-url'])).toBe(false);
+  });
+
+  it('sem origem configurada, nenhum destino remoto passa', () => {
+    expect(isAllowedReturnTo('https://lucrato.vercel.app/')).toBe(false);
+    // Local continua valendo: e o fluxo de desenvolvimento.
+    expect(isAllowedReturnTo('http://localhost:4200/')).toBe(true);
   });
 
   it('recusa lixo', () => {
