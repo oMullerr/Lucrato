@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../../shared/ui/dialog/dialog.service';
-import { Firestore, doc, onSnapshot, setDoc, Unsubscribe } from '@angular/fire/firestore';
+import { Firestore, doc, setDoc } from '@angular/fire/firestore';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Settings } from '../../core/models/models';
 import { DEFAULT_FISCAL_CONFIG } from '../../core/fiscal/fiscal-regimes';
@@ -45,6 +45,50 @@ const DEFAULT_SETTINGS: Settings = {
 
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 
+/**
+ * Campos que ESTA tela edita.
+ *
+ * A lista é explícita de propósito. `Settings` guarda coisas que outras telas
+ * mandam — `mlAutoApply` (interruptor em Integrações), `fiscal`, `dasPaidMonths`
+ * e `dasnDeclaredYears` (tela Fiscal) — e o diff do salvamento percorria TODAS
+ * as chaves do objeto. Com o formulário aberto e o valor mudado em outra tela,
+ * salvar aqui devolveria o valor velho por cima: o dono desligaria o
+ * auto-aplicar em Integrações, salvaria uma cor de categoria aqui, e o
+ * auto-aplicar voltaria a ligar sozinho.
+ */
+const CAMPOS_DO_FORMULARIO = [
+  'defaultMlFee',
+  'minimumMargin',
+  'yellowAlertDays',
+  'redAlertDays',
+  'lowStockAlert',
+  'defaultShipping',
+  'returnWindowDays',
+  'defaultChannel',
+  'categories',
+  'categoryColors',
+  'suppliers',
+  'supplierColors',
+  'channels',
+  'channelColors',
+] as const satisfies readonly (keyof Settings)[];
+
+/** Só o que o formulário edita — o resto de `Settings` não passa por aqui. */
+type FormSettings = Pick<Settings, (typeof CAMPOS_DO_FORMULARIO)[number]>;
+
+/**
+ * Recorta `Settings` no que esta tela edita.
+ *
+ * O recorte é o que impede o salvamento de devolver ao servidor um valor
+ * antigo de campo que pertence a outra tela. Comparar e gravar só o que se
+ * possui é mais barato que lembrar de excluir o que não se possui.
+ */
+function projetar(s: Settings): FormSettings {
+  const saida = {} as Record<string, unknown>;
+  for (const campo of CAMPOS_DO_FORMULARIO) saida[campo] = s[campo];
+  return clone(saida) as FormSettings;
+}
+
 @Component({
   selector: 'app-settings',
   standalone: true,
@@ -59,7 +103,7 @@ const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
-export class SettingsComponent implements OnDestroy {
+export class SettingsComponent {
   private readonly firestore = inject(Firestore);
   private readonly auth = inject(AuthService);
   private readonly dataService = inject(DataService);
@@ -70,30 +114,33 @@ export class SettingsComponent implements OnDestroy {
 
   private readonly fileInputEl = viewChild<ElementRef<HTMLInputElement>>('fileInputRef');
 
-  private readonly serverSettings = signal<Settings | null>(null);
-  protected readonly form = signal<Settings>(clone(DEFAULT_SETTINGS));
-  private readonly appliedBaseline = signal<Settings>(clone(DEFAULT_SETTINGS));
+  /**
+   * O que está gravado, lido do `DataService`.
+   *
+   * Esta tela mantinha um `onSnapshot` PRÓPRIO sobre `users/{uid}/db/main` e
+   * uma segunda cópia da composição de defaults — duas listas para discordarem
+   * entre si, e elas já discordavam: a daqui não conhecia `mlAutoApply` nem
+   * `taxPercentage`. Além da leitura duplicada (o documento é o mesmo que o
+   * DataService já escuta a sessão inteira), qualquer campo novo precisava ser
+   * lembrado em dois lugares, e esquecer o segundo não quebrava nada
+   * visivelmente — só fazia a tela salvar por cima do que não conhecia.
+   */
+  private readonly serverSettings = computed<FormSettings | null>(() => {
+    const s = this.dataService.settings();
+    return s ? projetar(s) : null;
+  });
+  protected readonly form = signal<FormSettings>(projetar(DEFAULT_SETTINGS));
+  private readonly appliedBaseline = signal<FormSettings>(projetar(DEFAULT_SETTINGS));
   protected readonly saving = signal(false);
   protected readonly importing = signal(false);
-  private snapshotUnsub: Unsubscribe | null = null;
 
   protected readonly hasChanges = computed(() => {
-    const a = this.serverSettings() ?? DEFAULT_SETTINGS;
+    const a = this.serverSettings() ?? projetar(DEFAULT_SETTINGS);
     const b = this.form();
     return JSON.stringify(a) !== JSON.stringify(b);
   });
 
   constructor() {
-    effect(() => {
-      const user = this.auth.currentUser();
-      if (user) {
-        this.attachListener(user.uid);
-      } else if (user === null) {
-        this.detachListener();
-        this.serverSettings.set(null);
-      }
-    }, { allowSignalWrites: true });
-
     effect(() => {
       const b = this.serverSettings();
       if (!b) return;
@@ -112,53 +159,7 @@ export class SettingsComponent implements OnDestroy {
     }, { allowSignalWrites: true });
   }
 
-  ngOnDestroy(): void {
-    this.detachListener();
-  }
-
-  private attachListener(uid: string): void {
-    this.detachListener();
-    const ref = doc(this.firestore, `users/${uid}/db/main`);
-    this.snapshotUnsub = onSnapshot(
-      ref,
-      snap => {
-        const data = snap.exists() ? (snap.data() as { settings?: Partial<Settings> }) : null;
-        const raw = data?.settings ?? null;
-        const composed: Settings = {
-          defaultMlFee: raw?.defaultMlFee ?? DEFAULT_SETTINGS.defaultMlFee,
-          yellowAlertDays: raw?.yellowAlertDays ?? DEFAULT_SETTINGS.yellowAlertDays,
-          redAlertDays: raw?.redAlertDays ?? DEFAULT_SETTINGS.redAlertDays,
-          minimumMargin: raw?.minimumMargin ?? DEFAULT_SETTINGS.minimumMargin,
-          lowStockAlert: raw?.lowStockAlert ?? DEFAULT_SETTINGS.lowStockAlert,
-          defaultShipping: raw?.defaultShipping ?? DEFAULT_SETTINGS.defaultShipping,
-          returnWindowDays: raw?.returnWindowDays ?? DEFAULT_SETTINGS.returnWindowDays,
-          defaultChannel: raw?.defaultChannel ?? DEFAULT_SETTINGS.defaultChannel,
-          categories: raw?.categories ?? DEFAULT_SETTINGS.categories,
-          categoryColors: raw?.categoryColors ?? DEFAULT_SETTINGS.categoryColors,
-          suppliers: raw?.suppliers ?? DEFAULT_SETTINGS.suppliers,
-          supplierColors: raw?.supplierColors ?? DEFAULT_SETTINGS.supplierColors,
-          channels: raw?.channels ?? DEFAULT_SETTINGS.channels,
-          channelColors: raw?.channelColors ?? DEFAULT_SETTINGS.channelColors,
-          fiscal: raw?.fiscal ?? DEFAULT_SETTINGS.fiscal,
-          dasPaidMonths: raw?.dasPaidMonths ?? DEFAULT_SETTINGS.dasPaidMonths,
-          dasnDeclaredYears: raw?.dasnDeclaredYears ?? DEFAULT_SETTINGS.dasnDeclaredYears,
-        };
-        this.serverSettings.set(composed);
-      },
-      err => {
-        logError('[Settings] onSnapshot falhou:', err);
-      }
-    );
-  }
-
-  private detachListener(): void {
-    if (this.snapshotUnsub) {
-      this.snapshotUnsub();
-      this.snapshotUnsub = null;
-    }
-  }
-
-  protected updateField<K extends keyof Settings>(key: K, value: Settings[K]): void {
+  protected updateField<K extends keyof FormSettings>(key: K, value: FormSettings[K]): void {
     this.form.update(f => ({ ...f, [key]: value }));
   }
 
@@ -220,14 +221,15 @@ export class SettingsComponent implements OnDestroy {
   }
 
   protected discard(): void {
-    const b = this.serverSettings() ?? DEFAULT_SETTINGS;
+    const b = this.serverSettings() ?? projetar(DEFAULT_SETTINGS);
     this.form.set(clone(b));
     this.appliedBaseline.set(clone(b));
     this.notify.info(this.t.instant('settings.discarded'));
   }
 
   protected downloadTemplate(): void {
-    this.importService.downloadTemplate(this.form());
+    // O modelo precisa do objeto inteiro; o formulário só edita um recorte.
+    this.importService.downloadTemplate({ ...DEFAULT_SETTINGS, ...this.form() });
   }
 
   protected triggerImport(): void {
@@ -261,7 +263,8 @@ export class SettingsComponent implements OnDestroy {
         file,
         this.dataService.purchases(),
         this.dataService.sales(),
-        this.form(),
+        // O parser lê o objeto inteiro; o formulário só edita um recorte dele.
+        this.dataService.settings() ?? { ...DEFAULT_SETTINGS, ...this.form() },
         this.dataService.returns(),
       );
 
@@ -321,17 +324,25 @@ export class SettingsComponent implements OnDestroy {
     return doc(this.firestore, `users/${uid}/db/main`);
   }
 
-  private buildDiff(base: Settings | null, next: Settings): { [field: string]: unknown } {
+  /**
+   * O que mudou, percorrendo SÓ os campos que esta tela possui.
+   *
+   * Antes percorria `Object.keys(next)`, e `next` carregava o objeto inteiro —
+   * inclusive `mlAutoApply` e a configuração fiscal, que outras telas escrevem.
+   * Bastava o formulário estar aberto com um valor velho em memória para o
+   * salvamento devolvê-lo ao servidor por cima do novo.
+   */
+  private buildDiff(base: FormSettings | null, next: FormSettings): { [field: string]: unknown } {
     const diff: { [field: string]: unknown } = {};
-    (Object.keys(next) as (keyof Settings)[]).forEach(k => {
+    for (const k of CAMPOS_DO_FORMULARIO) {
       if (!base || JSON.stringify(base[k]) !== JSON.stringify(next[k])) {
         diff[`settings.${k}`] = next[k];
       }
-    });
+    }
     return diff;
   }
 
-  private validate(s: Settings): string | null {
+  private validate(s: FormSettings): string | null {
     if (!Number.isFinite(s.defaultMlFee) || s.defaultMlFee < 0 || s.defaultMlFee > 1)
       return this.t.instant('settings.valFee');
     if (!Number.isFinite(s.minimumMargin) || s.minimumMargin < 0 || s.minimumMargin > 1)

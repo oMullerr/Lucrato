@@ -309,15 +309,31 @@ export class InventoryComponent {
     return refs;
   }
 
-  /** Tendência de margem — margem % acumulada por dia, últimos 30 dias. */
+  /**
+   * Tendência de margem — margem % acumulada por dia, últimos 30 dias.
+   *
+   * A régua vem em ordem crescente, então um cursor que só avança substitui o
+   * `filter` que varria TODAS as vendas a cada um dos 30 dias. Ver a nota de
+   * desempenho em `idleSparkline`.
+   */
   protected readonly marginSparkline = computed(() => {
     const sales = this.data.computedSales().filter(s => s.countsAsRevenue);
     if (sales.length < 2) return [];
+
+    const porData = sales
+      .map(s => ({ ts: Date.parse(s.saleDate), bruto: s.grossRevenue, lucro: s.netProfit }))
+      .sort((a, b) => a.ts - b.ts);
+
+    let i = 0;
+    let bruto = 0;
+    let lucro = 0;
     return this.localDayRefs(30).map(ref => {
-      const upTo = sales.filter(s => new Date(s.saleDate).getTime() <= ref);
-      const gross = upTo.reduce((acc, s) => acc + s.grossRevenue, 0);
-      const profit = upTo.reduce((acc, s) => acc + s.netProfit, 0);
-      return gross > 0 ? profit / gross : 0;
+      while (i < porData.length && porData[i].ts <= ref) {
+        bruto += porData[i].bruto;
+        lucro += porData[i].lucro;
+        i++;
+      }
+      return bruto > 0 ? lucro / bruto : 0;
     });
   });
 
@@ -330,47 +346,99 @@ export class InventoryComponent {
    * reescreveria a curva de capital retroativamente. Só o destino 'Estoque'
    * devolve a unidade; os demais continuam consumindo o lote.
    */
+  /*
+   * DESEMPENHO: esta era O(dias × lotes × (vendas + devoluções)).
+   *
+   * Para cada um dos 30 dias, para cada lote, ela varria o array inteiro de
+   * vendas e o de devoluções — e chamava `new Date(...)` dentro de cada
+   * iteração. Numa base modesta (75 lotes, 99 vendas) isso já dava mais de
+   * duzentas mil construções de Date por recálculo, e o recálculo dispara a
+   * cada alteração de dado. A tela de Estoque é a rota inicial.
+   *
+   * Agora os índices são montados UMA vez, com as datas já convertidas, e a
+   * régua de dias — que vem em ordem crescente — é percorrida com um cursor por
+   * lote que só avança. Fica O(n log n + dias × lotes).
+   *
+   * O resultado é idêntico: os testes de sparkline e o de fuso (que crava o
+   * balde de 06/07 contra o de 05/07) continuam valendo sem mudança.
+   */
   protected readonly idleSparkline = computed(() => {
     const purchases = this.data.computedPurchases();
     const sales = this.data.sales();
     const returns = this.data.returns();
     const saleBatch = new Map(sales.map(s => [s.id, s.batchId]));
-    return this.localDayRefs(30).map(ref => purchases.reduce((acc, c) => {
-      // Em trânsito conta como capital imobilizado desde a compra — mesma base do
-      // KPI idleCapital do card.
-      const start = new Date(c.receiptDate ?? c.purchaseDate).getTime();
-      if (start > ref) return acc;
-      const soldByDate = sales
-        .filter(s => s.batchId === c.id && countsAsRevenue(s, returns) && new Date(s.saleDate).getTime() <= ref)
-        .reduce((sum, s) => sum + s.quantitySold, 0);
-      const backByDate = returns
-        .filter(r =>
-          r.destination === 'Estoque'
-          && !!r.arrivalDate
-          && new Date(r.arrivalDate).getTime() <= ref
-          && saleBatch.get(r.saleId) === c.id)
-        .reduce((sum, r) => sum + r.quantity, 0);
-      const remaining = Math.max(0, c.quantityPurchased - soldByDate + backByDate);
-      return acc + remaining * c.actualUnitCost;
-    }, 0));
+
+    const agrupar = <T>(itens: readonly T[], lote: (i: T) => string | undefined,
+                        ts: (i: T) => number, qtd: (i: T) => number) => {
+      const mapa = new Map<string, { ts: number; qtd: number }[]>();
+      for (const item of itens) {
+        const id = lote(item);
+        if (!id) continue;
+        const lista = mapa.get(id) ?? [];
+        lista.push({ ts: ts(item), qtd: qtd(item) });
+        mapa.set(id, lista);
+      }
+      for (const lista of mapa.values()) lista.sort((a, b) => a.ts - b.ts);
+      return mapa;
+    };
+
+    const vendasPorLote = agrupar(
+      // `countsAsRevenue` passa a ser avaliado uma vez por venda, não 30×lotes.
+      sales.filter(s => countsAsRevenue(s, returns)),
+      s => s.batchId, s => Date.parse(s.saleDate), s => s.quantitySold,
+    );
+    const voltasPorLote = agrupar(
+      returns.filter(r => r.destination === 'Estoque' && !!r.arrivalDate),
+      r => saleBatch.get(r.saleId), r => Date.parse(r.arrivalDate!), r => r.quantity,
+    );
+
+    const estado = purchases.map(c => ({
+      lote: c,
+      // Em trânsito conta como capital imobilizado desde a compra — mesma base
+      // do KPI idleCapital do card.
+      inicio: Date.parse(c.receiptDate ?? c.purchaseDate),
+      vendas: vendasPorLote.get(c.id) ?? [],
+      voltas: voltasPorLote.get(c.id) ?? [],
+      iv: 0, ir: 0, vendidas: 0, voltou: 0,
+    }));
+
+    return this.localDayRefs(30).map(ref => {
+      let total = 0;
+      for (const e of estado) {
+        /* Cursores avançam mesmo quando o lote ainda não começou: eles
+           acompanham a régua, não a elegibilidade do lote. */
+        while (e.iv < e.vendas.length && e.vendas[e.iv].ts <= ref) e.vendidas += e.vendas[e.iv++].qtd;
+        while (e.ir < e.voltas.length && e.voltas[e.ir].ts <= ref) e.voltou += e.voltas[e.ir++].qtd;
+        if (e.inicio > ref) continue;
+        const resta = Math.max(0, e.lote.quantityPurchased - e.vendidas + e.voltou);
+        total += resta * e.lote.actualUnitCost;
+      }
+      return total;
+    });
   });
 
+  /**
+   * Acumulado diário dos últimos 30 dias.
+   *
+   * Uma passada só: cada venda é datada e somada no balde dela, em vez de as
+   * 30 réguas varrerem o array inteiro. Só as vendas DENTRO da janela entram,
+   * como antes — o `acc` começa em zero no primeiro dia da régua.
+   */
   private buildSparkline(picker: (s: import('../../core/models/models').ComputedSale) => number): number[] {
     const sales = this.data.computedSales().filter(s => s.countsAsRevenue);
     if (sales.length < 2) return [];
-    const points: number[] = [];
-    let acc = 0;
-    for (const ref of this.localDayRefs(30)) {
-      const dayValue = sales
-        .filter(s => {
-          const d = new Date(s.saleDate).getTime();
-          return d >= ref && d < ref + MS_PER_DAY;
-        })
-        .reduce((sum, s) => sum + picker(s), 0);
-      acc += dayValue;
-      points.push(acc);
+
+    const refs = this.localDayRefs(30);
+    const inicio = refs[0];
+    const baldes = new Array<number>(refs.length).fill(0);
+
+    for (const s of sales) {
+      const dia = Math.floor((Date.parse(s.saleDate) - inicio) / MS_PER_DAY);
+      if (dia >= 0 && dia < baldes.length) baldes[dia] += picker(s);
     }
-    return points;
+
+    let acc = 0;
+    return baldes.map(v => (acc += v));
   }
 
   protected setFilter(f: FilterKey): void {
