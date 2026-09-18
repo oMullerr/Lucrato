@@ -17,27 +17,52 @@
 
 <div class="page-content listings-body">
 
-  @if (!ml.connected()) {
-    <app-empty-state
-      icon="store"
-      [title]="'listings.notConnected' | translate"
-      [description]="'listings.notConnectedMsg' | translate"
-    >
-      <a appBtn="primary" routerLink="/integracoes">{{ 'listings.goToIntegrations' | translate }}</a>
-    </app-empty-state>
-  } @else if (!ml.itemsLoaded()) {
+  <!-- A ordem das condições importa: o que decide se há tela é TER ANÚNCIO
+       guardado, não o estado da autorização. Até setembro/2026 o primeiro teste
+       era `!ml.connected()`, e uma autorização vencida escondia anúncios que já
+       estavam sincronizados no Firestore — junto com os alertas que apontavam
+       justamente o que estava custando dinheiro naquele momento. -->
+  @if (!ml.itemsLoaded()) {
     <app-skeleton variant="table-row" [count]="6" />
   } @else if (linhas().length === 0) {
-    <app-empty-state
-      icon="package"
-      [title]="'listings.emptyTitle' | translate"
-      [description]="'listings.emptyMsg' | translate"
-    >
-      <button appBtn="primary" [disabled]="ml.working()" (click)="sincronizar()">
-        {{ 'listings.sync' | translate }}
-      </button>
-    </app-empty-state>
+    @if (ml.connected()) {
+      <app-empty-state
+        icon="package"
+        [title]="'listings.emptyTitle' | translate"
+        [description]="'listings.emptyMsg' | translate"
+      >
+        <button appBtn="primary" [disabled]="ml.working()" (click)="sincronizar()">
+          {{ 'listings.sync' | translate }}
+        </button>
+      </app-empty-state>
+    } @else {
+      <app-empty-state
+        icon="store"
+        [title]="'listings.notConnected' | translate"
+        [description]="'listings.notConnectedMsg' | translate"
+      >
+        <a appBtn="primary" routerLink="/integracoes">{{ 'listings.goToIntegrations' | translate }}</a>
+      </app-empty-state>
+    }
   } @else {
+
+    @if (ml.needsReconnect()) {
+      <p class="stale-note">
+        <app-icon name="triangle-alert" [size]="16" />
+        <span>{{ 'listings.staleData' | translate }}</span>
+        <a routerLink="/integracoes">{{ 'listings.goToIntegrations' | translate }}</a>
+      </p>
+    }
+
+    @if (alertas().length > 0) {
+      <section class="alertas-card" [attr.aria-label]="'alerts.title' | translate">
+        <header class="alertas-head">
+          <h2>{{ 'alerts.title' | translate }}</h2>
+          <p>{{ 'alerts.subtitle' | translate }}</p>
+        </header>
+        <app-alert-list [alertas]="alertas()" [limite]="6" />
+      </section>
+    }
 
     <section class="filtros" [attr.aria-label]="'listings.filters' | translate">
       <app-field class="f-busca" [label]="'listings.searchLabel' | translate">

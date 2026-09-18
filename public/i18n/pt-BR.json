@@ -1065,6 +1065,18 @@
       "listings": "Seus anúncios: título, SKU, preço e estoque"
     }
   },
+  "alerts": {
+    "listLabel": "Alertas de operação",
+    "resolve": "Resolver",
+    "andMore": "e mais {{total}} — veja a lista completa em Anúncios",
+    "title": "Precisa de você",
+    "subtitle": "O que está custando dinheiro agora e tem conserto",
+    "none": "Nada pedindo atenção. Seus anúncios e o estoque estão em ordem.",
+    "ativo_sem_estoque": "Anúncio no ar sem estoque — aparece na busca e não converte",
+    "pausado_com_estoque": "Pausado com {{estoque}} em estoque — capital parado sem chance de vender",
+    "margem_baixa": "Margem de {{margem}}%, abaixo da sua meta de {{minima}}%",
+    "sem_conversao": "{{visitas}} visitas em 30 dias e nenhuma venda — o problema é a oferta, não a exposição"
+  },
   "listings": {
     "title": "Anúncios",
     "eyebrow": "Mercado Livre",
@@ -1074,6 +1086,7 @@
     "syncError": "Não deu para sincronizar os anúncios. Tente de novo.",
     "notConnected": "Conecte o Mercado Livre primeiro",
     "notConnectedMsg": "Os anúncios aparecem aqui depois que a conta estiver conectada.",
+    "staleData": "A autorização venceu — estes são os últimos dados sincronizados. Reconecte para atualizar.",
     "goToIntegrations": "Ir para Integrações",
     "emptyTitle": "Nenhum anúncio por aqui",
     "emptyMsg": "Sincronize para trazer seus anúncios do Mercado Livre.",

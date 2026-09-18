@@ -1065,8 +1065,21 @@
       "listings": "Tus publicaciones: título, SKU, precio y stock"
     }
   },
+  "alerts": {
+    "listLabel": "Alertas de operación",
+    "resolve": "Resolver",
+    "andMore": "y {{total}} más — mirá la lista completa en Publicaciones",
+    "title": "Necesita tu atención",
+    "subtitle": "Lo que está costando plata ahora y tiene arreglo",
+    "none": "Nada pidiendo atención. Tus publicaciones y el stock están en orden.",
+    "ativo_sem_estoque": "Publicación activa sin stock — aparece en la búsqueda y no convierte",
+    "pausado_com_estoque": "Pausada con {{estoque}} en stock — capital parado sin chance de vender",
+    "margem_baixa": "Margen de {{margem}}%, por debajo de tu meta de {{minima}}%",
+    "sem_conversao": "{{visitas}} visitas en 30 días y ninguna venta — el problema es la oferta, no la exposición"
+  },
   "listings": {
     "title": "Publicaciones",
+    "staleData": "La autorización venció — estos son los últimos datos sincronizados. Reconectá para actualizar.",
     "eyebrow": "Mercado Libre",
     "subtitle": "Vinculá cada publicación con un producto tuyo. Después, sus ventas caen en el lote correcto.",
     "sync": "Sincronizar publicaciones",
