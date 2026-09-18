@@ -13,6 +13,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https';
 
 import { ML_CLIENT_ID, ML_CLIENT_SECRET } from '../config';
 import { criarMlClient, MlClient } from './client';
+import { cobrarIntervalo } from './debounce';
 
 /** Teto defensivo: acima disso a conta é grande demais para uma chamada só. */
 const MAX_ITENS = 5_000;
@@ -227,6 +228,9 @@ export const mlSyncItems = onCall(
     if (!mlUserId) {
       throw new HttpsError('failed-precondition', 'Conecte a conta do Mercado Livre primeiro.');
     }
+
+    // Varredura de até 5.000 anúncios; a trava do navegador some num F5.
+    await cobrarIntervalo(uid, 'syncItems');
 
     const cliente = criarMlClient(uid, ML_CLIENT_ID.value(), ML_CLIENT_SECRET.value());
 

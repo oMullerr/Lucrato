@@ -16,7 +16,9 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - run: npm test
+      # Com limiar de cobertura: o piso está em jest.config.js e existe para
+      # travar regressão. Cair abaixo dele reprova o PR.
+      - run: npm run test:coverage
       - run: npm run build
       # A auditoria de celular é estática: falha se voltar `@media` cru,
       # `min-width` que não cabe em 375px, token de cor inexistente ou `100vh`.
@@ -40,6 +42,27 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+
+  # As security rules são o arquivo que protege o dado, e eram o único teste do
+  # repositório que NÃO rodava no CI — exigem o emulador do Firestore, e por isso
+  # ficaram de fora. Uma regra frouxa passaria despercebida até alguém notar que
+  # passou.
+  rules:
+    name: Firestore rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: npm ci
+      - run: npm ci --prefix functions
+      - run: npm run test:rules
 
   audit:
     name: Dependency audit (informativo)

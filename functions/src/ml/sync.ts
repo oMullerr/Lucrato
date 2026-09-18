@@ -17,6 +17,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 
 import { ML_CLIENT_ID, ML_CLIENT_SECRET } from '../config';
 import { criarMlClient } from './client';
+import { cobrarIntervalo } from './debounce';
 import { marcarSync, processarPedido } from './inbox';
 import { processarReclamacao } from './returns';
 
@@ -179,6 +180,11 @@ export const mlBackfill = onCall(
     if (!mlUserId) {
       throw new HttpsError('failed-precondition', 'Conecte a conta do Mercado Livre primeiro.');
     }
+
+    /* A trava do navegador (`working`) some num F5. Sem esta, recarregar e
+       clicar de novo dispara uma segunda varredura por cima da primeira, e as
+       duas competem pelo mesmo rate limit do ML — que bloqueia por IP. */
+    await cobrarIntervalo(uid, 'backfill');
 
     const meses = Math.min(12, Math.max(1, Number((request.data as Bruto)?.['meses'] ?? 12)));
     const desde = new Date();

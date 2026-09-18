@@ -21,6 +21,7 @@ import type { DetalheBruto, PeriodoDeFaturamento } from '../../../src/app/core/m
 import { VERSAO_AGREGACAO, agregarPeriodo } from '../../../src/app/core/ml/billing';
 import { ML_CLIENT_ID, ML_CLIENT_SECRET } from '../config';
 import { criarMlClient, MlClient } from './client';
+import { cobrarIntervalo } from './debounce';
 
 type Bruto = Record<string, unknown>;
 
@@ -278,6 +279,11 @@ export const mlSyncBilling = onCall(
     if (!(await mlUserIdDe(uid))) {
       throw new HttpsError('failed-precondition', 'Conecte a conta do Mercado Livre primeiro.');
     }
+
+    /* O ML bloqueia por IP quem varre os doze períodos de uma vez, e insistir
+       só aprofunda o bloqueio — o intervalo aqui impede que a insistência vire
+       hábito. */
+    await cobrarIntervalo(uid, 'syncBilling');
 
     try {
       const { total, faltam } = await sincronizarFaturamento(uid, true);
