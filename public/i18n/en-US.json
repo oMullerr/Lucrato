@@ -601,6 +601,8 @@
     "filterLoss": "Loss",
     "filterLowMargin": "Low margin",
     "batchMissing": "Batch {{id}} not found — product cost was not included in this sale's profit",
+    "fromMl": "ML",
+    "fromMlTooltip": "Came from Mercado Livre · order {{pedido}}",
     "colId": "ID",
     "colBatch": "Batch",
     "colProduct": "Product",
@@ -643,6 +645,7 @@
   "saleForm": {
     "editTitle": "Edit Sale",
     "newTitle": "New Sale",
+    "fromMlWarning": "This sale came from Mercado Livre (order {{pedido}}). The figures were pulled from your account — editing them by hand will make the invoice check report a difference.",
     "batchId": "Batch ID (from Purchases tab)",
     "searchByProduct": "Search by product...",
     "searchBatchByProduct": "Search batch by product",

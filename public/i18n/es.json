@@ -601,6 +601,8 @@
     "filterLoss": "Pérdida",
     "filterLowMargin": "Margen bajo",
     "batchMissing": "Lote {{id}} no encontrado — el costo del producto no se incluyó en la ganancia de esta venta",
+    "fromMl": "ML",
+    "fromMlTooltip": "Vino de Mercado Libre · pedido {{pedido}}",
     "colId": "ID",
     "colBatch": "Lote",
     "colProduct": "Producto",
@@ -643,6 +645,7 @@
   "saleForm": {
     "editTitle": "Editar Venta",
     "newTitle": "Nueva Venta",
+    "fromMlWarning": "Esta venta vino de Mercado Libre (pedido {{pedido}}). Los valores se trajeron de tu cuenta — cambiarlos a mano hace que la verificación de la factura marque una diferencia.",
     "batchId": "ID Lote (de la pestaña Compras)",
     "searchByProduct": "Buscar por producto...",
     "searchBatchByProduct": "Buscar lote por producto",

@@ -61,6 +61,7 @@ export class SalesComponent {
   private readonly t = inject(TranslateService);
   private readonly quick = inject(QuickActionsService);
   protected readonly bp = inject(BreakpointService);
+  private readonly brDate = new BrDatePipe();
 
   protected readonly textFilter = signal('');
   protected readonly channelFilter = signal('all');
@@ -333,6 +334,22 @@ export class SalesComponent {
       case 'Devolvida': return 'danger';
       default: return 'neutral';
     }
+  }
+
+  /**
+   * Linha de contexto do card no celular.
+   *
+   * A origem entra aqui porque o card não tem coluna de ID para carregar o
+   * selo que a tabela usa — e saber que a venda veio do Mercado Livre muda o
+   * que você faz com ela (editar à mão desfaz a conciliação).
+   */
+  protected metaFor(v: ComputedSale): string {
+    // Mesmo pipe da tabela: duas formatações de data divergiriam no primeiro
+    // ajuste de fuso, e a do celular seria a última a ser notada.
+    const base = `${this.brDate.transform(v.saleDate)} · ${v.channel}`;
+    return v.source === 'mercadolivre'
+      ? `${base} · ${this.t.instant('sales.fromMl')}`
+      : base;
   }
 
   /** Valores do rodapé do record-card mobile. */

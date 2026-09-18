@@ -1,5 +1,26 @@
 @use '../../../styles/breakpoints' as bp;
 
+/* Aviso de origem: informa, não bloqueia. O formulário segue editável porque
+   às vezes é o número do Mercado Livre que está errado. */
+.ml-origin-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.ml-origin-note app-icon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
 .id-badge {
   font-family: var(--font-display);
   font-size: 12px;

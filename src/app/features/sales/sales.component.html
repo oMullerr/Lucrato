@@ -117,9 +117,9 @@
             <app-record-card
               [title]="v.product"
               [code]="v.id"
-              [status]="('status.' + v.status) | translate"
+              [status]="('status.' + v.effectiveStatus) | translate"
               [statusKind]="statusKindFor(v)"
-              [meta]="(v.saleDate | brDate) + ' · ' + v.channel"
+              [meta]="metaFor(v)"
               [figures]="figuresFor(v)"
               (pressed)="editFromCard(v)"
             />
@@ -168,7 +168,15 @@
                     <td class="col-edge">
                       <span class="row-stripe" [class.stripe-danger]="v.netProfit < 0" aria-hidden="true"></span>
                     </td>
-                    <td><span class="id-tag id-sale mono">{{ v.id }}</span></td>
+                    <td>
+                      <span class="id-tag id-sale mono">{{ v.id }}</span>
+                      @if (v.source === 'mercadolivre') {
+                        <span
+                          class="origin-tag"
+                          [appTooltip]="'sales.fromMlTooltip' | translate:{ pedido: v.mlOrderId ?? '—' }"
+                        >{{ 'sales.fromMl' | translate }}</span>
+                      }
+                    </td>
                     <td>
                       <span class="id-tag mono">{{ v.batchId }}</span>
                       @if (isOrphanBatch(v.batchId)) {

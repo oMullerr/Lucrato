@@ -601,6 +601,8 @@
     "filterLoss": "Prejuízo",
     "filterLowMargin": "Margem baixa",
     "batchMissing": "Lote {{id}} não encontrado — o custo do produto não entrou no cálculo do lucro desta venda",
+    "fromMl": "ML",
+    "fromMlTooltip": "Veio do Mercado Livre · pedido {{pedido}}",
     "colId": "ID",
     "colBatch": "Lote",
     "colProduct": "Produto",
@@ -643,6 +645,7 @@
   "saleForm": {
     "editTitle": "Editar Venda",
     "newTitle": "Nova Venda",
+    "fromMlWarning": "Esta venda veio do Mercado Livre (pedido {{pedido}}). Os valores foram trazidos da conta — alterar à mão faz a conferência da fatura acusar diferença.",
     "batchId": "ID Lote (da aba Compras)",
     "searchByProduct": "Buscar por produto...",
     "searchBatchByProduct": "Buscar lote por produto",

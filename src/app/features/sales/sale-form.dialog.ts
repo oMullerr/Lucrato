@@ -48,6 +48,16 @@ export class SaleFormDialogComponent {
   protected readonly isFlexShipping = computed(() => this.model().shippingType === 'flex');
   protected readonly hasBatch = computed(() => !!this.model().batchId);
 
+  /**
+   * Venda trazida pela integração.
+   *
+   * O formulário continua totalmente editável — às vezes o número do ML é que
+   * está errado, e o dono precisa poder corrigir. O que faltava era o aviso: os
+   * campos aqui vieram da API, e mexer neles faz a tela de Faturamento passar a
+   * acusar divergência contra a fatura sem explicar de onde ela saiu.
+   */
+  protected readonly veioDoMl = computed(() => this.model().source === 'mercadolivre');
+
   protected setShippingType(isFlex: boolean): void {
     this.model.update(m => isFlex
       ? ({ ...m, shippingType: 'flex', sellerShipping: 0 })
@@ -215,7 +225,23 @@ export class SaleFormDialogComponent {
   }
 
   private initialModel(): Sale {
-    if (this.data.sale) return { ...this.data.sale, status: 'Concluída' };
+    if (this.data.sale) {
+      /* O formulário não tem campo de status, e até setembro/2026 ele gravava
+         'Concluída' em TODA edição. Para 'Devolvida' isso era o desejado — esse
+         par é derivado das devoluções, e `DataService.syncSaleStatus` reescreve
+         logo em seguida. Para 'Cancelada' e 'Em disputa' era perda de dado:
+         abrir a venda para corrigir uma vírgula na observação ressuscitava um
+         faturamento cancelado, mudando receita, lucro e teto do MEI sem uma
+         linha na tela.
+
+         A regra agora é a MESMA de `syncSaleStatus`: só o par Concluída ↔
+         Devolvida é automático; o que você escolheu à mão fica. */
+      const escolhidoPeloDono =
+        this.data.sale.status === 'Cancelada' || this.data.sale.status === 'Em disputa';
+      return escolhidoPeloDono
+        ? { ...this.data.sale }
+        : { ...this.data.sale, status: 'Concluída' };
+    }
     const cfg = this.dataService.settings();
     return {
       id: this.dataService.nextSaleId(),

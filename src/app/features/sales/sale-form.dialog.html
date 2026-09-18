@@ -4,6 +4,15 @@
 >
   <span dialogBadge class="id-badge num" [appTooltip]="'purchaseForm.autoId' | translate">{{ model().id }}</span>
 
+  @if (veioDoMl()) {
+    <!-- Editar à mão um número que veio da API desfaz a conciliação em silêncio:
+         a tela de Faturamento passa a acusar divergência sem dizer por quê. -->
+    <p class="ml-origin-note">
+      <app-icon name="store" [size]="16" />
+      <span>{{ 'saleForm.fromMlWarning' | translate:{ pedido: model().mlOrderId ?? '—' } }}</span>
+    </p>
+  }
+
   <form class="form-grid" (submit)="$event.preventDefault(); save()">
     <app-field
       class="full"
