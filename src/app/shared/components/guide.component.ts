@@ -31,6 +31,16 @@ export class GuideComponent {
   readonly indexAria = input<string>('');
   readonly tocTitle = input<string>('');
 
+  /**
+   * Prefixo dos `id` das seções.
+   *
+   * Existe porque a página do Guia passou a montar DOIS guias (a integração e
+   * o uso manual) na mesma rota. Sem prefixo os dois gerariam `sec-0`, e `id`
+   * duplicado é HTML inválido: leitor de tela e âncora passam a apontar para o
+   * primeiro que encontrarem, que é sempre o guia errado.
+   */
+  readonly idPrefix = input<string>('sec');
+
   private readonly host = inject(ElementRef) as ElementRef<HTMLElement>;
 
   /**
@@ -42,7 +52,7 @@ export class GuideComponent {
    */
   protected scrollToSection(event: MouseEvent, index: number): void {
     event.preventDefault();
-    const target = this.host.nativeElement.querySelector(`#sec-${index}`);
+    const target = this.host.nativeElement.querySelector(`#${this.idPrefix()}-${index}`);
     if (!target) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });

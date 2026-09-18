@@ -32,6 +32,7 @@
     "calculator": "Calculadora · Lucrato",
     "billing": "Faturamento · Lucrato",
     "mlGuide": "Guia do Mercado Livre · Lucrato",
+    "guide": "Guia · Lucrato",
     "cashFlow": "Fluxo de caixa · Lucrato"
   },
   "common": {
@@ -59,9 +60,12 @@
     "unsavedChanges": "Você tem alterações não salvas. Sair mesmo assim?"
   },
   "nav": {
-    "groupMain": "PRINCIPAL",
+    "groupMain": "PANORAMA",
+    "groupOperation": "OPERAÇÃO",
+    "groupMoney": "DINHEIRO",
     "groupRecords": "REGISTROS",
     "groupSystem": "SISTEMA",
+    "guide": "Guia",
     "inventory": "Estoque",
     "inventoryTitle": "Panorama",
     "dashboard": "Dashboard",
@@ -788,6 +792,15 @@
     "errNetwork": "Falha de conexão. Verifique sua internet.",
     "errGeneric": "Não foi possível concluir a operação. Tente novamente."
   },
+  "guide": {
+    "title": "Guia",
+    "eyebrow": "AJUDA · {{count}} SEÇÕES",
+    "subtitle": "Como o Lucrato trabalha por você, e o que ainda depende das suas mãos.",
+    "groupMlTitle": "O que acontece sozinho",
+    "groupMlSub": "Com a conta do Mercado Livre conectada, da autorização à conferência da fatura.",
+    "groupManualTitle": "O que depende de você",
+    "groupManualSub": "O custo do fornecedor, a venda fora da plataforma e as correções — o que a API nunca vai saber."
+  },
   "instructions": {
     "title": "Instruções",
     "subtitle": "Tudo o que você precisa saber para tirar o máximo do Lucrato no dia a dia.",
@@ -1051,6 +1064,8 @@
     "disconnected": "Mercado Livre desconectado.",
     "disconnectError": "Não deu para desconectar. Tente de novo.",
     "connectError": "Não deu para iniciar a conexão. Tente de novo.",
+    "inboxWaiting": "{{total}} item(ns) esperando sua decisão",
+    "inboxEmpty": "Nada esperando — tudo que chegou já entrou no razão",
     "autoApplyTitle": "Lançar as vendas sozinho",
     "autoApplyHelp": "Quando o anúncio já está vinculado a um produto com estoque, a venda entra no razão assim que chega — sem passar pela sua conferência. O resto continua esperando você na caixa de entrada.",
     "autoApplyOn": "Lançamento automático ligado.",

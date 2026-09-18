@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { DataService } from '../../core/services/data.service';
@@ -42,7 +43,7 @@ type SaleFilter = 'all' | 'profit' | 'loss' | 'low-margin';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule, TranslateModule,
+    FormsModule, RouterLink, TranslateModule,
     PageHeaderComponent, StatusBadgeComponent, KpiCardComponent,
     EmptyStateComponent, SkeletonComponent, ColorPillComponent, DateRangePickerComponent,
     BrlPipe, BrDatePipe,

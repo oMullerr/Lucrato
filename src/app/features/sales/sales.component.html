@@ -3,7 +3,15 @@
   [eyebrow]="'sales.eyebrow' | translate:{ count: sales().length }"
   [subtitle]="'sales.subtitle' | translate"
 >
-  <button appBtn type="button" (click)="openNew()">
+  <!-- Devoluções saiu do menu: devolução se registra a partir da venda, e é
+       daqui que se chega à lista. -->
+  <a appBtn="ghost" routerLink="/returns">
+    <app-icon name="rotate-ccw" [size]="16" />
+    {{ 'nav.returns' | translate }}
+  </a>
+  <!-- Rebaixado a secundário: só Mercado Livre, a venda entra sozinha. Digitar
+       à mão é exceção (venda fora da plataforma, correção pontual). -->
+  <button appBtn="outline" type="button" (click)="openNew()">
     <app-icon name="plus" [size]="16" />
     {{ 'sales.newSale' | translate }}
   </button>

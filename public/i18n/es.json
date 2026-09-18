@@ -32,6 +32,7 @@
     "calculator": "Calculadora · Lucrato",
     "billing": "Facturación · Lucrato",
     "mlGuide": "Guía de Mercado Libre · Lucrato",
+    "guide": "Guía · Lucrato",
     "cashFlow": "Flujo de caja · Lucrato"
   },
   "common": {
@@ -59,9 +60,12 @@
     "unsavedChanges": "Tienes cambios sin guardar. ¿Salir de todos modos?"
   },
   "nav": {
-    "groupMain": "PRINCIPAL",
+    "groupMain": "PANORAMA",
+    "groupOperation": "OPERACIÓN",
+    "groupMoney": "DINERO",
     "groupRecords": "REGISTROS",
     "groupSystem": "SISTEMA",
+    "guide": "Guía",
     "inventory": "Inventario",
     "inventoryTitle": "Panorama",
     "dashboard": "Panel",
@@ -788,6 +792,15 @@
     "errNetwork": "Error de conexión. Revisa tu internet.",
     "errGeneric": "No se pudo completar la operación. Inténtalo de nuevo."
   },
+  "guide": {
+    "title": "Guía",
+    "eyebrow": "AYUDA · {{count}} SECCIONES",
+    "subtitle": "Cómo Lucrato trabaja por vos, y qué sigue dependiendo de tus manos.",
+    "groupMlTitle": "Lo que pasa solo",
+    "groupMlSub": "Con la cuenta de Mercado Libre conectada, de la autorización a la verificación de la factura.",
+    "groupManualTitle": "Lo que depende de vos",
+    "groupManualSub": "El costo del proveedor, la venta fuera de la plataforma y las correcciones — lo que la API nunca va a saber."
+  },
   "instructions": {
     "title": "Instrucciones",
     "subtitle": "Todo lo que necesitas saber para sacar el máximo provecho de Lucrato cada día.",
@@ -1051,6 +1064,8 @@
     "disconnected": "Mercado Libre desconectado.",
     "disconnectError": "No se pudo desconectar. Probá de nuevo.",
     "connectError": "No se pudo iniciar la conexión. Probá de nuevo.",
+    "inboxWaiting": "{{total}} ítem(s) esperando tu decisión",
+    "inboxEmpty": "Nada esperando — todo lo que llegó ya entró al libro",
     "autoApplyTitle": "Registrar las ventas solo",
     "autoApplyHelp": "Cuando el anuncio ya está vinculado a un producto con stock, la venta entra al libro apenas llega — sin pasar por tu revisión. El resto sigue esperándote en la bandeja de entrada.",
     "autoApplyOn": "Registro automático activado.",

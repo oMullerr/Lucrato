@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MlIntegrationService } from '../../core/services/ml-integration.service';
 import { DataService } from '../../core/services/data.service';
@@ -34,7 +35,7 @@ const LEITURAS: readonly { icon: IconName; key: string }[] = [
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule,
+    FormsModule, RouterLink,
     PageHeaderComponent, SkeletonComponent, ButtonComponent, IconComponent,
     SwitchComponent, TranslateModule,
   ],
@@ -52,6 +53,9 @@ export class IntegrationsComponent {
 
   /** Trava o interruptor enquanto a gravação não volta. */
   protected readonly salvandoAutoApply = signal(false);
+
+  /** Itens da caixa esperando decisão — é o que justifica o atalho aparecer. */
+  protected readonly esperando = computed(() => this.ml.inboxPendentes().length);
 
   /** Data e hora curtas, no padrao brasileiro. */
   protected formatarQuando(d: Date | null | undefined): string {

@@ -32,6 +32,7 @@
     "calculator": "Calculator · Lucrato",
     "billing": "Billing · Lucrato",
     "mlGuide": "Mercado Livre guide · Lucrato",
+    "guide": "Guide · Lucrato",
     "cashFlow": "Cash flow · Lucrato"
   },
   "common": {
@@ -59,9 +60,12 @@
     "unsavedChanges": "You have unsaved changes. Leave anyway?"
   },
   "nav": {
-    "groupMain": "MAIN",
+    "groupMain": "OVERVIEW",
+    "groupOperation": "OPERATION",
+    "groupMoney": "MONEY",
     "groupRecords": "RECORDS",
     "groupSystem": "SYSTEM",
+    "guide": "Guide",
     "inventory": "Inventory",
     "inventoryTitle": "Overview",
     "dashboard": "Dashboard",
@@ -788,6 +792,15 @@
     "errNetwork": "Connection failed. Check your internet.",
     "errGeneric": "Couldn't complete the operation. Please try again."
   },
+  "guide": {
+    "title": "Guide",
+    "eyebrow": "HELP · {{count}} SECTIONS",
+    "subtitle": "How Lucrato works for you, and what still depends on your hands.",
+    "groupMlTitle": "What happens on its own",
+    "groupMlSub": "With the Mercado Livre account connected, from authorization to checking the invoice.",
+    "groupManualTitle": "What depends on you",
+    "groupManualSub": "Supplier cost, sales outside the platform and corrections — what the API will never know."
+  },
   "instructions": {
     "title": "Instructions",
     "subtitle": "Everything you need to know to get the most out of Lucrato every day.",
@@ -1051,6 +1064,8 @@
     "disconnected": "Mercado Livre disconnected.",
     "disconnectError": "Could not disconnect. Please try again.",
     "connectError": "Could not start the connection. Please try again.",
+    "inboxWaiting": "{{total}} item(s) waiting on you",
+    "inboxEmpty": "Nothing waiting — everything that arrived is already in the ledger",
     "autoApplyTitle": "Post sales automatically",
     "autoApplyHelp": "When a listing is already linked to a product that has stock, the sale is posted to the ledger as soon as it arrives — without waiting for your review. Everything else still waits for you in the inbox.",
     "autoApplyOn": "Automatic posting on.",

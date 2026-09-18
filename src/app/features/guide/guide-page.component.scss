@@ -1,0 +1,22 @@
+.guide-body {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.group-head {
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.group-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.group-head p {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}

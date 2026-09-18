@@ -10,8 +10,7 @@ import { Component, Type } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule } from '@ngx-translate/core';
 import { GuideComponent, GuideItem } from './guide.component';
-import { InstructionsComponent } from '../../features/instructions/instructions.component';
-import { MlGuideComponent } from '../../features/ml-guide/ml-guide.component';
+import { GuidePageComponent } from '../../features/guide/guide-page.component';
 
 @Component({
   standalone: true,
@@ -80,16 +79,41 @@ describe('o guia desenha o que recebe', () => {
   });
 });
 
-describe('as duas páginas que usam o guia', () => {
-  it('Instruções continua com os seus 10 tópicos', () => {
-    // Guarda contra a extração ter comido uma seção no caminho.
-    const el = montar(InstructionsComponent).nativeElement as HTMLElement;
-    expect(el.querySelectorAll('.inst-section')).toHaveLength(10);
+/**
+ * As duas telas viraram uma em setembro/2026 (Instruções + Guia do ML).
+ *
+ * As contagens continuam sendo a guarda que importa: a fusão não podia comer
+ * seção no caminho, e é o tipo de perda que ninguém nota lendo o diff — 23
+ * chaves de i18n continuam existindo, só param de ser renderizadas.
+ */
+describe('o guia unificado', () => {
+  it('traz os 13 tópicos da integração e os 10 do uso manual', () => {
+    const el = montar(GuidePageComponent).nativeElement as HTMLElement;
+    expect(el.querySelectorAll('.inst-section')).toHaveLength(23);
+    expect(el.querySelectorAll('.toc-link')).toHaveLength(23);
   });
 
-  it('o guia do Mercado Livre cobre as 13 telas e regras', () => {
-    const el = montar(MlGuideComponent).nativeElement as HTMLElement;
-    expect(el.querySelectorAll('.inst-section')).toHaveLength(13);
-    expect(el.querySelectorAll('.toc-link')).toHaveLength(13);
+  it('mantém dois índices, um por bloco', () => {
+    // Um índice único de 23 linhas não ajuda ninguém a achar nada.
+    const el = montar(GuidePageComponent).nativeElement as HTMLElement;
+    expect(el.querySelectorAll('app-guide')).toHaveLength(2);
+    expect(el.querySelectorAll('.toc')).toHaveLength(2);
+  });
+
+  it('a integração vem antes do manual', () => {
+    // A ordem é a do uso real: o que acontece sozinho primeiro. Inverter faria
+    // quem conectou a conta ler dez seções que não valem mais para ele.
+    const el = montar(GuidePageComponent).nativeElement as HTMLElement;
+    const ids = Array.from(el.querySelectorAll('.inst-section')).map(s => s.getAttribute('id'));
+    expect(ids[0]).toBe('ml-0');
+    expect(ids[13]).toBe('man-0');
+  });
+
+  it('nenhum id de seção se repete entre os dois blocos', () => {
+    // `id` duplicado é HTML inválido: âncora e leitor de tela passam a apontar
+    // sempre para o primeiro, que é o guia errado.
+    const el = montar(GuidePageComponent).nativeElement as HTMLElement;
+    const ids = Array.from(el.querySelectorAll('.inst-section')).map(s => s.getAttribute('id'));
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
