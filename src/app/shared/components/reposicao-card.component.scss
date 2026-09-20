@@ -1,0 +1,144 @@
+﻿@use '../../../styles/breakpoints' as bp;
+
+.repor {
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-1);
+}
+
+.repor-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.repor-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.repor-head app-icon { color: var(--brand-primary); }
+
+.repor-count {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.repor-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.repor-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-2);
+}
+
+.tone-danger  { border-left-color: var(--color-danger); }
+.tone-warning { border-left-color: var(--color-warning); }
+.tone-info    { border-left-color: var(--color-info); }
+
+.repor-main {
+  /* `min-width: 0` permite a quebra do texto longo dentro do flex. */
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.repor-produto {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.repor-quando {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+.tone-danger .repor-quando  { color: var(--color-danger); }
+.tone-warning .repor-quando { color: var(--color-warning); }
+
+.repor-sep { opacity: 0.5; }
+
+.repor-estimado {
+  margin-left: 4px;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-1);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.repor-base {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.repor-numeros {
+  display: grid;
+  justify-items: end;
+  flex: 0 0 auto;
+  align-content: center;
+}
+
+.repor-qtd {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.repor-qtd-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.repor-estoque {
+  margin-top: 2px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@include bp.below(sm) {
+  .repor-row { flex-wrap: wrap; }
+
+  .repor-numeros {
+    justify-items: start;
+    flex-basis: 100%;
+    grid-auto-flow: column;
+    align-items: baseline;
+    gap: 6px;
+    justify-content: start;
+  }
+}

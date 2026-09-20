@@ -15,6 +15,7 @@ import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { DataService } from '../../core/services/data.service';
 import { MlIntegrationService } from '../../core/services/ml-integration.service';
 import { montarPendencias } from '../../core/pendencias';
+import { sugerirReposicao } from '../../core/reposicao';
 import { NotifyService } from '../../core/services/notify.service';
 import { QuickActionsService } from '../../core/services/quick-actions.service';
 import { ComputedPurchase, InventoryStatus, Purchase } from '../../core/models/models';
@@ -26,6 +27,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { BatchDetailPanelComponent } from '../../shared/components/batch-detail-panel.component';
 import { PendenciasCardComponent } from '../../shared/components/pendencias-card.component';
+import { ReposicaoCardComponent } from '../../shared/components/reposicao-card.component';
 import { ColorPillComponent } from '../../shared/components/color-pill.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
@@ -64,6 +66,7 @@ interface MobileSortOption {
     PageHeaderComponent, KpiCardComponent, StatusBadgeComponent,
     EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent,
     PendenciasCardComponent,
+    ReposicaoCardComponent,
     BrlPipe, BrDatePipe, DatePipe,
     ButtonComponent, IconComponent, TooltipDirective, ChipComponent, DrawerComponent,
     MoneyComponent, SortDirective, SortHeaderComponent, PaginatorComponent,
@@ -272,6 +275,17 @@ export class InventoryComponent {
       bandaFiscal: this.data.fiscalConfig().regime === 'none' ? null : this.data.fiscalStatus().band,
       usoDoTeto: this.data.fiscalStatus().usagePct,
     }),
+  );
+
+  /**
+   * O que comprar, quanto, e até quando.
+   *
+   * Fica aqui porque é onde a decisão de estoque acontece, logo abaixo da
+   * pauta: primeiro o que pede decisão hoje, depois o que pede pedido. A
+   * conta mora em `core/reposicao.ts`, pura e testada.
+   */
+  protected readonly reposicao = computed(() =>
+    sugerirReposicao(this.data.computedPurchases(), this.data.computedSales()),
   );
 
   protected readonly alertLevel = computed<'high' | 'medium'>(() =>

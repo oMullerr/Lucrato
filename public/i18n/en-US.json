@@ -1470,5 +1470,16 @@
     "creditsPart": "Another {{valor}} comes from {{total}} Mercado Pago credit(s) with no order behind them — a bonus, an adjustment or a fee refund. There is nothing to reconcile there.",
     "creditRow": "Mercado Pago credit",
     "sortDefault": "Default order"
+  },
+  "restock": {
+    "title": "Restock",
+    "atrasado": "Overdue by {{dias}} day(s)",
+    "critico": "Order within {{dias}} day(s)",
+    "atencao": "Order within {{dias}} days",
+    "lead": "{{fornecedor}} takes ~{{dias}} day(s)",
+    "leadGuess": "estimated lead time",
+    "basis": "{{unidades}} units across {{vendas}} sale(s) in the last {{dias}} days",
+    "units": "units",
+    "onHand": "{{estoque}} on hand"
   }
 }

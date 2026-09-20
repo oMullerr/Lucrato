@@ -1470,5 +1470,16 @@
     "creditsPart": "Otros {{valor}} vienen de {{total}} crédito(s) de Mercado Pago sin pedido detrás — bonificación, ajuste o devolución de tarifa. No hay nada que conciliar ahí.",
     "creditRow": "crédito de Mercado Pago",
     "sortDefault": "Como estaba"
+  },
+  "restock": {
+    "title": "Reponer",
+    "atrasado": "Atrasado {{dias}} día(s)",
+    "critico": "Pedir en {{dias}} día(s)",
+    "atencao": "Pedir dentro de {{dias}} días",
+    "lead": "{{fornecedor}} tarda ~{{dias}} día(s)",
+    "leadGuess": "plazo estimado",
+    "basis": "{{unidades}} u. en {{vendas}} venta(s) en los últimos {{dias}} días",
+    "units": "unidades",
+    "onHand": "{{estoque}} en stock"
   }
 }

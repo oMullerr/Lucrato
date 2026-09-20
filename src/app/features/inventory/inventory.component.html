@@ -51,6 +51,11 @@
              pedindo minha decisão agora?". Some quando não há nada. -->
         <app-pendencias-card [pendencias]="pendencias()" />
 
+        <!-- Logo abaixo da pauta, e na mesma lógica: primeiro o que pede
+             decisão hoje, depois o que pede pedido. Some quando não há o que
+             repor. -->
+        <app-reposicao-card [sugestoes]="reposicao()" />
+
         <!-- ZONA A — PULSO -->
         <section class="hero" [attr.aria-label]="'inventory.financialSummary' | translate">
           <article class="hero-card">
