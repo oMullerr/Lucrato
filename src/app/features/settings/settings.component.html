@@ -108,6 +108,21 @@
                 <span fieldSuffix class="unit-suffix">R$</span>
               </app-field>
 
+              <app-field
+                [label]="'settings.flexShippingCost' | translate"
+                [hint]="'settings.flexShippingCostHint' | translate"
+              >
+                <input
+                  appInput
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  [ngModel]="s.flexShippingCost ?? 0"
+                  (ngModelChange)="updateField('flexShippingCost', clamp0($event))"
+                />
+                <span fieldSuffix class="unit-suffix">R$</span>
+              </app-field>
+
               <app-field [label]="'settings.defaultChannel' | translate">
                 <app-select
                   [ngModel]="s.defaultChannel"

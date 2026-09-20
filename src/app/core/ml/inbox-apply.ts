@@ -38,6 +38,31 @@ export interface ItemDaCaixa {
 /** Por que um item não pôde entrar sozinho. */
 export type MotivoPendencia = 'sem_vinculo' | 'sem_estoque';
 
+export interface OpcoesDaAplicacao {
+  /**
+   * Custo da transportadora numa venda Flex, por pedido (`Settings.flexShippingCost`).
+   *
+   * No Flex o Mercado Livre informa um frete que não é o que você paga, então
+   * a importação descarta o número dele — e, até setembro/2026, não punha nada
+   * no lugar: toda venda Flex entrava com frete zero e o lucro saía inflado.
+   * Este é o valor que entra no lugar, rateado entre as fatias quando o pedido
+   * se divide em lotes, e editável depois em cada venda.
+   */
+  custoFlex?: number;
+}
+
+/**
+ * Frete do vendedor neste item: o que veio do pedido, ou o padrão do Flex.
+ *
+ * Só preenche quando o item chegou zerado. Um valor que já veio do Mercado
+ * Livre, ou que você editou na caixa, manda mais que a configuração — o padrão
+ * existe para o caso em que ninguém sabia, não para sobrescrever quem sabia.
+ */
+function freteDoVendedor(item: ItemDaCaixa, opcoes: OpcoesDaAplicacao): number {
+  if (item.shippingType !== 'flex' || item.sellerShipping > 0) return item.sellerShipping;
+  return opcoes.custoFlex && opcoes.custoFlex > 0 ? opcoes.custoFlex : 0;
+}
+
 export interface PlanoDeAplicacao {
   /** Vendas novas, já com id e lote. */
   novas: Sale[];
@@ -139,6 +164,7 @@ export function planejarAplicacao(
   itens: readonly ItemDaCaixa[],
   lotes: readonly ComputedPurchase[],
   vendas: readonly Sale[],
+  opcoes: OpcoesDaAplicacao = {},
 ): PlanoDeAplicacao {
   const plano: PlanoDeAplicacao = { novas: [], atualizadas: [], aplicados: [], pendentes: [] };
 
@@ -161,7 +187,12 @@ export function planejarAplicacao(
   // Ordem cronológica: o FIFO só faz sentido se as vendas antigas vierem antes.
   const fila = [...itens].sort((a, b) => a.saleDate.localeCompare(b.saleDate));
 
-  for (const item of fila) {
+  for (const cru of fila) {
+    /* O frete do Flex é resolvido UMA vez, aqui, e o resto do laço enxerga só
+       o valor resolvido. Resolver mais adiante faria a comparação de "o que
+       mudou no pedido" enxergar o zero da caixa e zerar de volta, a cada
+       rodada, o custo que a configuração tinha acabado de pôr. */
+    const item: ItemDaCaixa = { ...cru, sellerShipping: freteDoVendedor(cru, opcoes) };
     const existentes = jaAplicadas.get(item.externalId);
     if (existentes?.length) {
       // Já está no razão: só reflete o que mudou no pedido.

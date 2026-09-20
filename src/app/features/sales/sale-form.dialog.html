@@ -165,6 +165,21 @@
           name="sellerShipping" />
       </app-field>
     } @else {
+      <!-- No Flex existem os DOIS lados: você paga a transportadora e o
+           Mercado Livre às vezes devolve parte. Só o crédito tinha campo, e
+           por isso toda venda Flex entrava com frete zero. -->
+      <app-field
+        [label]="'saleForm.flexShipping' | translate"
+        [hint]="'saleForm.flexShippingHint' | translate"
+      >
+        <span fieldPrefix class="money-prefix">R$</span>
+        <input appInput appCurrencyInput inputmode="numeric"
+          [ngModel]="model().sellerShipping"
+          (ngModelChange)="setNum('sellerShipping', $event)"
+          [disabled]="!hasBatch()"
+          name="flexShipping" />
+      </app-field>
+
       <app-field [label]="'saleForm.flexRefund' | translate" [hint]="'saleForm.flexRefundHint' | translate">
         <span fieldPrefix class="money-prefix">R$</span>
         <input appInput appCurrencyInput inputmode="numeric"

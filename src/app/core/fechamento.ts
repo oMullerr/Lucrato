@@ -91,7 +91,10 @@ export function fecharMes(
     linha.unidades += v.effectiveQuantity;
     linha.receitaBruta += v.grossRevenue;
     linha.comissao += v.feeAmount;
-    // `shippingEffective` é negativo quando o frete sai do bolso do vendedor.
+    /* Frete LÍQUIDO: o que saiu menos o que voltou. `shippingEffective` é o
+       impacto na receita (negativo quando o frete sai do bolso), então o sinal
+       trocado é o custo. Numa venda Flex isso passa a ser a conta da
+       transportadora menos o estorno do ML — que é o custo real do envio. */
     linha.frete += -v.shippingEffective;
     linha.descontos += v.discountEffective;
     linha.outrosCustos += v.otherCostsEffective;

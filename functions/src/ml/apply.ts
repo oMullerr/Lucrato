@@ -78,6 +78,9 @@ function configMinima(bruto: Partial<Settings> | undefined): Settings {
     lowStockAlert: bruto?.lowStockAlert ?? 0,
     defaultShipping: bruto?.defaultShipping ?? 0,
     returnWindowDays: bruto?.returnWindowDays ?? 30,
+    /* Este SIM muda número: é o custo da transportadora no Flex, que entra no
+       lucro. Ausente vale zero, que é o comportamento de antes da opção. */
+    flexShippingCost: bruto?.flexShippingCost,
     defaultChannel: bruto?.defaultChannel ?? 'Mercado Livre',
     categories: [],
     categoryColors: {},
@@ -162,7 +165,9 @@ export async function aplicarNoRazao(uid: string): Promise<ResultadoDaAplicacao>
     const lotes = razao.purchases.map((p) =>
       calculatePurchase(p, razao.sales, razao.settings, razao.returns),
     );
-    const planoVendas = planejarAplicacao(novas, lotes, razao.sales);
+    const planoVendas = planejarAplicacao(novas, lotes, razao.sales, {
+      custoFlex: razao.settings.flexShippingCost,
+    });
 
     /* As devoluções são planejadas contra o razão JÁ com as vendas desta
        rodada: uma devolução só existe se a venda existir, e a venda pode ter

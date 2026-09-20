@@ -58,9 +58,18 @@ export class SaleFormDialogComponent {
    */
   protected readonly veioDoMl = computed(() => this.model().source === 'mercadolivre');
 
+  /**
+   * Troca o tipo de frete.
+   *
+   * Ao virar Flex, o custo NÃO é zerado: `sellerShipping` agora vale nos dois
+   * tipos (no Flex é a transportadora que você contrata), e zerar apagaria o
+   * que você acabou de digitar só por ter mexido no interruptor. Vazio cai no
+   * padrão de Configurações — que começa em zero, o comportamento de antes.
+   */
   protected setShippingType(isFlex: boolean): void {
+    const padraoFlex = this.dataService.settings()?.flexShippingCost ?? 0;
     this.model.update(m => isFlex
-      ? ({ ...m, shippingType: 'flex', sellerShipping: 0 })
+      ? ({ ...m, shippingType: 'flex', sellerShipping: m.sellerShipping || padraoFlex })
       : ({ ...m, shippingType: 'correios', flexRefund: 0 }));
   }
 

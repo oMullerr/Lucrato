@@ -254,7 +254,7 @@ describe('calculatePurchase', () => {
       }),
       makeSale({
         id: 'V002', shippingType: 'flex', quantitySold: 1, unitPrice: 300,
-        feePercentage: 0.1, flexRefund: 30, sellerShipping: 99 /* obsoleto, deve ser ignorado */,
+        feePercentage: 0.1, flexRefund: 30, sellerShipping: 0,
         discount: 10, otherCosts: 0, status: 'Concluída',
       }),
     ];
@@ -301,7 +301,7 @@ describe('calculateSale', () => {
     const sale = makeSale({
       shippingType: 'flex',
       flexRefund: 15,
-      sellerShipping: 99,
+      sellerShipping: 0,
       quantitySold: 1,
       unitPrice: 100,
       feePercentage: 0,
@@ -318,7 +318,7 @@ describe('calculateSale', () => {
     const sale = makeSale({
       shippingType: 'flex',
       flexRefund: undefined,
-      sellerShipping: 99,
+      sellerShipping: 0,
       quantitySold: 1,
       unitPrice: 100,
       feePercentage: 0,
@@ -328,6 +328,65 @@ describe('calculateSale', () => {
     const result = calculateSale(sale, []);
 
     expect(result.netRevenue).toBe(100);
+  });
+
+  /* Até setembro/2026 o frete era descartado no Flex: o valor que o Mercado
+     Livre informa não é o que você paga, porque quem contrata a transportadora
+     é você — só que não havia onde lançar o real, e a venda entrava com frete
+     zero. Toda venda Flex saía com o lucro inflado pelo custo do envio. */
+  it('no Flex, o frete da transportadora SAI da receita', () => {
+    const sale = makeSale({
+      shippingType: 'flex',
+      sellerShipping: 18,
+      flexRefund: 0,
+      quantitySold: 1,
+      unitPrice: 100,
+      feePercentage: 0,
+      discount: 0,
+      otherCosts: 0,
+    });
+    const result = calculateSale(sale, []);
+
+    // netRevenue = 100 - 0 + 0 - 18 = 82
+    expect(result.netRevenue).toBe(82);
+    expect(result.shippingCostEffective).toBe(18);
+    expect(result.shippingCreditEffective).toBe(0);
+  });
+
+  it('no Flex, custo e estorno convivem sem um esconder o outro', () => {
+    const sale = makeSale({
+      shippingType: 'flex',
+      sellerShipping: 18,
+      flexRefund: 5,
+      quantitySold: 1,
+      unitPrice: 100,
+      feePercentage: 0,
+      discount: 0,
+      otherCosts: 0,
+    });
+    const result = calculateSale(sale, []);
+
+    // netRevenue = 100 + 5 - 18 = 87
+    expect(result.netRevenue).toBe(87);
+    // As duas linhas seguem separadas: o estorno não abate a conta do frete.
+    expect(result.shippingCostEffective).toBe(18);
+    expect(result.shippingCreditEffective).toBe(5);
+  });
+
+  it('o frete do Flex volta proporcionalmente na devolução, como todo custo de venda', () => {
+    const sale = makeSale({
+      id: 'V500', shippingType: 'flex', sellerShipping: 20, flexRefund: 0,
+      quantitySold: 4, unitPrice: 100, feePercentage: 0, discount: 0, otherCosts: 0,
+    });
+    const result = calculateSale(sale, [], [{
+      id: 'D001', saleId: 'V500', batchId: 'C001', product: 'Produto A',
+      channel: 'Mercado Livre', quantity: 1, requestDate: '2026-03-01',
+      arrivalDate: '2026-03-05', reason: 'Outro', destination: 'Estoque',
+      returnShipping: 0, refundedAmount: 0, notes: '',
+    }]);
+
+    // 1 de 4 devolvida ⇒ 3/4 do frete continua valendo.
+    expect(result.shippingCostEffective).toBe(15);
   });
 
   it('soma estorno na receita líquida em envio Correios', () => {
@@ -352,6 +411,7 @@ describe('calculateSale', () => {
     const sale = makeSale({
       shippingType: 'flex',
       flexRefund: 15,
+      sellerShipping: 0,
       estorno: 30,
       quantitySold: 1,
       unitPrice: 100,
@@ -485,7 +545,9 @@ describe('calculateKpis', () => {
       netMargin: 0.275,
       discountEffective: overrides.discount ?? 0,
       estornoEffective: overrides.estorno ?? 0,
-      shippingEffective: shippingType === 'flex' ? (flexRefund ?? 0) : -sellerShipping,
+      shippingEffective: (shippingType === 'flex' ? (flexRefund ?? 0) : 0) - sellerShipping,
+      shippingCostEffective: sellerShipping,
+      shippingCreditEffective: shippingType === 'flex' ? (flexRefund ?? 0) : 0,
       otherCostsEffective: overrides.otherCosts ?? base.otherCosts,
       returnedQuantity: 0,
       returnedToStockQuantity: 0,
@@ -557,7 +619,12 @@ describe('calculateKpis', () => {
     expect(result.averageTicket).toBe(200);
   });
 
-  it('totalShipping ignora frete de Flex; agrega totalFlexRefund e totalOtherCosts', () => {
+  /* Antes o KPI desembrulhava o impacto líquido pelo tipo de frete, e o Flex
+     não tinha custo — então "frete" queria dizer "frete dos Correios". Agora
+     tem, e as duas linhas precisam continuar separadas: somar o estorno do ML
+     contra a conta da transportadora faria as duas mentirem ao mesmo tempo,
+     uma para menos e outra para mais, com o total fechando certo. */
+  it('totalShipping soma o frete dos DOIS tipos; totalFlexRefund fica só com o crédito', () => {
     const sales: ComputedSale[] = [
       makeComputedSale({
         id: 'V001', status: 'Concluída',
@@ -565,13 +632,13 @@ describe('calculateKpis', () => {
       }),
       makeComputedSale({
         id: 'V002', status: 'Concluída',
-        shippingType: 'flex', sellerShipping: 99, flexRefund: 15, otherCosts: 0,
+        shippingType: 'flex', sellerShipping: 12, flexRefund: 15, otherCosts: 0,
       }),
     ];
     const result = calculateKpis([], sales);
 
-    expect(result.totalShipping).toBe(20);    // só Correios; o 99 da venda Flex é ignorado
-    expect(result.totalFlexRefund).toBe(15);
+    expect(result.totalShipping).toBe(32);    // 20 dos Correios + 12 da transportadora
+    expect(result.totalFlexRefund).toBe(15);  // só o que o ML devolveu
     expect(result.totalOtherCosts).toBe(5);
   });
 });

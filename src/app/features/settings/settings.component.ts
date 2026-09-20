@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
+﻿import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { Firestore, doc, setDoc } from '@angular/fire/firestore';
@@ -31,6 +31,7 @@ const DEFAULT_SETTINGS: Settings = {
   lowStockAlert: 1,
   defaultShipping: 0,
   returnWindowDays: 30,
+  flexShippingCost: 0,
   defaultChannel: 'Mercado Livre',
   categories: [],
   categoryColors: {},
@@ -64,6 +65,7 @@ const CAMPOS_DO_FORMULARIO = [
   'lowStockAlert',
   'defaultShipping',
   'returnWindowDays',
+  'flexShippingCost',
   'defaultChannel',
   'categories',
   'categoryColors',

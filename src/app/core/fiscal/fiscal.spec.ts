@@ -46,6 +46,8 @@ function makeComputedSale(overrides: Partial<ComputedSale> = {}): ComputedSale {
     discountEffective: overrides.discount ?? 0,
     estornoEffective: overrides.estorno ?? 0,
     shippingEffective: 0,
+    shippingCostEffective: 0,
+    shippingCreditEffective: 0,
     otherCostsEffective: 0,
     returnedQuantity: 0,
     returnedToStockQuantity: 0,

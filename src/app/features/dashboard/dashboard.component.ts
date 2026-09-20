@@ -143,8 +143,10 @@ export class DashboardComponent {
     const proportionalCost = sales.reduce((s, v) => s + v.proportionalCost, 0);
     // EFETIVOS em todos os componentes: sao eles que somam para netRevenue, e a
     // cascata do waterfall so fecha se o passo usar a mesma parcela revertida.
-    const totalShipping = sales.reduce((s, v) => s + (v.shippingType === 'flex' ? 0 : -v.shippingEffective), 0);
-    const totalFlexRefund = sales.reduce((s, v) => s + (v.shippingType === 'flex' ? v.shippingEffective : 0), 0);
+    // Custo e crédito vêm separados da venda: desembrulhar o impacto líquido
+    // pelo tipo de frete parou de funcionar quando o Flex passou a ter custo.
+    const totalShipping = sales.reduce((s, v) => s + v.shippingCostEffective, 0);
+    const totalFlexRefund = sales.reduce((s, v) => s + v.shippingCreditEffective, 0);
     const totalDiscounts = sales.reduce((s, v) => s + v.discountEffective, 0);
     const totalOtherCosts = sales.reduce((s, v) => s + v.otherCostsEffective, 0);
     const totalEstorno = sales.reduce((s, v) => s + v.estornoEffective, 0);

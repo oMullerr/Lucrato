@@ -135,6 +135,18 @@ export interface Settings {
   defaultShipping: number;
   /** Janela (dias) em que uma venda ainda aceita devolução. Padrão 30. */
   returnWindowDays: number;
+  /**
+   * Quanto você paga à transportadora numa venda Flex, por pedido.
+   *
+   * No Flex o Mercado Livre informa um custo de frete que NÃO é o que você
+   * paga — quem contrata a transportadora é você. Por isso o número dele é
+   * ignorado na importação, e até setembro/2026 não havia onde lançar o real:
+   * toda venda Flex entrava com frete zero e o lucro saía inflado.
+   *
+   * Ausente ou zero mantém o comportamento antigo. O valor é rateado entre as
+   * fatias quando um pedido é dividido em lotes, e continua editável por venda.
+   */
+  flexShippingCost?: number;
   defaultChannel: SaleChannel;
   categories: string[];
   /** Cor (hex) por categoria, indexada pelo nome. Ausência = cor padrão. */
@@ -204,6 +216,10 @@ export interface ComputedSale extends Sale {
   estornoEffective: number;
   /** Impacto do frete original após reversão proporcional. Negativo = custo do vendedor. */
   shippingEffective: number;
+  /** Só o CUSTO do frete, positivo, após reversão proporcional. */
+  shippingCostEffective: number;
+  /** Só o CRÉDITO do frete (Flex), positivo, após reversão proporcional. */
+  shippingCreditEffective: number;
   /** Outros custos após reversão proporcional das devoluções. */
   otherCostsEffective: number;
   /** Unidades devolvidas em devoluções FINALIZADAS (clampado em quantitySold). */

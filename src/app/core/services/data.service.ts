@@ -1,4 +1,4 @@
-import { Injectable, computed, effect, inject, signal } from '@angular/core';
+﻿import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import {
   Firestore, collection, doc, onSnapshot, setDoc, deleteField, writeBatch,
 } from '@angular/fire/firestore';
@@ -678,7 +678,9 @@ export class DataService {
    * servidor do que foi aplicado.
    */
   async applyMlInbox(itens: readonly ItemDaCaixa[]): Promise<PlanoDeAplicacao> {
-    const plano = planejarAplicacao(itens, this.computedPurchases(), this.sales());
+    const plano = planejarAplicacao(itens, this.computedPurchases(), this.sales(), {
+      custoFlex: this.settings()?.flexShippingCost,
+    });
     if (plano.novas.length === 0 && plano.atualizadas.length === 0) return plano;
 
     await this.update(d => {
@@ -703,7 +705,7 @@ export class DataService {
   async adotarNumerosDoMl(saleId: string, item: ItemDaCaixa): Promise<void> {
     const atual = this.findSale(saleId);
     if (!atual) return;
-    const corrigida = adotarNumerosDoMl(atual, item);
+    const corrigida = adotarNumerosDoMl(atual, item, this.settings()?.flexShippingCost);
 
     await this.update(d => {
       const i = d.sales.findIndex(v => v.id === saleId);
@@ -728,10 +730,11 @@ export class DataService {
     const alvos = pares.filter(p => this.findSale(p.saleId));
     if (alvos.length === 0) return [];
 
+    const custoFlex = this.settings()?.flexShippingCost;
     await this.update(d => {
       for (const { saleId, item } of alvos) {
         const i = d.sales.findIndex(v => v.id === saleId);
-        if (i >= 0) d.sales[i] = adotarNumerosDoMl(d.sales[i], item);
+        if (i >= 0) d.sales[i] = adotarNumerosDoMl(d.sales[i], item, custoFlex);
       }
     });
 
@@ -846,6 +849,7 @@ export class DataService {
       lowStockAlert: cfg.lowStockAlert ?? defaults.lowStockAlert,
       defaultShipping: cfg.defaultShipping ?? defaults.defaultShipping,
       returnWindowDays: cfg.returnWindowDays ?? defaults.returnWindowDays,
+      flexShippingCost: cfg.flexShippingCost ?? defaults.flexShippingCost,
       defaultChannel: cfg.defaultChannel ?? defaults.defaultChannel,
       categories: cfg.categories ?? defaults.categories,
       categoryColors: cfg.categoryColors ?? defaults.categoryColors,
@@ -877,6 +881,11 @@ export class DataService {
       lowStockAlert: 1,
       defaultShipping: 0,
       returnWindowDays: 30,
+      /* Zero é o padrão de propósito: o custo da transportadora no Flex é seu,
+         varia por região e por contrato, e chutar um número aqui poria uma
+         despesa inventada no lucro de todo mundo. Zero mantém exatamente o
+         comportamento de antes até você preencher. */
+      flexShippingCost: 0,
       defaultChannel: 'Mercado Livre',
       categories: ['Eletrônicos', 'Outros'],
       categoryColors: {},

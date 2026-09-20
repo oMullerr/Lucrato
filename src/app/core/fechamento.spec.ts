@@ -26,6 +26,8 @@ function venda(over: Partial<ComputedSale> = {}): ComputedSale {
     grossRevenue: 100,
     feeAmount: 12,
     shippingEffective: -8,
+    shippingCostEffective: 8,
+    shippingCreditEffective: 0,
     discountEffective: 0,
     otherCostsEffective: 0,
     netRevenue: 80,
