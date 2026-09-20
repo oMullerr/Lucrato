@@ -16,6 +16,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 
 import { ML_CLIENT_ID, ML_CLIENT_SECRET } from '../config';
+import { aplicarNoRazao } from './apply';
 import { criarMlClient } from './client';
 import { cobrarIntervalo } from './debounce';
 import { marcarSync, processarPedido } from './inbox';
@@ -53,6 +54,35 @@ export function idDaReclamacao(resource: string): string {
 async function uidDoVendedor(mlUserId: string): Promise<string> {
   const snap = await db().doc(`mlIndex/${mlUserId}`).get();
   return snap.exists ? String(snap.get('uid') ?? '') : '';
+}
+
+/**
+ * Lança no razão o que acabou de ser capturado — e NUNCA derruba a captura.
+ *
+ * As duas etapas têm consequências diferentes. Capturar é o que não pode se
+ * perder: o Mercado Livre desiste de reenviar depois de uma hora. Lançar pode
+ * esperar a próxima rodada sem prejuízo nenhum, porque o pedido já está
+ * guardado na caixa. Por isso a falha aqui é registrada e engolida: deixar uma
+ * exceção do lançamento marcar o evento como "com erro" faria a captura ser
+ * repetida por causa de um problema que não é dela.
+ */
+async function lancarNoRazao(uid: string): Promise<void> {
+  try {
+    const r = await aplicarNoRazao(uid);
+    if (r.vendas > 0 || r.devolucoes > 0) {
+      logger.info('Razão avançou sem o navegador', {
+        uid,
+        vendas: r.vendas,
+        devolucoes: r.devolucoes,
+        pendentes: r.pendentes,
+      });
+    }
+  } catch (err) {
+    logger.error('Lançamento no razão falhou; o pedido segue na caixa', {
+      uid,
+      motivo: String((err as Error).message),
+    });
+  }
 }
 
 /** Reage à notificação enfileirada pelo webhook. */
@@ -98,6 +128,7 @@ export const mlProcessEvent = onDocumentCreated(
         logger.info('Pedido processado pelo webhook', { uid, orderId, rascunhos: total });
       }
       await marcarSync(uid);
+      await lancarNoRazao(uid);
       await event.data?.ref.delete();
     } catch (err) {
       const motivo = String((err as Error).message);
@@ -255,6 +286,11 @@ export const mlPoller = onSchedule(
       try {
         const total = await varrerVendedor(uid, mlUserId);
         if (total > 0) logger.info('Varredura trouxe pedidos', { uid, total });
+        /* Fora do `if`: a varredura pode não trazer pedido nenhum e ainda
+           assim haver coisa esperando na caixa — um anúncio vinculado agora,
+           um lote cadastrado ontem. É esta chamada que faz o razão andar
+           sozinho de 15 em 15 minutos. */
+        await lancarNoRazao(uid);
       } catch (err) {
         const motivo = String((err as Error).message);
         // Conta que precisa reconectar não deve derrubar a varredura das outras.

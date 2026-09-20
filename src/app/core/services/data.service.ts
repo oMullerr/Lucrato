@@ -488,8 +488,33 @@ export class DataService {
     await this.mergeSettings({ mlAutoApply: on });
   }
 
+  /**
+   * Devolve `id` se estiver livre, ou o próximo número livre do espaço.
+   *
+   * O número é escolhido quando o formulário ABRE, não quando você salva. Entre
+   * uma coisa e outra passam minutos, e desde que a Cloud Function lança no
+   * razão sozinha existe um segundo escritor: se ela gravar V102 enquanto o seu
+   * formulário está aberto com V102, salvar sobrescreveria a venda dela — sem
+   * erro, sem aviso, sem linha na tela. O mesmo valia para duas abas suas.
+   *
+   * Aqui a verificação é contra o retrato VIVO da base, dentro da mutação, a
+   * milissegundos da gravação. Do outro lado o servidor usa `create`, que falha
+   * se o documento já existe — nenhum dos dois consegue apagar o outro.
+   */
+  private idLivre<T extends { id: string }>(
+    existentes: readonly T[],
+    id: string,
+    prefixo: string,
+  ): string {
+    return existentes.some(i => i.id === id)
+      ? nextId(existentes.map(i => i.id), prefixo)
+      : id;
+  }
+
   addPurchase(purchase: Purchase): void {
-    this.update(d => { d.purchases.push({ ...purchase }); });
+    this.update(d => {
+      d.purchases.push({ ...purchase, id: this.idLivre(d.purchases, purchase.id, 'C') });
+    });
   }
 
   updatePurchase(id: string, data: Partial<Purchase>): void {
@@ -525,7 +550,7 @@ export class DataService {
   }
 
   addSale(sale: Sale): void {
-    this.update(d => { d.sales.push({ ...sale }); });
+    this.update(d => { d.sales.push({ ...sale, id: this.idLivre(d.sales, sale.id, 'V') }); });
   }
 
   updateSale(id: string, data: Partial<Sale>): void {
@@ -579,7 +604,7 @@ export class DataService {
 
   addReturn(ret: Return): void {
     this.update(d => {
-      d.returns.push({ ...ret });
+      d.returns.push({ ...ret, id: this.idLivre(d.returns, ret.id, 'D') });
       this.syncSaleStatus(d, ret.saleId);
     });
   }
