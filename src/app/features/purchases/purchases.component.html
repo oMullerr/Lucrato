@@ -1,4 +1,4 @@
-<div class="pur-layout">
+﻿<div class="pur-layout">
   <div class="pur-main">
 
     <app-page-header
@@ -42,7 +42,12 @@
             />
           </app-field>
 
-          <app-date-range-picker variant="menu" (selectionChange)="onRangeChange($event)" />
+          <app-date-range-picker
+          variant="menu"
+          [(range)]="periodo.range"
+          [(customStart)]="periodo.customStart"
+          [(customEnd)]="periodo.customEnd"
+          (selectionChange)="onRangeChange($event)" />
 
           <div class="filter-chips" role="tablist">
             <button appChip [active]="statusFilter() === 'all'" [count]="totals().all"

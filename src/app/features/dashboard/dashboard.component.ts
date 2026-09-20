@@ -5,6 +5,7 @@ import { BaseChartDirective } from 'ng2-charts';
 import type { ChartConfiguration } from 'chart.js';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
+import { PeriodoService } from '../../core/services/periodo.service';
 import { MlIntegrationService } from '../../core/services/ml-integration.service';
 import { juntarRecebiveis, resumirCaixa } from '../../core/ml/payouts';
 import { ThemeService } from '../../core/services/theme.service';
@@ -60,9 +61,14 @@ export class DashboardComponent {
   private readonly lang = inject(LanguageService);
 
   protected readonly rangeOptions = RANGE_OPTIONS;
-  protected readonly range = signal<RangeKey>('30d');
-  protected readonly customStart = signal<Date | null>(null);
-  protected readonly customEnd = signal<Date | null>(null);
+
+  /* O período agora é do app, não desta tela: escolher aqui vale em Vendas,
+     Compras e Devoluções, e vice-versa. Por isso o padrão deixou de ser 30
+     dias e passou a ser 'all' — ver `PeriodoService`. */
+  protected readonly periodo = inject(PeriodoService);
+  protected readonly range = this.periodo.range;
+  protected readonly customStart = this.periodo.customStart;
+  protected readonly customEnd = this.periodo.customEnd;
   protected readonly today = new Date();
 
   /** All completed sales — unfiltered base. */

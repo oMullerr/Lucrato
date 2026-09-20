@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+﻿import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { DataService } from '../../core/services/data.service';
+import { PeriodoService } from '../../core/services/periodo.service';
 import { MlIntegrationService } from '../../core/services/ml-integration.service';
 import { Recebivel, juntarRecebiveis, porOrderId } from '../../core/ml/payouts';
 import { NotifyService } from '../../core/services/notify.service';
@@ -67,6 +68,9 @@ export class SalesComponent {
   protected readonly textFilter = signal('');
   protected readonly channelFilter = signal('all');
   protected readonly quickFilter = signal<SaleFilter>('all');
+  /* O recorte de datas e do app, nao desta tela: o mesmo periodo vale em
+     Vendas, Compras, Devolucoes e no Painel. Ver PeriodoService. */
+  protected readonly periodo = inject(PeriodoService);
   protected readonly dateBounds = signal<RangeBounds | null>(null);
   protected readonly expandedRow = signal<string | null>(null);
 

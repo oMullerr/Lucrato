@@ -1,4 +1,4 @@
-<app-page-header
+﻿<app-page-header
   [title]="'sales.title' | translate"
   [eyebrow]="'sales.eyebrow' | translate:{ count: sales().length }"
   [subtitle]="'sales.subtitle' | translate"
@@ -87,7 +87,12 @@
         }
       </app-select>
 
-      <app-date-range-picker variant="menu" (selectionChange)="onRangeChange($event)" />
+      <app-date-range-picker
+          variant="menu"
+          [(range)]="periodo.range"
+          [(customStart)]="periodo.customStart"
+          [(customEnd)]="periodo.customEnd"
+          (selectionChange)="onRangeChange($event)" />
 
       <div class="quick-chips" role="tablist">
         <button appChip [active]="quickFilter() === 'all'" [count]="quickCounts().all"

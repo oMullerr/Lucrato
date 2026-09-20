@@ -1,4 +1,4 @@
-jest.mock('@angular/fire/firestore', () => ({
+﻿jest.mock('@angular/fire/firestore', () => ({
   Firestore: class Firestore {},
   doc: jest.fn(),
   setDoc: jest.fn(),
@@ -58,7 +58,11 @@ describe('DashboardComponent (tela Dashboard — valores exibidos)', () => {
   });
 
   describe('periodSales() — vendas do período (canceladas sempre fora)', () => {
-    it('30d (padrão): V002, V003, V005, V007', () => {
+    /* O período agora é do app e vem do `PeriodoService`, cujo padrão é 'all'.
+       Estes testes passam a declarar o recorte que medem em vez de herdá-lo —
+       que é o que sempre deviam fazer. */
+    it('30d: V002, V003, V005, V007', () => {
+      cmp.range.set('30d');
       expect(cmp.periodSales().map((s: any) => s.id)).toEqual(EXPECTED.dash30d.ids);
     });
 
@@ -82,6 +86,7 @@ describe('DashboardComponent (tela Dashboard — valores exibidos)', () => {
 
   describe('periodKpis() — cards KPI do topo', () => {
     it('30d: todos os campos batem com o cálculo de referência', () => {
+      cmp.range.set('30d');
       const k = cmp.periodKpis();
       const e = EXPECTED.dash30d;
       expect(k.grossRevenue).toBeCloseTo(e.grossRevenue, 10);
@@ -263,6 +268,7 @@ describe('DashboardComponent (tela Dashboard — valores exibidos)', () => {
 
   describe('sparklines — tendências dos KPIs', () => {
     it('30d: 30 pontos cumulativos; final = total do período (lucro, receita, taxas)', () => {
+      cmp.range.set('30d');
       const e = EXPECTED.dash30d;
       const profit = cmp.profitSpark();
       const revenue = cmp.revenueSpark();
@@ -287,6 +293,7 @@ describe('DashboardComponent (tela Dashboard — valores exibidos)', () => {
     });
 
     it('marginSpark: último ponto = margem do período', () => {
+      cmp.range.set('30d');
       const pts = cmp.marginSpark();
       expect(pts).toHaveLength(30);
       const e = EXPECTED.dash30d;
