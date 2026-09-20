@@ -176,7 +176,11 @@
                   <tr
                     class="row row-clickable"
                     [class.expanded]="expandedRow() === r.id"
+                    [attr.aria-expanded]="expandedRow() === r.id"
+                    tabindex="0"
                     (click)="toggleRow(r.id, $event)"
+                    (keydown.enter)="toggleRow(r.id, $event)"
+                    (keydown.space)="$event.preventDefault(); toggleRow(r.id, $event)"
                   >
                     <td class="col-edge">
                       <span class="row-stripe"

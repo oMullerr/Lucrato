@@ -1329,7 +1329,8 @@
     "needCost": "Enter the product cost before turning it into a purchase.",
     "fromCalculator": "Created by the calculator",
     "untitled": "Unnamed product",
-    "historyTitle": "Saved analyses"
+    "historyTitle": "Saved analyses",
+    "removeAnalysis": "Remove analysis"
   },
   "billing": {
     "title": "Billing",

@@ -20,8 +20,10 @@ jobs:
       # travar regressão. Cair abaixo dele reprova o PR.
       - run: npm run test:coverage
       - run: npm run build
-      # A auditoria de celular é estática: falha se voltar `@media` cru,
-      # `min-width` que não cabe em 375px, token de cor inexistente ou `100vh`.
+      # Auditoria estática de celular e acessibilidade. Os dois eixos estão
+      # aqui pela mesma razão: falham em SILÊNCIO. Token de cor inexistente
+      # vira `inherit` sem erro, e botão sem nome acessível funciona perfeito
+      # para quem enxerga — nenhum dos dois aparece num teste de comportamento.
       - run: node scripts/audit-mobile.mjs
 
   # As functions rodam no servidor e mexem em token e em dinheiro — ficarem

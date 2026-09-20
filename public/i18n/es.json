@@ -1329,7 +1329,8 @@
     "needCost": "Cargá el costo del producto antes de convertir en compra.",
     "fromCalculator": "Creado por la calculadora",
     "untitled": "Producto sin nombre",
-    "historyTitle": "Análisis guardados"
+    "historyTitle": "Análisis guardados",
+    "removeAnalysis": "Quitar análisis"
   },
   "billing": {
     "title": "Facturación",

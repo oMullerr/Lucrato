@@ -211,7 +211,11 @@
               {{ a.resultado.lucroLiquido | brl }}
               <small>{{ (a.resultado.margemContribuicao * 100).toFixed(1) }}%</small>
             </span>
-            <button appBtn="ghost" (click)="analises.remover(a.id)">
+            <button
+              appBtn="ghost"
+              [attr.aria-label]="'calculator.removeAnalysis' | translate"
+              (click)="analises.remover(a.id)"
+            >
               <app-icon name="trash" />
             </button>
           </li>

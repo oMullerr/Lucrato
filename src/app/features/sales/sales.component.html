@@ -173,10 +173,19 @@
               </thead>
               <tbody>
                 @for (v of pagedSales(); track v.id) {
+                  <!-- `tabindex` + Enter/Espaço porque a linha É o controle
+                       que abre o detalhe, e sem isto só o mouse abria. Sem
+                       `role="button"` de propósito: trocar o papel tiraria a
+                       linha da tabela para quem usa leitor de tela, que é um
+                       preço alto para resolver o teclado. -->
                   <tr
                     class="row row-clickable"
                     [class.expanded]="expandedRow() === v.id"
+                    [attr.aria-expanded]="expandedRow() === v.id"
+                    tabindex="0"
                     (click)="toggleRow(v.id, $event)"
+                    (keydown.enter)="toggleRow(v.id, $event)"
+                    (keydown.space)="$event.preventDefault(); toggleRow(v.id, $event)"
                   >
                     <td class="col-edge">
                       <span class="row-stripe" [class.stripe-danger]="v.netProfit < 0" aria-hidden="true"></span>

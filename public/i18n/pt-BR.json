@@ -1329,7 +1329,8 @@
     "needCost": "Informe o custo do produto antes de virar compra.",
     "fromCalculator": "Criado pela calculadora",
     "untitled": "Produto sem nome",
-    "historyTitle": "Análises salvas"
+    "historyTitle": "Análises salvas",
+    "removeAnalysis": "Remover análise"
   },
   "billing": {
     "title": "Faturamento",

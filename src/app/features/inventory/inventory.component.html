@@ -246,7 +246,11 @@
                       <tr
                         class="row row-clickable"
                         [class.expanded]="expandedRow() === c.id"
+                        [attr.aria-expanded]="expandedRow() === c.id"
+                        tabindex="0"
                         (click)="openDetail(c)"
+                        (keydown.enter)="openDetail(c)"
+                        (keydown.space)="$event.preventDefault(); openDetail(c)"
                       >
                         <td class="col-edge">
                           <span class="row-stripe" [class]="rowStripeClass(c)" aria-hidden="true"></span>
