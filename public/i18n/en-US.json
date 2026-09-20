@@ -1148,6 +1148,7 @@
     "none": "Nothing needs attention. Your listings and stock are in order.",
     "ativo_sem_estoque": "Listing live with no stock — it shows in search and never converts",
     "pausado_com_estoque": "Paused with {{estoque}} in stock — capital tied up with no chance to sell",
+    "preco_abaixo_do_minimo": "Live price yields {{margem}}%, below your {{minima}}% target — the next sale leaves R$ {{lucro}}",
     "margem_baixa": "Margin of {{margem}}%, below your {{minima}}% target",
     "sem_conversao": "{{visitas}} visits in 30 days and no sales — the offer is the problem, not the exposure"
   },

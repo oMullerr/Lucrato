@@ -98,9 +98,12 @@ describe('pausado com estoque parado', () => {
 
 describe('margem abaixo da meta', () => {
   it('acusa usando a margem realizada', () => {
-    // Comissao alta o bastante para a margem ficar abaixo de 10%.
+    /* Comissao alta o bastante para a margem REALIZADA ficar abaixo de 10%,
+       mas com o anuncio hoje a um preco que fecha bem. E o que separa este
+       alerta do `preco_abaixo_do_minimo`: aquele olha o preco que esta no ar,
+       este olha a venda que ja aconteceu. */
     const ruim = venda({ feePercentage: 0.5, sellerShipping: 40 });
-    const a = gerarAlertas([anuncio()], vinculos, [ruim], [lote()], settings, HOJE);
+    const a = gerarAlertas([anuncio({ price: 2000 })], vinculos, [ruim], [lote()], settings, HOJE);
     const alerta = a.find(x => x.tipo === 'margem_baixa');
     expect(alerta).toBeDefined();
     expect(alerta?.dados['minima']).toBe(10);
@@ -194,5 +197,94 @@ describe('ordenacao', () => {
 
   it('lista vazia quando esta tudo em ordem', () => {
     expect(gerarAlertas([anuncio()], vinculos, [], [lote()], settings, HOJE)).toEqual([]);
+  });
+});
+
+/**
+ * Preco do anuncio abaixo do piso, ANTES de vender.
+ *
+ * `margem_baixa` olha para tras: so acusa depois que a venda ruim aconteceu.
+ * Este olha para frente — pega o preco que esta no ar agora, o custo do lote
+ * que sairia na proxima venda e a comissao que a plataforma vem cobrando.
+ */
+describe('preco abaixo do minimo', () => {
+  it('acusa quando o preco no ar nao fecha a margem minima', () => {
+    // Lote a 100 por unidade, anuncio a 120, comissao padrao de 12%:
+    // 120 - 14,40 - 100 = 5,60, ou 4,7% — abaixo dos 10% pedidos.
+    const a = gerarAlertas([anuncio({ price: 120 })], vinculos, [], [lote()], settings, HOJE);
+    const alerta = a.find(x => x.tipo === 'preco_abaixo_do_minimo');
+
+    expect(alerta).toBeDefined();
+    expect(alerta?.severidade).toBe('alta');
+    expect(alerta?.dados['minima']).toBe(10);
+    expect(Number(alerta?.dados['lucro'])).toBeCloseTo(5.6, 2);
+  });
+
+  it('preco folgado nao acusa', () => {
+    const a = gerarAlertas([anuncio({ price: 300 })], vinculos, [], [lote()], settings, HOJE);
+    expect(a.map(x => x.tipo)).not.toContain('preco_abaixo_do_minimo');
+  });
+
+  it('usa a comissao REAL que a plataforma vem cobrando, nao a estimada', () => {
+    // A 300 com os 12% padrao sobram 54,7%; com os 60% reais, sobram 3,3%.
+    const caro = venda({ feePercentage: 0.6 });
+    const a = gerarAlertas([anuncio({ price: 300 })], vinculos, [caro], [lote()], settings, HOJE);
+    expect(a.map(x => x.tipo)).toContain('preco_abaixo_do_minimo');
+  });
+
+  it('usa o custo do lote que sai na PROXIMA venda, pelo mesmo FIFO do razao', () => {
+    /* O lote velho e barato ja acabou; o proximo a sair custa 250, e a essa
+       altura o preco de 300 nao fecha mais. E o caso do "custo do lote novo
+       subiu" — sem isto, so se descobre depois de vender no prejuizo. */
+    const velhoVazio = calculatePurchase(
+      makePurchase({ id: 'C001', product: 'Furadeira Bosch', quantityPurchased: 1, unitCost: 50,
+                     purchaseDate: '2026-01-01', receiptDate: '2026-01-02' }),
+      [makeSale({ id: 'V900', batchId: 'C001', quantitySold: 1 })],
+      settings,
+      [],
+    );
+    const novoCaro = calculatePurchase(
+      makePurchase({ id: 'C002', product: 'Furadeira Bosch', quantityPurchased: 10, unitCost: 250,
+                     purchaseDate: '2026-08-01', receiptDate: '2026-08-02' }),
+      [],
+      settings,
+      [],
+    );
+
+    const a = gerarAlertas([anuncio({ price: 300 })], vinculos, [], [velhoVazio, novoCaro], settings, HOJE);
+    expect(a.map(x => x.tipo)).toContain('preco_abaixo_do_minimo');
+  });
+
+  it('sem vinculo nao ha custo, e sem custo a margem seria invencao', () => {
+    const a = gerarAlertas([anuncio({ price: 1 })], new Map(), [], [lote()], settings, HOJE);
+    expect(a.map(x => x.tipo)).not.toContain('preco_abaixo_do_minimo');
+  });
+
+  it('sem estoque quem fala e `ativo_sem_estoque` — nao dois alertas no mesmo anuncio', () => {
+    const vazio = calculatePurchase(
+      makePurchase({ id: 'C001', product: 'Furadeira Bosch', quantityPurchased: 1, unitCost: 100 }),
+      [makeSale({ id: 'V900', batchId: 'C001', quantitySold: 1 })],
+      settings,
+      [],
+    );
+    const a = gerarAlertas(
+      [anuncio({ price: 1, availableQuantity: 0 })], vinculos, [], [vazio], settings, HOJE,
+    );
+
+    expect(a.map(x => x.tipo)).toContain('ativo_sem_estoque');
+    expect(a.map(x => x.tipo)).not.toContain('preco_abaixo_do_minimo');
+  });
+
+  it('anuncio pausado nao acusa — nao ha venda para proteger', () => {
+    const a = gerarAlertas([anuncio({ price: 1, status: 'paused' })], vinculos, [], [lote()], settings, HOJE);
+    expect(a.map(x => x.tipo)).not.toContain('preco_abaixo_do_minimo');
+  });
+
+  it('suprime `margem_baixa` do mesmo anuncio: duas linhas para um problema so', () => {
+    const ruim = venda({ feePercentage: 0.5, sellerShipping: 40 });
+    const a = gerarAlertas([anuncio({ price: 120 })], vinculos, [ruim], [lote()], settings, HOJE);
+
+    expect(a.map(x => x.tipo)).toContain('preco_abaixo_do_minimo');
+    expect(a.map(x => x.tipo)).not.toContain('margem_baixa');
   });
 });

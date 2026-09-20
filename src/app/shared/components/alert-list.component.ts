@@ -9,6 +9,9 @@ import { IconName } from '../ui/icon/icons';
 const APARENCIA: Record<TipoAlerta, { icone: IconName; rota: string }> = {
   ativo_sem_estoque: { icone: 'package', rota: '/purchases' },
   pausado_com_estoque: { icone: 'tags', rota: '/anuncios' },
+  /* Leva aos Anúncios, e não a Vendas: o conserto é o preço que está no ar
+     agora, não a venda que já passou. */
+  preco_abaixo_do_minimo: { icone: 'calculator', rota: '/anuncios' },
   margem_baixa: { icone: 'trending-up', rota: '/sales' },
   sem_conversao: { icone: 'chart-spline', rota: '/anuncios' },
 };

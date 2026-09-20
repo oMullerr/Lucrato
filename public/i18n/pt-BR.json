@@ -1148,6 +1148,7 @@
     "none": "Nada pedindo atenção. Seus anúncios e o estoque estão em ordem.",
     "ativo_sem_estoque": "Anúncio no ar sem estoque — aparece na busca e não converte",
     "pausado_com_estoque": "Pausado com {{estoque}} em estoque — capital parado sem chance de vender",
+    "preco_abaixo_do_minimo": "Preço no ar rende {{margem}}%, abaixo da sua meta de {{minima}}% — a próxima venda deixa R$ {{lucro}}",
     "margem_baixa": "Margem de {{margem}}%, abaixo da sua meta de {{minima}}%",
     "sem_conversao": "{{visitas}} visitas em 30 dias e nenhuma venda — o problema é a oferta, não a exposição"
   },
