@@ -443,9 +443,6 @@
     "eyebrow": "Panorama · atualizado {{time}}",
     "subtitleEmpty": "Comece cadastrando seu primeiro lote para acompanhar a saúde do seu estoque.",
     "subtitleSummary": "{{active}} lotes ativos · {{attention}} demandam atenção",
-    "onboardTitle": "Comece pelo primeiro lote",
-    "onboardDesc": "Cadastre uma compra para começar a acompanhar seu estoque, capital investido e margens. Em seguida, registre vendas e veja o panorama se desenhar automaticamente.",
-    "onboardCta": "Cadastrar primeiro lote",
     "financialSummary": "Resumo financeiro",
     "netProfit": "Lucro líquido",
     "revenue": "Receita",
@@ -1483,5 +1480,19 @@
     "basis": "{{unidades}} un. em {{vendas}} venda(s) nos últimos {{dias}} dias",
     "units": "unidades",
     "onHand": "{{estoque}} em estoque"
+  },
+  "onboarding": {
+    "title": "Primeiros passos",
+    "subtitle": "Três coisas e o Lucrato passa a trabalhar sozinho. A ordem importa: as vendas vêm do Mercado Livre, mas o custo só você sabe.",
+    "done": "Feito",
+    "conectarTitle": "Conectar o Mercado Livre",
+    "conectarDesc": "Autoriza a leitura dos seus pedidos. A partir daí as vendas entram sozinhas, com a comissão real de cada uma.",
+    "conectarCta": "Conectar",
+    "vincularTitle": "Vincular os anúncios aos produtos",
+    "vincularDesc": "Diz qual anúncio é qual produto seu. Sem o vínculo a venda fica esperando na caixa, porque o sistema não inventa produto.",
+    "vincularCta": "Vincular",
+    "lotesTitle": "Cadastrar os lotes que você comprou",
+    "lotesDesc": "O Mercado Livre sabe o que você vendeu, mas não quanto pagou ao fornecedor. Sem lote não há custo, e sem custo o app mostraria faturamento e chamaria de lucro.",
+    "lotesCta": "Cadastrar lote"
   }
 }

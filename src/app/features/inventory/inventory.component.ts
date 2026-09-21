@@ -28,6 +28,7 @@ import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { BatchDetailPanelComponent } from '../../shared/components/batch-detail-panel.component';
 import { PendenciasCardComponent } from '../../shared/components/pendencias-card.component';
 import { ReposicaoCardComponent } from '../../shared/components/reposicao-card.component';
+import { EstadoDosPassos, PrimeirosPassosComponent } from '../../shared/components/primeiros-passos.component';
 import { ColorPillComponent } from '../../shared/components/color-pill.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
@@ -67,6 +68,7 @@ interface MobileSortOption {
     EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent,
     PendenciasCardComponent,
     ReposicaoCardComponent,
+    PrimeirosPassosComponent,
     BrlPipe, BrDatePipe, DatePipe,
     ButtonComponent, IconComponent, TooltipDirective, ChipComponent, DrawerComponent,
     MoneyComponent, SortDirective, SortHeaderComponent, PaginatorComponent,
@@ -287,6 +289,20 @@ export class InventoryComponent {
   protected readonly reposicao = computed(() =>
     sugerirReposicao(this.data.computedPurchases(), this.data.computedSales()),
   );
+
+  /**
+   * Onde a primeira configuração está.
+   *
+   * Cada passo se marca a partir do estado REAL — conexão viva, vínculo
+   * gravado, lote cadastrado —, e não de um checklist guardado. Um passo que
+   * diz "feito" porque alguém clicou, e não porque aconteceu, é pior que passo
+   * nenhum: some da lista sem ter resolvido nada.
+   */
+  protected readonly primeirosPassos = computed<EstadoDosPassos>(() => ({
+    conectado: this.ml.connected() || this.ml.needsReconnect(),
+    vinculado: this.ml.linksByItem().size > 0,
+    temLotes: this.data.purchases().length > 0,
+  }));
 
   protected readonly alertLevel = computed<'high' | 'medium'>(() =>
     this.alerts().some(a => a.status === 'Parado') ? 'high' : 'medium'

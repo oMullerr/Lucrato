@@ -33,17 +33,11 @@
         </section>
 
       } @else if (sortedPurchases().length === 0) {
-        <!-- Onboarding de primeira vez -->
-        <app-empty-state
-          icon="package"
-          [title]="'inventory.onboardTitle' | translate"
-          [description]="'inventory.onboardDesc' | translate"
-        >
-          <a appBtn routerLink="/purchases">
-            <app-icon name="plus" [size]="16" />
-            {{ 'inventory.onboardCta' | translate }}
-          </a>
-        </app-empty-state>
+        <!-- Primeiros passos. Antes havia um botão só, "cadastrar lote" — não
+             errado, incompleto: numa base zerada ninguém descobria por ali que
+             o caminho começa em conectar o Mercado Livre, e ia digitar à mão
+             um mês de vendas que a integração traria sozinha. -->
+        <app-primeiros-passos [estado]="primeirosPassos()" />
 
       } @else {
         <!-- ZONA 0 — PAUTA. Antes do pulso de propósito: "como vai o negócio"

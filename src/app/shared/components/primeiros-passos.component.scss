@@ -1,0 +1,121 @@
+@use '../../../styles/breakpoints' as bp;
+
+.passos {
+  padding: 24px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-1);
+}
+
+.passos-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.passos-head p {
+  margin: 4px 0 20px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.passos-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.passo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-2);
+}
+
+.passo-num {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-1);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.passo.feito .passo-num {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: var(--bg-surface-1);
+}
+
+.passo-texto {
+  /* `min-width: 0` permite a quebra do texto longo dentro do flex. */
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.passo-titulo {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.passo.feito .passo-titulo { color: var(--text-secondary); }
+
+.passo-desc {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.passo-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  /* Alvo de toque de 44px: é a primeira coisa que se toca no app. */
+  min-height: 44px;
+  padding: 0 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.passo-go:hover { text-decoration: underline; }
+
+.passo-ok {
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-success);
+  white-space: nowrap;
+}
+
+@include bp.below(sm) {
+  .passos { padding: 16px; }
+
+  .passo { flex-wrap: wrap; }
+
+  .passo-texto { flex-basis: calc(100% - 44px); }
+
+  .passo-go,
+  .passo-ok {
+    margin-left: 44px;
+  }
+
+  .passo-go { min-height: 32px; }
+}

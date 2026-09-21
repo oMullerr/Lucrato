@@ -443,9 +443,6 @@
     "eyebrow": "Overview · updated {{time}}",
     "subtitleEmpty": "Start by recording your first batch to track the health of your inventory.",
     "subtitleSummary": "{{active}} active batches · {{attention}} need attention",
-    "onboardTitle": "Start with the first batch",
-    "onboardDesc": "Record a purchase to start tracking your stock, invested capital, and margins. Then record sales and watch the overview draw itself automatically.",
-    "onboardCta": "Record first batch",
     "financialSummary": "Financial summary",
     "netProfit": "Net profit",
     "revenue": "Revenue",
@@ -1483,5 +1480,19 @@
     "basis": "{{unidades}} units across {{vendas}} sale(s) in the last {{dias}} days",
     "units": "units",
     "onHand": "{{estoque}} on hand"
+  },
+  "onboarding": {
+    "title": "First steps",
+    "subtitle": "Three things and Lucrato starts working on its own. Order matters: sales come from Mercado Livre, but only you know the cost.",
+    "done": "Done",
+    "conectarTitle": "Connect Mercado Livre",
+    "conectarDesc": "Authorises reading your orders. From then on sales come in by themselves, each with its real commission.",
+    "conectarCta": "Connect",
+    "vincularTitle": "Link listings to your products",
+    "vincularDesc": "Tells the app which listing is which product. Without the link the sale waits in the inbox, because the system never invents a product.",
+    "vincularCta": "Link",
+    "lotesTitle": "Register the batches you bought",
+    "lotesDesc": "Mercado Livre knows what you sold, not what you paid your supplier. No batch means no cost, and the app would show revenue and call it profit.",
+    "lotesCta": "Add batch"
   }
 }
