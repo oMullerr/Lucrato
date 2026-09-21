@@ -76,8 +76,17 @@ npm start          # http://localhost:4200, aponta para o projeto lucrato-dev
 
 ## Estrutura dos dados
 
+A partir do schema 2 o razão mora em **subcoleções**, um documento por registro. O formato
+antigo — os três arrays dentro de `db/main` — continua sendo lido enquanto a base não
+migrar, porque a migração é aditiva e acontece quando você mandar, em Configurações →
+Zona de perigo. É essa mudança que tira o teto de 1 MiB do documento único e que permite
+a Cloud Function lançar no razão sem ser sobrescrita pelo navegador.
+
 ```
-users/{uid}/db/main        o razão: purchases[], sales[], returns[], settings   (app escreve)
+users/{uid}/purchases      lotes, um documento cada            (schema 2; app e servidor)
+users/{uid}/sales          vendas, um documento cada           (schema 2; app e servidor)
+users/{uid}/returns        devoluções, uma documento cada      (schema 2; app e servidor)
+users/{uid}/db/main        settings + metadata.schema; no schema 1, também o razão inteiro
 users/{uid}/db/analyses    histórico da calculadora                             (app escreve)
 users/{uid}/db/ml          estado da integração                                 (só servidor)
 users/{uid}/secret/ml      tokens do Mercado Livre            (negado ao navegador)
@@ -112,8 +121,15 @@ npx firebase-tools deploy --only firestore:rules --project lucrato-web
 ```
 
 Para a integração com o Mercado Livre, os segredos do app do DevCenter vão para o Secret
-Manager (`ML_CLIENT_ID`, `ML_CLIENT_SECRET`) — nunca para o repositório. As duas URLs não
-secretas (`ML_REDIRECT_URI`, `APP_ORIGINS`) ficam em `functions/.env.<projeto>`.
+Manager (`ML_CLIENT_ID`, `ML_CLIENT_SECRET`) — nunca para o repositório. O resto fica em
+`functions/.env.<projeto>`:
+
+| Chave | Obrigatória? | O que faz |
+|---|---|---|
+| `ML_REDIRECT_URI` | sim | Para onde o Mercado Livre devolve o OAuth. |
+| `APP_ORIGINS` | **sim em produção** | Lista explícita de origens que o `returnTo` aceita. Antes havia um curinga `*.vercel.app`, que valia para qualquer site hospedado lá. Aceita `https://exemplo.com` e `*.exemplo.com` — este último casando um único rótulo à esquerda. |
+| `ML_WEBHOOK_TOKEN` | não | Segredo no caminho do webhook (`/mlWebhook/<token>`), cadastrado no DevCenter. Ausente, o webhook segue aberto como antes. |
+| `ML_KMS_KEY` | não | Chave do Cloud KMS que cifra os tokens do ML em repouso. Ausente, eles ficam em texto puro e nada quebra — ver a seção abaixo. |
 
 ---
 
@@ -203,4 +219,20 @@ Proteções que não moram no código. Fazer no setup e revisar de tempos em tem
 ## Auditoria de setembro/2026
 
 Um mapa de melhorias — segurança, arquitetura, telas redundantes, métricas e layout — foi
-levantado e está sendo executado na branch `auditoria/2026-09`.
+levantado e executado na branch `auditoria/2026-09`, que ainda **não** foi integrada.
+
+O que ela entrega, em uma linha cada:
+
+- exclusão de conta que realmente desconecta o Mercado Livre;
+- tokens do ML cifrados com Cloud KMS, e webhook com segredo no caminho;
+- razão em subcoleções, sem o teto de 1 MiB, com a migração sob seu comando;
+- **a Cloud Function lança no razão sozinha** — o app não precisa mais estar aberto;
+- devolução parcial, frete real do Flex e status de venda cancelada deixaram de
+  produzir número errado em silêncio;
+- fechamento mensal, reposição sugerida e alerta de preço abaixo do piso;
+- período escolhido uma vez, valendo em todas as telas;
+- eixo de acessibilidade na auditoria estática do CI.
+
+Ficaram de fora, por decisão: **notificações fora do app** (exigem infraestrutura a
+provisionar) e a **atualização de Angular e Firebase**, que vai para branch própria por
+serem quatro majors mexendo na semântica de `effect`.

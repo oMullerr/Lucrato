@@ -23,7 +23,6 @@ import { countsAsRevenue } from '../../core/services/calculations';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { KpiCardComponent } from '../../shared/components/kpi-card.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
-import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { BatchDetailPanelComponent } from '../../shared/components/batch-detail-panel.component';
 import { PendenciasCardComponent } from '../../shared/components/pendencias-card.component';
@@ -65,7 +64,7 @@ interface MobileSortOption {
   imports: [
     RouterLink, FormsModule, TranslateModule,
     PageHeaderComponent, KpiCardComponent, StatusBadgeComponent,
-    EmptyStateComponent, SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent,
+    SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent,
     PendenciasCardComponent,
     ReposicaoCardComponent,
     PrimeirosPassosComponent,
