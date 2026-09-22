@@ -70,3 +70,9 @@
   0%   { background-position: -1000px 0; }
   100% { background-position: 1000px 0; }
 }
+
+/* Giro de espera. Global porque era definido DUAS vezes, idêntico, com nomes
+   diferentes — `spinner-rotate` no spinner e `spin` no banner de conexão. */
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
