@@ -15,7 +15,7 @@ import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { DataService } from '../../core/services/data.service';
 import { MlIntegrationService } from '../../core/services/ml-integration.service';
 import { montarPendencias } from '../../core/pendencias';
-import { sugerirReposicao } from '../../core/reposicao';
+// import { sugerirReposicao } from '../../core/reposicao';  // ver REPOR, desligado
 import { NotifyService } from '../../core/services/notify.service';
 import { QuickActionsService } from '../../core/services/quick-actions.service';
 import { ComputedPurchase, InventoryStatus, Purchase } from '../../core/models/models';
@@ -26,7 +26,7 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { BatchDetailPanelComponent } from '../../shared/components/batch-detail-panel.component';
 import { PendenciasCardComponent } from '../../shared/components/pendencias-card.component';
-import { ReposicaoCardComponent } from '../../shared/components/reposicao-card.component';
+// import { ReposicaoCardComponent } from '../../shared/components/reposicao-card.component';
 import { EstadoDosPassos, PrimeirosPassosComponent } from '../../shared/components/primeiros-passos.component';
 import { ColorPillComponent } from '../../shared/components/color-pill.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
@@ -66,7 +66,6 @@ interface MobileSortOption {
     PageHeaderComponent, KpiCardComponent, StatusBadgeComponent,
     SkeletonComponent, BatchDetailPanelComponent, ColorPillComponent,
     PendenciasCardComponent,
-    ReposicaoCardComponent,
     PrimeirosPassosComponent,
     BrlPipe, BrDatePipe, DatePipe,
     ButtonComponent, IconComponent, TooltipDirective, ChipComponent, DrawerComponent,
@@ -278,16 +277,14 @@ export class InventoryComponent {
     }),
   );
 
-  /**
-   * O que comprar, quanto, e até quando.
-   *
-   * Fica aqui porque é onde a decisão de estoque acontece, logo abaixo da
-   * pauta: primeiro o que pede decisão hoje, depois o que pede pedido. A
-   * conta mora em `core/reposicao.ts`, pura e testada.
-   */
+  /* REPOR — desligado em 22/09/2026 junto com o bloco no template.
+     Ver a explicação por extenso lá. O módulo puro e seus 18 testes ficam de
+     pé, então isto não apodrece enquanto espera.
+
   protected readonly reposicao = computed(() =>
     sugerirReposicao(this.data.computedPurchases(), this.data.computedSales()),
   );
+  */
 
   /**
    * Onde a primeira configuração está.

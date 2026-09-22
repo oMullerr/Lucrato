@@ -12,14 +12,33 @@
   margin: 0 0 4px;
 }
 
+/**
+ * Três por linha, mas a ÚLTIMA linha preenche a largura toda.
+ *
+ * Era `grid-template-columns: repeat(3, 1fr)`. Com cinco blocos — e são cinco
+ * desde que "Eficiência do capital" entrou — a segunda linha ficava com dois
+ * cards ocupando dois terços e um buraco à direita, que lia como card faltando.
+ * Grade não resolve isso: a coluna existe com ou sem conteúdo.
+ *
+ * Flex com `wrap` resolve, porque `flex-grow` reparte a sobra entre quem está
+ * na linha. A base é a largura de um terço menos os vãos; numa linha com dois,
+ * os dois crescem e fecham. Serve para 4, 5 ou 6 blocos sem tocar aqui de novo.
+ */
 .resume-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 14px;
 }
 
-@include bp.below(xl) { .resume-grid { grid-template-columns: repeat(2, 1fr); } }
-@include bp.below(md) { .resume-grid { grid-template-columns: 1fr; } }
+.resume-grid > * {
+  flex: 1 1 calc((100% - 28px) / 3);
+  /* Piso para não espremer três colunas numa tela estreita — abaixo disto o
+     `wrap` age sozinho e viram duas, depois uma. */
+  min-width: 260px;
+}
+
+@include bp.below(xl) { .resume-grid > * { flex-basis: calc((100% - 14px) / 2); } }
+@include bp.below(md) { .resume-grid > * { flex-basis: 100%; min-width: 0; } }
 
 .resume-card {
   background: var(--bg-surface-1);

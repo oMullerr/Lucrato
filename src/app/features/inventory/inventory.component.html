@@ -45,10 +45,20 @@
              pedindo minha decisão agora?". Some quando não há nada. -->
         <app-pendencias-card [pendencias]="pendencias()" />
 
-        <!-- Logo abaixo da pauta, e na mesma lógica: primeiro o que pede
-             decisão hoje, depois o que pede pedido. Some quando não há o que
-             repor. -->
-        <app-reposicao-card [sugestoes]="reposicao()" />
+        <!-- REPOR — desligado em 22/09/2026, a pedido do dono, e de propósito
+             sem apagar nada.
+
+             A conta está certa e testada (`core/reposicao.ts`, 18 testes), mas
+             hoje o negócio é garimpo de oferta: compra o que apareceu barato,
+             vende e parte para outra. Repor pressupõe recomprar o MESMO
+             produto, e isso ainda é exceção aqui — a lista virava um retrato
+             do que já passou pela loja em vez de uma pauta de compra.
+
+             Quando houver um núcleo de produtos que se repete, basta
+             descomentar esta linha, o `import` e o `reposicao` computed no
+             .ts. Nada mais precisa voltar.
+
+        <app-reposicao-card [sugestoes]="reposicao()" /> -->
 
         <!-- ZONA A — PULSO -->
         <section class="hero" [attr.aria-label]="'inventory.financialSummary' | translate">
