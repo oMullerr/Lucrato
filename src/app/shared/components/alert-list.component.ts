@@ -4,6 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import type { Alerta, Severidade, TipoAlerta } from '../../core/ml/alerts';
 import { IconComponent } from '../ui/icon/icon.component';
 import { IconName } from '../ui/icon/icons';
+import { BrlPipe } from '../pipes/brl.pipe';
 
 /** Ícone e destino de cada tipo de alerta. O texto vem do i18n. */
 const APARENCIA: Record<TipoAlerta, { icone: IconName; rota: string }> = {
@@ -41,7 +42,7 @@ const TOM: Record<Severidade, string> = { alta: 'danger', media: 'warning', baix
           <li class="alert-row" [class]="'tone-' + tom(a)">
             <span class="alert-icon" aria-hidden="true"><app-icon [name]="icone(a)" [size]="17" /></span>
             <div class="alert-text">
-              <p class="alert-msg">{{ 'alerts.' + a.tipo | translate:a.dados }}</p>
+              <p class="alert-msg">{{ 'alerts.' + a.tipo | translate:textos(a) }}</p>
               <p class="alert-item" [title]="a.titulo">{{ a.titulo }}</p>
             </div>
             <a class="alert-go" [routerLink]="rota(a)" [attr.aria-label]="'alerts.resolve' | translate">
@@ -74,4 +75,22 @@ export class AlertListComponent {
   protected icone(a: Alerta): IconName { return APARENCIA[a.tipo].icone; }
   protected rota(a: Alerta): string { return APARENCIA[a.tipo].rota; }
   protected tom(a: Alerta): string { return TOM[a.severidade]; }
+
+  /**
+   * Formata o dinheiro ANTES do i18n.
+   *
+   * O `translate` interpola texto cru: `41.2` chegava assim mesmo no meio da
+   * frase — ponto decimal e um centavo faltando, num app que fala real.
+   * Mesmo tratamento que o card de pendências já fazia; esta lista tinha
+   * ficado de fora porque, até o alerta de preço, nenhum alerta trazia valor.
+   */
+  protected textos(a: Alerta): Record<string, string | number> {
+    const dados = { ...a.dados };
+    if (typeof dados['lucro'] === 'number') {
+      dados['lucro'] = this.brl.transform(dados['lucro']);
+    }
+    return dados;
+  }
+
+  private readonly brl = new BrlPipe();
 }

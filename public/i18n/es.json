@@ -1145,7 +1145,7 @@
     "none": "Nada pidiendo atención. Tus publicaciones y el stock están en orden.",
     "ativo_sem_estoque": "Publicación activa sin stock — aparece en la búsqueda y no convierte",
     "pausado_com_estoque": "Pausada con {{estoque}} en stock — capital parado sin chance de vender",
-    "preco_abaixo_do_minimo": "El precio publicado rinde {{margem}}%, por debajo de tu meta de {{minima}}% — la próxima venta deja R$ {{lucro}}",
+    "preco_abaixo_do_minimo": "El precio publicado rinde {{margem}}%, por debajo de tu meta de {{minima}}% — la próxima venta deja {{lucro}}",
     "margem_baixa": "Margen de {{margem}}%, por debajo de tu meta de {{minima}}%",
     "sem_conversao": "{{visitas}} visitas en 30 días y ninguna venta — el problema es la oferta, no la exposición"
   },
