@@ -1,10 +1,10 @@
-﻿import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import {
   Firestore, collection, doc, onSnapshot, setDoc, deleteField, writeBatch,
 } from '@angular/fire/firestore';
 import type { Unsubscribe } from '@angular/fire/firestore';
 import { TranslateService } from '@ngx-translate/core';
-import { APP, DEFAULT_CATEGORY_COLOR } from '../constants/app.constants';
+import { APP, defaultCategoryColor } from '../constants/app.constants';
 import {
   Purchase, Sale, Settings, Database, SaleChannel, SaleStatus, Return,
   SCHEMA_SUBCOLECOES,
@@ -407,7 +407,7 @@ export class DataService {
     const map = kind === 'supplier' ? s?.supplierColors
               : kind === 'channel'  ? s?.channelColors
               :                       s?.categoryColors;
-    return map?.[name] ?? DEFAULT_CATEGORY_COLOR;
+    return map?.[name] ?? defaultCategoryColor();
   }
 
   /**

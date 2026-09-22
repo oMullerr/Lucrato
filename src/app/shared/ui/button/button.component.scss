@@ -62,7 +62,7 @@
 /* ---------- Variantes ---------- */
 :host(.btn--primary) {
   background: var(--brand-primary);
-  color: #ffffff;
+  color: var(--on-brand);
 
   &:hover:not([disabled]) {
     background: color-mix(in srgb, var(--brand-primary) 88%, #000);
@@ -73,9 +73,10 @@
   }
 }
 
+/* A COR do texto agora vem de `--on-brand`, que o tema resolve. Esta regra
+   sobra só para o sentido da mistura no hover: no claro a marca escurece, no
+   escuro ela clareia. */
 :host-context(html.dark).btn--primary {
-  color: #0b100f;
-
   &:hover:not([disabled]) {
     background: color-mix(in srgb, var(--brand-primary) 88%, #fff);
   }
@@ -116,7 +117,7 @@
 
 :host(.btn--danger) {
   background: var(--color-danger);
-  color: #ffffff;
+  color: var(--on-danger);
 
   &:hover:not([disabled]) {
     background: var(--color-danger-2);

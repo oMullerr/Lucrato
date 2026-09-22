@@ -365,10 +365,7 @@ textarea.app-input {
    escurecem: o backdrop transparente (menus/dropdowns) fica de fora, senão
    abrir o menu da loja/idioma escureceria a página inteira. */
 html .cdk-overlay-backdrop:not(.cdk-overlay-transparent-backdrop) {
-  background: rgba(8, 12, 11, 0.55);
+  background: var(--bg-backdrop);
   backdrop-filter: blur(6px);
 }
 
-html.dark .cdk-overlay-backdrop:not(.cdk-overlay-transparent-backdrop) {
-  background: rgba(0, 0, 0, 0.65);
-}

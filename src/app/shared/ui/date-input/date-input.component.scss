@@ -157,7 +157,7 @@
 
   &.is-selected {
     background: var(--brand-primary);
-    color: #ffffff;
+    color: var(--on-brand);
     font-weight: 600;
   }
 
@@ -166,9 +166,6 @@
     cursor: not-allowed;
   }
 }
-
-/* Texto sobre brand-primary precisa ser escuro no dark mode (mesmo ajuste do appBtn primary). */
-html.dark .date-cell.is-selected { color: #0b100f; }
 
 .date-panel-footer {
   display: flex;

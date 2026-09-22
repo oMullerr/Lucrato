@@ -79,7 +79,8 @@ app-toast-host {
   width: 10px;
   height: 6px;
   margin-left: 1px;
-  color: var(--brand-accent);
+  /* A barra lateral e escura nos dois temas: acento que nao inverte. */
+  color: var(--accent-on-dark);
   transform: translateY(-2px);
 }
 
@@ -169,7 +170,7 @@ app-toast-host {
   app-icon { opacity: 1; color: var(--brand-primary-3); }
 
   .active-dot {
-    background: var(--brand-accent);
+    background: var(--accent-on-dark);
     height: 16px;
   }
 }

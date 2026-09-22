@@ -22,7 +22,7 @@
   height: 64px;
   border-radius: var(--radius-full);
   background: var(--brand-primary);
-  color: #FFFFFF;
+  color: var(--on-brand);
   font-family: var(--font-display);
   font-size: 22px;
   font-weight: 600;
@@ -247,7 +247,7 @@
 
   &:hover {
     background: var(--color-danger);
-    color: #FFFFFF;
+    color: var(--on-danger);
   }
 }
 

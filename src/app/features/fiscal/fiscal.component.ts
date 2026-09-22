@@ -8,7 +8,7 @@ import { DataService } from '../../core/services/data.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { LanguageService } from '../../core/services/language.service';
 import { NotifyService } from '../../core/services/notify.service';
-import { CHART_COLORS } from '../../core/constants/app.constants';
+import { paletaDeGrafico } from '../../core/constants/app.constants';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { KpiCardComponent } from '../../shared/components/kpi-card.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
@@ -153,7 +153,7 @@ export class FiscalComponent {
   });
 
   protected readonly palette = computed(() =>
-    this.theme.isDark() ? CHART_COLORS.dark : CHART_COLORS.light
+    paletaDeGrafico(this.theme.isDark())
   );
 
   /** Nota dinâmica do card de DAS (INSS + adicional fixo, aproximado). */
