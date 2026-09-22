@@ -286,11 +286,6 @@ export const mlPoller = onSchedule(
       try {
         const total = await varrerVendedor(uid, mlUserId);
         if (total > 0) logger.info('Varredura trouxe pedidos', { uid, total });
-        /* Fora do `if`: a varredura pode não trazer pedido nenhum e ainda
-           assim haver coisa esperando na caixa — um anúncio vinculado agora,
-           um lote cadastrado ontem. É esta chamada que faz o razão andar
-           sozinho de 15 em 15 minutos. */
-        await lancarNoRazao(uid);
       } catch (err) {
         const motivo = String((err as Error).message);
         // Conta que precisa reconectar não deve derrubar a varredura das outras.
@@ -300,6 +295,22 @@ export const mlPoller = onSchedule(
           { merge: true },
         );
       }
+
+      /* FORA do try/catch, e esse é o ponto: lançar no razão não fala com o
+         Mercado Livre. Lê a caixa e o razão, que são seus, e grava no razão.
+         Uma autorização vencida não é motivo para parar de lançar o que já
+         está capturado.
+
+         Estava dentro do `try`, depois da varredura, e com a conta precisando
+         reconectar — o estado real em 22/09/2026 — a varredura lançava, o
+         `catch` assumia e o lançamento NUNCA rodava. O razão ficava parado
+         justamente enquanto ninguém podia consertar do outro lado, e vincular
+         um anúncio não adiantaria nada até a reconexão.
+
+         Também não depende de a varredura ter trazido pedido: pode não vir
+         nada novo e ainda haver coisa esperando — um anúncio vinculado agora,
+         um lote cadastrado ontem. */
+      await lancarNoRazao(uid);
     }
   },
 );
