@@ -34,6 +34,22 @@ export const COBERTURA_ALVO_DIAS = 30;
 /** Prazo assumido quando não há nenhum recebimento no histórico para medir. */
 export const PRAZO_PADRAO_DIAS = 15;
 
+/**
+ * Vendas distintas na janela para o produto contar como demanda.
+ *
+ * DUAS não é número escolhido a esmo: é o mínimo que consegue mostrar
+ * repetição. Com uma venda só não há como separar o produto que você revende
+ * sempre daquele que apareceu, vendeu e acabou — e o segundo é a maioria de
+ * quem garimpa oferta.
+ *
+ * Sem este corte a lista tinha 36 linhas numa base real, 22 delas apoiadas numa
+ * única venda em 90 dias, todas com estoque zero. Isso não é pauta de compra: é
+ * a lista de tudo que já passou pela loja. Mesmo princípio do
+ * `MINIMO_DE_VISITAS` dos alertas — abaixo de certa amostra, o número não
+ * significa nada.
+ */
+export const MINIMO_DE_VENDAS = 2;
+
 export type Urgencia = 'atrasado' | 'critico' | 'atencao';
 
 export interface SugestaoDeCompra {
@@ -168,6 +184,7 @@ export function sugerirReposicao(
 
   for (const [produto, e] of porProduto) {
     if (e.unidades <= 0) continue;
+    if (e.vendas < MINIMO_DE_VENDAS) continue;
 
     const velocidadeDiaria = e.unidades / janelaDias;
     const coberturaDias = velocidadeDiaria > 0 ? e.estoque / velocidadeDiaria : 0;
@@ -203,9 +220,18 @@ export function sugerirReposicao(
     });
   }
 
+  /* A velocidade desempata ANTES do nome, e isso importa mais do que parece:
+     quando tudo está sem estoque — o normal em quem garimpa oferta — o prazo
+     restante é o mesmo para todos, e o desempate caía em ordem alfabética.
+     Numa base real isso escondia a esmerilhadeira de 5 vendas atrás de itens
+     de uma venda só, no topo da lista, por causa da letra inicial.
+
+     Quem vende mais rápido perde mais por estar sem estoque, e é por isso que
+     vem primeiro. */
   return sugestoes.sort(
     (a, b) => ORDEM[a.urgencia] - ORDEM[b.urgencia]
       || a.diasParaPedir - b.diasParaPedir
+      || b.velocidadeDiaria - a.velocidadeDiaria
       || a.produto.localeCompare(b.produto),
   );
 }

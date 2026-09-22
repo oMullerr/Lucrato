@@ -46,7 +46,7 @@ const TOM: Record<Urgencia, string> = {
               <div class="repor-main">
                 <p class="repor-produto">{{ s.produto }}</p>
                 <p class="repor-quando">
-                  {{ 'restock.' + s.urgencia | translate:{ dias: absDias(s) } }}
+                  {{ 'restock.' + frase(s) | translate:{ dias: absDias(s) } }}
                   <span class="repor-sep">·</span>
                   {{ 'restock.lead' | translate:{ dias: s.prazoDias, fornecedor: s.fornecedor } }}
                   @if (!s.prazoMedido) {
@@ -83,6 +83,18 @@ export class ReposicaoCardComponent {
   protected readonly visiveis = computed(() => this.sugestoes().slice(0, this.limite()));
 
   protected tom(s: SugestaoDeCompra): string { return TOM[s.urgencia]; }
+
+  /**
+   * Qual frase descreve a situação.
+   *
+   * Estoque zerado ganha frase própria. "Atrasado há 2 dias" vinha do prazo do
+   * fornecedor — o tempo que você levaria para repor —, mas quem lê entende
+   * "faz 2 dias que isto acabou", e numa base real esses produtos estavam sem
+   * estoque havia meses. O número estava certo e a frase, errada.
+   */
+  protected frase(s: SugestaoDeCompra): string {
+    return s.estoque <= 0 ? 'semEstoque' : s.urgencia;
+  }
 
   /**
    * O sinal de `diasParaPedir` já está na urgência ('atrasado'), e a frase de

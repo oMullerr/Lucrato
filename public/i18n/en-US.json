@@ -1472,6 +1472,7 @@
   },
   "restock": {
     "title": "Restock",
+    "semEstoque": "Out of stock right now",
     "atrasado": "Overdue by {{dias}} day(s)",
     "critico": "Order within {{dias}} day(s)",
     "atencao": "Order within {{dias}} days",

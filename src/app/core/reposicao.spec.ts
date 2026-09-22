@@ -149,6 +149,32 @@ describe('o que entra na pauta', () => {
 });
 
 describe('o que NÃO entra', () => {
+  it('uma venda só não é demanda — é um item que vendeu e acabou', () => {
+    /* Encontrado com dados reais: a lista trazia 36 linhas, 22 delas apoiadas
+       numa única venda em 90 dias e todas com estoque zero. Isso não é pauta
+       de compra, é a lista de tudo que já passou pela loja. */
+    const { lotes, vendas } = cenario(
+      [{ id: 'C001', product: 'Achado', supplier: 'Acme', quantityPurchased: 1,
+         purchaseDate: '2026-06-01', receiptDate: '2026-06-06' }],
+      [{ id: 'V001', batchId: 'C001', product: 'Achado', quantitySold: 1, saleDate: '2026-09-01' }],
+    );
+
+    expect(sugerirReposicao(lotes, vendas, 90, HOJE)).toEqual([]);
+  });
+
+  it('duas vendas já mostram repetição e entram', () => {
+    const { lotes, vendas } = cenario(
+      [{ id: 'C001', product: 'Repete', supplier: 'Acme', quantityPurchased: 2,
+         purchaseDate: '2026-06-01', receiptDate: '2026-06-06' }],
+      [
+        { id: 'V001', batchId: 'C001', product: 'Repete', quantitySold: 1, saleDate: '2026-08-20' },
+        { id: 'V002', batchId: 'C001', product: 'Repete', quantitySold: 1, saleDate: '2026-09-10' },
+      ],
+    );
+
+    expect(sugerirReposicao(lotes, vendas, 90, HOJE)).toHaveLength(1);
+  });
+
   it('produto sem venda na janela fica fora — sem ritmo, a sugestão seria chute', () => {
     /* Encalhado não precisa de reposição: precisa de decisão sobre o que já
        está parado, que é outra tela. */
@@ -223,6 +249,33 @@ describe('urgência e ordem', () => {
     expect(lista.map(s => s.produto)).toEqual(['Urgente', 'Calmo']);
     expect(lista[0].urgencia).toBe('critico');
     expect(lista[1].urgencia).toBe('atencao');
+  });
+
+  it('tudo sem estoque: quem vende mais rápido vem primeiro, não quem vem antes no alfabeto', () => {
+    /* Encontrado com dados reais. Quando tudo está zerado — o normal em quem
+       garimpa oferta — o prazo restante é o mesmo para todos, e o desempate
+       caía no nome: a esmerilhadeira de 5 vendas ficava escondida atrás de
+       itens de duas vendas, por causa da letra inicial. */
+    const vendasDe = (produto: string, lote: string, quantas: number) =>
+      Array.from({ length: quantas }, (_, i) => ({
+        id: `V${produto}${i}`, batchId: lote, product: produto, quantitySold: 1,
+        saleDate: `2026-0${7 + (i % 3)}-1${i % 9}`,
+      }));
+
+    const { lotes, vendas } = cenario([
+      { id: 'C001', product: 'Aaa devagar', supplier: 'Acme', quantityPurchased: 2,
+        purchaseDate: '2026-06-01', receiptDate: '2026-06-06' },
+      { id: 'C002', product: 'Zzz rapido', supplier: 'Acme', quantityPurchased: 6,
+        purchaseDate: '2026-06-01', receiptDate: '2026-06-06' },
+    ], [
+      ...vendasDe('Aaa devagar', 'C001', 2),
+      ...vendasDe('Zzz rapido', 'C002', 6),
+    ]);
+
+    const lista = sugerirReposicao(lotes, vendas, 90, HOJE);
+
+    expect(lista.map(s => s.estoque)).toEqual([0, 0]);
+    expect(lista.map(s => s.produto)).toEqual(['Zzz rapido', 'Aaa devagar']);
   });
 
   it('a quantidade sugerida nunca é zero nem negativa', () => {

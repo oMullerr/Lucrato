@@ -1472,6 +1472,7 @@
   },
   "restock": {
     "title": "Repor",
+    "semEstoque": "Sem estoque agora",
     "atrasado": "Atrasado há {{dias}} dia(s)",
     "critico": "Pedir em {{dias}} dia(s)",
     "atencao": "Pedir em até {{dias}} dias",

@@ -1472,6 +1472,7 @@
   },
   "restock": {
     "title": "Reponer",
+    "semEstoque": "Sin stock ahora",
     "atrasado": "Atrasado {{dias}} día(s)",
     "critico": "Pedir en {{dias}} día(s)",
     "atencao": "Pedir dentro de {{dias}} días",
