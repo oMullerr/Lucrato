@@ -32,6 +32,22 @@
   background: linear-gradient(90deg, var(--brand-accent), color-mix(in srgb, var(--brand-accent) 20%, transparent));
 }
 
+/* A régua cresce junto com a contagem do número — é O gesto da tela inicial.
+   Um só, num lugar só: é isso que faz ele significar alguma coisa em vez de
+   virar mais um enfeite entre outros. A duração acompanha a da contagem
+   (`DURACAO_PADRAO_MS`, 600ms). */
+@media (prefers-reduced-motion: no-preference) {
+  .money-hero-rule {
+    animation: regua-cresce 600ms var(--ease-out) both;
+    transform-origin: left center;
+  }
+
+  @keyframes regua-cresce {
+    from { transform: scaleX(0); opacity: 0; }
+    to   { transform: scaleX(1); opacity: 1; }
+  }
+}
+
 .money-hero-delta {
   font-size: var(--fs-small);
   align-self: flex-end;

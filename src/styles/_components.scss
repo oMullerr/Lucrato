@@ -25,10 +25,26 @@
   }
 }
 
+/* Entrada de tela, escalonada.
+   Antes todos os blocos entravam JUNTOS, com a mesma duração: a tela inteira
+   piscava de uma vez, que é quase o mesmo que não animar. Agora cada bloco
+   entra um pouco depois do anterior e o olho acompanha a página se montando.
+
+   O escalonamento PARA no sexto. O Painel tem onze cartões e o Estoque tem
+   sete seções; levar o atraso até o fim faria o último bloco aparecer meio
+   segundo depois, e esperar pela própria interface é o oposto de vida. Do
+   sétimo em diante todos entram no mesmo tempo do sexto. */
 @media (prefers-reduced-motion: no-preference) {
   .page-container > * {
     animation: page-fade-in var(--dur-slow) var(--ease-out) both;
   }
+
+  @for $i from 2 through 6 {
+    .page-container > *:nth-child(#{$i}) {
+      animation-delay: #{($i - 1) * 45}ms;
+    }
+  }
+
   @keyframes page-fade-in {
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
