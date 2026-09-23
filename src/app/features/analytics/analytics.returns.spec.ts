@@ -66,11 +66,14 @@ describe('AnalyticsComponent — devoluções', () => {
   });
 
   describe('bloco de resumo', () => {
-    it('adiciona o 4º bloco Devoluções com os valores do KPI', () => {
+    it('adiciona o bloco Devoluções com os valores do KPI', () => {
+      /* Busca pelo TÍTULO, não por posição: o resumo ganhou o bloco de
+         eficiência do capital em setembro/2026 e um índice fixo quebrou. O
+         que o teste quer provar é que o bloco existe com os números certos —
+         onde ele aparece na fila é decisão de layout. */
       const blocks = cmp.resumeBlocks();
-      expect(blocks).toHaveLength(4);
-      const returns = blocks[3];
-      expect(returns.title).toBe('analytics.resReturns');
+      const returns = blocks.find((b: any) => b.title === 'analytics.resReturns');
+      expect(returns).toBeDefined();
       const value = (label: string) => returns.rows.find((r: any) => r.label === label).value;
       expect(value('returns.kpiCount')).toBe(EXPECTED_RETURNS.kpis.returnCount);
       expect(value('returns.kpiUnits')).toBe(EXPECTED_RETURNS.kpis.returnedUnits);
@@ -123,7 +126,7 @@ describe('AnalyticsComponent — regressão sem devoluções', () => {
     jest.useFakeTimers();
     jest.setSystemTime(FROZEN_NOW);
     const cmp: any = setupComponentHarness(AnalyticsComponent, goldenDb()).component;
-    const rows = cmp.resumeBlocks()[3].rows;
+    const rows = cmp.resumeBlocks().find((b: any) => b.title === 'analytics.resReturns').rows;
     expect(rows.every((r: any) => r.value === 0)).toBe(true);
   });
 });

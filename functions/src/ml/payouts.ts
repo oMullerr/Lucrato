@@ -29,6 +29,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import type { PagamentoDoMl } from '../../../src/app/core/ml/payouts';
 import { ML_CLIENT_ID, ML_CLIENT_SECRET } from '../config';
 import { criarMlClient, MlClient } from './client';
+import { cobrarIntervalo } from './debounce';
 
 type Bruto = Record<string, unknown>;
 
@@ -215,6 +216,8 @@ export const mlSyncPayouts = onCall(
     if (!(await mlUserIdDe(uid))) {
       throw new HttpsError('failed-precondition', 'Conecte a conta do Mercado Livre primeiro.');
     }
+
+    await cobrarIntervalo(uid, 'syncPayouts');
 
     try {
       const total = await sincronizarRecebiveis(uid);

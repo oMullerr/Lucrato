@@ -58,6 +58,23 @@
   margin-left: 4px;
 }
 
+/* Selo de origem: diz que a venda veio da integração, sem disputar atenção
+   com o ID nem com os números — é contexto, não alerta. */
+.origin-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  color: var(--text-muted);
+  vertical-align: middle;
+  cursor: default;
+}
+
 .row-action.danger:hover { color: var(--color-danger); }
 
 /* Linha expandida */

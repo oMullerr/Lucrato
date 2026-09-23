@@ -72,12 +72,19 @@ export const GOLDEN_SALES: Sale[] = [
   makeSale({
     id: 'V002', batchId: 'C001', product: 'Fone BT', quantitySold: 3, unitPrice: 90,
     saleDate: '2026-05-20', channel: 'Shopee', feePercentage: 0.12,
-    shippingType: 'flex', flexRefund: 4, sellerShipping: 12, discount: 0, otherCosts: 2, status: 'Concluída',
+    // sellerShipping ZERO nas vendas Flex, como toda base real sempre teve: a
+    // importação do ML, o formulário e o Excel forçavam zero aqui. O valor que
+    // ficava neste campo era letra morta, porque o cálculo ignorava o frete no
+    // Flex — e era essa exatamente a lacuna que fazia a venda Flex entrar sem
+    // custo de envio e o lucro sair inflado. Agora o campo vale, então deixá-lo
+    // preenchido aqui faria este conjunto medir um caso que nunca existiu e
+    // mover números que precisam ficar parados.
+    shippingType: 'flex', flexRefund: 4, sellerShipping: 0, discount: 0, otherCosts: 2, status: 'Concluída',
   }),
   makeSale({
     id: 'V003', batchId: 'C002', product: 'Caneca', quantitySold: 1, unitPrice: 30,
     saleDate: '2026-06-10', channel: 'Mercado Livre', feePercentage: 0.12,
-    shippingType: 'flex', flexRefund: 2, sellerShipping: 5, discount: 0, otherCosts: 0, status: 'Concluída',
+    shippingType: 'flex', flexRefund: 2, sellerShipping: 0, discount: 0, otherCosts: 0, status: 'Concluída',
   }),
   makeSale({
     id: 'V004', batchId: 'C002', product: 'Caneca', quantitySold: 2, unitPrice: 30,

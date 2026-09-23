@@ -35,6 +35,36 @@
   }
 }
 
+/* Aviso de dado envelhecido.
+   Quatro telas leem do Mercado Livre (Anúncios, Caixa, Faturamento, Fluxo de
+   caixa) e todas precisam da mesma frase quando a autorização venceu: o que
+   está na tela é o último retrato sincronizado, e continua sendo do dono. Uma
+   cópia por página envelheceria em quatro ritmos diferentes. */
+.stale-note {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--color-warning);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-1);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.stale-note app-icon { color: var(--color-warning); }
+
+.stale-note a {
+  color: var(--brand-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.stale-note a:hover { text-decoration: underline; }
+
 .surface-card {
   background: var(--bg-surface-1);
   border: 1px solid var(--border-subtle);

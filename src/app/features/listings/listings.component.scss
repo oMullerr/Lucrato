@@ -6,6 +6,32 @@
   gap: 16px;
 }
 
+/* `.stale-note` é global (ver styles/_components.scss): quatro telas do ML
+   usam o mesmo aviso. */
+
+/* ---------- alertas de operação ---------- */
+.alertas-card {
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-1);
+}
+
+.alertas-head {
+  margin-bottom: 12px;
+}
+
+.alertas-head h2 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.alertas-head p {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
 /* ---------- filtros ---------- */
 .filtros {
   display: grid;

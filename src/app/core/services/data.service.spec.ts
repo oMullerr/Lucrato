@@ -1,4 +1,4 @@
-// Mock do @angular/fire/firestore
+﻿// Mock do @angular/fire/firestore
 jest.mock('@angular/fire/firestore', () => ({
   Firestore: class Firestore {},
   doc: jest.fn((..._args: unknown[]) => ({ __doc: true, path: _args.slice(1).join('/') })),
@@ -17,7 +17,7 @@ import { ConnectionService } from './connection.service';
 
 /** Minimal TranslateService stub: returns the key so notify assertions stay text-agnostic. */
 const fakeTranslate = { instant: (key: string) => key } as unknown as TranslateService;
-import { Purchase, Sale, Database } from '../models/models';
+import { Purchase, Sale, Return, Database } from '../models/models';
 import { makeFakeUser, makeFakeDatabase, makeFakeSnapshot } from '../../../testing/firebase-mocks';
 
 function makePurchase(overrides: Partial<Purchase> = {}): Purchase {
@@ -51,6 +51,24 @@ function makeSale(overrides: Partial<Sale> = {}): Sale {
     discount: 0,
     otherCosts: 0,
     status: 'Concluída',
+    ...overrides,
+  };
+}
+
+function makeReturn(overrides: Partial<Return> = {}): Return {
+  return {
+    id: 'D001',
+    saleId: 'V001',
+    batchId: 'C001',
+    product: 'Produto',
+    channel: 'Mercado Livre',
+    quantity: 1,
+    requestDate: '2025-03-01',
+    reason: 'Outro',
+    destination: 'Estoque',
+    returnShipping: 0,
+    refundedAmount: 0,
+    notes: '',
     ...overrides,
   };
 }
@@ -190,6 +208,48 @@ describe('DataService', () => {
         sales: [makeSale({ id: 'V001' })],
       }));
       expect(service.nextSaleId()).toBe('V002');
+    });
+
+    /* O número é escolhido quando o formulário ABRE e gravado quando você
+       salva — minutos depois. Desde que a Cloud Function lança no razão
+       sozinha existe um segundo escritor, e o mesmo valia para duas abas.
+       Sem esta verificação, salvar sobrescreveria a venda do outro escritor
+       em silêncio: sem erro, sem aviso, sem linha na tela. */
+    it('venda com número já ocupado é realocada, não sobrescreve', () => {
+      const { service } = setupHarness();
+      loadDb(service, makeFakeDatabase({ sales: [makeSale({ id: 'V001', unitPrice: 999 })] }));
+
+      service.addSale(makeSale({ id: 'V001', product: 'Nova' }));
+
+      expect(service.sales()).toHaveLength(2);
+      expect(service.findSale('V001')?.unitPrice).toBe(999);
+      expect(service.findSale('V002')?.product).toBe('Nova');
+    });
+
+    it('número livre é respeitado — não realoca à toa', () => {
+      const { service } = setupHarness();
+      loadDb(service, makeFakeDatabase({ sales: [makeSale({ id: 'V001' })] }));
+
+      service.addSale(makeSale({ id: 'V007', product: 'Nova' }));
+
+      expect(service.findSale('V007')?.product).toBe('Nova');
+    });
+
+    it('a mesma proteção vale para lotes e devoluções', () => {
+      const { service } = setupHarness();
+      loadDb(service, makeFakeDatabase({
+        purchases: [makePurchase({ id: 'C001', unitCost: 42 })],
+        sales: [makeSale({ id: 'V001' })],
+        returns: [makeReturn({ id: 'D001', requestDate: '2025-03-01' })],
+      }));
+
+      service.addPurchase(makePurchase({ id: 'C001', product: 'Outro lote' }));
+      service.addReturn(makeReturn({ id: 'D001', requestDate: '2025-04-01' }));
+
+      expect(service.findPurchase('C001')?.unitCost).toBe(42);
+      expect(service.findPurchase('C002')?.product).toBe('Outro lote');
+      expect(service.findReturn('D001')?.requestDate).toBe('2025-03-01');
+      expect(service.findReturn('D002')?.requestDate).toBe('2025-04-01');
     });
 
     it('findPurchase retorna purchase quando existe', () => {

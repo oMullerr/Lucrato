@@ -143,8 +143,19 @@ export function classificarCaixa(
  * Preserva o que é seu — id, lote, produto e observações — e substitui o que a
  * plataforma sabe melhor: comissão, frete, desconto, estorno e situação. Passa
  * a carregar o `externalId`, então nunca mais vira duplicata.
+ *
+ * O frete do Flex é a exceção, e por isso `custoFlex`: nele o Mercado Livre
+ * NÃO sabe melhor — o número que ele informa não é o que você paga, porque
+ * quem contrata a transportadora é você. Adotar o zero da caixa por cima de um
+ * custo que você já tinha lançado à mão seria trocar o número certo pelo
+ * errado, em nome de "vem da plataforma".
  */
-export function adotarNumerosDoMl(venda: Sale, item: ItemDaCaixa): Sale {
+export function adotarNumerosDoMl(venda: Sale, item: ItemDaCaixa, custoFlex = 0): Sale {
+  const freteFlex =
+    item.shippingType === 'flex' && item.sellerShipping <= 0
+      ? (venda.sellerShipping > 0 ? venda.sellerShipping : Math.max(0, custoFlex))
+      : item.sellerShipping;
+
   return {
     ...venda,
     unitPrice: item.unitPrice,
@@ -153,7 +164,7 @@ export function adotarNumerosDoMl(venda: Sale, item: ItemDaCaixa): Sale {
     channel: 'Mercado Livre',
     feePercentage: item.feePercentage,
     shippingType: item.shippingType,
-    sellerShipping: item.sellerShipping,
+    sellerShipping: freteFlex,
     flexRefund: item.flexRefund,
     estorno: item.estorno,
     discount: item.discount,

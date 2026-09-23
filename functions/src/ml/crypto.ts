@@ -32,6 +32,20 @@ export function newState(): string {
  * O `returnTo` é gravado no início do fluxo, por um usuário já autenticado, e
  * relido no callback — nunca vem da query string do callback. Ainda assim é
  * validado contra uma lista, para não virar um redirecionador aberto.
+ *
+ * ATÉ SETEMBRO/2026 ESTA FUNÇÃO ACEITAVA QUALQUER `*.vercel.app`. A exploração
+ * era limitada (o destino só recebe `?ml=ok|erro`, nunca o `code`), mas a regra
+ * dizia "confio em todo site hospedado na Vercel" — e a Vercel hospeda o mundo.
+ * Uma regra frouxa sobrevive à razão que a tornou inofensiva: basta alguém
+ * acrescentar um dado ao redirecionamento, um ano depois, sem reler isto aqui.
+ *
+ * Agora todo destino remoto precisa estar escrito em `APP_ORIGINS`. Uma entrada
+ * pode ser uma origem exata (`https://lucrato.vercel.app`) ou, para os previews,
+ * um curinga de UM rótulo à esquerda (`https://*.lucrato.vercel.app`). O curinga
+ * nunca casa com o domínio-pai nem atravessa ponto, então `*.vercel.app`
+ * continua sem cobrir `atacante.vercel.app`... porque ninguém deveria escrever
+ * `*.vercel.app` — e se escrever, está declarando isso por extenso, e não
+ * herdando de um `endsWith` esquecido.
  */
 export function isAllowedReturnTo(url: string, extraOrigins: readonly string[] = []): boolean {
   let parsed: URL;
@@ -46,16 +60,32 @@ export function isAllowedReturnTo(url: string, extraOrigins: readonly string[] =
 
   if (protocol !== 'https:' && !(protocol === 'http:' && local)) return false;
   if (local) return true;
-  if (hostname === 'vercel.app') return false;
-  if (hostname.endsWith('.vercel.app')) return true;
 
-  return extraOrigins.some((origin) => {
-    try {
-      return new URL(origin).hostname === hostname;
-    } catch {
-      return false;
-    }
-  });
+  return extraOrigins.some((origin) => casaComOrigem(hostname, origin));
+}
+
+/** Um host casa com a entrada da lista? Exata, ou curinga de um rótulo só. */
+function casaComOrigem(hostname: string, entrada: string): boolean {
+  const cru = entrada.trim();
+  if (!cru) return false;
+
+  // `https://*.exemplo.com` — o `URL` não parseia curinga, então ele sai antes.
+  const curinga = /^(?:https?:\/\/)?\*\.(.+)$/.exec(cru);
+  if (curinga) {
+    const base = curinga[1].replace(/\/.*$/, '').toLowerCase();
+    if (!base || !base.includes('.')) return false;
+    const sufixo = `.${base}`;
+    if (!hostname.endsWith(sufixo)) return false;
+    // Exatamente um rótulo à esquerda: `a.b.exemplo.com` não casa `*.exemplo.com`.
+    const rotulo = hostname.slice(0, -sufixo.length);
+    return rotulo.length > 0 && !rotulo.includes('.');
+  }
+
+  try {
+    return new URL(cru).hostname.toLowerCase() === hostname.toLowerCase();
+  } catch {
+    return false;
+  }
 }
 
 /**

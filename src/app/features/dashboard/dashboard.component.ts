@@ -5,6 +5,7 @@ import { BaseChartDirective } from 'ng2-charts';
 import type { ChartConfiguration } from 'chart.js';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
+import { PeriodoService } from '../../core/services/periodo.service';
 import { MlIntegrationService } from '../../core/services/ml-integration.service';
 import { juntarRecebiveis, resumirCaixa } from '../../core/ml/payouts';
 import { ThemeService } from '../../core/services/theme.service';
@@ -60,9 +61,14 @@ export class DashboardComponent {
   private readonly lang = inject(LanguageService);
 
   protected readonly rangeOptions = RANGE_OPTIONS;
-  protected readonly range = signal<RangeKey>('30d');
-  protected readonly customStart = signal<Date | null>(null);
-  protected readonly customEnd = signal<Date | null>(null);
+
+  /* O período agora é do app, não desta tela: escolher aqui vale em Vendas,
+     Compras e Devoluções, e vice-versa. Por isso o padrão deixou de ser 30
+     dias e passou a ser 'all' — ver `PeriodoService`. */
+  protected readonly periodo = inject(PeriodoService);
+  protected readonly range = this.periodo.range;
+  protected readonly customStart = this.periodo.customStart;
+  protected readonly customEnd = this.periodo.customEnd;
   protected readonly today = new Date();
 
   /** All completed sales — unfiltered base. */
@@ -143,8 +149,10 @@ export class DashboardComponent {
     const proportionalCost = sales.reduce((s, v) => s + v.proportionalCost, 0);
     // EFETIVOS em todos os componentes: sao eles que somam para netRevenue, e a
     // cascata do waterfall so fecha se o passo usar a mesma parcela revertida.
-    const totalShipping = sales.reduce((s, v) => s + (v.shippingType === 'flex' ? 0 : -v.shippingEffective), 0);
-    const totalFlexRefund = sales.reduce((s, v) => s + (v.shippingType === 'flex' ? v.shippingEffective : 0), 0);
+    // Custo e crédito vêm separados da venda: desembrulhar o impacto líquido
+    // pelo tipo de frete parou de funcionar quando o Flex passou a ter custo.
+    const totalShipping = sales.reduce((s, v) => s + v.shippingCostEffective, 0);
+    const totalFlexRefund = sales.reduce((s, v) => s + v.shippingCreditEffective, 0);
     const totalDiscounts = sales.reduce((s, v) => s + v.discountEffective, 0);
     const totalOtherCosts = sales.reduce((s, v) => s + v.otherCostsEffective, 0);
     const totalEstorno = sales.reduce((s, v) => s + v.estornoEffective, 0);

@@ -12,9 +12,7 @@ import {
   sugerirProduto,
 } from '../../core/ml/matching';
 // A janela de 30 dias vem de `alerts.ts` para casar com a das visitas do ML.
-// O resto do módulo continua lá, testado e sem consumidor, para o painel de
-// alertas poder voltar num commit só.
-import { JANELA_DIAS } from '../../core/ml/alerts';
+import { Alerta, JANELA_DIAS, gerarAlertas } from '../../core/ml/alerts';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
@@ -26,6 +24,7 @@ import { FieldComponent } from '../../shared/ui/field/field.component';
 import { InputDirective } from '../../shared/ui/field/input.directive';
 import { TooltipDirective } from '../../shared/ui/tooltip/tooltip.directive';
 import { PaginatorComponent, PageChangeEvent } from '../../shared/ui/paginator/paginator.component';
+import { AlertListComponent } from '../../shared/components/alert-list.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 
 /** Uma linha da tela: anúncio + o que sabemos sobre o vínculo dele. */
@@ -55,7 +54,7 @@ const TAMANHOS_DE_PAGINA = [25, 50, 100];
     PageHeaderComponent, EmptyStateComponent, SkeletonComponent,
     ButtonComponent, IconComponent, SelectComponent, OptionComponent,
     FieldComponent, InputDirective, TooltipDirective, PaginatorComponent,
-    BrlPipe, TranslateModule,
+    AlertListComponent, BrlPipe, TranslateModule,
   ],
   templateUrl: './listings.component.html',
   styleUrl: './listings.component.scss',
@@ -150,6 +149,25 @@ export class ListingsComponent {
   });
 
   protected readonly nomesDeProdutos = computed(() => this.produtos().map(p => p.produto));
+
+  /**
+   * Alertas de operação dos anúncios.
+   *
+   * O motor estava pronto e testado desde a feature de métricas, e nenhuma tela
+   * o consumia — só a constante `JANELA_DIAS` era importada daqui. Cada alerta
+   * cruza as DUAS fontes: o anúncio vem do Mercado Livre, a venda e o estoque
+   * vêm do Lucrato. É o cruzamento que diz se o problema é audiência, oferta ou
+   * estoque — nenhum dos dois lados responde isso sozinho.
+   */
+  protected readonly alertas = computed<Alerta[]>(() =>
+    gerarAlertas(
+      this.ml.items() ?? [],
+      this.ml.linksByItem(),
+      this.data.computedSales(),
+      this.data.computedPurchases(),
+      this.data.settings(),
+    ),
+  );
 
   /** Estoque atual por chave de produto, somando os lotes. */
   private readonly estoquePorChave = computed(() => {

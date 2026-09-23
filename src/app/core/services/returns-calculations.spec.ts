@@ -44,12 +44,16 @@ const settings = (): Settings => ({
 /** Venda do cenário (a)/(e): 3 × 90, taxa 12%, Flex +4, outros custos 2. */
 const SALE_A: Sale = makeSale({
   id: 'V002', batchId: 'C001', quantitySold: 3, unitPrice: 90, feePercentage: 0.12,
-  shippingType: 'flex', flexRefund: 4, sellerShipping: 12, discount: 0, otherCosts: 2,
+  // sellerShipping ZERO, como no conjunto dourado: no Flex este campo era
+  // letra morta, e só passou a valer quando o frete da transportadora ganhou
+  // onde ser lançado. Deixá-lo preenchido aqui moveria números que estes
+  // cenários existem para manter parados.
+  shippingType: 'flex', flexRefund: 4, sellerShipping: 0, discount: 0, otherCosts: 2,
 });
 /** Venda do cenário (b): 1 × 30, taxa 12%, Flex +2. */
 const SALE_B: Sale = makeSale({
   id: 'V003', batchId: 'C002', quantitySold: 1, unitPrice: 30, feePercentage: 0.12,
-  shippingType: 'flex', flexRefund: 2, sellerShipping: 5, discount: 0, otherCosts: 0,
+  shippingType: 'flex', flexRefund: 2, sellerShipping: 0, discount: 0, otherCosts: 0,
 });
 /** Venda do cenário (c): 2 × 100, taxa 10%, Correios 15, desconto 5. */
 const SALE_C: Sale = makeSale({

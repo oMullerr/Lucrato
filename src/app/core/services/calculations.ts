@@ -12,9 +12,34 @@ function actualUnitCostOf(p: Purchase): number {
   return p.quantityPurchased > 0 ? total / p.quantityPurchased : 0;
 }
 
-/** Shipping impact of a sale on net revenue: +flexRefund (Flex) or -sellerShipping (Correios). */
+/**
+ * Frete de uma venda, separado em CUSTO e CRÉDITO — ambos positivos.
+ *
+ * Eram um número só, com sinal, e no Flex só existia o lado do crédito: o
+ * custo era ignorado porque o valor que o Mercado Livre informa não é o que
+ * você paga (quem contrata a transportadora é você). Só que não havia onde
+ * lançar o real, então toda venda Flex entrava com frete zero e o lucro saía
+ * inflado — e nenhuma tela dizia isso.
+ *
+ * Agora `sellerShipping` é o custo nos DOIS tipos e `flexRefund` é o crédito,
+ * que só o Flex tem. Para dado antigo nada muda: as vendas Flex existentes têm
+ * `sellerShipping` zero, e nas 'correios' o crédito sempre foi zero.
+ *
+ * Separado em duas funções porque os KPIs mostram "frete" e "reembolso Flex"
+ * em linhas diferentes — somar os dois num impacto líquido faria um crédito
+ * cancelar um custo e as duas linhas mentirem juntas.
+ */
+function saleShippingCost(s: Sale): number {
+  return s.sellerShipping;
+}
+
+function saleShippingCredit(s: Sale): number {
+  return s.shippingType === 'flex' ? (s.flexRefund ?? 0) : 0;
+}
+
+/** Impacto líquido na receita: crédito menos custo. */
 function saleShippingImpact(s: Sale): number {
-  return s.shippingType === 'flex' ? (s.flexRefund ?? 0) : -s.sellerShipping;
+  return saleShippingCredit(s) - saleShippingCost(s);
 }
 
 /** Meia-noite UTC do dia de calendário LOCAL de `ref` (mesma âncora usada em todo o app). */
@@ -103,6 +128,8 @@ interface SaleFinancials {
   discountEffective: number;
   estornoEffective: number;
   shippingEffective: number;
+  shippingCostEffective: number;
+  shippingCreditEffective: number;
   otherCostsEffective: number;
   netRevenue: number;
   proportionalCost: number;
@@ -165,6 +192,8 @@ function saleFinancials(sale: Sale, actualUnitCost: number, returns: Return[]): 
   // devolvida não pode deixar custo de venda para trás.
   const fullShippingImpact = saleShippingImpact(sale);
   const shippingEff = fullShippingImpact * (1 - ratio);
+  const shippingCostEff = saleShippingCost(sale) * (1 - ratio);
+  const shippingCreditEff = saleShippingCredit(sale) * (1 - ratio);
   const otherCostsEff = sale.otherCosts * (1 - ratio);
   const discountEff = sale.discount * (1 - ratio);
   const estornoEff = (sale.estorno ?? 0) * (1 - ratio);
@@ -207,6 +236,8 @@ function saleFinancials(sale: Sale, actualUnitCost: number, returns: Return[]): 
     discountEffective: discountEff,
     estornoEffective: estornoEff,
     shippingEffective: shippingEff,
+    shippingCostEffective: shippingCostEff,
+    shippingCreditEffective: shippingCreditEff,
     otherCostsEffective: otherCostsEff,
     netRevenue,
     proportionalCost,
@@ -320,6 +351,8 @@ export function calculateSale(
     discountEffective: f.discountEffective,
     estornoEffective: f.estornoEffective,
     shippingEffective: f.shippingEffective,
+    shippingCostEffective: f.shippingCostEffective,
+    shippingCreditEffective: f.shippingCreditEffective,
     otherCostsEffective: f.otherCostsEffective,
     netRevenue: f.netRevenue,
     actualUnitCost,
@@ -413,10 +446,14 @@ export function calculateKpis(
   const totalFees = completed.reduce((s, v) => s + v.feeAmount, 0);
   // EFETIVOS: precisam casar com netRevenue, senão a cascata do dashboard não
   // fecha quando há devolução (o componente revertido sumiria da conta).
-  // shippingEffective já é o impacto com sinal: negativo custeia o frete do
-  // vendedor, positivo é reembolso do Flex.
-  const totalShipping = completed.reduce((s, v) => s + (v.shippingType === 'flex' ? 0 : -v.shippingEffective), 0);
-  const totalFlexRefund = completed.reduce((s, v) => s + (v.shippingType === 'flex' ? v.shippingEffective : 0), 0);
+  //
+  // Custo e crédito vêm SEPARADOS da venda, em vez de serem desembrulhados do
+  // impacto líquido pelo tipo de frete. Enquanto o Flex não tinha custo, dava
+  // no mesmo; agora que tem, ler o líquido faria o reembolso abater a conta da
+  // transportadora e as duas linhas mentiriam juntas — uma para menos, outra
+  // para mais —, com a soma fechando certo e escondendo as duas.
+  const totalShipping = completed.reduce((s, v) => s + v.shippingCostEffective, 0);
+  const totalFlexRefund = completed.reduce((s, v) => s + v.shippingCreditEffective, 0);
   const totalDiscounts = completed.reduce((s, v) => s + v.discountEffective, 0);
   const totalEstorno = completed.reduce((s, v) => s + v.estornoEffective, 0);
   const totalOtherCosts = completed.reduce((s, v) => s + v.otherCostsEffective, 0);

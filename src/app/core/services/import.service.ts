@@ -627,7 +627,10 @@ export class ImportService {
         channel,
         feePercentage: feePct / 100,
         shippingType,
-        sellerShipping: shippingType === 'correios' ? sellerShipping : 0,
+        /* O frete do vendedor vale nos dois tipos. Zerá-lo no Flex jogava fora
+           uma coluna que a planilha tem e você preencheu — e era mais um jeito
+           de a venda Flex entrar sem o custo do envio. */
+        sellerShipping,
         flexRefund: shippingType === 'flex' ? flexRefund : undefined,
         estorno,
         discount,

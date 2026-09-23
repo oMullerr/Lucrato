@@ -1,6 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MlIntegrationService } from '../../core/services/ml-integration.service';
+import { DataService } from '../../core/services/data.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { logError } from '../../core/services/logger';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
@@ -9,6 +12,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.c
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { IconName } from '../../shared/ui/icon/icons';
+import { SwitchComponent } from '../../shared/ui/switch/switch.component';
 import { DialogService } from '../../shared/ui/dialog/dialog.service';
 
 interface EstadoVisual {
@@ -31,18 +35,27 @@ const LEITURAS: readonly { icon: IconName; key: string }[] = [
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    PageHeaderComponent, SkeletonComponent, ButtonComponent, IconComponent, TranslateModule,
+    FormsModule, RouterLink,
+    PageHeaderComponent, SkeletonComponent, ButtonComponent, IconComponent,
+    SwitchComponent, TranslateModule,
   ],
   templateUrl: './integrations.component.html',
   styleUrl: './integrations.component.scss',
 })
 export class IntegrationsComponent {
   protected readonly ml = inject(MlIntegrationService);
+  protected readonly data = inject(DataService);
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(DialogService);
   private readonly t = inject(TranslateService);
 
   protected readonly leituras = LEITURAS;
+
+  /** Trava o interruptor enquanto a gravação não volta. */
+  protected readonly salvandoAutoApply = signal(false);
+
+  /** Itens da caixa esperando decisão — é o que justifica o atalho aparecer. */
+  protected readonly esperando = computed(() => this.ml.inboxPendentes().length);
 
   /** Data e hora curtas, no padrao brasileiro. */
   protected formatarQuando(d: Date | null | undefined): string {
@@ -75,6 +88,28 @@ export class IntegrationsComponent {
       messageKey: 'integrations.offMsg',
     };
   });
+
+  /**
+   * Liga/desliga o lançamento automático.
+   *
+   * O `DataService` já aplica a mudança de forma otimista e faz rollback se a
+   * gravação falhar, então a tela não precisa desfazer nada aqui — só avisar.
+   */
+  protected async alternarAutoApply(on: boolean): Promise<void> {
+    if (this.salvandoAutoApply()) return;
+    this.salvandoAutoApply.set(true);
+    try {
+      await this.data.setMlAutoApply(on);
+      this.notify.success(
+        this.t.instant(on ? 'integrations.autoApplyOn' : 'integrations.autoApplyOff'),
+      );
+    } catch (err) {
+      logError('[Integrations] salvar auto-aplicar falhou:', err);
+      // O erro do Firestore já foi notificado pelo DataService.
+    } finally {
+      this.salvandoAutoApply.set(false);
+    }
+  }
 
   protected async connect(): Promise<void> {
     try {

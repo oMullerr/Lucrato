@@ -1,7 +1,7 @@
 jest.mock('./logger', () => ({ logError: jest.fn() }));
 
 import { TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { MlAutoApplyService } from './ml-auto-apply.service';
 import { MlIntegrationService } from './ml-integration.service';
@@ -93,6 +93,11 @@ function setupHarness(opts: {
     settings,
     loaded,
     sales,
+    /* Derivado do MESMO sinal de settings, com a MESMA regra do serviço real
+       (ausente ⇒ ligado). Um dublê que devolvesse um booleano solto deixaria
+       de provar justamente o que interessa: que o interruptor da tela de
+       Integrações e a decisão de escrever no razão leem a mesma coisa. */
+    mlAutoApply: computed(() => settings().mlAutoApply !== false),
     applyMlInbox: jest.fn().mockResolvedValue(opts.planoVendas ?? planoVazioDeVendas()),
     applyMlReturns: jest.fn().mockResolvedValue(opts.planoDevolucoes ?? planoOrfao()),
   };

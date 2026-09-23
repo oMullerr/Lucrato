@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DialogService } from '../../shared/ui/dialog/dialog.service';
-import { Firestore, deleteDoc, doc } from '@angular/fire/firestore';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 import { NotifyService } from '../../core/services/notify.service';
@@ -35,7 +34,6 @@ export class ProfileComponent {
   private readonly auth = inject(AuthService);
   private readonly notify = inject(NotifyService);
   private readonly dialog = inject(DialogService);
-  private readonly firestore = inject(Firestore);
   private readonly router = inject(Router);
   private readonly t = inject(TranslateService);
   private readonly lang = inject(LanguageService);
@@ -192,17 +190,30 @@ export class ProfileComponent {
       });
   }
 
+  /**
+   * Exclui a conta pelo servidor.
+   *
+   * Até setembro/2026 esta função apagava `users/{uid}/db/main` daqui mesmo e
+   * chamava `deleteUser()`. O que o navegador NÃO alcança ficava de pé: os
+   * tokens do Mercado Livre em `users/{uid}/secret/ml`, o `mlIndex` que o
+   * poller usa, e todas as coleções `ml*`. O resultado era um refresh token
+   * vivo, renovado a cada quinze minutos, sem nenhuma conta capaz de
+   * desconectá-lo — as rules negam esse caminho ao cliente, por desenho.
+   *
+   * Agora a única responsabilidade daqui é provar que é o dono (a senha) e
+   * chamar. Quem apaga é `functions/src/account.ts`, que enxerga tudo.
+   */
   private async performAccountDeletion(password: string): Promise<void> {
-    const uid = this.auth.currentUser()?.uid;
-    if (!uid) {
+    if (!this.auth.currentUser()?.uid) {
       this.notify.error(this.t.instant('profile.sessionExpired'));
       return;
     }
 
     this.deletingAccount.set(true);
     try {
+      // A re-autenticação renova o `auth_time` do token, que é o que a function
+      // confere para aceitar a exclusão.
       await this.auth.reauthenticate(password);
-      await deleteDoc(doc(this.firestore, `users/${uid}/db/main`));
       await this.auth.deleteAccount();
       this.notify.success(this.t.instant('profile.accountDeleted'));
       this.router.navigate(['/login']);
@@ -216,6 +227,14 @@ export class ProfileComponent {
 
   private friendlyAuthError(code: string | undefined): string {
     switch (code) {
+      /* Erros da callable de exclusão. Sem estes, qualquer falha do servidor
+         caía no genérico — e a mais provável delas ("não deu para desconectar
+         o Mercado Livre, tente de novo") é justamente a que o dono precisa
+         entender, porque ela significa que NADA foi apagado. */
+      case 'functions/failed-precondition':
+        return this.t.instant('profile.errRecentLogin');
+      case 'functions/internal':
+        return this.t.instant('profile.errDeleteServer');
       case 'auth/wrong-password':
       case 'auth/invalid-credential':
         return this.t.instant('profile.errWrongPassword');

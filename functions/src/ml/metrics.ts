@@ -16,6 +16,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 
 import { ML_CLIENT_ID, ML_CLIENT_SECRET } from '../config';
 import { criarMlClient, MlClient } from './client';
+import { cobrarIntervalo } from './debounce';
 
 type Bruto = Record<string, unknown>;
 
@@ -125,6 +126,12 @@ export const mlSyncMetrics = onCall(
     if (!mlUserId) {
       throw new HttpsError('failed-precondition', 'Conecte a conta do Mercado Livre primeiro.');
     }
+
+    /* Intervalo mais folgado que os outros: a API de visitas não tem multiget,
+       então isto é UMA chamada por anúncio ativo. Numa conta grande, repetir de
+       hora em hora é o caminho mais curto para o bloqueio por IP — e as visitas
+       de 30 dias não mudam o suficiente para justificar. */
+    await cobrarIntervalo(uid, 'syncMetrics');
 
     try {
       const total = await atualizarMetricas(uid, mlUserId);

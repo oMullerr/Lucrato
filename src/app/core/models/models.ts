@@ -135,6 +135,18 @@ export interface Settings {
   defaultShipping: number;
   /** Janela (dias) em que uma venda ainda aceita devolução. Padrão 30. */
   returnWindowDays: number;
+  /**
+   * Quanto você paga à transportadora numa venda Flex, por pedido.
+   *
+   * No Flex o Mercado Livre informa um custo de frete que NÃO é o que você
+   * paga — quem contrata a transportadora é você. Por isso o número dele é
+   * ignorado na importação, e até setembro/2026 não havia onde lançar o real:
+   * toda venda Flex entrava com frete zero e o lucro saía inflado.
+   *
+   * Ausente ou zero mantém o comportamento antigo. O valor é rateado entre as
+   * fatias quando um pedido é dividido em lotes, e continua editável por venda.
+   */
+  flexShippingCost?: number;
   defaultChannel: SaleChannel;
   categories: string[];
   /** Cor (hex) por categoria, indexada pelo nome. Ausência = cor padrão. */
@@ -156,8 +168,6 @@ export interface Settings {
    * vinculado a um produto com estoque. Ausente ⇒ true.
    */
   mlAutoApply?: boolean;
-  /** Percentual de imposto usado como padrao na calculadora. Ausente ⇒ 0. */
-  taxPercentage?: number;
 }
 
 /** Purchase with derived computed fields */
@@ -206,6 +216,10 @@ export interface ComputedSale extends Sale {
   estornoEffective: number;
   /** Impacto do frete original após reversão proporcional. Negativo = custo do vendedor. */
   shippingEffective: number;
+  /** Só o CUSTO do frete, positivo, após reversão proporcional. */
+  shippingCostEffective: number;
+  /** Só o CRÉDITO do frete (Flex), positivo, após reversão proporcional. */
+  shippingCreditEffective: number;
   /** Outros custos após reversão proporcional das devoluções. */
   otherCostsEffective: number;
   /** Unidades devolvidas em devoluções FINALIZADAS (clampado em quantitySold). */
@@ -298,11 +312,30 @@ export interface KpiSummary {
   pendingReturnValue: number;
 }
 
+/**
+ * Versão do formato de armazenamento.
+ *
+ *  1 — tudo num documento só (`users/{uid}/db/main`), inclusive os arrays.
+ *      Formato original; ainda lido para quem não migrou.
+ *  2 — o razão vive em subcoleções (`users/{uid}/{purchases,sales,returns}`) e
+ *      `db/main` guarda só `settings` e `metadata`.
+ *
+ * O documento único tem teto de 1 MiB no Firestore, o que dava uma parede real
+ * em torno de 1.500 a 2.500 vendas — e toda alteração, até marcar um DAS como
+ * pago, regravava a base inteira.
+ */
+export const SCHEMA_SUBCOLECOES = 2;
+
 /** JSON database */
 export interface Database {
   purchases: Purchase[];
   sales: Sale[];
   returns: Return[];
   settings: Settings;
-  metadata: { versao: string; ultimaAtualizacao: string };
+  metadata: {
+    versao: string;
+    ultimaAtualizacao: string;
+    /** Ausente ⇒ 1 (formato original). */
+    schema?: number;
+  };
 }

@@ -19,25 +19,39 @@
 
 <div class="page-content inbox-body">
 
-  @if (!ml.connected()) {
-    <app-empty-state
-      icon="store"
-      [title]="'mlInbox.notConnected' | translate"
-      [description]="'mlInbox.notConnectedMsg' | translate"
-    >
-      <a appBtn="primary" routerLink="/integracoes">{{ 'mlInbox.goToIntegrations' | translate }}</a>
-    </app-empty-state>
-  } @else if (!ml.inboxLoaded()) {
+  <!-- Aqui a autorização vencida é ainda mais grave que nas outras telas: a
+       caixa guarda vendas capturadas que NUNCA ENTRARAM no razão. Escondê-las
+       porque o token expirou some com faturamento que está esperando decisão —
+       o oposto do que esta tela existe para fazer. -->
+  @if (!ml.inboxLoaded()) {
     <app-skeleton variant="table-row" [count]="4" />
   } @else if (totalEsperando() === 0) {
-    <app-empty-state
-      icon="circle-check"
-      [title]="'mlInbox.emptyTitle' | translate"
-      [description]="'mlInbox.emptyMsg' | translate"
-    >
-      <a appBtn="outline" routerLink="/sales">{{ 'mlInbox.goToSales' | translate }}</a>
-    </app-empty-state>
+    @if (ml.connected() || ml.needsReconnect()) {
+      <app-empty-state
+        icon="circle-check"
+        [title]="'mlInbox.emptyTitle' | translate"
+        [description]="'mlInbox.emptyMsg' | translate"
+      >
+        <a appBtn="outline" routerLink="/sales">{{ 'mlInbox.goToSales' | translate }}</a>
+      </app-empty-state>
+    } @else {
+      <app-empty-state
+        icon="store"
+        [title]="'mlInbox.notConnected' | translate"
+        [description]="'mlInbox.notConnectedMsg' | translate"
+      >
+        <a appBtn="primary" routerLink="/integracoes">{{ 'mlInbox.goToIntegrations' | translate }}</a>
+      </app-empty-state>
+    }
   } @else {
+
+    @if (ml.needsReconnect()) {
+      <p class="stale-note">
+        <app-icon name="triangle-alert" [size]="16" />
+        <span>{{ 'mlInbox.staleData' | translate }}</span>
+        <a routerLink="/integracoes">{{ 'mlInbox.goToIntegrations' | translate }}</a>
+      </p>
+    }
 
     <p class="resumo">
       {{ 'mlInbox.summary' | translate:{ total: totalEsperando() } }}

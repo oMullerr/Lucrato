@@ -1,0 +1,98 @@
+@use '../../../styles/breakpoints' as bp;
+
+.alert-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.alert-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-1);
+}
+
+.tone-danger  { border-left-color: var(--color-danger); }
+.tone-warning { border-left-color: var(--color-warning); }
+.tone-info    { border-left-color: var(--color-info); }
+
+.alert-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
+}
+
+.tone-danger .alert-icon  { color: var(--color-danger); }
+.tone-warning .alert-icon { color: var(--color-warning); }
+.tone-info .alert-icon    { color: var(--color-info); }
+
+.alert-text {
+  /* `min-width: 0` é o que permite o truncamento do título dentro do flex. */
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.alert-msg {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.alert-item {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alert-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  /* 44px de alvo de toque: o alerta é feito para ser clicado no celular. */
+  min-height: 44px;
+  padding: 0 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.alert-go:hover { text-decoration: underline; }
+
+.alert-more {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+@include bp.below(sm) {
+  .alert-row {
+    /* Em coluna o link desce para baixo do texto, em vez de espremer os dois. */
+    flex-wrap: wrap;
+  }
+
+  .alert-text { flex-basis: calc(100% - 42px); }
+
+  .alert-go {
+    margin-left: 42px;
+    min-height: 32px;
+  }
+}

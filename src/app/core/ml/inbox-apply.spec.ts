@@ -269,3 +269,94 @@ describe('venda gerada', () => {
     expect(v.sellerShipping).toBeCloseTo(23.25, 2);
   });
 });
+
+/**
+ * Frete do Flex — o custo que nao existia.
+ *
+ * No Flex o Mercado Livre informa um frete que NAO e o que voce paga: quem
+ * contrata a transportadora e voce. O numero dele e descartado na importacao,
+ * e ate setembro/2026 nada entrava no lugar — toda venda Flex caia no razao
+ * com frete zero e o lucro saia inflado, sem nenhuma tela dizendo isso.
+ */
+describe('custo do frete Flex', () => {
+  const lotes = [lote({ id: 'C001', product: 'Fone Bluetooth', quantityPurchased: 10 })];
+
+  it('venda Flex sem frete recebe o padrao das configuracoes', () => {
+    const plano = planejarAplicacao(
+      [item({ shippingType: 'flex', sellerShipping: 0 })],
+      lotes,
+      [],
+      { custoFlex: 18 },
+    );
+    expect(plano.novas[0].sellerShipping).toBe(18);
+  });
+
+  it('sem padrao configurado, segue zero — nao inventa despesa', () => {
+    const plano = planejarAplicacao(
+      [item({ shippingType: 'flex', sellerShipping: 0 })],
+      lotes,
+      [],
+    );
+    expect(plano.novas[0].sellerShipping).toBe(0);
+  });
+
+  it('venda Correios NAO recebe o padrao do Flex', () => {
+    const plano = planejarAplicacao(
+      [item({ shippingType: 'correios', sellerShipping: 0 })],
+      lotes,
+      [],
+      { custoFlex: 18 },
+    );
+    expect(plano.novas[0].sellerShipping).toBe(0);
+  });
+
+  it('frete que ja veio no pedido manda mais que o padrao', () => {
+    // O padrao existe para o caso em que ninguem sabia, nao para sobrescrever
+    // quem sabia.
+    const plano = planejarAplicacao(
+      [item({ shippingType: 'flex', sellerShipping: 7 })],
+      lotes,
+      [],
+      { custoFlex: 18 },
+    );
+    expect(plano.novas[0].sellerShipping).toBe(7);
+  });
+
+  it('pedido dividido entre lotes rateia o custo, nao cobra duas vezes', () => {
+    const divididos = [
+      lote({ id: 'C001', product: 'Fone Bluetooth', quantityPurchased: 2, purchaseDate: '2026-01-01' }),
+      lote({ id: 'C002', product: 'Fone Bluetooth', quantityPurchased: 2, purchaseDate: '2026-02-01' }),
+    ];
+    const plano = planejarAplicacao(
+      [item({ shippingType: 'flex', sellerShipping: 0, quantitySold: 4 })],
+      divididos,
+      [],
+      { custoFlex: 20 },
+    );
+
+    expect(plano.novas).toHaveLength(2);
+    const soma = plano.novas.reduce((s, v) => s + v.sellerShipping, 0);
+    expect(soma).toBeCloseTo(20, 2);
+  });
+
+  it('rodar de novo nao zera o custo que o padrao acabou de por', () => {
+    /* A caixa continua trazendo o item com frete zero. Se a comparacao de "o
+       que mudou no pedido" enxergasse esse zero, cada rodada devolveria a
+       venda para frete zero — e o custo sumiria sozinho, em silencio. */
+    const primeira = planejarAplicacao(
+      [item({ shippingType: 'flex', sellerShipping: 0 })],
+      lotes,
+      [],
+      { custoFlex: 18 },
+    );
+    const segunda = planejarAplicacao(
+      [item({ shippingType: 'flex', sellerShipping: 0 })],
+      lotes,
+      primeira.novas,
+      { custoFlex: 18 },
+    );
+
+    expect(segunda.novas).toHaveLength(0);
+    expect(segunda.atualizadas).toHaveLength(0);
+  });
+});

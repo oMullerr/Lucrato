@@ -16,7 +16,9 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 
 import { ML_CLIENT_ID, ML_CLIENT_SECRET } from '../config';
+import { aplicarNoRazao } from './apply';
 import { criarMlClient } from './client';
+import { cobrarIntervalo } from './debounce';
 import { marcarSync, processarPedido } from './inbox';
 import { processarReclamacao } from './returns';
 
@@ -52,6 +54,35 @@ export function idDaReclamacao(resource: string): string {
 async function uidDoVendedor(mlUserId: string): Promise<string> {
   const snap = await db().doc(`mlIndex/${mlUserId}`).get();
   return snap.exists ? String(snap.get('uid') ?? '') : '';
+}
+
+/**
+ * Lança no razão o que acabou de ser capturado — e NUNCA derruba a captura.
+ *
+ * As duas etapas têm consequências diferentes. Capturar é o que não pode se
+ * perder: o Mercado Livre desiste de reenviar depois de uma hora. Lançar pode
+ * esperar a próxima rodada sem prejuízo nenhum, porque o pedido já está
+ * guardado na caixa. Por isso a falha aqui é registrada e engolida: deixar uma
+ * exceção do lançamento marcar o evento como "com erro" faria a captura ser
+ * repetida por causa de um problema que não é dela.
+ */
+async function lancarNoRazao(uid: string): Promise<void> {
+  try {
+    const r = await aplicarNoRazao(uid);
+    if (r.vendas > 0 || r.devolucoes > 0) {
+      logger.info('Razão avançou sem o navegador', {
+        uid,
+        vendas: r.vendas,
+        devolucoes: r.devolucoes,
+        pendentes: r.pendentes,
+      });
+    }
+  } catch (err) {
+    logger.error('Lançamento no razão falhou; o pedido segue na caixa', {
+      uid,
+      motivo: String((err as Error).message),
+    });
+  }
 }
 
 /** Reage à notificação enfileirada pelo webhook. */
@@ -97,6 +128,7 @@ export const mlProcessEvent = onDocumentCreated(
         logger.info('Pedido processado pelo webhook', { uid, orderId, rascunhos: total });
       }
       await marcarSync(uid);
+      await lancarNoRazao(uid);
       await event.data?.ref.delete();
     } catch (err) {
       const motivo = String((err as Error).message);
@@ -180,6 +212,11 @@ export const mlBackfill = onCall(
       throw new HttpsError('failed-precondition', 'Conecte a conta do Mercado Livre primeiro.');
     }
 
+    /* A trava do navegador (`working`) some num F5. Sem esta, recarregar e
+       clicar de novo dispara uma segunda varredura por cima da primeira, e as
+       duas competem pelo mesmo rate limit do ML — que bloqueia por IP. */
+    await cobrarIntervalo(uid, 'backfill');
+
     const meses = Math.min(12, Math.max(1, Number((request.data as Bruto)?.['meses'] ?? 12)));
     const desde = new Date();
     desde.setMonth(desde.getMonth() - meses);
@@ -258,6 +295,22 @@ export const mlPoller = onSchedule(
           { merge: true },
         );
       }
+
+      /* FORA do try/catch, e esse é o ponto: lançar no razão não fala com o
+         Mercado Livre. Lê a caixa e o razão, que são seus, e grava no razão.
+         Uma autorização vencida não é motivo para parar de lançar o que já
+         está capturado.
+
+         Estava dentro do `try`, depois da varredura, e com a conta precisando
+         reconectar — o estado real em 22/09/2026 — a varredura lançava, o
+         `catch` assumia e o lançamento NUNCA rodava. O razão ficava parado
+         justamente enquanto ninguém podia consertar do outro lado, e vincular
+         um anúncio não adiantaria nada até a reconexão.
+
+         Também não depende de a varredura ter trazido pedido: pode não vir
+         nada novo e ainda haver coisa esperando — um anúncio vinculado agora,
+         um lote cadastrado ontem. */
+      await lancarNoRazao(uid);
     }
   },
 );

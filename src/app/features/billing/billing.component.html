@@ -13,27 +13,40 @@
 
 <div class="page-content billing-body">
 
-  @if (!ml.connected()) {
-    <app-empty-state
-      icon="store"
-      [title]="'billing.notConnected' | translate"
-      [description]="'billing.notConnectedMsg' | translate"
-    >
-      <a appBtn="primary" routerLink="/integracoes">{{ 'billing.goToIntegrations' | translate }}</a>
-    </app-empty-state>
-  } @else if (!ml.faturamentoLoaded()) {
+  <!-- O que decide se há tela é TER FATURA GUARDADA, não o estado da
+       autorização: uma conta em `reconnect_required` continua sendo do dono, e
+       os períodos já sincronizados são dele. Ver o mesmo conserto na tela de
+       Anúncios. -->
+  @if (!ml.faturamentoLoaded()) {
     <app-skeleton variant="table-row" [count]="5" />
   } @else if (periodos().length === 0) {
-    <app-empty-state
-      icon="receipt-text"
-      [title]="'billing.emptyTitle' | translate"
-      [description]="'billing.emptyMsg' | translate"
-    >
-      <button appBtn="primary" [disabled]="ml.working() || sincronizando()" (click)="sincronizar()">
-        {{ 'billing.sync' | translate }}
-      </button>
-    </app-empty-state>
+    @if (ml.connected()) {
+      <app-empty-state
+        icon="receipt-text"
+        [title]="'billing.emptyTitle' | translate"
+        [description]="'billing.emptyMsg' | translate"
+      >
+        <button appBtn="primary" [disabled]="ml.working() || sincronizando()" (click)="sincronizar()">
+          {{ 'billing.sync' | translate }}
+        </button>
+      </app-empty-state>
+    } @else {
+      <app-empty-state
+        icon="store"
+        [title]="'billing.notConnected' | translate"
+        [description]="'billing.notConnectedMsg' | translate"
+      >
+        <a appBtn="primary" routerLink="/integracoes">{{ 'billing.goToIntegrations' | translate }}</a>
+      </app-empty-state>
+    }
   } @else {
+    @if (ml.needsReconnect()) {
+      <p class="stale-note">
+        <app-icon name="triangle-alert" [size]="16" />
+        <span>{{ 'billing.staleData' | translate }}</span>
+        <a routerLink="/integracoes">{{ 'billing.goToIntegrations' | translate }}</a>
+      </p>
+    }
     <!-- `as` só vale no `@if` primário, então o período abre um bloco próprio. -->
     @if (periodo(); as p) {
 

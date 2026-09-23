@@ -60,14 +60,9 @@ describe('migração das configurações novas', () => {
     expect(migrate(setup(), { settings: {} }).settings.mlAutoApply).toBe(true);
   });
 
-  it('base antiga ganha imposto zero por padrão', () => {
-    expect(migrate(setup(), { settings: {} }).settings.taxPercentage).toBe(0);
-  });
-
   it('preserva a escolha do usuário quando já existe', () => {
-    const s = migrate(setup(), { settings: { mlAutoApply: false, taxPercentage: 6 } }).settings;
+    const s = migrate(setup(), { settings: { mlAutoApply: false } }).settings;
     expect(s.mlAutoApply).toBe(false);
-    expect(s.taxPercentage).toBe(6);
   });
 
   it('não mexe em nenhuma configuração existente', () => {

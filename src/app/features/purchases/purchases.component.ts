@@ -1,4 +1,4 @@
-import {
+﻿import {
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../shared/ui/dialog/dialog.service';
 import { DataService } from '../../core/services/data.service';
+import { PeriodoService } from '../../core/services/periodo.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { Purchase, ComputedPurchase, InventoryStatus } from '../../core/models/models';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
@@ -65,6 +66,9 @@ export class PurchasesComponent {
 
   protected readonly textFilter = signal('');
   protected readonly statusFilter = signal<StatusFilter>('all');
+  /* O recorte de datas e do app, nao desta tela: o mesmo periodo vale em
+     Vendas, Compras, Devolucoes e no Painel. Ver PeriodoService. */
+  protected readonly periodo = inject(PeriodoService);
   protected readonly dateBounds = signal<RangeBounds | null>(null);
   protected readonly expandedRow = signal<string | null>(null);
   protected readonly selectedBatch = signal<ComputedPurchase | null>(null);

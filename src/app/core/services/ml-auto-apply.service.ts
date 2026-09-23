@@ -48,7 +48,10 @@ export class MlAutoApplyService {
       if (this.desarmado) return;
 
       const pendentes = this.ml.inboxPendentes();
-      const ligado = this.data.settings()?.mlAutoApply !== false;
+      /* Mesma fonte que o interruptor da tela de Integrações lê. Duas leituras
+         da mesma configuração acabariam discordando — e a que discordasse em
+         silêncio seria justamente esta, que decide se o app escreve no razão. */
+      const ligado = this.data.mlAutoApply();
 
       const devolucoes = this.ml.devolucoesPendentes();
       if (!ligado || this.rodando() || !this.data.loaded()) return;

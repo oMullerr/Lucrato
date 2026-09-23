@@ -1,0 +1,36 @@
+<app-page-header
+  [title]="'guide.title' | translate"
+  [eyebrow]="'guide.eyebrow' | translate:{ count: total }"
+  [subtitle]="'guide.subtitle' | translate"
+/>
+
+<div class="page-content guide-body">
+
+  <!-- O que acontece sozinho vem primeiro: é o caminho normal desde a
+       integração. O manual virou exceção e desceu. -->
+  <section class="guide-group">
+    <header class="group-head">
+      <h2>{{ 'guide.groupMlTitle' | translate }}</h2>
+      <p>{{ 'guide.groupMlSub' | translate }}</p>
+    </header>
+    <app-guide
+      [items]="integracao"
+      idPrefix="ml"
+      tocTitle="mlGuide.tocTitle"
+      indexAria="mlGuide.indexAria"
+    />
+  </section>
+
+  <section class="guide-group">
+    <header class="group-head">
+      <h2>{{ 'guide.groupManualTitle' | translate }}</h2>
+      <p>{{ 'guide.groupManualSub' | translate }}</p>
+    </header>
+    <app-guide
+      [items]="manual"
+      idPrefix="man"
+      tocTitle="instructions.tocTitle"
+      indexAria="instructions.indexAria"
+    />
+  </section>
+</div>

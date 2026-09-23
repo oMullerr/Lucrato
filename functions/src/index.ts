@@ -29,6 +29,13 @@ export const mlHealth = onCall({ enforceAppCheck: false }, (request) => {
 /** Reporte de erro do navegador. Sem isto, produção é cega. */
 export { logClientError } from './client-errors';
 
+/**
+ * Exclusão de conta. Precisa ser servidor: o navegador não alcança
+ * `users/{uid}/secret/ml` nem `mlIndex/*` — e era ali que os tokens vivos do
+ * Mercado Livre ficavam para trás.
+ */
+export { deleteAccount } from './account';
+
 export { mlAuthUrl, mlAuthCallback, mlDisconnect } from './ml/oauth';
 export { mlSyncItems } from './ml/items';
 export { mlSetLinks } from './ml/links';

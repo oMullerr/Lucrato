@@ -51,10 +51,19 @@
                 <span class="rc-label">{{ row.label }}</span>
                 <strong class="rc-value mono" [class.text-success]="row.tone === 'success' && $any(row).kind !== 'count'"
                                               [class.text-warning]="row.tone === 'warning'">
-                  @if ($any(row).kind === 'percent') {
+                  @if (row.value === null) {
+                    <!-- Sem base para a conta (estoque zerado, nenhuma saída na
+                         janela). Um zero aqui seria um número inventado, e
+                         alguém decidiria compra em cima dele. -->
+                    <span class="rc-empty" [title]="'analytics.noBasis' | translate">—</span>
+                  } @else if ($any(row).kind === 'percent') {
                     {{ (row.value * 100).toFixed(1) }}%
                   } @else if ($any(row).kind === 'count') {
                     {{ row.value }}
+                  } @else if ($any(row).kind === 'times') {
+                    {{ row.value.toFixed(1) }}×
+                  } @else if ($any(row).kind === 'days') {
+                    {{ row.value.toFixed(0) }} {{ 'analytics.daysUnit' | translate }}
                   } @else {
                     {{ row.value | brl }}
                   }

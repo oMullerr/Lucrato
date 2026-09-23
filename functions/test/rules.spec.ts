@@ -182,3 +182,59 @@ describe('errorLog e invisivel ao navegador', () => {
     await assertFails(deleteDoc(doc(verificado(), 'errorLog/erro-1')));
   });
 });
+
+/**
+ * Razao em subcolecoes (schema 2).
+ *
+ * Sao as UNICAS colecoes novas em que o navegador escreve. O documento unico
+ * tinha validacao de formato e teto de tamanho; estes caminhos precisam do
+ * equivalente, senao a migracao troca uma parede de 1 MiB por uma porta aberta.
+ */
+describe('razao em subcolecoes', () => {
+  const lote = { id: 'C001', product: 'Furadeira', quantityPurchased: 3, unitCost: 50 };
+
+  it('o dono verificado le e escreve o proprio razao', async () => {
+    const db = verificado();
+    await assertSucceeds(setDoc(doc(db, `users/${DONO}/purchases/C001`), lote));
+    await assertSucceeds(getDoc(doc(db, `users/${DONO}/purchases/C001`)));
+    await assertSucceeds(setDoc(doc(db, `users/${DONO}/sales/V001`), { id: 'V001', product: 'x' }));
+    await assertSucceeds(setDoc(doc(db, `users/${DONO}/returns/D001`), { id: 'D001', product: 'x' }));
+    await assertSucceeds(deleteDoc(doc(db, `users/${DONO}/purchases/C001`)));
+  });
+
+  it('e-mail nao verificado nao passa', async () => {
+    await assertFails(setDoc(doc(naoVerificado(), `users/${DONO}/purchases/C001`), lote));
+    await assertFails(getDoc(doc(naoVerificado(), `users/${DONO}/purchases/C001`)));
+  });
+
+  it('o razao de outro usuario e invisivel', async () => {
+    await assertFails(setDoc(doc(intruso(), `users/${DONO}/purchases/C001`), lote));
+    await assertFails(getDoc(doc(intruso(), `users/${DONO}/sales/V001`)));
+  });
+
+  it('anonimo nao chega perto', async () => {
+    await assertFails(getDoc(doc(anonimo(), `users/${DONO}/purchases/C001`)));
+    await assertFails(setDoc(doc(anonimo(), `users/${DONO}/purchases/C001`), lote));
+  });
+
+  it('registro sem id nao entra', async () => {
+    // Sem `id`, o diff da gravacao nao sabe o que atualizar nem o que apagar.
+    await assertFails(setDoc(doc(verificado(), `users/${DONO}/purchases/C001`), { product: 'x' }));
+    await assertFails(setDoc(doc(verificado(), `users/${DONO}/purchases/C001`), { id: '', product: 'x' }));
+  });
+
+  it('texto gigante nao entra', async () => {
+    // Sem teto por campo, uma observacao de megabytes derruba o documento —
+    // e a coleta de um erro assim custa caro para diagnosticar.
+    const enorme = 'x'.repeat(3000);
+    await assertFails(setDoc(doc(verificado(), `users/${DONO}/purchases/C001`), { ...lote, notes: enorme }));
+    await assertFails(setDoc(doc(verificado(), `users/${DONO}/purchases/C001`), { ...lote, product: 'y'.repeat(400) }));
+  });
+
+  it('objeto com campos demais nao entra', async () => {
+    const inchado: Record<string, unknown> = { ...lote };
+    for (let i = 0; i < 60; i++) inchado[`campo${i}`] = i;
+    await assertFails(setDoc(doc(verificado(), `users/${DONO}/purchases/C001`), inchado));
+  });
+});
+

@@ -96,6 +96,12 @@ export const routes: Routes = [
     title: 'routeTitles.cashFlow',
   },
   {
+    path: 'fechamento',
+    loadComponent: () => import('./features/closing/closing.component').then(m => m.ClosingComponent),
+    canActivate: [authGuard],
+    title: 'routeTitles.closing',
+  },
+  {
     path: 'faturamento',
     loadComponent: () => import('./features/billing/billing.component').then(m => m.BillingComponent),
     canActivate: [authGuard],
@@ -108,16 +114,14 @@ export const routes: Routes = [
     title: 'routeTitles.profile',
   },
   {
-    path: 'instructions',
-    loadComponent: () => import('./features/instructions/instructions.component').then(m => m.InstructionsComponent),
+    path: 'guia',
+    loadComponent: () => import('./features/guide/guide-page.component').then(m => m.GuidePageComponent),
     canActivate: [authGuard],
-    title: 'routeTitles.instructions',
+    title: 'routeTitles.guide',
   },
-  {
-    path: 'guia-mercado-livre',
-    loadComponent: () => import('./features/ml-guide/ml-guide.component').then(m => m.MlGuideComponent),
-    canActivate: [authGuard],
-    title: 'routeTitles.mlGuide',
-  },
+  /* As duas telas viraram uma. Os caminhos antigos continuam válidos: são
+     links salvos e o destino das buscas de quem já usava o app. */
+  { path: 'instructions', redirectTo: 'guia', pathMatch: 'full' },
+  { path: 'guia-mercado-livre', redirectTo: 'guia', pathMatch: 'full' },
   { path: '**', redirectTo: 'inventory' },
 ];

@@ -274,8 +274,11 @@ function registradoDaVenda(v: ComputedSale): { comissao: number; frete: number }
   // No Flex o frete é pago à transportadora particular, não ao Mercado Livre
   // (regra do negócio, definida em 2026-09-03). Se aparecer cobrança de envio
   // num pedido Flex, a diferença tem de aparecer — e não ser silenciada aqui.
-  // `shippingEffective` é negativo para Correios: é custo.
-  const daVenda = v.shippingType === 'flex' ? 0 : -v.shippingEffective;
+  //
+  // O zero continua valendo mesmo agora que a venda Flex carrega um custo de
+  // frete: este número é "o que o ML deveria ter cobrado", e o que você paga
+  // ao transportador nunca entra na fatura dele.
+  const daVenda = v.shippingType === 'flex' ? 0 : v.shippingCostEffective;
 
   // O frete da devolução também é cobrado na fatura (tarifa de devolução por
   // envio externo). No Lucrato ele mora na devolução, não na venda — mas é

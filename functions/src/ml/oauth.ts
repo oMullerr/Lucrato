@@ -15,7 +15,7 @@ import { defineString } from 'firebase-functions/params';
 
 import { ML_API, ML_AUTH_URL, ML_CLIENT_ID, ML_CLIENT_SECRET } from '../config';
 import { codeChallengeOf, isAllowedReturnTo, newCodeVerifier, newState } from './crypto';
-import { saveTokens } from './tokens';
+import { apagarConexao, saveTokens } from './tokens';
 
 /** Deve ser IDÊNTICA à cadastrada no DevCenter do Mercado Livre. */
 export const ML_REDIRECT_URI = defineString('ML_REDIRECT_URI', { default: '' });
@@ -49,6 +49,19 @@ export const mlAuthUrl = onCall({ enforceAppCheck: false, secrets: [ML_CLIENT_ID
   const returnTo = String((request.data as { returnTo?: unknown } | undefined)?.returnTo ?? '');
   const extras = APP_ORIGINS.value().split(',').map((s) => s.trim()).filter(Boolean);
   if (returnTo && !isAllowedReturnTo(returnTo, extras)) {
+    /* Separar os dois casos não é capricho: desde que o curinga `*.vercel.app`
+       saiu (setembro/2026), TODO destino remoto depende de `APP_ORIGINS`. Sem
+       essa distinção, esquecer a configuração no deploy produziria "endereço
+       não autorizado" para o endereço certo — a mensagem que mais atrasa o
+       diagnóstico, porque manda procurar no lugar errado. */
+    if (extras.length === 0) {
+      logger.error('APP_ORIGINS não configurada: nenhum destino remoto é aceito', { returnTo });
+      throw new HttpsError(
+        'failed-precondition',
+        'APP_ORIGINS não configurada nas functions — nenhum endereço de retorno é aceito.',
+      );
+    }
+    logger.warn('Destino de retorno recusado', { returnTo });
     throw new HttpsError('invalid-argument', 'Endereço de retorno não autorizado.');
   }
 
@@ -204,18 +217,9 @@ export const mlDisconnect = onCall({ enforceAppCheck: false }, async (request) =
   }
   const uid = request.auth.uid;
 
-  const secret = db().doc(`users/${uid}/secret/ml`);
-  const snap = await secret.get();
-  const mlUserId = snap.exists ? Number(snap.get('mlUserId')) : 0;
+  // Mesma rotina que a exclusão de conta usa (ver `apagarConexao`).
+  const mlUserId = await apagarConexao(uid);
 
-  if (mlUserId) {
-    const indice = db().doc(`mlIndex/${mlUserId}`);
-    const atual = await indice.get();
-    // Só remove o índice se ele ainda aponta para este usuário.
-    if (atual.exists && atual.get('uid') === uid) await indice.delete();
-  }
-
-  await secret.delete();
   await db().doc(`users/${uid}/db/ml`).set(
     {
       connected: false,

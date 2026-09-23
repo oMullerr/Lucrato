@@ -53,6 +53,55 @@
       </div>
     </section>
 
+    @if (ml.connected() || ml.needsReconnect()) {
+      <!-- O comportamento mais consequente do app precisa ser visível e negociável.
+           `needsReconnect` também conta: a conta continua sendo sua, só a
+           autorização venceu — esconder o interruptor ali deixaria a
+           configuração inalcançável justo em quem tem caixa acumulada para
+           aplicar depois de reconectar. -->
+      <section class="info-card auto-apply">
+        <div class="auto-apply-head">
+          <div class="auto-apply-text">
+            <h3>{{ 'integrations.autoApplyTitle' | translate }}</h3>
+            <p>{{ 'integrations.autoApplyHelp' | translate }}</p>
+          </div>
+          <app-switch
+            [ngModel]="data.mlAutoApply()"
+            (ngModelChange)="alternarAutoApply($event)"
+            [disabled]="salvandoAutoApply() || !data.loaded()"
+            [attr.aria-label]="'integrations.autoApplyTitle' | translate"
+          />
+        </div>
+        @if (!data.mlAutoApply()) {
+          <p class="auto-apply-warn">
+            <app-icon name="triangle-alert" />
+            {{ 'integrations.autoApplyOffNote' | translate }}
+          </p>
+        }
+      </section>
+    }
+
+    @if (ml.connected() || ml.needsReconnect()) {
+      <!-- A Caixa saiu do menu: no regime normal ela fica vazia (o auto-aplicar
+           consome tudo), e um item cativo para uma tela de exceção competia com
+           as telas do dia a dia. O contador aqui é o que a torna visível
+           quando de fato tem algo. -->
+      <a class="info-card caixa-link" routerLink="/caixa-ml">
+        <app-icon name="download" />
+        <div class="caixa-text">
+          <h3>{{ 'nav.mlInbox' | translate }}</h3>
+          <p>
+            {{ (esperando() > 0 ? 'integrations.inboxWaiting' : 'integrations.inboxEmpty')
+               | translate:{ total: esperando() } }}
+          </p>
+        </div>
+        @if (esperando() > 0) {
+          <span class="caixa-badge">{{ esperando() }}</span>
+        }
+        <app-icon class="caixa-chevron" name="chevron-right" [size]="18" />
+      </a>
+    }
+
     <!-- O que a integração faz, em português claro -->
     <section class="info-card">
       <h3>{{ 'integrations.readsTitle' | translate }}</h3>

@@ -1,4 +1,4 @@
-<div class="pur-layout">
+﻿<div class="pur-layout">
   <div class="pur-main">
 
     <app-page-header
@@ -42,7 +42,12 @@
             />
           </app-field>
 
-          <app-date-range-picker variant="menu" (selectionChange)="onRangeChange($event)" />
+          <app-date-range-picker
+          variant="menu"
+          [(range)]="periodo.range"
+          [(customStart)]="periodo.customStart"
+          [(customEnd)]="periodo.customEnd"
+          (selectionChange)="onRangeChange($event)" />
 
           <div class="filter-chips" role="tablist">
             <button appChip [active]="statusFilter() === 'all'" [count]="totals().all"
@@ -129,7 +134,11 @@
                       <tr
                         class="row row-clickable"
                         [class.expanded]="expandedRow() === c.id"
+                        [attr.aria-expanded]="expandedRow() === c.id"
+                        tabindex="0"
                         (click)="openDetail(c)"
+                        (keydown.enter)="openDetail(c)"
+                        (keydown.space)="$event.preventDefault(); openDetail(c)"
                       >
                         <td><span class="id-tag mono">{{ c.id }}</span></td>
                         <td class="product-cell" [title]="c.product">{{ c.product }}</td>

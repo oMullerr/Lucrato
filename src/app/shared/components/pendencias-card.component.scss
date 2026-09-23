@@ -1,0 +1,115 @@
+@use '../../../styles/breakpoints' as bp;
+
+.pauta {
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-1);
+}
+
+.pauta-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pauta-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.pauta-head app-icon { color: var(--color-warning); }
+
+.pauta-count {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pauta-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.pauta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-2);
+}
+
+.tone-danger  { border-left-color: var(--color-danger); }
+.tone-warning { border-left-color: var(--color-warning); }
+.tone-info    { border-left-color: var(--color-info); }
+
+.pauta-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-1);
+  color: var(--text-secondary);
+}
+
+.tone-danger .pauta-icon  { color: var(--color-danger); }
+.tone-warning .pauta-icon { color: var(--color-warning); }
+.tone-info .pauta-icon    { color: var(--color-info); }
+
+.pauta-msg {
+  /* `min-width: 0` permite a quebra do texto longo dentro do flex. */
+  min-width: 0;
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.pauta-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  /* Alvo de toque de 44px: a pauta existe para ser clicada no celular. */
+  min-height: 44px;
+  padding: 0 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pauta-go:hover { text-decoration: underline; }
+
+@include bp.below(sm) {
+  .pauta-row { flex-wrap: wrap; }
+
+  .pauta-msg { flex-basis: calc(100% - 42px); }
+
+  .pauta-go {
+    margin-left: 42px;
+    min-height: 32px;
+  }
+}

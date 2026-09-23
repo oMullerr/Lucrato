@@ -36,7 +36,23 @@ interface NavItem {
   title?: string;
 }
 
-/** Labels/títulos são chaves i18n resolvidas com o pipe `translate` no template. */
+/**
+ * Menu lateral. Labels/títulos são chaves i18n resolvidas no template.
+ *
+ * Reorganizado em setembro/2026. Eram 16 itens em três grupos onde "Anúncios",
+ * "Caixa do ML" e "Faturamento" pesavam o mesmo que "Vendas" — tela do dia a
+ * dia e tela de conferência mensal na mesma lista, sem hierarquia de uso.
+ *
+ * Saíram três: Instruções e Guia do ML viraram um só (as rotas antigas
+ * redirecionam), e Devoluções e Caixa do ML deixaram o menu porque têm dono
+ * natural — devolução se registra a partir da venda, e a caixa é o estado da
+ * integração. As duas telas continuam existindo e alcançáveis pelas telas-pai
+ * e pela pauta da tela inicial; o que mudou foi o lugar cativo no menu, que
+ * elas ocupavam sem merecer: no regime normal a caixa fica vazia.
+ *
+ * Os grupos agora respondem a perguntas, não a tipos de registro: como vai,
+ * o que eu opero, onde está o dinheiro, o que configuro.
+ */
 const NAV_GROUPS: NavGroup[] = [
   {
     label: 'nav.groupMain',
@@ -44,20 +60,24 @@ const NAV_GROUPS: NavGroup[] = [
       { path: '/inventory',  label: 'nav.inventory', icon: 'package',      title: 'nav.inventoryTitle' },
       { path: '/dashboard',  label: 'nav.dashboard', icon: 'chart-column', title: 'nav.dashboard' },
       { path: '/analytics',  label: 'nav.analytics', icon: 'chart-spline', title: 'nav.analytics' },
-      { path: '/calculadora', label: 'nav.calculator', icon: 'calculator',   title: 'nav.calculator' },
       { path: '/fiscal',     label: 'nav.fiscal',    icon: 'landmark',     title: 'nav.fiscal' },
     ],
   },
   {
-    label: 'nav.groupRecords',
+    label: 'nav.groupOperation',
     items: [
       { path: '/purchases', label: 'nav.purchases', icon: 'shopping-cart', title: 'nav.purchases' },
       { path: '/sales',     label: 'nav.sales',     icon: 'tag',           title: 'nav.sales' },
-      { path: '/returns',   label: 'nav.returns',   icon: 'rotate-ccw',    title: 'nav.returns' },
       { path: '/anuncios',  label: 'nav.listings',  icon: 'tags',          title: 'nav.listings' },
-      { path: '/caixa-ml',  label: 'nav.mlInbox',   icon: 'download',      title: 'nav.mlInbox' },
-      { path: '/faturamento', label: 'nav.billing', icon: 'receipt-text',  title: 'nav.billing' },
+    ],
+  },
+  {
+    label: 'nav.groupMoney',
+    items: [
+      { path: '/fechamento', label: 'nav.closing', icon: 'calendar-check', title: 'nav.closing' },
       { path: '/fluxo-de-caixa', label: 'nav.cashFlow', icon: 'banknote',  title: 'nav.cashFlow' },
+      { path: '/faturamento', label: 'nav.billing', icon: 'receipt-text',  title: 'nav.billing' },
+      { path: '/calculadora', label: 'nav.calculator', icon: 'calculator', title: 'nav.calculator' },
     ],
   },
   {
@@ -65,10 +85,21 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { path: '/integracoes',  label: 'nav.integrations', icon: 'store',              title: 'nav.integrations' },
       { path: '/settings',     label: 'nav.settings',     icon: 'sliders-horizontal', title: 'nav.settings' },
-      { path: '/instructions', label: 'nav.instructions', icon: 'book-open',          title: 'nav.instructions' },
-      { path: '/guia-mercado-livre', label: 'nav.mlGuide', icon: 'store',             title: 'nav.mlGuide' },
+      { path: '/guia',         label: 'nav.guide',        icon: 'book-open',          title: 'nav.guide' },
     ],
   },
+];
+
+/**
+ * Telas fora do menu que ainda precisam de título no cabeçalho.
+ *
+ * Elas não sumiram — só perderam o lugar cativo na lista. Sem isto, o
+ * breadcrumb ficaria em branco justamente nelas.
+ */
+const TITULOS_FORA_DO_MENU: readonly { path: string; title: string }[] = [
+  { path: '/returns',  title: 'nav.returns' },
+  { path: '/caixa-ml', title: 'nav.mlInbox' },
+  { path: '/profile',  title: 'nav.profile' },
 ];
 
 @Component({
@@ -127,8 +158,8 @@ export class AppComponent {
       const found = group.items.find(it => url.startsWith(it.path));
       if (found) return found.title ?? found.label;
     }
-    if (url.startsWith('/profile')) return 'nav.profile';
-    return '';
+    const fora = TITULOS_FORA_DO_MENU.find(t => url.startsWith(t.path));
+    return fora?.title ?? '';
   });
 
   protected readonly statusLabel = computed(() => {

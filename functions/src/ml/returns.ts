@@ -29,6 +29,35 @@ function envioEntregue(envios: Bruto[]): Bruto | undefined {
 }
 
 /**
+ * Unidades devolvidas, somadas sobre as linhas da devolução.
+ *
+ * O `return_quantity` vem como STRING decimal (`"1.0"`) — não como número —,
+ * então `numero()` sozinho devolveria zero e toda devolução viraria integral de
+ * novo. Até setembro/2026 este campo era simplesmente ignorado: quem devolvesse
+ * 1 de 3 unidades tinha as 3 revertidas no razão, inflando estoque e derrubando
+ * o faturamento sem nenhum sinal na tela.
+ *
+ * Devolve `undefined` quando a API não informa nada — aí quem chama decide, e a
+ * decisão continua sendo "a venda inteira", como sempre foi.
+ */
+export function unidadesDevolvidas(retorno: Bruto): number | undefined {
+  const pedidos = Array.isArray(retorno['orders']) ? (retorno['orders'] as Bruto[]) : [];
+  let total = 0;
+  let achou = false;
+
+  for (const p of pedidos) {
+    const cru = p['return_quantity'];
+    const n = typeof cru === 'number' ? cru : Number(texto(cru));
+    if (!isFinite(n) || n <= 0) continue;
+    achou = true;
+    total += n;
+  }
+
+  // Fração não existe em unidade de estoque; o ML manda "1.0", nunca "1.5".
+  return achou ? Math.max(1, Math.round(total)) : undefined;
+}
+
+/**
  * Destino do produto devolvido.
  *
  * `seller_address` significa que a peça volta para você — só nesse caso ela
@@ -62,12 +91,14 @@ export function normalizarDevolucao(
   const envios = Array.isArray(retorno['shipments']) ? (retorno['shipments'] as Bruto[]) : [];
   const entregue = envioEntregue(envios);
   const fechamento = texto(retorno['date_closed']) || texto(retorno['last_updated']);
+  const quantidade = unidadesDevolvidas(retorno);
 
   return {
     claimId,
     externalIdVenda: `${orderId}:${itemId}`,
     mlOrderId: orderId,
     mlItemId: itemId,
+    ...(quantidade !== undefined ? { quantity: quantidade } : {}),
     requestDate: diaLocalDeISO(texto(retorno['date_created']) || texto(claim['date_created'])),
     ...(entregue && fechamento ? { arrivalDate: diaLocalDeISO(fechamento) } : {}),
     returnShipping: custoFrete,

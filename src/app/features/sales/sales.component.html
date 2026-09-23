@@ -1,9 +1,17 @@
-<app-page-header
+﻿<app-page-header
   [title]="'sales.title' | translate"
   [eyebrow]="'sales.eyebrow' | translate:{ count: sales().length }"
   [subtitle]="'sales.subtitle' | translate"
 >
-  <button appBtn type="button" (click)="openNew()">
+  <!-- Devoluções saiu do menu: devolução se registra a partir da venda, e é
+       daqui que se chega à lista. -->
+  <a appBtn="ghost" routerLink="/returns">
+    <app-icon name="rotate-ccw" [size]="16" />
+    {{ 'nav.returns' | translate }}
+  </a>
+  <!-- Rebaixado a secundário: só Mercado Livre, a venda entra sozinha. Digitar
+       à mão é exceção (venda fora da plataforma, correção pontual). -->
+  <button appBtn="outline" type="button" (click)="openNew()">
     <app-icon name="plus" [size]="16" />
     {{ 'sales.newSale' | translate }}
   </button>
@@ -79,7 +87,12 @@
         }
       </app-select>
 
-      <app-date-range-picker variant="menu" (selectionChange)="onRangeChange($event)" />
+      <app-date-range-picker
+          variant="menu"
+          [(range)]="periodo.range"
+          [(customStart)]="periodo.customStart"
+          [(customEnd)]="periodo.customEnd"
+          (selectionChange)="onRangeChange($event)" />
 
       <div class="quick-chips" role="tablist">
         <button appChip [active]="quickFilter() === 'all'" [count]="quickCounts().all"
@@ -117,9 +130,9 @@
             <app-record-card
               [title]="v.product"
               [code]="v.id"
-              [status]="('status.' + v.status) | translate"
+              [status]="('status.' + v.effectiveStatus) | translate"
               [statusKind]="statusKindFor(v)"
-              [meta]="(v.saleDate | brDate) + ' · ' + v.channel"
+              [meta]="metaFor(v)"
               [figures]="figuresFor(v)"
               (pressed)="editFromCard(v)"
             />
@@ -160,15 +173,32 @@
               </thead>
               <tbody>
                 @for (v of pagedSales(); track v.id) {
+                  <!-- `tabindex` + Enter/Espaço porque a linha É o controle
+                       que abre o detalhe, e sem isto só o mouse abria. Sem
+                       `role="button"` de propósito: trocar o papel tiraria a
+                       linha da tabela para quem usa leitor de tela, que é um
+                       preço alto para resolver o teclado. -->
                   <tr
                     class="row row-clickable"
                     [class.expanded]="expandedRow() === v.id"
+                    [attr.aria-expanded]="expandedRow() === v.id"
+                    tabindex="0"
                     (click)="toggleRow(v.id, $event)"
+                    (keydown.enter)="toggleRow(v.id, $event)"
+                    (keydown.space)="$event.preventDefault(); toggleRow(v.id, $event)"
                   >
                     <td class="col-edge">
                       <span class="row-stripe" [class.stripe-danger]="v.netProfit < 0" aria-hidden="true"></span>
                     </td>
-                    <td><span class="id-tag id-sale mono">{{ v.id }}</span></td>
+                    <td>
+                      <span class="id-tag id-sale mono">{{ v.id }}</span>
+                      @if (v.source === 'mercadolivre') {
+                        <span
+                          class="origin-tag"
+                          [appTooltip]="'sales.fromMlTooltip' | translate:{ pedido: v.mlOrderId ?? '—' }"
+                        >{{ 'sales.fromMl' | translate }}</span>
+                      }
+                    </td>
                     <td>
                       <span class="id-tag mono">{{ v.batchId }}</span>
                       @if (isOrphanBatch(v.batchId)) {
