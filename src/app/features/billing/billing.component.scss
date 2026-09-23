@@ -97,6 +97,15 @@
   color: var(--brand-primary);
 }
 
+/* O `li` é flex com quebra: o link já é item, e crescer não parte a linha. */
+@include bp.below(md) {
+  .fora a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
 /* ---------- seções com tabela ---------- */
 .composicao h2,
 .pedidos h2 {

@@ -70,5 +70,9 @@
    tamanhos compactos são uma vantagem, não um defeito. */
 @include bp.below(md) {
   .select-trigger { min-height: 44px; font-size: 16px; }
-  app-field .select-trigger { min-height: 44px; }
+  /* Precisa ser `:host-context` e não `app-field ...`: o `app-field` do
+     template de quem usa pertence a OUTRO escopo de encapsulamento, então o
+     seletor nunca casava e a regra de 38px acima vencia — o gatilho dentro de
+     um campo ficava a 38px no celular, dentro de uma moldura de 44. */
+  :host-context(.field-box) .select-trigger { min-height: 44px; }
 }

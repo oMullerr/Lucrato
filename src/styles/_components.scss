@@ -95,6 +95,17 @@
 
 .stale-note a:hover { text-decoration: underline; }
 
+/* O aviso é um flex com quebra, então o link já é item de flex e não texto
+   corrido: dar altura a ele não parte a frase no meio. É o único caminho de
+   volta quando a autorização vence — e aparece em quatro telas. */
+@include bp.below(md) {
+  .stale-note a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
 .surface-card {
   background: var(--bg-surface-1);
   border: 1px solid var(--border-subtle);

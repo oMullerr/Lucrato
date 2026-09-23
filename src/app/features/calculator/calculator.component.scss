@@ -103,6 +103,18 @@
   box-shadow: var(--shadow-sm, 0 1px 2px rgb(0 0 0 / 0.2));
 }
 
+/* Piso de toque no celular: 44px é o mínimo confortável para o dedo, e o
+   padrão desktop deste kit fica entre 26 e 40. Só abaixo de md — no mouse os
+   tamanhos compactos são uma vantagem, não um defeito. */
+@include bp.below(md) {
+  .opcao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+  }
+}
+
 .linha-switch {
   display: flex;
   align-items: center;

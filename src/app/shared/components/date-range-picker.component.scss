@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 :host {
   display: inline-flex;
 }
@@ -184,4 +186,24 @@
     opacity: 0.5;
     pointer-events: none;
   }
+}
+
+/* Piso de toque no celular: 44px é o mínimo confortável para o dedo, e o
+   padrão desktop deste kit fica entre 26 e 40. Só abaixo de md — no mouse os
+   tamanhos compactos são uma vantagem, não um defeito.
+
+   As pills são o filtro principal do Painel e vinham a 26px; o gatilho de
+   período, a 38. São os dois controles que se toca antes de ler qualquer
+   número. As pills passam a quebrar em duas linhas no celular, e é o preço
+   certo: uma linha estreita demais para acertar não filtra nada. */
+@include bp.below(md) {
+  .range-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .period-trigger,
+  .period-clear { min-height: 44px; }
 }

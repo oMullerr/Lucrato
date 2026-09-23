@@ -353,6 +353,12 @@ app-connection-banner { flex-shrink: 0; }
    ================================================================= */
 @include bp.below(md) {
   .sidebar { box-shadow: var(--shadow-xl); }
+
+  /* Abaixo de md a barra lateral vira gaveta: o que era alvo de ponteiro
+     passa a ser alvo de dedo. O padding de 9px dava 38px de altura, e são
+     os catorze itens do menu — o alvo mais repetido do app. */
+  .nav-item { min-height: 44px; }
+  .user-btn { height: 44px; }
   /* Com `viewport-fit=cover` o conteúdo passa a ir até a borda física: no
      iPhone deitado, o entalhe come o canto do topbar sem este recuo. */
   .topbar {
