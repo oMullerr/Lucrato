@@ -134,6 +134,85 @@
       >
         <button appBtn="outline" (click)="limparFiltros()">{{ 'listings.clearFilters' | translate }}</button>
       </app-empty-state>
+    } @else if (bp.isMobile()) {
+      <!-- Anúncios não usa `app-record-card`: o cartão daquele componente é um
+           bloco de leitura, e aqui a coluna que importa é um SELECT — vincular
+           o anúncio ao produto é a razão de a tela existir. Na tabela ele fica
+           na última coluna, a duas telas de rolagem lateral do polegar. -->
+      <div class="anuncio-lista">
+        @for (l of visiveis(); track l.item.id) {
+          <article class="anuncio-card" [class.pendente]="l.escolha !== l.salvo">
+            <header class="ac-topo">
+              @if (l.item.thumbnail) {
+                <img [src]="l.item.thumbnail" [alt]="l.item.title" loading="lazy" width="48" height="48" />
+              }
+              <div class="ac-texto">
+                <a [href]="l.item.permalink" target="_blank" rel="noopener noreferrer">{{ l.item.title }}</a>
+                <small>
+                  {{ l.item.id }}
+                  @if (l.item.sku) { · {{ 'listings.sku' | translate }} {{ l.item.sku }} }
+                  @if (l.item.status !== 'active') { · {{ 'listings.status.' + l.item.status | translate }} }
+                </small>
+              </div>
+            </header>
+
+            <dl class="ac-numeros">
+              <div>
+                <dt>{{ 'listings.colPrice' | translate }}</dt>
+                <dd>{{ l.item.price | brl }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'listings.colStock' | translate }}</dt>
+                <dd [class.divergente]="divergente(l)">
+                  {{ l.item.availableQuantity }}
+                  @if (divergente(l)) { <app-icon name="triangle-alert" [size]="14" /> }
+                </dd>
+              </div>
+              <div>
+                <dt>{{ 'listings.colVisits' | translate }}</dt>
+                <dd>{{ l.item.visits30d === undefined ? '—' : l.item.visits30d }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'listings.colConversion' | translate }}</dt>
+                <dd>
+                  @if (conversao(l.item.id, l.item.visits30d); as taxa) {
+                    {{ (taxa * 100).toFixed(1) }}%
+                  } @else {
+                    —
+                  }
+                </dd>
+              </div>
+            </dl>
+
+            @if (divergente(l)) {
+              <p class="ac-divergencia">
+                {{ 'listings.stockMismatch' | translate:{ ml: l.item.availableQuantity, lucrato: l.estoqueLucrato } }}
+              </p>
+            }
+
+            <app-field [label]="'listings.colProduct' | translate">
+              <app-select
+                [ngModel]="l.escolha"
+                (ngModelChange)="escolher(l.item.id, $event)"
+                [placeholder]="'listings.pickProduct' | translate"
+                [searchable]="true"
+                [searchPlaceholder]="'listings.searchProduct' | translate"
+              >
+                <app-option [value]="''">{{ 'listings.noLink' | translate }}</app-option>
+                @for (nome of nomesDeProdutos(); track nome) {
+                  <app-option [value]="nome">{{ nome }}</app-option>
+                }
+              </app-select>
+            </app-field>
+
+            @if (l.sugestao) {
+              <small class="sugestao">
+                {{ (l.sugestao === 'sku' ? 'listings.bySku' : 'listings.byTitle') | translate }}
+              </small>
+            }
+          </article>
+        }
+      </div>
     } @else {
       <div class="table-frame">
         <div class="table-scroll">

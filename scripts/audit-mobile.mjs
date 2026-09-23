@@ -174,8 +174,12 @@ for (const { rel, texto, offset } of docsTemplate) {
     const [, tag, atributos, dentro] = m;
     /* `{{ }}` é texto visível — foi o que este script aprendeu na primeira
        rodada, quando acusou 156 botões que tinham rótulo traduzido. E
-       `<ng-content>` pode trazer o rótulo de fora. */
+       `<ng-content>` pode trazer o rótulo de fora; `ngTemplateOutlet`, de
+       outro ponto do mesmo arquivo. Nos dois casos o conteúdo existe e este
+       script não tem como segui-lo — acusar aqui seria pedir um `aria-label`
+       que sobrescreveria o rótulo de verdade. */
     if (/<ng-content\b/.test(dentro)) continue;
+    if (/ngTemplateOutlet/.test(dentro)) continue;
     if (dentro.replace(/<[^>]*>/g, '').trim()) continue;
     if (TEM_NOME.test(atributos)) continue;
     problemas.push(`${rel}:${linhaDe(m.index)}  <${tag}> só com ícone e sem aria-label`);

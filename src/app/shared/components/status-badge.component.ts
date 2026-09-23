@@ -2,12 +2,15 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { TranslateModule } from '@ngx-translate/core';
 import { InventoryStatus, SaleStatus, ReturnStatus } from '../../core/models/models';
 
-type StatusType = InventoryStatus | SaleStatus | ReturnStatus;
+export type StatusType = InventoryStatus | SaleStatus | ReturnStatus;
 type Variant = 'success' | 'info' | 'warning' | 'danger' | 'neutral';
 
 /** Maps each status value to its badge color. The label is the status value
- *  itself, resolved as the i18n key `status.<value>` in the template. */
-const STATUS_VARIANT: Record<StatusType, Variant> = {
+ *  itself, resolved as the i18n key `status.<value>` in the template.
+ *
+ *  Exportado porque o `app-record-card` do celular precisa do MESMO tom para o
+ *  ponto de status: uma segunda cópia divergiria no primeiro status novo. */
+export const STATUS_VARIANT: Record<StatusType, Variant> = {
   // Estoque
   'Em Estoque':  'success',
   'Vendido':     'neutral',

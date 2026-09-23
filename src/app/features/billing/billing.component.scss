@@ -210,6 +210,27 @@
   color: var(--color-danger);
 }
 
+/* Substitui o `tfoot` da composição no celular. */
+.total-celular {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-2);
+  font-size: var(--fs-small);
+  color: var(--text-secondary);
+
+  strong {
+    font-family: var(--font-mono);
+    font-size: var(--fs-body);
+    color: var(--text-primary);
+  }
+}
+
 .aviso,
 .rodape {
   display: flex;

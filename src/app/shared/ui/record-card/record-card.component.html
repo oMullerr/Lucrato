@@ -1,4 +1,4 @@
-<button type="button" class="record-card" (click)="pressed.emit()">
+<ng-template #corpo>
   <span class="record-head">
     <span class="record-title-wrap">
       @if (code()) {
@@ -26,10 +26,22 @@
           @if (fig.value !== undefined) {
             <app-money [value]="fig.value ?? null" [tone]="fig.tone ?? 'neutral'" variant="text" />
           } @else {
-            <span class="record-figure-text num">{{ fig.text }}</span>
+            <span class="record-figure-text num" [class]="fig.textClass ?? ''">{{ fig.text }}</span>
           }
         </span>
       }
     </span>
   }
-</button>
+</ng-template>
+
+@if (interactive()) {
+  <button type="button" class="record-card" (click)="pressed.emit()">
+    <ng-container [ngTemplateOutlet]="corpo" />
+  </button>
+} @else {
+  <!-- Sem `pressed` não há o que abrir: um `<button>` aqui seria anunciado
+       como botão pelo leitor de tela e não faria nada ao ser pressionado. -->
+  <div class="record-card record-card--parado">
+    <ng-container [ngTemplateOutlet]="corpo" />
+  </div>
+}
