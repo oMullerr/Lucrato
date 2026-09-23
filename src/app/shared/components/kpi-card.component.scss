@@ -120,13 +120,12 @@
     line-height: 1;
   }
 
+  /* Só a borda responde ao ponteiro, como no cartão comum. Levantar e ganhar
+     sombra é o gesto de "clique aqui", e este cartão não abre nada — é a
+     mesma promessa falsa que o `app-record-card` de leitura deixou de fazer. */
   &:hover {
     border-color: color-mix(in srgb, var(--accent) 30%, var(--border-default));
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
   }
 
-  transition: border-color var(--dur-base) var(--ease-out),
-              transform var(--dur-base) var(--ease-out),
-              box-shadow var(--dur-base) var(--ease-out);
+  transition: border-color var(--dur-base) var(--ease-out);
 }

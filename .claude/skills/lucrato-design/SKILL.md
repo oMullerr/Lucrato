@@ -121,6 +121,25 @@ tabular-nums` — as classes `.num`, `.kpi-value`, `.mono` já fazem isso.
 - O número-herói conta ao entrar; a régua champanhe sob ele cresce junto. É
   **um** gesto, na tela inicial. O resto da interface fica quieto — é assim que
   ele significa alguma coisa.
+- O que já existe, para reusar em vez de reinventar:
+  - **Entrada de página** — `.page-content > *`, escalonada até o 6º bloco
+    (`_components.scss`). Automática em toda rota.
+  - **Revelação ao rolar** — `appRevelar` no `.page-content` (hoje em Estoque e
+    Painel). Só o que começa abaixo da dobra espera.
+  - **Barra de proporção** — `@include mov.barra-que-cresce` (`_movimento.scss`).
+    Anima `scaleX`, não `width`.
+  - **Contagem de número** — `contarAte()` em `core/anim/contar.ts`.
+  - **Pressão** — `@include mov.pressionar` (cede 3% no `:active`). Botão e
+    chip já usam. Todo controle novo precisa de um `:active` de COR também: o
+    reset desliga o realce de toque do navegador.
+- **Hover que levanta ou ganha sombra é promessa de clique.** Não use em
+  cartão que não abre nada.
+- **`fill-mode: backwards`, nunca `both`,** em animação com `transform`. Com
+  `both` o último quadro fica aplicado para sempre, e um `transform` que não é
+  `none` passa a ser referência para todo `position: fixed` lá dentro.
+- Antes de concluir que uma animação "travou", confira `document.visibilityState`:
+  aba do Chrome em segundo plano congela a linha do tempo em 0, e tudo parece
+  parado no primeiro quadro. Já produziu três alarmes falsos.
 
 ## Responsividade
 

@@ -24,6 +24,24 @@
 
    Dentro de um bloco revelado ao rolar (`appRevelar`), a animação espera o
    bloco aparecer — ver `_components.scss`. */
+/* Resposta ao dedo: o controle cede um pouco enquanto está pressionado.
+
+   O `_reset.scss` desliga o realce azul de toque do navegador e deixa a
+   resposta com o `:active` de cada componente. Esta é a parte de MOVIMENTO
+   dessa resposta — a de cor fica em cada componente, e vale também para quem
+   pediu menos movimento (esta não).
+
+   Quem inclui precisa ter `transform` na própria `transition`, senão o
+   encolhimento é um salto. E nunca num cartão de largura cheia: 3% de uma
+   caixa de 400px é um tranco, não um toque. */
+@mixin pressionar {
+  @media (prefers-reduced-motion: no-preference) {
+    &:active:not([disabled]):not([aria-disabled='true']) {
+      transform: scale(0.97);
+    }
+  }
+}
+
 @mixin barra-que-cresce($atraso: var(--dur-slow)) {
   @media (prefers-reduced-motion: no-preference) {
     transform-origin: left center;
