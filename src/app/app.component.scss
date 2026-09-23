@@ -58,7 +58,7 @@ app-toast-host {
 
 .wordmark {
   font-family: var(--font-display);
-  font-stretch: 106%;
+  font-stretch: 92%;
   font-weight: 600;
   font-size: 22px;
   letter-spacing: -0.04em;
@@ -79,7 +79,8 @@ app-toast-host {
   width: 10px;
   height: 6px;
   margin-left: 1px;
-  color: var(--brand-accent);
+  /* A barra lateral e escura nos dois temas: acento que nao inverte. */
+  color: var(--accent-on-dark);
   transform: translateY(-2px);
 }
 
@@ -169,7 +170,7 @@ app-toast-host {
   app-icon { opacity: 1; color: var(--brand-primary-3); }
 
   .active-dot {
-    background: var(--brand-accent);
+    background: var(--accent-on-dark);
     height: 16px;
   }
 }
@@ -299,7 +300,7 @@ app-toast-host {
     height: 28px;
     border-radius: var(--radius-full);
     background: var(--brand-primary);
-    color: #FFFFFF;
+    color: var(--on-brand);
     font-size: 11px;
     font-weight: 600;
     font-family: var(--font-display);
@@ -352,6 +353,12 @@ app-connection-banner { flex-shrink: 0; }
    ================================================================= */
 @include bp.below(md) {
   .sidebar { box-shadow: var(--shadow-xl); }
+
+  /* Abaixo de md a barra lateral vira gaveta: o que era alvo de ponteiro
+     passa a ser alvo de dedo. O padding de 9px dava 38px de altura, e são
+     os catorze itens do menu — o alvo mais repetido do app. */
+  .nav-item { min-height: 44px; }
+  .user-btn { height: 44px; }
   /* Com `viewport-fit=cover` o conteúdo passa a ir até a borda física: no
      iPhone deitado, o entalhe come o canto do topbar sem este recuo. */
   .topbar {

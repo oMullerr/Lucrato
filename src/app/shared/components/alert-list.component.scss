@@ -91,8 +91,7 @@
 
   .alert-text { flex-basis: calc(100% - 42px); }
 
-  .alert-go {
-    margin-left: 42px;
-    min-height: 32px;
-  }
+  /* Sem reduzir para 32px: o comentário acima promete 44 e é aqui, no
+     celular, que a promessa importa. */
+  .alert-go { margin-left: 42px; }
 }

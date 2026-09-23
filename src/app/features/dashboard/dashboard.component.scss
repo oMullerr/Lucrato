@@ -1,4 +1,5 @@
 @use '../../../styles/breakpoints' as bp;
+@use '../../../styles/movimento' as mov;
 
 .dash-body {
   display: flex;
@@ -284,6 +285,7 @@
   background: linear-gradient(90deg, var(--color-warning) 0%, color-mix(in srgb, var(--color-warning) 80%, var(--color-danger)) 100%);
   border-radius: var(--radius-full);
   transition: width var(--dur-base) var(--ease-out);
+  @include mov.barra-que-cresce;
 }
 
 .idle-value {

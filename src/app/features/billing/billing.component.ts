@@ -7,6 +7,7 @@ import { MlIntegrationService } from '../../core/services/ml-integration.service
 import { NotifyService } from '../../core/services/notify.service';
 import { logError } from '../../core/services/logger';
 import {
+  Balde,
   Confronto,
   ConfrontoDoPedido,
   LinhaDoFaturamento,
@@ -23,6 +24,8 @@ import { SelectComponent } from '../../shared/ui/select/select.component';
 import { OptionComponent } from '../../shared/ui/select/option.component';
 import { FieldComponent } from '../../shared/ui/field/field.component';
 import { SwitchComponent } from '../../shared/ui/switch/switch.component';
+import { BreakpointService } from '../../shared/ui/breakpoint.service';
+import { RecordCardComponent, RecordCardFigure } from '../../shared/ui/record-card/record-card.component';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
 
@@ -43,7 +46,7 @@ import { BrDatePipe } from '../../shared/pipes/br-date.pipe';
     FormsModule, RouterLink,
     PageHeaderComponent, EmptyStateComponent, SkeletonComponent, KpiCardComponent,
     ButtonComponent, IconComponent, SelectComponent, OptionComponent,
-    FieldComponent, SwitchComponent,
+    FieldComponent, SwitchComponent, RecordCardComponent,
     BrlPipe, BrDatePipe, TranslateModule,
   ],
   templateUrl: './billing.component.html',
@@ -124,6 +127,55 @@ export class BillingComponent {
   private dia(iso: string): string {
     const [, mes, dia] = (iso ?? '').split('-');
     return mes && dia ? `${dia}/${mes}` : (iso ?? '');
+  }
+
+  /* =================================================================
+     CELULAR — as duas tabelas viram lista de cartões
+
+     Conciliar é comparar duas colunas, e é a coluna da direita que decide:
+     por isso a diferença é a ÚLTIMA cifra do cartão, e só ela muda de cor.
+     A tela é de leitura, então os cartões vão com `[interactive]="false"`.
+     ================================================================= */
+
+  protected readonly bp = inject(BreakpointService);
+  private readonly brl = new BrlPipe();
+  private readonly brDate = new BrDatePipe();
+
+  /** Tom do ponto que substitui a etiqueta de balde da tabela. */
+  protected tomDoBalde(b: Balde): string {
+    switch (b) {
+      case 'comissao': return 'brand';
+      case 'frete': return 'info';
+      default: return 'warning';
+    }
+  }
+
+  protected figurasDaLinha(l: LinhaDoFaturamento): RecordCardFigure[] {
+    return [
+      { label: this.t.instant('billing.colLines'), text: String(l.linhas) },
+      { label: this.t.instant('billing.colAmount'), value: l.valor, tone: 'neutral' },
+    ];
+  }
+
+  protected figurasDoPedido(o: ConfrontoDoPedido): RecordCardFigure[] {
+    const tr = (k: string) => this.t.instant(k);
+    return [
+      { label: tr('billing.colCommission'), value: o.cobrado.comissao, tone: 'neutral' },
+      { label: tr('billing.colShipping'), value: o.cobrado.frete, tone: 'neutral' },
+      { label: tr('billing.colOther'), value: o.cobrado.outros, tone: 'neutral' },
+      { label: tr('billing.colRecorded'), value: o.registrado.comissao + o.registrado.frete, tone: 'neutral' },
+      {
+        label: tr('billing.colDiff'),
+        text: this.brl.transform(o.diferenca),
+        // Mesma regra da tabela: cobrou a mais é o caso que custa dinheiro, e
+        // só ele fica vermelho.
+        textClass: o.diferenca > 0 ? 'text-danger' : '',
+      },
+    ];
+  }
+
+  protected dataEId(o: ConfrontoDoPedido): string {
+    return `${this.brDate.transform(o.data)} · ${o.orderId}`;
   }
 
   protected async sincronizar(): Promise<void> {

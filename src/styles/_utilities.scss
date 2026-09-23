@@ -70,3 +70,16 @@
   0%   { background-position: -1000px 0; }
   100% { background-position: 1000px 0; }
 }
+
+/* Giro de espera. Global porque era definido DUAS vezes, idêntico, com nomes
+   diferentes — `spinner-rotate` no spinner e `spin` no banner de conexão. */
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
+/* Barra que cresce do zero — use pelo mixin `barra-que-cresce`
+   (`_movimento.scss`), não direto. Só o `from`: o fim é o estilo da própria
+   barra, com a largura que o dado deu a ela. */
+@keyframes crescer {
+  from { transform: scaleX(0); }
+}

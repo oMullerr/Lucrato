@@ -136,6 +136,26 @@
       <section class="composicao">
         <h2>{{ 'billing.compositionTitle' | translate }}</h2>
         <p class="ajuda">{{ 'billing.compositionHelp' | translate }}</p>
+        @if (bp.isMobile()) {
+          <div class="record-list">
+            @for (l of linhas(); track l.subTipo + l.rotulo) {
+              <app-record-card
+                [title]="l.rotulo || ('billing.unlabeled' | translate)"
+                [code]="l.subTipo"
+                [status]="'billing.bucket.' + l.balde | translate"
+                [statusKind]="tomDoBalde(l.balde)"
+                [figures]="figurasDaLinha(l)"
+                [interactive]="false"
+              />
+            }
+          </div>
+          <!-- O total mora no `tfoot` da tabela, que não existe aqui: sem esta
+               linha o celular perderia o número que fecha a fatura. -->
+          <p class="total-celular">
+            <span>{{ 'billing.periodTotal' | translate }}</span>
+            <strong>{{ totalCobrado() | brl }}</strong>
+          </p>
+        } @else {
         <div class="table-frame">
           <div class="table-scroll">
             <table class="data-table">
@@ -173,6 +193,7 @@
             </table>
           </div>
         </div>
+        }
         @if (naoExplicado() !== 0) {
           <p class="aviso">
             <app-icon name="triangle-alert" />
@@ -204,6 +225,17 @@
             [title]="(soDivergentes() ? 'billing.allMatchTitle' : 'billing.noOrdersTitle') | translate"
             [description]="(soDivergentes() ? 'billing.allMatchMsg' : 'billing.noOrdersMsg') | translate"
           />
+        } @else if (bp.isMobile()) {
+          <div class="record-list">
+            @for (o of pedidos(); track o.orderId) {
+              <app-record-card
+                [title]="o.produto"
+                [meta]="dataEId(o)"
+                [figures]="figurasDoPedido(o)"
+                [interactive]="false"
+              />
+            }
+          </div>
         } @else {
           <div class="table-frame">
             <div class="table-scroll">

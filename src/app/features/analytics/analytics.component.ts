@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DataService } from '../../core/services/data.service';
 import { LanguageService } from '../../core/services/language.service';
@@ -8,7 +9,7 @@ import { XlsxExportService, SheetSpec, ResumoSpec, Tone } from '../../core/servi
 import { ComputedPurchase, ComputedReturn, InventoryStatus } from '../../core/models/models';
 import { calcularMetricasDeCapital } from '../../core/metricas';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
-import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
+import { StatusBadgeComponent, STATUS_VARIANT } from '../../shared/components/status-badge.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { SkeletonComponent } from '../../shared/components/skeleton.component';
 import { ColorPillComponent } from '../../shared/components/color-pill.component';
@@ -20,6 +21,10 @@ import { TooltipDirective } from '../../shared/ui/tooltip/tooltip.directive';
 import { TabsComponent } from '../../shared/ui/tabs/tabs.component';
 import { TabComponent } from '../../shared/ui/tabs/tab.component';
 import { PaginatorComponent, PageChangeEvent } from '../../shared/ui/paginator/paginator.component';
+import { BreakpointService } from '../../shared/ui/breakpoint.service';
+import { RecordCardComponent, RecordCardFigure } from '../../shared/ui/record-card/record-card.component';
+import { SelectComponent } from '../../shared/ui/select/select.component';
+import { OptionComponent } from '../../shared/ui/select/option.component';
 
 interface ProductStat {
   product: string;
@@ -67,9 +72,10 @@ type SortDir = 'asc' | 'desc';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    RouterLink, CommonModule,
+    RouterLink, CommonModule, FormsModule,
     ButtonComponent, IconComponent, TooltipDirective, TabsComponent, TabComponent, PaginatorComponent,
     PageHeaderComponent, StatusBadgeComponent, EmptyStateComponent, SkeletonComponent, ColorPillComponent, BrlPipe,
+    RecordCardComponent, SelectComponent, OptionComponent,
     TranslateModule,
   ],
   templateUrl: './analytics.component.html',
@@ -564,6 +570,155 @@ export class AnalyticsComponent {
     if (cfg && m < cfg.minimumMargin) return 'text-warning';
     return 'text-success';
   }
+
+  /* =================================================================
+     CELULAR — as quatro tabelas viram lista de cartões
+
+     Nenhuma linha daqui abre detalhe: Análises é tela de leitura. Por isso
+     os cartões vão com `[interactive]="false"`, e a ordenação, que no
+     desktop mora nos cabeçalhos, precisa de um controle próprio — sem ele o
+     celular ficaria preso na ordem padrão.
+
+     As quatro listas mostram MENOS colunas do que a tabela, de propósito. A
+     receita bruta sai porque é a líquida que alimenta o lucro; o custo
+     unitário sai do mensal porque o total já está lá. O cartão não é a
+     tabela espremida: é a mesma pergunta respondida com menos números.
+     ================================================================= */
+
+  protected readonly bp = inject(BreakpointService);
+  private readonly brl = new BrlPipe();
+
+  /** Tom do ponto de status a partir da margem — mesma régua do `marginClass`. */
+  protected tomDaMargem(m: number): string {
+    const classe = this.marginClass(m);
+    if (classe === 'text-danger') return 'danger';
+    if (classe === 'text-warning') return 'warning';
+    return 'success';
+  }
+
+  protected readonly ordemProduto = [
+    { value: 'netProfit:desc', labelKey: 'analytics.hNetProfit' },
+    { value: 'margin:desc', labelKey: 'sales.colMargin' },
+    { value: 'qty:desc', labelKey: 'purchases.colQty' },
+    { value: 'netRevenue:desc', labelKey: 'analytics.hNetRevenue' },
+    { value: 'product:asc', labelKey: 'analytics.colProduct' },
+  ];
+
+  protected readonly ordemCategoria = [
+    { value: 'profit:desc', labelKey: 'analytics.hNetProfit' },
+    { value: 'margin:desc', labelKey: 'sales.colMargin' },
+    { value: 'idleCapital:desc', labelKey: 'analytics.hIdleShort' },
+    { value: 'invested:desc', labelKey: 'analytics.hInvested' },
+    { value: 'category:asc', labelKey: 'analytics.colCategory' },
+  ];
+
+  protected readonly ordemMes = [
+    { value: 'sortKey:asc', labelKey: 'analytics.hMonth' },
+    { value: 'profit:desc', labelKey: 'analytics.hProfit' },
+    { value: 'revenue:desc', labelKey: 'analytics.hRevenue' },
+    { value: 'qty:desc', labelKey: 'analytics.hSales' },
+  ];
+
+  protected readonly ordemParado = [
+    { value: 'idleValue:desc', labelKey: 'analytics.hIdleShort' },
+    { value: 'daysInStock:desc', labelKey: 'analytics.hDaysIdle' },
+    { value: 'currentStock:desc', labelKey: 'inventory.colStock' },
+  ];
+
+  protected readonly ordemProdutoAtual = computed(() => juntar(this.productSort()));
+  protected readonly ordemCategoriaAtual = computed(() => juntar(this.categorySort()));
+  protected readonly ordemMesAtual = computed(() => juntar(this.monthSort()));
+  protected readonly ordemParadoAtual = computed(() => juntar(this.idleSort()));
+
+  protected escolherOrdemProduto(v: string): void {
+    const [key, dir] = v.split(':');
+    this.productSort.set({ key: key as keyof ProductStat, dir: dir as SortDir });
+  }
+
+  protected escolherOrdemCategoria(v: string): void {
+    const [key, dir] = v.split(':');
+    this.categorySort.set({ key: key as keyof CategoryStat, dir: dir as SortDir });
+  }
+
+  protected escolherOrdemMes(v: string): void {
+    const [key, dir] = v.split(':');
+    this.monthSort.set({ key: key as keyof MonthStat, dir: dir as SortDir });
+  }
+
+  protected escolherOrdemParado(v: string): void {
+    const [key, dir] = v.split(':');
+    this.idleSort.set({ key: key as 'daysInStock' | 'idleValue' | 'currentStock', dir: dir as SortDir });
+  }
+
+  protected figurasDeProduto(p: ProductStat): RecordCardFigure[] {
+    const tr = (k: string) => this.t.instant(k);
+    const figs: RecordCardFigure[] = [
+      { label: tr('purchases.colQty'), text: `${p.qty}×` },
+      { label: tr('analytics.hNetRevenue'), value: p.netRevenue, tone: 'neutral' },
+      { label: tr('analytics.hCost'), value: p.cost, tone: 'neutral' },
+      { label: tr('analytics.hNetProfit'), value: p.netProfit, tone: 'auto' },
+    ];
+    // As duas colunas de devolução só existem na tabela quando há devolução
+    // finalizada; o cartão segue a mesma regra para não mostrar dois traços.
+    if (this.finalizedReturns().length > 0 && p.returnedQty > 0) {
+      figs.push(
+        {
+          label: tr('analytics.colReturnRate'),
+          text: (p.returnRate * 100).toFixed(1) + '%',
+          textClass: 'text-warning',
+        },
+        { label: tr('analytics.colReturnLoss'), value: p.returnLoss, tone: 'loss' },
+      );
+    }
+    return figs;
+  }
+
+  protected figurasDeCategoria(c: CategoryStat): RecordCardFigure[] {
+    const tr = (k: string) => this.t.instant(k);
+    return [
+      { label: tr('analytics.hBatches'), text: String(c.batches) },
+      { label: tr('analytics.hInvested'), value: c.invested, tone: 'neutral' },
+      { label: tr('analytics.hIdleShort'), text: this.brl.transform(c.idleCapital), textClass: 'text-warning' },
+      { label: tr('analytics.hRevenue'), value: c.revenue, tone: 'neutral' },
+      { label: tr('analytics.hNetProfit'), value: c.profit, tone: 'auto' },
+    ];
+  }
+
+  protected figurasDeMes(m: MonthStat): RecordCardFigure[] {
+    const tr = (k: string) => this.t.instant(k);
+    return [
+      { label: tr('analytics.hSales'), text: String(m.qty) },
+      { label: tr('analytics.hRevenue'), value: m.revenue, tone: 'neutral' },
+      { label: tr('analytics.hFees'), text: this.brl.transform(m.fees), textClass: 'text-warning' },
+      { label: tr('analytics.hNetRevenue'), value: m.netRevenue, tone: 'neutral' },
+      { label: tr('analytics.hProfit'), value: m.profit, tone: 'auto' },
+    ];
+  }
+
+  protected figurasDeParado(c: ComputedPurchase): RecordCardFigure[] {
+    const tr = (k: string) => this.t.instant(k);
+    return [
+      { label: tr('inventory.colStock'), text: String(c.currentStock) },
+      { label: tr('analytics.hUnitCost'), value: c.actualUnitCost, tone: 'neutral' },
+      { label: tr('analytics.hIdleShort'), text: this.brl.transform(c.idleValue), textClass: 'text-warning' },
+    ];
+  }
+
+  /** "137 dias parado" — o número que a barra desenha na tabela. */
+  protected diasParado(c: ComputedPurchase): string {
+    return `${c.daysInStock} ${this.t.instant('analytics.daysUnit')}`;
+  }
+
+  /** Mesmo tom do `app-status-badge` que a tabela usa — a tabela e a lista de
+      cartões não podem pintar o mesmo status de cores diferentes. */
+  protected tomDoStatus(s: InventoryStatus): string {
+    return STATUS_VARIANT[s];
+  }
+}
+
+/** `{ key, dir }` → `"key:dir"`, o formato que o select de ordem usa. */
+function juntar(s: { key: string; dir: SortDir }): string {
+  return `${s.key}:${s.dir}`;
 }
 
 function compare(a: unknown, b: unknown, dir: SortDir): number {

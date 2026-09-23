@@ -25,6 +25,7 @@ import { InputDirective } from '../../shared/ui/field/input.directive';
 import { TooltipDirective } from '../../shared/ui/tooltip/tooltip.directive';
 import { PaginatorComponent, PageChangeEvent } from '../../shared/ui/paginator/paginator.component';
 import { AlertListComponent } from '../../shared/components/alert-list.component';
+import { BreakpointService } from '../../shared/ui/breakpoint.service';
 import { BrlPipe } from '../../shared/pipes/brl.pipe';
 
 /** Uma linha da tela: anúncio + o que sabemos sobre o vínculo dele. */
@@ -64,6 +65,7 @@ export class ListingsComponent {
   protected readonly data = inject(DataService);
   private readonly notify = inject(NotifyService);
   private readonly t = inject(TranslateService);
+  protected readonly bp = inject(BreakpointService);
 
   /** Escolhas mexidas pelo usuário nesta sessão, por id de anúncio. */
   private readonly escolhas = signal<Record<string, string>>({});

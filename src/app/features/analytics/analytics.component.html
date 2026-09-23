@@ -94,6 +94,28 @@
                 [title]="'analytics.noSalesTitle' | translate"
                 [description]="'analytics.noSalesDesc' | translate"
               />
+            } @else if (bp.isMobile()) {
+              <div class="mobile-sort">
+                <span>{{ 'table.sortBy' | translate }}</span>
+                <app-select [ngModel]="ordemProdutoAtual()" (ngModelChange)="escolherOrdemProduto($event)">
+                  @for (op of ordemProduto; track op.value) {
+                    <app-option [value]="op.value">{{ op.labelKey | translate }}</app-option>
+                  }
+                </app-select>
+              </div>
+              <div class="record-list">
+                @for (p of pagedProductRanking(); track p.product; let i = $index) {
+                  <app-record-card
+                    [title]="p.product"
+                    [code]="'#' + (productPage().pageIndex * productPage().pageSize + i + 1)"
+                    [status]="(p.margin * 100).toFixed(1) + '%'"
+                    [statusKind]="tomDaMargem(p.margin)"
+                    [figures]="figurasDeProduto(p)"
+                    [interactive]="false"
+                  />
+                }
+              </div>
+              <app-paginator [length]="productRanking().length" [pageSize]="productPage().pageSize" [pageIndex]="productPage().pageIndex" [pageSizeOptions]="pageSizeOptions" [showFirstLast]="true" (page)="productPage.set($event)" />
             } @else {
               <div class="table-frame">
                 <div class="table-scroll">
@@ -162,6 +184,27 @@
                 {{ 'analytics.exportExcel' | translate }}
               </button>
             </div>
+            @if (bp.isMobile()) {
+              <div class="mobile-sort">
+                <span>{{ 'table.sortBy' | translate }}</span>
+                <app-select [ngModel]="ordemCategoriaAtual()" (ngModelChange)="escolherOrdemCategoria($event)">
+                  @for (op of ordemCategoria; track op.value) {
+                    <app-option [value]="op.value">{{ op.labelKey | translate }}</app-option>
+                  }
+                </app-select>
+              </div>
+              <div class="record-list">
+                @for (c of pagedCategoryStats(); track c.category) {
+                  <app-record-card
+                    [title]="c.category"
+                    [status]="(c.margin * 100).toFixed(1) + '%'"
+                    [statusKind]="tomDaMargem(c.margin)"
+                    [figures]="figurasDeCategoria(c)"
+                    [interactive]="false"
+                  />
+                }
+              </div>
+            } @else {
             <div class="table-frame">
               <div class="table-scroll">
                 <table class="data-table">
@@ -198,6 +241,7 @@
                 </table>
               </div>
             </div>
+            }
             <app-paginator [length]="categoryStats().length" [pageSize]="categoryPage().pageSize" [pageIndex]="categoryPage().pageIndex" [pageSizeOptions]="pageSizeOptions" [showFirstLast]="true" (page)="categoryPage.set($event)" />
           </div>
         </app-tab>
@@ -218,6 +262,27 @@
                 [title]="'analytics.noMonthlyTitle' | translate"
                 [description]="'analytics.noMonthlyDesc' | translate"
               />
+            } @else if (bp.isMobile()) {
+              <div class="mobile-sort">
+                <span>{{ 'table.sortBy' | translate }}</span>
+                <app-select [ngModel]="ordemMesAtual()" (ngModelChange)="escolherOrdemMes($event)">
+                  @for (op of ordemMes; track op.value) {
+                    <app-option [value]="op.value">{{ op.labelKey | translate }}</app-option>
+                  }
+                </app-select>
+              </div>
+              <div class="record-list">
+                @for (m of pagedMonthlyStats(); track m.sortKey) {
+                  <app-record-card
+                    [title]="m.month"
+                    [status]="(m.margin * 100).toFixed(1) + '%'"
+                    [statusKind]="tomDaMargem(m.margin)"
+                    [figures]="figurasDeMes(m)"
+                    [interactive]="false"
+                  />
+                }
+              </div>
+              <app-paginator [length]="monthlyStats().length" [pageSize]="monthPage().pageSize" [pageIndex]="monthPage().pageIndex" [pageSizeOptions]="pageSizeOptions" [showFirstLast]="true" (page)="monthPage.set($event)" />
             } @else {
               <div class="table-frame">
                 <div class="table-scroll">
@@ -278,6 +343,29 @@
                 [title]="'analytics.noIdleTitle' | translate"
                 [description]="'analytics.noIdleDesc' | translate"
               />
+            } @else if (bp.isMobile()) {
+              <div class="mobile-sort">
+                <span>{{ 'table.sortBy' | translate }}</span>
+                <app-select [ngModel]="ordemParadoAtual()" (ngModelChange)="escolherOrdemParado($event)">
+                  @for (op of ordemParado; track op.value) {
+                    <app-option [value]="op.value">{{ op.labelKey | translate }}</app-option>
+                  }
+                </app-select>
+              </div>
+              <div class="record-list">
+                @for (c of pagedIdleInventory(); track c.id) {
+                  <app-record-card
+                    [title]="c.product"
+                    [code]="c.id"
+                    [status]="'status.' + c.status | translate"
+                    [statusKind]="tomDoStatus(c.status)"
+                    [meta]="diasParado(c)"
+                    [figures]="figurasDeParado(c)"
+                    [interactive]="false"
+                  />
+                }
+              </div>
+              <app-paginator [length]="idleInventory().length" [pageSize]="idlePage().pageSize" [pageIndex]="idlePage().pageIndex" [pageSizeOptions]="pageSizeOptions" [showFirstLast]="true" (page)="idlePage.set($event)" />
             } @else {
               <div class="table-frame">
                 <div class="table-scroll">

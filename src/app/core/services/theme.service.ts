@@ -11,7 +11,13 @@ export class ThemeService {
   constructor() {
     effect(() => {
       const t = this._theme();
-      document.documentElement.classList.toggle('dark', t === 'dark');
+      const raiz = document.documentElement;
+      raiz.classList.toggle('dark', t === 'dark');
+      /* `light` também, e não é redundante: o CSS aplica o tema escuro por
+         `prefers-color-scheme` em `html:not(.light)`, para o primeiro paint
+         não piscar branco antes de o Angular subir. Sem esta marca, quem tem o
+         sistema no escuro e escolheu claro ficaria preso no escuro. */
+      raiz.classList.toggle('light', t === 'light');
       localStorage.setItem(APP.themeKey, t);
     });
   }

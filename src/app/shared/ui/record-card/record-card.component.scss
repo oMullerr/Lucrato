@@ -24,6 +24,17 @@
   &:active { background: var(--bg-surface-3); }
 }
 
+/* Variante de leitura: sem cursor, sem hover, sem pressão — nada aqui promete
+   que algo acontece ao tocar. */
+.record-card--parado {
+  cursor: default;
+
+  &:hover {
+    border-color: var(--border-subtle);
+    background: var(--bg-surface-1);
+  }
+}
+
 .record-head {
   display: flex;
   align-items: flex-start;

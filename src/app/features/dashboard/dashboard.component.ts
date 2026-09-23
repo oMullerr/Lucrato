@@ -10,7 +10,7 @@ import { MlIntegrationService } from '../../core/services/ml-integration.service
 import { juntarRecebiveis, resumirCaixa } from '../../core/ml/payouts';
 import { ThemeService } from '../../core/services/theme.service';
 import { LanguageService } from '../../core/services/language.service';
-import { CHART_COLORS } from '../../core/constants/app.constants';
+import { paletaDeGrafico } from '../../core/constants/app.constants';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { KpiCardComponent } from '../../shared/components/kpi-card.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
@@ -21,6 +21,7 @@ import { ComputedSale, ComputedReturn, ReturnReason } from '../../core/models/mo
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { MoneyComponent } from '../../shared/ui/money/money.component';
+import { RevelarDirective } from '../../shared/ui/revelar/revelar.directive';
 import { SparklineComponent } from '../../shared/components/sparkline.component';
 
 interface RangeOption { key: RangeKey; labelKey: string; }
@@ -47,7 +48,7 @@ const RANGE_OPTIONS: RangeOption[] = [
   imports: [
     FormsModule, RouterLink, BaseChartDirective,
     DateRangePickerComponent, PageHeaderComponent, KpiCardComponent, EmptyStateComponent, SkeletonComponent, BrlPipe,
-    ButtonComponent, IconComponent, MoneyComponent, SparklineComponent,
+    ButtonComponent, IconComponent, MoneyComponent, SparklineComponent, RevelarDirective,
     TranslateModule,
   ],
   templateUrl: './dashboard.component.html',
@@ -187,7 +188,7 @@ export class DashboardComponent {
 
   /** Paleta dinâmica conforme tema atual. */
   protected readonly palette = computed(() =>
-    this.themeService.isDark() ? CHART_COLORS.dark : CHART_COLORS.light
+    paletaDeGrafico(this.themeService.isDark())
   );
 
   protected readonly profitSpark = computed(() => this.buildSparkline(s => s.netProfit));

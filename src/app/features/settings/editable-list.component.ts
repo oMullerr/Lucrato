@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { moveItemInArray } from '@angular/cdk/drag-drop';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotifyService } from '../../core/services/notify.service';
-import { DEFAULT_CATEGORY_COLOR } from '../../core/constants/app.constants';
+import { defaultCategoryColor } from '../../core/constants/app.constants';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { FieldComponent } from '../../shared/ui/field/field.component';
@@ -29,13 +29,13 @@ export class EditableListComponent {
   /** Quando true, cada item ganha um seletor de cor e o mapa `colors` é editado junto. */
   readonly withColor = input<boolean>(false);
   readonly colors = input<Record<string, string>>({});
-  readonly defaultColor = input<string>(DEFAULT_CATEGORY_COLOR);
+  readonly defaultColor = input<string>(defaultCategoryColor());
 
   readonly itemsChange = output<string[]>();
   readonly colorsChange = output<Record<string, string>>();
 
   protected draft = '';
-  protected draftColor = DEFAULT_CATEGORY_COLOR;
+  protected draftColor = defaultCategoryColor();
 
   protected colorOf(item: string): string {
     return this.colors()[item] ?? this.defaultColor();

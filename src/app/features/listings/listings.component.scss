@@ -186,3 +186,104 @@
   .anuncio { min-width: 220px; }
   .vinculo { min-width: 200px; }
 }
+
+/* =================================================================
+   CARTÃO DE CELULAR
+
+   Não é `app-record-card`: aquele é um bloco de leitura, e aqui a última
+   linha é um select — vincular o anúncio ao produto é o trabalho da tela.
+   ================================================================= */
+.anuncio-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.anuncio-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-1);
+
+  /* Mesmo sinal da tabela: escolha feita e ainda não salva. */
+  &.pendente {
+    background: var(--tint-brand);
+    border-color: color-mix(in srgb, var(--brand-primary) 30%, transparent);
+  }
+}
+
+.ac-topo {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.ac-topo img {
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.ac-texto {
+  min-width: 0;
+}
+
+.ac-texto a {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  /* O título abre o anúncio no Mercado Livre: é alvo de toque, e duas linhas
+     dão 41px. A miniatura ao lado já tem 48, então o piso não muda o desenho
+     do cabeçalho — só garante que o dedo acerte. */
+  min-height: 44px;
+  color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.ac-texto small {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: var(--fs-caption);
+  /* Sem `nowrap` aqui: no celular o id e o SKU quebram em vez de sumir. */
+  overflow-wrap: anywhere;
+}
+
+/* Quatro números em duas colunas: cabe em 375px sem apertar nenhum. */
+.ac-numeros {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.ac-numeros dt {
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ac-numeros dd {
+  margin: 1px 0 0;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+/* O tooltip da tabela não existe no toque: a divergência vira frase. */
+.ac-divergencia {
+  margin: 0;
+  color: var(--color-warning);
+  font-size: var(--fs-small);
+  line-height: 1.4;
+}

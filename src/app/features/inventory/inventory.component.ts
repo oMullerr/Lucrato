@@ -46,6 +46,7 @@ import { PaginatorComponent, PageChangeEvent } from '../../shared/ui/paginator/p
 import { RecordCardComponent, RecordCardFigure } from '../../shared/ui/record-card/record-card.component';
 import { SelectComponent } from '../../shared/ui/select/select.component';
 import { OptionComponent } from '../../shared/ui/select/option.component';
+import { RevelarDirective } from '../../shared/ui/revelar/revelar.directive';
 
 const MS_PER_DAY = 86_400_000;
 
@@ -70,7 +71,7 @@ interface MobileSortOption {
     BrlPipe, BrDatePipe, DatePipe,
     ButtonComponent, IconComponent, TooltipDirective, ChipComponent, DrawerComponent,
     MoneyComponent, SortDirective, SortHeaderComponent, PaginatorComponent,
-    RecordCardComponent, SelectComponent, OptionComponent,
+    RecordCardComponent, SelectComponent, OptionComponent, RevelarDirective,
   ],
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss',

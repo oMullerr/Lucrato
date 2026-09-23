@@ -157,7 +157,7 @@
 
   &.is-selected {
     background: var(--brand-primary);
-    color: #ffffff;
+    color: var(--on-brand);
     font-weight: 600;
   }
 
@@ -166,9 +166,6 @@
     cursor: not-allowed;
   }
 }
-
-/* Texto sobre brand-primary precisa ser escuro no dark mode (mesmo ajuste do appBtn primary). */
-html.dark .date-cell.is-selected { color: #0b100f; }
 
 .date-panel-footer {
   display: flex;
@@ -183,7 +180,10 @@ html.dark .date-cell.is-selected { color: #0b100f; }
    tamanhos compactos são uma vantagem, não um defeito. */
 @include bp.below(md) {
   .date-trigger { min-height: 44px; font-size: 16px; }
-  app-field .date-trigger { min-height: 44px; }
+  /* Mesmo motivo do app-select: `app-field ...` pertence a outro escopo de
+     encapsulamento e nunca casava, então o gatilho dentro de um campo ficava
+     a 38px no celular. */
+  :host-context(.field-box) .date-trigger { min-height: 44px; }
   /* Setas de mês eram 28px — o menor alvo do app inteiro. */
   .date-nav { width: 44px; height: 44px; }
   .date-panel { width: min(320px, calc(100vw - 24px)); }

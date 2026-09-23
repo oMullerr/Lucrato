@@ -108,8 +108,8 @@
 
   .pauta-msg { flex-basis: calc(100% - 42px); }
 
-  .pauta-go {
-    margin-left: 42px;
-    min-height: 32px;
-  }
+  /* O alvo continua em 44px. Este bloco já o reduziu para 32px uma vez —
+     justamente na largura em que a pauta é tocada com o dedo, e logo abaixo
+     do comentário que promete 44. Conferido a 375px. */
+  .pauta-go { margin-left: 42px; }
 }

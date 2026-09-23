@@ -10,8 +10,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Controle de estoque, vendas e lucro real para quem revende no Mercado Livre.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <meta name="theme-color" content="#0B6B59" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0B100F" media="(prefers-color-scheme: dark)">
+  <!-- Barra do navegador. Segue `--bg-canvas` dos dois temas; se um dia
+       divergir do `_tokens.scss`, é aqui que se corrige. -->
+  <meta name="theme-color" content="#F5F5F3" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121417" media="(prefers-color-scheme: dark)">
+
+  <!-- Aplica o tema ESCOLHIDO antes do primeiro paint. Síncrono de propósito
+       (sem defer/async): precisa terminar antes de o corpo aparecer. Arquivo, e
+       não inline, porque o CSP barra inline — ver o cabeçalho de tema.js. -->
+  <script src="/tema.js"></script>
 
   <!-- Instalacao na tela inicial -->
   <link rel="manifest" href="manifest.webmanifest">
@@ -22,9 +29,9 @@
   <meta name="apple-mobile-web-app-title" content="Lucrato">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- Fontes self-hosted (Inter corpo, Archivo display, Geist Mono dados) -->
+  <!-- Fontes self-hosted (Inter corpo, Instrument Sans display, Geist Mono dados) -->
   <link rel="preload" href="/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/fonts/archivo-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/instrument-sans-var-latin.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body>
   <app-root></app-root>

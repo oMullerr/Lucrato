@@ -26,6 +26,11 @@ jobs:
       # para quem enxerga — nenhum dos dois aparece num teste de comportamento.
       - run: node scripts/audit-mobile.mjs
 
+      # Contraste calculado a partir dos tokens, nos dois temas. Escolher a cor
+      # não é o mesmo que conferi-la: a primeira rodada desta auditoria reprovou
+      # 7 pares que pareciam seguros a olho nu.
+      - run: node scripts/audit-contraste.mjs
+
   # As functions rodam no servidor e mexem em token e em dinheiro — ficarem
   # fora do CI era a lacuna maior. Projeto separado, `npm ci` próprio.
   functions:

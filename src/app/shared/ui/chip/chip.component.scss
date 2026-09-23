@@ -1,4 +1,5 @@
 @use '../../../../styles/breakpoints' as bp;
+@use '../../../../styles/movimento' as mov;
 
 :host {
   display: inline-flex;
@@ -29,7 +30,9 @@
     background: var(--bg-surface-2);
   }
 
-  &:active { transform: scale(0.97); }
+  /* Era o único controle que cedia ao toque, com o valor escrito aqui. Agora
+     é o mesmo gesto do botão, vindo do mesmo lugar. */
+  @include mov.pressionar;
 }
 
 :host(.chip--active) {

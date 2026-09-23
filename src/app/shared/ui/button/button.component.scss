@@ -1,4 +1,5 @@
 @use '../../../../styles/breakpoints' as bp;
+@use '../../../../styles/movimento' as mov;
 
 :host {
   position: relative;
@@ -22,7 +23,10 @@
     background var(--dur-fast) var(--ease-out),
     border-color var(--dur-fast) var(--ease-out),
     color var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out);
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+
+  @include mov.pressionar;
 
   &[disabled],
   &[aria-disabled='true'] {
@@ -62,7 +66,7 @@
 /* ---------- Variantes ---------- */
 :host(.btn--primary) {
   background: var(--brand-primary);
-  color: #ffffff;
+  color: var(--on-brand);
 
   &:hover:not([disabled]) {
     background: color-mix(in srgb, var(--brand-primary) 88%, #000);
@@ -73,9 +77,10 @@
   }
 }
 
+/* A COR do texto agora vem de `--on-brand`, que o tema resolve. Esta regra
+   sobra só para o sentido da mistura no hover: no claro a marca escurece, no
+   escuro ela clareia. */
 :host-context(html.dark).btn--primary {
-  color: #0b100f;
-
   &:hover:not([disabled]) {
     background: color-mix(in srgb, var(--brand-primary) 88%, #fff);
   }
@@ -102,6 +107,12 @@
     color: var(--brand-primary);
     background: var(--tint-brand);
   }
+  /* Outline, ghost e danger não tinham `:active`. Com o realce de toque do
+     navegador desligado no reset, apertar um deles no celular não mudava
+     nada até o dedo sair. */
+  &:active:not([disabled]) {
+    background: color-mix(in srgb, var(--brand-primary) 18%, transparent);
+  }
 }
 
 :host(.btn--ghost) {
@@ -112,15 +123,22 @@
     background: var(--bg-surface-2);
     color: var(--text-primary);
   }
+  &:active:not([disabled]) {
+    background: var(--bg-surface-3);
+    color: var(--text-primary);
+  }
 }
 
 :host(.btn--danger) {
   background: var(--color-danger);
-  color: #ffffff;
+  color: var(--on-danger);
 
   &:hover:not([disabled]) {
     background: var(--color-danger-2);
     box-shadow: var(--shadow-sm);
+  }
+  &:active:not([disabled]) {
+    background: color-mix(in srgb, var(--color-danger-2) 88%, #000);
   }
 }
 

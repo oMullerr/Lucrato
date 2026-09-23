@@ -1,3 +1,5 @@
+@use '../../../../styles/breakpoints' as bp;
+
 :host { display: inline-flex; }
 
 .switch {
@@ -51,3 +53,12 @@
 }
 
 .switch-label:empty { display: none; }
+
+/* Piso de toque no celular: 44px é o mínimo confortável para o dedo, e o
+   padrão desktop deste kit fica entre 26 e 40. Só abaixo de md — no mouse os
+   tamanhos compactos são uma vantagem, não um defeito.
+
+   O trilho continua com 22px: quem cresce é a área clicável em volta dele. */
+@include bp.below(md) {
+  .switch { min-height: 44px; }
+}

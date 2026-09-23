@@ -109,3 +109,15 @@
   .layout { grid-template-columns: 1fr; gap: 28px; }
   .toc { position: static; }
 }
+
+/* Piso de toque no celular: 44px é o mínimo confortável para o dedo, e o
+   padrão desktop deste kit fica entre 26 e 40. Só abaixo de md — no mouse os
+   tamanhos compactos são uma vantagem, não um defeito.
+
+   São 21 links empilhados: a lista fica mais alta, e é o certo. Um sumário
+   que erra o destino é pior do que um sumário mais longo. */
+@include bp.below(md) {
+  /* Cresce pelo padding, não por `min-height`: o alinhamento é por linha de
+     base, e uma caixa alta com `baseline` deixaria o texto colado no topo. */
+  .toc-link { padding: 14px 10px; }
+}

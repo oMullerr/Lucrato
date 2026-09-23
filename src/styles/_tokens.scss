@@ -1,76 +1,108 @@
-/* LUCRATO · Design tokens — identidade "fintech brasileira premium".
-   Paleta "cédula petróleo + champanhe", dark-first.
+/* LUCRATO · Design tokens — paleta "cédula", setembro/2026.
 
-   Regras anti-clichê (decisão de design, não estilo pessoal):
-   - A base escura é VERDE-PETRÓLEO, nunca preto neutro (#000/#0a0a0a).
-   - Champanhe (--brand-accent) é acento pontual (dot ativo, hairline do herói,
+   DE ONDE VEM A COR. Da família de notas do real: o azul da de 100 é ação, o
+   violeta da de 5 é informação, o amarelo da de 20 é atenção, o vermelho da de
+   10 é perigo. Jade para lucro não é cor de nota — é a convenção do dinheiro, e
+   ela fica.
+
+   O QUE MUDOU, E POR QUÊ. Até aqui a base era verde-petróleo: o mesmo verde
+   pintava superfície, marca E lucro. Três papéis numa cor só não deixam sobrar
+   contraste para hierarquia nenhuma, e no escuro o canvas (#0B100F) e o card
+   (#101614) eram quase o mesmo pixel. Agora as superfícies são grafite neutro e
+   a cor fica reservada para significado.
+
+   REGRAS ANTI-CLICHÊ (decisão de design, não gosto pessoal):
+   - Superfície é NEUTRA. Cor em superfície é tinta gasta sem dizer nada.
+   - Champanhe (--brand-accent) é acento pontual (dot ativo, régua do herói,
      eyebrow) — NUNCA preenchimento de superfície ou cor de texto corrido.
    - Números-herói ficam em quase-branco/quase-preto; o tom de lucro/prejuízo
-     vem de chips de delta e hairlines, nunca tingindo o número inteiro. */
+     vem de chips de delta e hairlines, nunca tingindo o número inteiro.
+   - --color-info NÃO é azul: com a marca azul, um "info" azul viraria botão.
+
+   PISO DE CONTRASTE: 4.5:1 para texto corrido, 3:1 para texto grande e
+   elementos de interface. Verificado por `scripts/audit-contraste.mjs`, que
+   roda no CI e falha o build — escolher o valor não é o mesmo que conferi-lo. */
 
 /* ---------- Light mode ---------- */
 :root {
-  /* Brand — petróleo profundo + champanhe */
-  --brand-primary:    #0B6B59;
-  --brand-primary-2:  #0E8C77;
-  --brand-primary-3:  #2BAE96;
-  --brand-primary-4:  #5BC6B0;
-  --brand-accent:     #B08A45;
-  --brand-accent-2:   #97722F;
+  /* Marca — azul de cédula + champanhe */
+  --brand-primary:    #1D5BA6;
+  --brand-primary-2:  #174C8C;
+  --brand-primary-3:  #4A87CC;
+  --brand-primary-4:  #86B4E4;
+  --brand-accent:     #A07B2E;
+  --brand-accent-2:   #856324;
 
   /* Semânticas — estritamente para dados */
-  --color-success:    #137A46;
-  --color-success-2:  #0F6239;
-  --color-danger:     #C03530;
-  --color-danger-2:   #A32B27;
-  --color-warning:    #B45309;
-  --color-warning-2:  #92400E;
-  --color-info:       #2563EB;
-  --color-info-2:     #1D4ED8;
-  --color-neutral:    #64716B;
+  --color-success:    #0C7152;
+  --color-success-2:  #095B42;
+  --color-danger:     #B23324;
+  --color-danger-2:   #96281B;
+  --color-warning:    #8A5D00;
+  --color-warning-2:  #6E4A00;
+  --color-info:       #6D4AA8;
+  --color-info-2:     #563889;
+  --color-neutral:    #5D636B;
 
   /* Dinheiro — aliases semânticos do domínio (lidos por app-money) */
   --color-profit:     var(--color-success);
   --color-loss:       var(--color-danger);
 
-  /* Superfícies — papel quente, nunca estéril */
-  --bg-canvas:        #F7F7F2;
+  /* Texto por cima de cor SÓLIDA. Existe porque, no escuro, a marca e o perigo
+     são cores CLARAS — branco por cima delas some. Até setembro/2026 cinco
+     componentes cravavam `#ffffff` ali dentro, e o botão de perigo no tema
+     escuro era texto branco sobre salmão. */
+  --on-brand:         #FFFFFF;
+  --on-danger:        #FFFFFF;
+
+  /* Superfícies — grafite neutro, levemente quente */
+  --bg-canvas:        #F5F5F3;
   --bg-surface-1:     #FFFFFF;
-  --bg-surface-2:     #F1F2EC;
-  --bg-surface-3:     #E9EBE3;
+  --bg-surface-2:     #EFEFEC;
+  --bg-surface-3:     #E6E6E2;
   --bg-overlay:       #FFFFFF;
-  --bg-sidebar:       #0B1210;
-  --bg-sidebar-2:     #131A17;
+  --bg-sidebar:       #17191D;
+  --bg-sidebar-2:     #1E2126;
+  --bg-backdrop:      rgba(16, 18, 22, 0.55);
+
+  /* ---- Superfícies escuras nos DOIS temas ----
+     A barra lateral e o painel do login não invertem: são âncoras escuras que
+     dão a moldura do app. Por isso têm acento próprio — `--brand-accent` no
+     tema claro é um dourado escuro (#A07B2E) que sobre near-black some. */
+  --accent-on-dark:   #E0C177;
+  --bg-hero-1:        #0F3A6B;
+  --bg-hero-2:        #1D5BA6;
+  --bg-hero-3:        #2464AD;
 
   /* Tints de status (sutis) */
-  --tint-success:     rgba(19, 122, 70, 0.08);
-  --tint-danger:      rgba(192, 53, 48, 0.08);
-  --tint-warning:     rgba(180, 83, 9, 0.08);
-  --tint-info:        rgba(37, 99, 235, 0.08);
-  --tint-brand:       rgba(11, 107, 89, 0.08);
-  --tint-accent:      rgba(176, 138, 69, 0.12);
+  --tint-success:     rgba(12, 113, 82, 0.08);
+  --tint-danger:      rgba(190, 58, 43, 0.08);
+  --tint-warning:     rgba(160, 108, 0, 0.09);
+  --tint-info:        rgba(109, 74, 168, 0.08);
+  --tint-brand:       rgba(29, 91, 166, 0.08);
+  --tint-accent:      rgba(160, 123, 46, 0.12);
 
   /* Texto */
-  --text-primary:     #0C0D0C;
-  --text-secondary:   #3D423F;
-  --text-muted:       #5F6660;
-  --text-sidebar:     rgba(240, 247, 243, 0.74);
-  --text-sidebar-muted: rgba(240, 247, 243, 0.42);
+  --text-primary:     #14161A;
+  --text-secondary:   #4A4F56;
+  --text-muted:       #5F656D;
+  --text-sidebar:     rgba(242, 245, 248, 0.76);
+  --text-sidebar-muted: rgba(242, 245, 248, 0.55);
 
   /* Bordas */
-  --border-subtle:    rgba(18, 38, 30, 0.07);
-  --border-default:   rgba(18, 38, 30, 0.11);
-  --border-strong:    rgba(18, 38, 30, 0.17);
-  --border-sidebar:   rgba(240, 247, 243, 0.06);
+  --border-subtle:    rgba(20, 22, 26, 0.07);
+  --border-default:   rgba(20, 22, 26, 0.11);
+  --border-strong:    rgba(20, 22, 26, 0.17);
+  --border-sidebar:   rgba(242, 245, 248, 0.07);
 
   /* Sombras — contidas, em camadas */
-  --shadow-sm:        0 1px 2px rgba(18, 38, 30, 0.04);
-  --shadow-md:        0 4px 12px rgba(18, 38, 30, 0.06), 0 1px 3px rgba(18, 38, 30, 0.04);
-  --shadow-lg:        0 12px 32px rgba(18, 38, 30, 0.10), 0 4px 8px rgba(18, 38, 30, 0.06);
-  --shadow-xl:        0 24px 56px rgba(18, 38, 30, 0.14), 0 8px 16px rgba(18, 38, 30, 0.08);
-  --shadow-glow-brand:   0 0 0 1px rgba(11, 107, 89, 0.18), 0 8px 24px rgba(11, 107, 89, 0.18);
-  --shadow-glow-success: 0 0 0 1px rgba(19, 122, 70, 0.18), 0 8px 24px rgba(19, 122, 70, 0.12);
-  --shadow-glow-danger:  0 0 0 1px rgba(192, 53, 48, 0.18), 0 8px 24px rgba(192, 53, 48, 0.12);
+  --shadow-sm:        0 1px 2px rgba(20, 22, 26, 0.04);
+  --shadow-md:        0 4px 12px rgba(20, 22, 26, 0.06), 0 1px 3px rgba(20, 22, 26, 0.04);
+  --shadow-lg:        0 12px 32px rgba(20, 22, 26, 0.10), 0 4px 8px rgba(20, 22, 26, 0.06);
+  --shadow-xl:        0 24px 56px rgba(20, 22, 26, 0.14), 0 8px 16px rgba(20, 22, 26, 0.08);
+  --shadow-glow-brand:   0 0 0 1px rgba(29, 91, 166, 0.18), 0 8px 24px rgba(29, 91, 166, 0.18);
+  --shadow-glow-success: 0 0 0 1px rgba(12, 113, 82, 0.18), 0 8px 24px rgba(12, 113, 82, 0.12);
+  --shadow-glow-danger:  0 0 0 1px rgba(190, 58, 43, 0.18), 0 8px 24px rgba(190, 58, 43, 0.12);
 
   --ring-focus:       0 0 0 3px color-mix(in srgb, var(--brand-primary) 35%, transparent);
 
@@ -106,7 +138,7 @@
   --sidebar-rail:     64px;
 
   /* Famílias tipográficas */
-  --font-display: 'Archivo', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --font-mono:    'Geist Mono', 'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
 
@@ -156,62 +188,92 @@
   }
 }
 
-/* ---------- Dark mode (modo canônico da identidade) ---------- */
-html.dark {
-  --brand-primary:    #2BAE96;
-  --brand-primary-2:  #34C5AB;
-  --brand-primary-3:  #5BC6B0;
-  --brand-primary-4:  #88D9C6;
-  --brand-accent:     #E8C77B;
-  --brand-accent-2:   #D4B068;
+/* ---------- Dark mode ----------
 
-  --color-success:    #4BC488;
-  --color-success-2:  #38A971;
-  --color-danger:     #E8736C;
-  --color-danger-2:   #DC5A52;
-  --color-warning:    #E8B54E;
-  --color-warning-2:  #D19E33;
-  --color-info:       #6EA8DE;
-  --color-info-2:     #5590CC;
-  --color-neutral:    #93A39C;
+   Aplicado por DOIS caminhos, e é de propósito:
 
-  /* Superfícies — petróleo-negro em camadas, subtom verde */
-  --bg-canvas:        #0B100F;
-  --bg-surface-1:     #101614;
-  --bg-surface-2:     #151D1A;
-  --bg-surface-3:     #1B2420;
-  --bg-overlay:       #202A26;
-  --bg-sidebar:       #080C0B;
-  --bg-sidebar-2:     #101614;
+   1. `html.dark`, que o `ThemeService` liga quando você escolheu escuro;
+   2. `prefers-color-scheme: dark` em `html:not(.light)`, para quem tem o
+      sistema no escuro e nunca escolheu nada.
 
-  --tint-success:     rgba(75, 196, 136, 0.10);
-  --tint-danger:      rgba(232, 115, 108, 0.10);
-  --tint-warning:     rgba(232, 181, 78, 0.10);
-  --tint-info:        rgba(110, 168, 222, 0.10);
-  --tint-brand:       rgba(43, 174, 150, 0.12);
-  --tint-accent:      rgba(232, 199, 123, 0.14);
+   O segundo existe por causa de um bug: nada punha a classe antes do Angular
+   subir, então quem usa tema escuro via a tela PISCAR BRANCO a cada
+   carregamento. A correção óbvia seria um script inline no `index.html` — mas
+   o CSP é `script-src 'self'`, sem `'unsafe-inline'`, e ele seria bloqueado em
+   produção (o app já caiu uma vez por causa de CSP). CSS não tem esse
+   problema: chega antes do primeiro pixel e não depende de JavaScript nenhum.
 
-  --text-primary:     #F2F7F4;
-  --text-secondary:   #A8B3AE;
-  --text-muted:       #8A948F;
-  --text-sidebar:     rgba(240, 247, 243, 0.78);
-  --text-sidebar-muted: rgba(240, 247, 243, 0.42);
+   Por isso o `ThemeService` agora marca `html.light` também. Sem essa marca,
+   quem tem sistema escuro e escolheu claro ficaria preso no escuro. */
+@mixin escuro {
+  --brand-primary:    #6BA6E8;
+  --brand-primary-2:  #8FBEF0;
+  --brand-primary-3:  #A9CBF3;
+  --brand-primary-4:  #C6DEF8;
+  --brand-accent:     #E0C177;
+  --brand-accent-2:   #CDAB5E;
 
-  /* Bordas — brancos aquecidos de verde */
-  --border-subtle:    rgba(226, 240, 234, 0.07);
-  --border-default:   rgba(226, 240, 234, 0.11);
-  --border-strong:    rgba(226, 240, 234, 0.18);
-  --border-sidebar:   rgba(226, 240, 234, 0.06);
+  --color-success:    #3FCFA0;
+  --color-success-2:  #2FB98C;
+  --color-danger:     #FF8A7A;
+  --color-danger-2:   #F5705F;
+  --color-warning:    #E8B84B;
+  --color-warning-2:  #D4A433;
+  --color-info:       #B39DDB;
+  --color-info-2:     #9E85CC;
+  --color-neutral:    #98A1AB;
+
+  /* No escuro a marca e o perigo são claros: o texto por cima vira escuro. */
+  --on-brand:         #0D1A2B;
+  --on-danger:        #3B0D07;
+
+  /* Superfícies — grafite neutro em camadas.
+     O degrau entre canvas e card subiu de ~2% para ~7% de luminância: é ele
+     que faz o card parecer um card em vez de um retângulo invisível. */
+  --bg-canvas:        #121417;
+  --bg-surface-1:     #191C20;
+  --bg-surface-2:     #20242A;
+  --bg-surface-3:     #282D34;
+  --bg-overlay:       #20242A;
+  --bg-sidebar:       #0E1013;
+  --bg-sidebar-2:     #15181C;
+  --bg-backdrop:      rgba(0, 0, 0, 0.65);
+
+  --tint-success:     rgba(63, 207, 160, 0.12);
+  --tint-danger:      rgba(255, 138, 122, 0.12);
+  --tint-warning:     rgba(232, 184, 75, 0.12);
+  --tint-info:        rgba(179, 157, 219, 0.14);
+  --tint-brand:       rgba(107, 166, 232, 0.14);
+  --tint-accent:      rgba(224, 193, 119, 0.14);
+
+  --text-primary:     #EDEFF2;
+  --text-secondary:   #A8B1BB;
+  --text-muted:       #8D96A0;
+  --text-sidebar:     rgba(242, 245, 248, 0.78);
+  --text-sidebar-muted: rgba(242, 245, 248, 0.55);
+
+  /* Bordas — um degrau acima do que eram: sobre superfície mais clara, .07
+     simplesmente não aparecia. */
+  --border-subtle:    rgba(232, 238, 245, 0.08);
+  --border-default:   rgba(232, 238, 245, 0.13);
+  --border-strong:    rgba(232, 238, 245, 0.20);
+  --border-sidebar:   rgba(232, 238, 245, 0.07);
 
   --shadow-sm:        0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-md:        0 4px 14px rgba(0, 0, 0, 0.45);
   --shadow-lg:        0 12px 32px rgba(0, 0, 0, 0.55);
   --shadow-xl:        0 24px 56px rgba(0, 0, 0, 0.65);
-  --shadow-glow-brand:   0 0 0 1px rgba(43, 174, 150, 0.30), 0 8px 24px rgba(43, 174, 150, 0.18);
-  --shadow-glow-success: 0 0 0 1px rgba(75, 196, 136, 0.30), 0 8px 24px rgba(75, 196, 136, 0.18);
-  --shadow-glow-danger:  0 0 0 1px rgba(232, 115, 108, 0.30), 0 8px 24px rgba(232, 115, 108, 0.18);
+  --shadow-glow-brand:   0 0 0 1px rgba(107, 166, 232, 0.30), 0 8px 24px rgba(107, 166, 232, 0.18);
+  --shadow-glow-success: 0 0 0 1px rgba(63, 207, 160, 0.30), 0 8px 24px rgba(63, 207, 160, 0.18);
+  --shadow-glow-danger:  0 0 0 1px rgba(255, 138, 122, 0.30), 0 8px 24px rgba(255, 138, 122, 0.18);
 
   --ring-focus:       0 0 0 3px color-mix(in srgb, var(--brand-primary) 45%, transparent);
 
   color-scheme: dark;
+}
+
+html.dark { @include escuro; }
+
+@media (prefers-color-scheme: dark) {
+  html:not(.light) { @include escuro; }
 }

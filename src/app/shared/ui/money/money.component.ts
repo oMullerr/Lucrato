@@ -7,6 +7,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import { contarAte } from '../../../core/anim/contar';
 import { BrlPipe } from '../../pipes/brl.pipe';
 import { IconComponent } from '../icon/icon.component';
 import { IconName } from '../icon/icons';
@@ -25,8 +26,9 @@ export function resolveMoneyTone(value: number | null, tone: MoneyTone): Exclude
  * "O Número" — o elemento-assinatura do Lucrato. Todo valor de lucro/margem
  * aparece com este tratamento, reconhecível em qualquer página:
  *
- * - variant="hero": número gigante em Archivo expandida com hairline champanhe
- *   (o herói do dashboard) e count-up respeitando prefers-reduced-motion.
+ * - variant="hero": número gigante na fonte de display (Instrument Sans,
+ *   condensada) com a régua champanhe que cresce na entrada, e count-up
+ *   respeitando prefers-reduced-motion (ver core/anim/contar.ts).
  * - variant="chip": pílula tabular com tick direcional (▲ lucro / ▼ prejuízo).
  * - variant="text": valor tabular colorido pelo tom (colunas de tabela).
  *
@@ -76,7 +78,6 @@ export class MoneyComponent {
 
   /* ---- Count-up do hero (respeita prefers-reduced-motion) ---- */
   private readonly animatedValue = signal<number | null>(null);
-  private rafId = 0;
 
   protected readonly displayValue = computed(() =>
     this.variant() === 'hero' ? this.animatedValue() : this.value(),
@@ -85,27 +86,19 @@ export class MoneyComponent {
   constructor() {
     effect((onCleanup) => {
       const target = this.value();
-      if (this.variant() !== 'hero' || target === null || this.prefersReducedMotion()) {
+      if (this.variant() !== 'hero' || target === null) {
         this.animatedValue.set(target);
         return;
       }
-      const from = untracked(this.animatedValue) ?? 0;
-      if (from === target) return;
-      const start = performance.now();
-      const duration = 600;
-      const step = (now: number) => {
-        const t = Math.min(1, (now - start) / duration);
-        const eased = 1 - Math.pow(1 - t, 3); // ease-out cúbico
-        this.animatedValue.set(from + (target - from) * eased);
-        if (t < 1) this.rafId = requestAnimationFrame(step);
-        else this.animatedValue.set(target);
-      };
-      this.rafId = requestAnimationFrame(step);
-      onCleanup(() => cancelAnimationFrame(this.rafId));
+      /* A rotina mora em `core/anim/contar` desde que o kpi-card passou a
+         contar também: duas contagens lado a lado em velocidades diferentes
+         leem como defeito. Ela já trata `prefers-reduced-motion`. */
+      const cancelar = contarAte(
+        untracked(this.animatedValue) ?? 0,
+        target,
+        (v) => this.animatedValue.set(v),
+      );
+      onCleanup(cancelar);
     }, { allowSignalWrites: true });
-  }
-
-  private prefersReducedMotion(): boolean {
-    return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   }
 }

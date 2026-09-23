@@ -3,22 +3,13 @@ import { SparklineComponent, SparklineTone } from './sparkline.component';
 import { IconComponent } from '../ui/icon/icon.component';
 import { IconName } from '../ui/icon/icons';
 
-export type KpiVariant =
-  | 'success' | 'danger' | 'warning' | 'info' | 'neutral' | 'brand'
-  /* Aliases legados — mantidos até todas as telas migrarem */
-  | 'red' | 'amber' | 'blue' | 'green' | 'teal' | 'purple' | 'orange' | 'gray';
+/* Só o vocabulário semântico. Os apelidos de cor (`red`, `teal`, `amber`…)
+   ficaram sem nenhum chamador quando as telas migraram, e manter os dois
+   vocabulários vivos era garantir que voltassem a divergir: `teal` apontava
+   para a marca numa época em que a marca era verde-petróleo. Como o tipo é uma
+   união, um apelido novo agora é erro de compilação, não cor errada. */
+export type KpiVariant = 'success' | 'danger' | 'warning' | 'info' | 'neutral' | 'brand';
 export type KpiSize = 'compact' | 'default' | 'hero';
-
-const VARIANT_MAP: Record<string, string> = {
-  red: 'danger',
-  amber: 'warning',
-  blue: 'info',
-  green: 'success',
-  teal: 'brand',
-  purple: 'info',
-  orange: 'warning',
-  gray: 'neutral',
-};
 
 @Component({
   selector: 'app-kpi-card',
@@ -38,12 +29,6 @@ export class KpiCardComponent {
   readonly delta = input<number | null>(null);
   readonly deltaLabel = input<string>('');
   readonly sparkline = input<number[] | null>(null);
-
-  /** Normaliza nomes de variante legados para a paleta semântica nova. */
-  protected readonly resolvedVariant = computed(() => {
-    const v = this.variant() as string;
-    return VARIANT_MAP[v] ?? v;
-  });
 
   protected readonly deltaDir = computed<'up' | 'down' | 'flat'>(() => {
     const d = this.delta();
@@ -65,9 +50,9 @@ export class KpiCardComponent {
     return `${abs}%`;
   });
 
-  /** Tom do sparkline — cai para a variante resolvida ou autodetecção. */
+  /** Tom do sparkline — cai para a variante ou autodetecção. */
   protected readonly sparklineTone = computed<SparklineTone>(() => {
-    const v = this.resolvedVariant();
+    const v = this.variant();
     if (v === 'success' || v === 'danger' || v === 'warning' || v === 'brand' || v === 'neutral') return v;
     return 'auto';
   });
