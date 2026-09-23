@@ -133,6 +133,27 @@ export async function marcarReconexao(uid: string, motivo: string): Promise<void
   logger.warn('Conta do Mercado Livre precisa ser reconectada', { uid, motivo });
 }
 
+/**
+ * A renovação falhou por um motivo que NÃO diz nada sobre o token.
+ *
+ * Em 23/09/2026 uma instância do Cloud Run passou a ser recusada pela borda do
+ * Mercado Livre: em vez de JSON, `/oauth/token` devolveu uma página HTML de
+ * bloqueio. O código lia aquilo como JSON, quebrava, e o `catch` marcava a conta
+ * como "precisa reconectar" — derrubando um vendedor por causa de um IP, com o
+ * refresh token provavelmente intacto (a requisição nem chegou à API).
+ *
+ * Só `invalid_grant` diz que o token morreu (inválido, vencido, revogado ou já
+ * usado). Página HTML, 403 da borda, 429, 5xx, falha de rede e qualquer outro
+ * código de erro são o mundo falhando, não o token — a próxima rodada tenta de
+ * novo, e o vendedor não precisa fazer nada.
+ */
+export class RenovacaoTransitoria extends Error {
+  constructor(readonly motivo: string) {
+    super(`refresh_transitorio:${motivo}`);
+    this.name = 'RenovacaoTransitoria';
+  }
+}
+
 /** Troca o refresh token por um par novo. Uma chamada, sem retentativa cega. */
 export async function trocarRefreshToken(
   refreshToken: string,
@@ -146,16 +167,34 @@ export async function trocarRefreshToken(
     refresh_token: refreshToken,
   });
 
-  const resposta = await fetch(`${ML_API}/oauth/token`, {
-    method: 'POST',
-    headers: { accept: 'application/json', 'content-type': 'application/x-www-form-urlencoded' },
-    body,
-  });
+  let resposta: Response;
+  try {
+    resposta = await fetch(`${ML_API}/oauth/token`, {
+      method: 'POST',
+      headers: { accept: 'application/json', 'content-type': 'application/x-www-form-urlencoded' },
+      body,
+    });
+  } catch (err) {
+    throw new RenovacaoTransitoria(`rede:${String((err as Error)?.message ?? err)}`);
+  }
 
-  const dados = (await resposta.json()) as Record<string, unknown>;
+  // Lido como texto antes: a borda do ML responde HTML quando recusa, e
+  // `resposta.json()` quebraria com uma mensagem que não explica nada.
+  const texto = await resposta.text();
+  let dados: Record<string, unknown> | null = null;
+  try {
+    const lido: unknown = JSON.parse(texto);
+    if (lido && typeof lido === 'object') dados = lido as Record<string, unknown>;
+  } catch {
+    dados = null;
+  }
+
+  if (!dados) throw new RenovacaoTransitoria(`${resposta.status}:resposta_nao_json`);
+
   if (!resposta.ok) {
-    const erro = String(dados['error'] ?? resposta.status);
-    throw new Error(`refresh_falhou:${erro}`);
+    const erro = String(dados['error'] ?? '');
+    if (erro === 'invalid_grant') throw new Error('refresh_falhou:invalid_grant');
+    throw new RenovacaoTransitoria(`${resposta.status}:${erro || 'sem_codigo'}`);
   }
 
   return {
@@ -236,8 +275,20 @@ export async function getValidAccessToken(
       );
       return novo.accessToken;
     } catch (err) {
-      // O refresh de uso único já foi consumido ou revogado: insistir só piora.
       await secretRef(uid).set({ refreshLockUntil: 0 }, { merge: true });
+
+      // Falha que não é do token: a conta continua conectada, e a próxima
+      // rodada tenta de novo com o MESMO refresh token, que segue guardado.
+      if (err instanceof RenovacaoTransitoria) {
+        logger.warn('Renovação do token falhou por motivo passageiro; tenta na próxima rodada', {
+          uid,
+          motivo: err.motivo,
+        });
+        throw new Error('renovacao_transitoria');
+      }
+
+      // `invalid_grant`: o refresh de uso único já foi consumido ou revogado.
+      // Insistir só piora — só o vendedor reconectando resolve.
       await marcarReconexao(uid, String((err as Error).message));
       throw new Error('reconexao_necessaria');
     }
