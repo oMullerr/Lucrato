@@ -128,11 +128,16 @@ const SUPERFICIES = ['--bg-canvas', '--bg-surface-1', '--bg-surface-2', '--bg-su
 const TEXTOS = ['--text-primary', '--text-secondary', '--text-muted'];
 
 /**
- * Cores de dado e de interface: piso de 3:1.
+ * Cores de dado: piso de TEXTO, 4.5:1.
  *
- * São número grande, ícone, borda de estado e rótulo curto em negrito — nunca
- * parágrafo. `--color-*-2` fica de fora por ser sempre a variante de hover/ativo
- * da cor já verificada.
+ * Até a primeira auditoria de tela elas estavam no piso de interface (3:1),
+ * com o argumento de que são número grande, ícone e borda. A tela desmentiu:
+ * a cascata do Painel pinta `−R$ 3.851,57` em `--color-warning` a 15px, que é
+ * texto corrido por qualquer definição. Piso frouxo aqui é piso frouxo no
+ * lugar que mais importa — o número.
+ *
+ * `--color-*-2` fica de fora por ser sempre a variante de hover/ativo da cor
+ * já verificada.
  */
 const INTERFACE = [
   '--brand-primary',
@@ -189,7 +194,7 @@ function verificar(nomeDoTema, tokens) {
 
   for (const sup of SUPERFICIES) {
     for (const t of TEXTOS) checar(t, sup, PISO_TEXTO);
-    for (const c of INTERFACE) checar(c, sup, PISO_GRANDE);
+    for (const c of INTERFACE) checar(c, sup, PISO_TEXTO);
   }
 
   /* A barra lateral é escura nos DOIS temas, então o texto dela tem de ser

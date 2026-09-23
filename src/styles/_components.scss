@@ -26,23 +26,37 @@
 }
 
 /* Entrada de tela, escalonada.
-   Antes todos os blocos entravam JUNTOS, com a mesma duração: a tela inteira
-   piscava de uma vez, que é quase o mesmo que não animar. Agora cada bloco
-   entra um pouco depois do anterior e o olho acompanha a página se montando.
+   Antes todos os blocos entravam JUNTOS: a tela inteira piscava de uma vez,
+   que é quase o mesmo que não animar. Agora cada bloco entra um pouco depois
+   do anterior e o olho acompanha a página se montando.
 
-   O escalonamento PARA no sexto. O Painel tem onze cartões e o Estoque tem
-   sete seções; levar o atraso até o fim faria o último bloco aparecer meio
-   segundo depois, e esperar pela própria interface é o oposto de vida. Do
-   sétimo em diante todos entram no mesmo tempo do sexto. */
+   O ALVO É `.page-content > *`, e isso custou uma volta: a primeira versão
+   escalonava `.page-container > *`, que tem só DOIS filhos — o `router-outlet`
+   e o componente da rota inteiro. O atraso existia e não fazia nada, porque a
+   página continuava entrando como um bloco só. Os blocos de verdade (pauta,
+   herói, grade de KPIs, tabela) são filhos de `.page-content`, presente nas
+   16 rotas, com 1 a 8 blocos cada.
+
+   O escalonamento PARA no sexto. O Fiscal tem oito blocos; levar o atraso até
+   o fim faria o último chegar meio segundo depois, e esperar pela própria
+   interface é o oposto de vida. Do sétimo em diante todos entram junto com o
+   sexto. */
 @media (prefers-reduced-motion: no-preference) {
-  .page-container > * {
+  .page-content > * {
     animation: page-fade-in var(--dur-slow) var(--ease-out) both;
   }
 
   @for $i from 2 through 6 {
-    .page-container > *:nth-child(#{$i}) {
+    .page-content > *:nth-child(#{$i}) {
       animation-delay: #{($i - 1) * 45}ms;
     }
+  }
+
+  /* Do sétimo em diante, todos entram JUNTO COM o sexto. Sem esta regra eles
+     cairiam no atraso zero da regra base e apareceriam ANTES dos blocos de
+     cima — ordem invertida, que é pior que não escalonar. */
+  .page-content > *:nth-child(n + 7) {
+    animation-delay: #{5 * 45}ms;
   }
 
   @keyframes page-fade-in {
