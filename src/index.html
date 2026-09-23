@@ -15,6 +15,11 @@
   <meta name="theme-color" content="#F5F5F3" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#121417" media="(prefers-color-scheme: dark)">
 
+  <!-- Aplica o tema ESCOLHIDO antes do primeiro paint. Síncrono de propósito
+       (sem defer/async): precisa terminar antes de o corpo aparecer. Arquivo, e
+       não inline, porque o CSP barra inline — ver o cabeçalho de tema.js. -->
+  <script src="/tema.js"></script>
+
   <!-- Instalacao na tela inicial -->
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="mobile-web-app-capable" content="yes">

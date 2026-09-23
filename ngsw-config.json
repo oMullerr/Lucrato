@@ -31,7 +31,7 @@
       "resources": {
         "files": [
           "/fonts/inter-var-latin.woff2",
-          "/fonts/archivo-var-latin.woff2",
+          "/fonts/instrument-sans-var-latin.woff2",
           "/fonts/geist-mono-var-latin.woff2",
           "/icons/*.png"
         ]

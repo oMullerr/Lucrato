@@ -26,8 +26,9 @@ export function resolveMoneyTone(value: number | null, tone: MoneyTone): Exclude
  * "O Número" — o elemento-assinatura do Lucrato. Todo valor de lucro/margem
  * aparece com este tratamento, reconhecível em qualquer página:
  *
- * - variant="hero": número gigante em Archivo expandida com hairline champanhe
- *   (o herói do dashboard) e count-up respeitando prefers-reduced-motion.
+ * - variant="hero": número gigante na fonte de display (Instrument Sans,
+ *   condensada) com a régua champanhe que cresce na entrada, e count-up
+ *   respeitando prefers-reduced-motion (ver core/anim/contar.ts).
  * - variant="chip": pílula tabular com tick direcional (▲ lucro / ▼ prejuízo).
  * - variant="text": valor tabular colorido pelo tom (colunas de tabela).
  *
