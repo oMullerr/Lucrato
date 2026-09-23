@@ -63,10 +63,19 @@ Claro em `:root`. Escuro num `@mixin escuro`, aplicado por **dois** caminhos:
 `html.dark` (escolha explícita) e `prefers-color-scheme: dark` em
 `html:not(.light)` (primeiro paint, antes do Angular subir).
 
-O segundo caminho é o que impede a tela de piscar branco. **Não troque por um
-script inline** no `index.html`: o CSP é `script-src 'self'` sem
-`'unsafe-inline'` e ele seria bloqueado em produção. O app já caiu por CSP uma
-vez.
+O segundo caminho é o que impede a tela de piscar branco para quem segue o
+sistema. Para quem ESCOLHEU um tema diferente do sistema, quem resolve é
+`public/tema.js`: o primeiro script do `<head>`, síncrono, que lê
+`APP.themeKey` e põe `dark`/`light` no `<html>` antes do primeiro paint.
+
+**Nunca como script inline** no `index.html`: o CSP é `script-src 'self'` sem
+`'unsafe-inline'` e o inline seria bloqueado em produção — o app já caiu por
+CSP uma vez. Arquivo da mesma origem passa. `src/tema.spec.ts` barra inline e
+amarra a chave.
+
+Trocou uma fonte? `src/ngsw-config.spec.ts` confere que ela entrou no cache do
+service worker — o gerador descarta em silêncio caminho que não existe, e foi
+assim que o Instrument Sans ficou fora do cache na troca de setembro/2026.
 
 Por isso o `ThemeService` marca `html.light` também — sem essa marca, quem tem
 sistema escuro e escolheu claro fica preso no escuro.
