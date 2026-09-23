@@ -63,10 +63,15 @@ jobs:
         with:
           node-version: '20'
           cache: npm
+      # O emulador do Firestore do firebase-tools 15 exige Java 21. E o
+      # `firebase` não vem instalado aqui: o `test:rules` o chama por `npx`,
+      # com versão fixa. Este job nasceu passando só na máquina de quem o
+      # escreveu, que tinha as duas coisas instaladas globalmente — e a
+      # primeira execução no CI (23/09/2026) falhou com `firebase: not found`.
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
       - run: npm ci
       - run: npm ci --prefix functions
       - run: npm run test:rules

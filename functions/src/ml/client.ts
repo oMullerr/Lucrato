@@ -30,6 +30,27 @@ export class MlApiError extends Error {
   }
 }
 
+/**
+ * O que o log precisa saber de uma falha — com o corpo da resposta do ML.
+ *
+ * O `MlApiError` sempre guardou o corpo, mas os `catch` registravam só a
+ * mensagem (`ml_api_403:/orders/search`), e o motivo real morria ali. Um 403
+ * do Mercado Livre tem pelo menos cinco causas — IP recusado
+ * (`blocked_by: PolicyAgent`), scope desabilitado, token de outro usuário,
+ * usuário inativo, aplicativo bloqueado — e cada uma pede um conserto
+ * diferente. Em 23/09/2026 a busca de pedidos passou a levar 403 em produção,
+ * e sem o corpo não havia como saber qual das cinco era.
+ *
+ * O corpo é resposta de erro do ML (status, código, mensagem): não carrega
+ * token, que só vai no cabeçalho da requisição.
+ */
+export function detalharErro(err: unknown): { motivo: string; status?: number; corpo?: string } {
+  if (err instanceof MlApiError) {
+    return { motivo: err.message, status: err.status, corpo: err.corpo };
+  }
+  return { motivo: String((err as Error)?.message ?? err) };
+}
+
 const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export interface MlClient {
