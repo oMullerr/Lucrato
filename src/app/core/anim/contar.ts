@@ -1,10 +1,11 @@
 /**
  * Contagem de número, para a tela mostrar o valor CHEGANDO.
  *
- * Nasceu dentro do `app-money`, animando só o número-herói. Saiu de lá para o
- * `kpi-card` poder usar a mesma rotina — e "a mesma" é o ponto: dois números
- * contando lado a lado em velocidades diferentes leem como defeito, não como
- * enfeite.
+ * Nasceu dentro do `app-money`, animando só o número-herói. Saiu de lá para que
+ * outro número que venha a contar use a mesma rotina — e "a mesma" é o ponto:
+ * dois números contando lado a lado em velocidades diferentes leem como
+ * defeito, não como enfeite. (O `kpi-card` ficou de fora de propósito: recebe
+ * texto já formatado, e contar exigiria trocar a API de 35 chamadas.)
  *
  * NÃO É DECORAÇÃO. Um número que aparece pronto não diz de onde veio; um que
  * sobe até o valor mostra a escala do salto no caminho. É a diferença entre ler

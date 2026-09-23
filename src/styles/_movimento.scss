@@ -1,0 +1,32 @@
+/* LUCRATO · Movimento reutilizável.
+
+   Só mixins: `@use` deste arquivo não emite CSS nenhum. Os `@keyframes` que
+   eles usam são globais (`_utilities.scss`), para existirem uma vez só.
+
+   Regra da casa: animação que EXPLICA fica, a que decora sai. */
+
+/* Barra de proporção que cresce do zero na primeira pintura.
+
+   Explica, não enfeita: o comprimento da barra É o dado, e vê-la crescer mostra
+   a escala antes de o olho ler o número ao lado. As transições de `width` que
+   já existiam não davam isso — transição só acontece quando o valor MUDA, e na
+   primeira pintura ele já nasce pronto.
+
+   `scaleX`, e não `width`: a largura final já está no `[style.width]` que o
+   dado define, e a animação só a revela. Não recalcula layout a cada quadro, e
+   funciona com qualquer largura, em % ou em px.
+
+   `backwards`: segura o zero durante o atraso e depois devolve a barra ao
+   estilo dela — nenhum `transform` fica aplicado.
+
+   O atraso deixa o bloco assentar antes: a barra cresce DEPOIS que o cartão
+   entrou, e não escondida pela entrada dele.
+
+   Dentro de um bloco revelado ao rolar (`appRevelar`), a animação espera o
+   bloco aparecer — ver `_components.scss`. */
+@mixin barra-que-cresce($atraso: var(--dur-slow)) {
+  @media (prefers-reduced-motion: no-preference) {
+    transform-origin: left center;
+    animation: crescer var(--dur-slow) var(--ease-out) $atraso backwards;
+  }
+}

@@ -40,10 +40,19 @@
    O escalonamento PARA no sexto. O Fiscal tem oito blocos; levar o atraso até
    o fim faria o último chegar meio segundo depois, e esperar pela própria
    interface é o oposto de vida. Do sétimo em diante todos entram junto com o
-   sexto. */
+   sexto.
+
+   `backwards`, e não `both`. Com `both` o último quadro ficava aplicado para
+   sempre, e cada bloco da página carregava um `transform: translateY(0)`
+   permanente. Não se vê — mas um `transform` que não é `none` vira referência
+   para todo `position: fixed` lá dentro, e um painel fixo aberto de dentro de
+   um bloco passaria a se posicionar pelo bloco, não pela tela. Nenhum faz isso
+   hoje (os overlays vão para o `body` pelo CDK); o próximo faria. `backwards`
+   segura o primeiro quadro durante o atraso e depois devolve o bloco ao estilo
+   dele, que é idêntico ao último quadro. */
 @media (prefers-reduced-motion: no-preference) {
   .page-content > * {
-    animation: page-fade-in var(--dur-slow) var(--ease-out) both;
+    animation: page-fade-in var(--dur-slow) var(--ease-out) backwards;
   }
 
   @for $i from 2 through 6 {
@@ -62,6 +71,39 @@
   @keyframes page-fade-in {
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* Revelação ao rolar (diretiva `appRevelar`, em Estoque e Painel).
+   Blocos que começam abaixo da dobra esperam o usuário chegar até eles.
+
+   Vem DEPOIS do escalonamento, com a mesma especificidade, para o
+   `animation: none` vencer: um bloco que espera a vez não pode também fazer a
+   entrada de carregamento, longe dos olhos.
+
+   `screen`: impresso, nada fica escondido esperando uma rolagem que não
+   existe no papel. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  .page-content > .a-revelar {
+    animation: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+  }
+
+  .page-content > .a-revelar.revelado {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* O que se anima DENTRO de um bloco que ainda espera (a barra que cresce,
+     por exemplo) fica pausado até ele aparecer. Sem isto, a barra cresceria
+     no carregamento, invisível, e o usuário a encontraria parada. Pausada, a
+     animação congela no primeiro quadro, inclusive durante o atraso. */
+  .page-content > .a-revelar:not(.revelado) * {
+    animation-play-state: paused;
   }
 }
 

@@ -97,8 +97,11 @@ que o componente monta com `color-mix()`.
 Três famílias, variáveis, **auto-hospedadas** em `public/fonts/`. Nada de
 Google Fonts — o CSP não permite e não há por que abrir.
 
-- `--font-display` — títulos e números-herói. Tem eixo de largura; a compressão
-  (`font-stretch: 104%`/`116%`) é parte da identidade.
+- `--font-display` — Instrument Sans: títulos e números-herói. Tem eixo de
+  largura de **75% a 100%**, então a identidade é CONDENSAR (`94%` títulos,
+  `97%` seções, `92%` wordmark). Valor acima de 100% clampa em silêncio — foi
+  o que quase apagou a identidade na troca do Archivo (62–125%), sem erro
+  nenhum no console.
 - `--font-body` — Inter. Afinada para densidade; trocar arrisca regressão em
   cada tabela.
 - `--font-mono` — Geist Mono. Ids e dinheiro.
@@ -126,11 +129,19 @@ tabular-nums` — as classes `.num`, `.kpi-value`, `.mono` já fazem isso.
 - `100dvh`, nunca `100vh`.
 - Nada de `min-width` acima de 320px numa caixa: o útil dentro de um card a
   375px é ~307px.
-- Alvo de toque de 44px abaixo de `md`.
-- **Tabela larga precisa de alternativa em celular.** `RecordCardComponent` é a
-  substituta da linha: o cartão inteiro é um `<button>` que abre o mesmo
-  detalhe. Análises, Anúncios e Faturamento ainda não têm — se mexer nelas,
-  esse é o débito.
+- Alvo de toque de 44px abaixo de `md`. **Meça na tela**, não no papel: três
+  componentes prometiam 44 num comentário e sobrescreviam para 32 no bloco de
+  celular logo abaixo. E seletor com `app-field ...` dentro de um componente
+  nunca casa — o `app-field` pertence a outro escopo de encapsulamento; use
+  `:host-context(.field-box)`.
+- **Tabela larga precisa de alternativa em celular** (`bp.isMobile()`). Toda
+  tela com tabela já tem uma. `RecordCardComponent` é a substituta da linha: por
+  padrão um `<button>` que abre o mesmo detalhe; em tela de leitura (Análises,
+  Faturamento) vai com `[interactive]="false"`, que desenha um bloco sem botão.
+  Se a linha tem um controle — o select de vínculo de Anúncios — o cartão
+  padrão não serve: faça um próprio.
+- Cabeçalho de tabela ordenável some no celular: a lista precisa de um
+  "Ordenar por" (`.mobile-sort`) com as mesmas chaves de tradução.
 
 ## Acessibilidade
 

@@ -21,6 +21,7 @@ import { ComputedSale, ComputedReturn, ReturnReason } from '../../core/models/mo
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { MoneyComponent } from '../../shared/ui/money/money.component';
+import { RevelarDirective } from '../../shared/ui/revelar/revelar.directive';
 import { SparklineComponent } from '../../shared/components/sparkline.component';
 
 interface RangeOption { key: RangeKey; labelKey: string; }
@@ -47,7 +48,7 @@ const RANGE_OPTIONS: RangeOption[] = [
   imports: [
     FormsModule, RouterLink, BaseChartDirective,
     DateRangePickerComponent, PageHeaderComponent, KpiCardComponent, EmptyStateComponent, SkeletonComponent, BrlPipe,
-    ButtonComponent, IconComponent, MoneyComponent, SparklineComponent,
+    ButtonComponent, IconComponent, MoneyComponent, SparklineComponent, RevelarDirective,
     TranslateModule,
   ],
   templateUrl: './dashboard.component.html',
