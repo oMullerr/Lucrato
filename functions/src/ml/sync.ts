@@ -17,7 +17,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 
 import { ML_CLIENT_ID, ML_CLIENT_SECRET } from '../config';
 import { aplicarNoRazao } from './apply';
-import { criarMlClient } from './client';
+import { criarMlClient, detalharErro } from './client';
 import { cobrarIntervalo } from './debounce';
 import { marcarSync, processarPedido } from './inbox';
 import { processarReclamacao } from './returns';
@@ -131,8 +131,9 @@ export const mlProcessEvent = onDocumentCreated(
       await lancarNoRazao(uid);
       await event.data?.ref.delete();
     } catch (err) {
-      const motivo = String((err as Error).message);
-      logger.error('Falha ao processar notificação', { uid, orderId, claimId, motivo });
+      const detalhe = detalharErro(err);
+      const motivo = detalhe.motivo;
+      logger.error('Falha ao processar notificação', { uid, orderId, claimId, ...detalhe });
       await db().doc(`users/${uid}/db/ml`).set(
         { lastError: motivo, updatedAt: Timestamp.now() },
         { merge: true },
@@ -253,8 +254,9 @@ export const mlBackfill = onCall(
       logger.info('Histórico importado', { uid, processados, meses });
       return { total: processados };
     } catch (err) {
-      const motivo = String((err as Error).message);
-      logger.error('Falha no backfill', { uid, motivo, processados });
+      const detalhe = detalharErro(err);
+      const motivo = detalhe.motivo;
+      logger.error('Falha no backfill', { uid, processados, ...detalhe });
       await db().doc(`users/${uid}/db/ml`).set(
         { lastError: motivo, updatedAt: Timestamp.now() },
         { merge: true },
@@ -287,9 +289,10 @@ export const mlPoller = onSchedule(
         const total = await varrerVendedor(uid, mlUserId);
         if (total > 0) logger.info('Varredura trouxe pedidos', { uid, total });
       } catch (err) {
-        const motivo = String((err as Error).message);
+        const detalhe = detalharErro(err);
+        const motivo = detalhe.motivo;
         // Conta que precisa reconectar não deve derrubar a varredura das outras.
-        logger.warn('Varredura falhou para um vendedor', { uid, motivo });
+        logger.warn('Varredura falhou para um vendedor', { uid, ...detalhe });
         await db().doc(`users/${uid}/db/ml`).set(
           { lastError: motivo, updatedAt: Timestamp.now() },
           { merge: true },
